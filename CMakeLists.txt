@@ -1,0 +1,59 @@
+cmake_minimum_required(VERSION 3.8)
+
+project(foo VERSION 1.0)
+
+
+# ------------------------------------------------------------------------
+# Let's go for Debug by default
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Debug)
+endif()
+# ------------------------------------------------------------------------
+#set(CMAKE_VERBOSE_MAKEFILE True)
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+option(USE_CXX_EXCEPTIONS "Enable C++ exception support" ON)
+
+#set(CMAKE_CXX_COMPILER "g++-13")
+#set(CMAKE_CXX_COMPILER "c++")
+set(CMAKE_CXX_FLAGS "-Wall -Wsign-compare")
+set(CMAKE_CXX_FLAGS_DEBUG "-g")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -D_NDEBUG -DNDEBUG")  #[[ comment  ]]
+
+message("FR   : ${CMAKE_CXX_FLAGS_RELEASE}")
+message("Build: ${CMAKE_BUILD_TYPE}")
+
+#This is the full list of exapmles for miniCPP		
+################################################################################
+file(GLOB libs "src/*.cpp")
+message("Lib: ${libs}")
+add_library(ddOpt
+  ${libs}
+)
+
+include_directories(src)
+file(GLOB files "*.cpp")
+message("${files}")
+
+foreach (file ${files})
+	get_filename_component(base ${file} NAME_WE)
+	get_filename_component(dir ${file} DIRECTORY)
+	message("BASE IS: [${base}]")
+	add_executable(${base} ${dir}/${base}.cpp)
+	target_link_libraries(${base} ddOpt)
+	add_dependencies(${base} ddOpt)
+endforeach()
+
+file(GLOB tests "test/*cpp")
+message("Tests: ${tests}")
+
+foreach (file ${tests})
+	get_filename_component(base ${file} NAME_WE)
+	get_filename_component(dir ${file} DIRECTORY)
+	message("BASE IS: [${base}]")
+	add_executable(${base} ${dir}/${base}.cpp)
+	target_link_libraries(${base} ddOpt)
+	add_dependencies(${base} ddOpt)  
+endforeach()
+

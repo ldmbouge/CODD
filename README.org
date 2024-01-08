@@ -1,0 +1,10 @@
+* Command to create a GCM for an import
+Like 
+#+begin_src c++
+  import iostream;
+#+end_src
+You need
+#+begin_src bash
+g++-13 -std=c++20 -fmodules-ts -xc++-system-header iostream
+#+end_src
+Haven't found a way to automate in cmake yet. Though there should be
