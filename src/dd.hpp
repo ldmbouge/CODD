@@ -73,7 +73,10 @@ private:
    }
    ANode::Ptr transition(ANode::Ptr src,int label) {
       auto op = dynamic_cast<const Node<ST>*>(src.get());
-      return makeNode(_stf(op->get(),label));      
+      auto vs = _stf(op->get(),label);
+      if (vs.has_value())
+         return makeNode(std::move(vs.value()));
+      else return nullptr;
    }
    ANode::Ptr merge(const ANode::Ptr f,const ANode::Ptr s) {
       auto fp = dynamic_cast<const Node<ST>*>(f.get());
