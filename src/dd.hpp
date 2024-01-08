@@ -4,6 +4,7 @@
 #include <algorithm>
 #include "node.hpp"
 #include <vector>
+#include <optional>
 #include "hashtable.hpp"
 
 class AbstractDD {
@@ -30,9 +31,9 @@ public:
 template <typename ST,
           typename IBL1 = ST(*)(),
           typename IBL2 = ST(*)(),
-          typename STF  = ST(*)(const ST&,int),
+          typename STF  = std::optional<ST>(*)(const ST&,int),
           typename STC  = double(*)(const ST&,int),
-          typename SMF  = ST(*)(const ST&,const ST&),
+          typename SMF  = std::optional<ST>(*)(const ST&,const ST&),
           class Equal = std::equal_to<ST>,
           class NotEqual=std::not_equal_to<ST>>
 requires Printable<ST> && Hashable<ST>
@@ -81,7 +82,10 @@ private:
    ANode::Ptr merge(const ANode::Ptr f,const ANode::Ptr s) {
       auto fp = dynamic_cast<const Node<ST>*>(f.get());
       auto sp = dynamic_cast<const Node<ST>*>(s.get());
-      return makeNode(_smf(fp->get(),sp->get()));      
+      auto vs = _smf(fp->get(),sp->get());
+      if (vs.has_value())
+         return makeNode(std::move(vs.value()));
+      else return nullptr;
    }
 public:
    DD(Pool::Ptr p,IBL1 sti,IBL2 stt,STF stf,STC stc,SMF smf)

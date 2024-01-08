@@ -44,14 +44,12 @@ MISP stTarget()
    std::set<int> U;
    return MISP { U, -1 };
 }
-MISP stf(const MISP& s,int label)
+
+std::optional<MISP> smf(const MISP& s1,const MISP& s2)
 {
-   auto ns = remove(s.sel,label);
-   return MISP {ns,(ns.size()==0) ? -1 : label};
-}
-MISP smf(const MISP& s1,const MISP& s2)
-{
-   return MISP {s1.sel | s2.sel,s1.e};
+   if (s1.e == s2.e)
+      return MISP {s1.sel & s2.sel,s1.e};
+   else return std::nullopt;
 }
 
 std::ostream& operator<<(std::ostream& os,const MISP& m)
@@ -115,12 +113,8 @@ int main()
          return MISP {ns,label};
       } else return std::nullopt;
    };
-
    constexpr auto scf = [](const MISP& s,int label) {
-      if (label == top)
-         return 0;
-      else
-         return weight[label];
+      return (label == top) ? 0 : weight[label];
    };
    std::cout << "LABELS:" << labels << "\n";
 

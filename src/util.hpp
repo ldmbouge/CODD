@@ -27,6 +27,18 @@ std::set<T> operator|(const std::set<T>& s1,const std::set<T>& s2)
    r.insert(s2.begin(),s2.end());
    return r;
 }
+
+template <typename T>
+std::set<T> operator&(const std::set<T>& s1,const std::set<T>& s2)
+{
+   std::set<T> r {};
+   for(const auto& e : s1)
+      if (s2.contains(e))
+         r.insert(e);
+   return r;
+}
+
+
 template <typename T>
 std::set<T> remove(const std::set<T>& s1,const T& v) {
    std::set<T> r;
