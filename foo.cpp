@@ -32,19 +32,6 @@ template<> struct std::hash<MISP> {
    }
 };
 
-MISP stInit()
-{
-   std::set<int> U;
-   for(int i=0;i < 10;i++)
-      U.insert(i);
-   return MISP { U, -1 };
-}
-MISP stTarget()
-{
-   std::set<int> U;
-   return MISP { U, -1 };
-}
-
 std::optional<MISP> smf(const MISP& s1,const MISP& s2)
 {
    if (s1.e == s2.e)
@@ -84,33 +71,37 @@ int main()
                                        GE {5,4}
    };
    const auto labels = ns | std::set<int> { top }; 
-   constexpr const int weight[] = {0,3,4,2,2,7};
+   constexpr const double weight[] = {0,3,4,2,2,7};
    std::vector<std::set<int>> neighbors(ns.size());
    for(int i : ns) {
       neighbors.push_back(std::set<int> {});
       std::copy_if(begin(ns),end(ns),std::inserter(neighbors[i],neighbors[i].begin()),[i,&es](auto j) {
          const GE e1 {i,j},e2 {j,i};
-         return std::find_if(es.begin(),es.end(),[e1,e2](auto e) { return e == e1 || e == e2;}) != es.end();
+         return std::find_if(es.begin(),es.end(),
+                             [e1,e2](auto e) { return e == e1 || e == e2;}) != es.end();
       });
       neighbors[i].insert(i);
       std::cout << i << " -> " << neighbors[i] << std::endl;
    }
    constexpr auto myInit = []() {
-      std::set<int> U;
-      for(int i=0;i < top;i++)
+      std::set<int> U {};
+      for(int i=1;i < top;i++)
          U.insert(i);
-      return MISP { U, -1 };      
+      return MISP { U, -1 };
+   };
+   constexpr auto myTarget = []() {
+      return MISP { std::set<int> {}, -1 };
    };
    auto myStf = [&neighbors](const MISP& s,int label) -> std::optional<MISP> {
       if (label == top)
-         return MISP { std::set<int> {}, label};
+         return MISP { std::set<int> {}, -1};
       else if (s.sel.contains(label)) {
          std::set<int> ns = s.sel;         
          for(int i=1;i< label;i++)
             ns.erase(i);
-         ns.erase(neighbors[label].begin(),neighbors[label].end());
-         //auto ns = remove(s.sel,label);         
-         return MISP {ns,label};
+         for(auto ngh : neighbors[label])
+            ns.erase(ngh);
+         return MISP {ns,(ns.size()==0) ? -1 : label};
       } else return std::nullopt;
    };
    constexpr auto scf = [](const MISP& s,int label) {
@@ -120,10 +111,12 @@ int main()
 
    Pool mine;
    auto myDD = DD<MISP,
-                  MISP(*)(),
-                  MISP(*)(),
+                  std::greater<double>, // to maximize
+                  decltype(myInit), 
+                  decltype(myTarget), // MISP(*)(),
                   decltype(myStf),
-                  decltype(scf)>::makeDD(&mine,myInit,stTarget,myStf,scf,smf);
+                  decltype(scf)
+                  >::makeDD(&mine,myInit,myTarget,myStf,scf,smf,labels);
    myDD->doIt();
    return 0;
 }

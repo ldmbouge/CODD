@@ -1,7 +1,10 @@
 #include "dd.hpp"
 #include "util.h"
 #include <iostream>
+#include <iomanip>
+#include <limits>
 #include "heap.hpp"
+#include "queue.hpp"
 
 void AbstractDD::addArc(Edge::Ptr e)
 {
@@ -9,26 +12,47 @@ void AbstractDD::addArc(Edge::Ptr e)
    e->_to->addArc(e);
 }
 
+void printMe(ANode* n)
+{
+   n->print(std::cout);
+   std::cout << std::endl;
+}
 
 void AbstractDD::doIt()
 {
-   auto root = init();
-   auto sink = target();
-   auto cur = root;
+   auto root = _root = init();
+   auto sink = _trg = target();
    _an.push_back(root);
    _an.push_back(sink);
-   int l = 9;
-   std::cout << "DOIT Loop\n"; 
-   while (neq(cur,sink)) {
-      auto nxt = transition(cur,l--);
-      _an.push_back(nxt);
-      Edge::Ptr e = new (_mem) Edge(cur,nxt);
-      addArc(e);
-      nxt->print(std::cout);std::cout << std::endl;
-      cur = nxt;
+   CQueue<ANode::Ptr> qn(32);
+   qn.enQueue(root);
+   while (!qn.empty()) {
+      auto p = qn.deQueue();
+      std::set<int> al {};
+      for(auto k = p->beginKids(); k != p->endKids();k++) 
+         al.insert((*k)->_lbl);
+      for(auto l : _labels) {
+         if (al.contains(l)) continue;
+         auto child = transition(p,l); // we get back either a new node, or an already existing one.
+         if (child) {
+            auto theCost = cost(p,l);
+            if (neq(child,sink)) {
+               _an.push_back(child); // keep track of it for printing's sake
+               const bool newNode = child->nbParents()==0;
+               Edge::Ptr e = new (_mem) Edge(p,child,l);
+               e->_obj = theCost;
+               addArc(e); // connect to new node
+               if (newNode)
+                  qn.enQueue(child);
+            } else {
+               Edge::Ptr e = new (_mem) Edge(p,child,l);
+               e->_obj = theCost;
+               addArc(e); // connect to sink
+            }
+         }
+      }
    }
-   _root = root;
-   _trg  = sink;
+   computeBest();
    print(std::cout);
 }
 
@@ -71,5 +95,36 @@ void AbstractDD::print(std::ostream& os)
          h.decrease(at);
       }
    }
+}
+
+void AbstractDD::computeBest()
+{
+   Heap<DNode,DNode> h(_mem,1000);
+   for(ANode::Ptr n : _an) {
+      h.insert({n,n->nbParents()});
+      std::cout << *n << " #PAR:" << n->nbParents() << "\n";
+   }
+   h.buildHeap();
+   while (h.size() > 0) {
+      auto n = h.extractMax();
+      double cur = (n.node->nbParents() == 0) ? 0 : initialBest();
+      for(auto pi = n.node->beginPar();pi != n.node->endPar();pi++) {
+         Edge::Ptr e = *pi;
+         std::cout << "EDGE:" << *e << std::endl;
+         auto ep = e->_from->_bound + e->_obj;
+         cur = better(cur,ep);
+      }
+      std::cout << "\tCOMPUTED:" << cur << " for ";
+      n.node->print(std::cout);
+      std::cout << "\n";
+      n.node->setBound(cur);
+      for(auto ki = n.node->beginKids(); ki != n.node->endKids();ki++) {
+         Edge::Ptr k = *ki;
+         auto at = h.find({k->_to,0});
+         assert(at!=-1);
+         h.decrease(at);
+      }
+   }
+   std::cout << "B@SINK:" << _trg->getBound() << std::endl;
 }
 

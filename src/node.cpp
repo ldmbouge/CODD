@@ -9,7 +9,7 @@ std::ostream& operator<<(std::ostream& os,const ANode& s)
 
 std::ostream& operator<<(std::ostream& os,const Edge& e)
 {
-   return os << "E<" << *e._from << " --- " << e._obj << " ---> "  << *e._to;
+   return os << "E<" << *e._from << " --- " << e._obj << "(" << e._lbl << ") ---> "  << *e._to;
 }
 
 void ANode::addArc(Edge::Ptr ep)

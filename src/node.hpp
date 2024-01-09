@@ -28,14 +28,16 @@ struct Edge {
    handle_ptr<ANode>  _from,_to;
    Vec<Edge::Ptr>::IdxType _fix,_tix;
    double _obj;
-   Edge(handle_ptr<ANode> fp,handle_ptr<ANode> tp)
-      : _from(fp),_to(tp),_fix(-1),_tix(-1),_obj(0) {}
+   int    _lbl;
+   Edge(handle_ptr<ANode> fp,handle_ptr<ANode> tp,int lbl)
+      : _from(fp),_to(tp),_fix(-1),_tix(-1),_obj(0),_lbl(lbl) {}
    friend std::ostream& operator<<(std::ostream& os,const Edge& e);
 };
 
 class ANode {
    Vec<Edge::Ptr,unsigned> _parents;
    Vec<Edge::Ptr,unsigned> _children;
+   double                  _bound;
    void addArc(Edge::Ptr ep);
 public:
    friend class AbstractDD;
@@ -49,6 +51,8 @@ public:
    auto endPar()    { return _parents.end();}
    auto beginKids() { return _children.begin();}
    auto endKids()   { return _children.end();}
+   void setBound(double b) { _bound = b;}
+   const auto getBound() const { return _bound;}
    friend std::ostream& operator<<(std::ostream& os,const ANode& s);
 };
 
