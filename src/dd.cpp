@@ -6,6 +6,16 @@
 #include "heap.hpp"
 #include "queue.hpp"
 
+AbstractDD::~AbstractDD()
+{
+   std::cout << "AbstractDD::~AbstractDD(" << this << ")\n";
+   for(ANode::Ptr p : _an)
+      p->~ANode();
+   _an.clear();
+   _root = _trg = nullptr;
+   _mem->clear();
+}
+
 void AbstractDD::addArc(Edge::Ptr e)
 {
    e->_from->addArc(e);
@@ -35,19 +45,15 @@ void AbstractDD::doIt()
          if (al.contains(l)) continue;
          auto child = transition(p,l); // we get back either a new node, or an already existing one.
          if (child) {
+            const bool newNode = child->nbParents()==0; // is this a newly created node?
             auto theCost = cost(p,l);
+            Edge::Ptr e = new (_mem) Edge(p,child,l);
+            e->_obj = theCost;
+            addArc(e); // connect to new node
             if (neq(child,sink)) {
                _an.push_back(child); // keep track of it for printing's sake
-               const bool newNode = child->nbParents()==0;
-               Edge::Ptr e = new (_mem) Edge(p,child,l);
-               e->_obj = theCost;
-               addArc(e); // connect to new node
                if (newNode)
                   qn.enQueue(child);
-            } else {
-               Edge::Ptr e = new (_mem) Edge(p,child,l);
-               e->_obj = theCost;
-               addArc(e); // connect to sink
             }
          }
       }

@@ -26,7 +26,7 @@ protected:
 public:
    typedef std::shared_ptr<AbstractDD> Ptr;
    AbstractDD(Pool::Ptr p,const std::set<int>& labels) : _mem(p),_labels(labels) {}
-   virtual ~AbstractDD() {}
+   virtual ~AbstractDD();
    virtual ANode::Ptr init() = 0;
    virtual ANode::Ptr target() = 0;
    virtual ANode::Ptr transition(ANode::Ptr src,int label) = 0;
@@ -119,6 +119,9 @@ public:
         _smf(smf),
         _nmap(p,128)
    {}
+   ~DD() {
+      _nmap.clear();
+   }
    template <class... Args>
    static AbstractDD::Ptr makeDD(Args&&... args) {
       return std::make_shared<DD>(std::forward<Args>(args)...);
