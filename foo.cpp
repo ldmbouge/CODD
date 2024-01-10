@@ -41,10 +41,8 @@ std::optional<MISP> smf(const MISP& s1,const MISP& s2)
 
 std::ostream& operator<<(std::ostream& os,const MISP& m)
 {
-   os << "<{ ";
-   for(int v : m.sel)
-      os << v << ',';
-   return os << "\b}," << m.e << ">";
+   os << "<" << m.sel;
+   return os << "," << m.e << ">";
 }
 
 struct GE {
@@ -117,7 +115,7 @@ int main()
                   decltype(myStf),
                   decltype(scf)
                   >::makeDD(&mine,myInit,myTarget,myStf,scf,smf,labels);
-   myDD->doIt();
+   myDD->compute();
    return 0;
 }
 

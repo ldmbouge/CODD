@@ -35,6 +35,7 @@ struct Edge {
 };
 
 class ANode {
+protected:
    Vec<Edge::Ptr,unsigned> _parents;
    Vec<Edge::Ptr,unsigned> _children;
    double                  _bound;
@@ -66,7 +67,7 @@ public:
    ~Node() {}
    const T& get() const {return _val;}
    void print(std::ostream& os) const {
-      os << _val;
+      os << _val << ":B=" << _bound;
    }
 };
 

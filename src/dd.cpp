@@ -1,8 +1,11 @@
 #include "dd.hpp"
 #include "util.h"
 #include <iostream>
+#include <fstream>
 #include <iomanip>
 #include <limits>
+#include <cstdio>
+#include <unistd.h>
 #include "heap.hpp"
 #include "queue.hpp"
 
@@ -28,7 +31,7 @@ void printMe(ANode* n)
    std::cout << std::endl;
 }
 
-void AbstractDD::doIt()
+void AbstractDD::compute()
 {
    auto root = _root = init();
    auto sink = _trg = target();
@@ -84,6 +87,7 @@ struct DNode {
 
 void AbstractDD::print(std::ostream& os)
 {
+   display();
    std::cout << "PRINTING: --------------------------------------------------\n";
    Heap<DNode,DNode> h(_mem,1000);
    for(ANode::Ptr n : _an) {
@@ -101,6 +105,57 @@ void AbstractDD::print(std::ostream& os)
          h.decrease(at);
       }
    }
+}
+
+
+void AbstractDD::saveGraph(std::ostream& os)
+{
+   Heap<DNode,DNode> h(_mem,1000);
+   for(ANode::Ptr n : _an) 
+      h.insert({n,n->nbParents()});   
+   h.buildHeap();
+   std::string colors[2] = {"green","red"};
+   os << "digraph MDD {" << std::endl;
+   os << " node [style=filled gradientangle=270];\n"; 
+   while (h.size() > 0) {
+      auto cur = h.extractMax();
+      os << "\"" << *cur.node << "\" [color=\"" << colors[0] << "\"];\n";      
+      for(auto ki = cur.node->beginKids(); ki != cur.node->endKids();ki++) {
+         Edge::Ptr k = *ki;
+         auto at = h.find({k->_to,0});
+         h.decrease(at);
+         ANode::Ptr from = k->_from;
+         ANode::Ptr to   = k->_to;
+         os << "\"" << *from << "\" ->" << "\"" << *to << "\"";
+         os << " [ label=\"" << k->_obj << "(" << k->_lbl << ")" << "\" ];\n";
+      }
+   }
+   os << "}" << std::endl;
+}
+
+void AbstractDD::display()
+{
+   char buf[256] = "/tmp/dotfile-XXXXXXX";
+   mkstemp(buf);
+   std::cout << "temporary file name: " << buf << '\n';   
+   std::ofstream out(buf);
+   std::string base = buf;
+   base = base + ".pdf";
+   saveGraph(out);
+   out.close();
+   pid_t child = fork();
+   if (child == 0) {
+      int st = execlp("dot","dot","-Tpdf","-O",buf,0);
+      printf("execl status: %d\n",st);
+   }
+   int st = 0;
+   waitpid(child,&st,0);
+   child = fork();
+   if (child == 0) {
+      execlp("open","open",base.c_str(),0);
+      printf("execl2 status: %d\n",st);
+   }
+   unlink(buf);
 }
 
 void AbstractDD::computeBest()

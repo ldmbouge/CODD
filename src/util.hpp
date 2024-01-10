@@ -14,10 +14,11 @@ template <class T> std::ostream& operator<<(std::ostream& os,const std::vector<T
 }
 
 template <class T> std::ostream& operator<<(std::ostream& os,const std::set<T>& s) {
-   os << "{ ";
-   for(int v : s)
-      os << v << ',';
-   return os << "\b}";
+   os << "{";
+   auto cnt = 0u;
+   for(auto i=s.begin();i!= s.end();i++,cnt++)
+      os << *i << ((cnt==s.size()-1) ? "" : ",");
+   return os << "}";
 }
 
 template <typename T>

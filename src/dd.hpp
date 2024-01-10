@@ -8,10 +8,10 @@
 #include <set>
 #include "hashtable.hpp"
 
+
 class AbstractDD {
 protected:
    Pool::Ptr _mem;
-private:
    ANode::Ptr _root;
    ANode::Ptr _trg;
    std::set<int> _labels;
@@ -23,6 +23,8 @@ protected:
    virtual double better(double obj1,double obj2) const = 0;
    virtual double initialBest() const = 0;
    void computeBest();
+   void saveGraph(std::ostream& os);
+   void display();
 public:
    typedef std::shared_ptr<AbstractDD> Ptr;
    AbstractDD(Pool::Ptr p,const std::set<int>& labels) : _mem(p),_labels(labels) {}
@@ -32,7 +34,7 @@ public:
    virtual ANode::Ptr transition(ANode::Ptr src,int label) = 0;
    virtual ANode::Ptr merge(const ANode::Ptr first,const ANode::Ptr snd) = 0;
    virtual double cost(ANode::Ptr src,int label) = 0;
-   void doIt();
+   void compute();
    void print(std::ostream& os);
 };
    
