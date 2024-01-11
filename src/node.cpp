@@ -19,3 +19,18 @@ void ANode::addArc(Edge::Ptr ep)
    else if (ep->_to == this)
       ep->_tix = _parents.push_back(ep);
 }
+
+void ANode::disconnect()
+{
+   for(auto e : _parents) {
+      assert(e->_from->_children[e->_fix] == e);
+      e->_from->_children.remove(e->_fix);
+   }
+   _parents.clear();
+   for(auto e : _children) {
+      assert(e->_to->_parents[e->_tix] == e);
+      e->_to->_parents.remove(e->_tix);
+   }
+   _children.clear();
+}
+

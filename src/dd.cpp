@@ -33,36 +33,8 @@ void printMe(ANode* n)
 
 void AbstractDD::compute()
 {
-   auto root = _root = init();
-   auto sink = _trg = target();
-   _an.push_back(root);
-   _an.push_back(sink);
-   CQueue<ANode::Ptr> qn(32);
-   qn.enQueue(root);
-   while (!qn.empty()) {
-      auto p = qn.deQueue();
-      std::set<int> al {};
-      for(auto k = p->beginKids(); k != p->endKids();k++) 
-         al.insert((*k)->_lbl);
-      for(auto l : _labels) {
-         if (al.contains(l)) continue;
-         auto child = transition(p,l); // we get back either a new node, or an already existing one.
-         if (child) {
-            const bool newNode = child->nbParents()==0; // is this a newly created node?
-            auto theCost = cost(p,l);
-            Edge::Ptr e = new (_mem) Edge(p,child,l);
-            e->_obj = theCost;
-            addArc(e); // connect to new node
-            if (neq(child,sink)) {
-               _an.push_back(child); // keep track of it for printing's sake
-               if (newNode)
-                  qn.enQueue(child);
-            }
-         }
-      }
-   }
-   computeBest();
-   print(std::cout);
+   assert(_strat);
+   _strat->compute();
 }
 
 struct DNode {
@@ -137,7 +109,6 @@ void AbstractDD::display()
 {
    char buf[256] = "/tmp/dotfile-XXXXXXX";
    mkstemp(buf);
-   std::cout << "temporary file name: " << buf << '\n';   
    std::ofstream out(buf);
    std::string base = buf;
    base = base + ".pdf";
@@ -161,10 +132,8 @@ void AbstractDD::display()
 void AbstractDD::computeBest()
 {
    Heap<DNode,DNode> h(_mem,1000);
-   for(ANode::Ptr n : _an) {
+   for(ANode::Ptr n : _an) 
       h.insert({n,n->nbParents()});
-      std::cout << *n << " #PAR:" << n->nbParents() << "\n";
-   }
    h.buildHeap();
    while (h.size() > 0) {
       auto n = h.extractMax();
@@ -189,3 +158,99 @@ void AbstractDD::computeBest()
    std::cout << "B@SINK:" << _trg->getBound() << std::endl;
 }
 
+// ----------------------------------------------------------------------
+// Exact DD Strategy
+
+void Exact::compute()
+{
+   auto root = _dd->init();
+   auto sink = _dd->target();
+   CQueue<ANode::Ptr> qn(32);
+   qn.enQueue(root);
+   while (!qn.empty()) {
+      auto p = qn.deQueue();
+      std::set<int> al {};
+      for(auto k = p->beginKids(); k != p->endKids();k++) 
+         al.insert((*k)->_lbl);
+      for(auto l : _dd->_labels) {
+         if (al.contains(l)) continue;
+         auto child = _dd->transition(p,l); // we get back a new node, or an already existing one.
+         if (child) {
+            const bool newNode = child->nbParents()==0; // is this a newly created node?
+            auto theCost = _dd->cost(p,l);
+            Edge::Ptr e = new (_dd->_mem) Edge(p,child,l);
+            e->_obj = theCost;
+            _dd->addArc(e); // connect to new node
+            if (_dd->neq(child,sink)) {
+               if (newNode)
+                  qn.enQueue(child);
+            }
+         }
+      }
+   }
+   _dd->computeBest();
+   _dd->print(std::cout);
+}
+
+void Restricted::truncate(std::vector<ANode::Ptr>& layer)
+{
+   auto from = layer.begin();
+   std::advance(from,_mxw);
+   for(auto start=from;start != layer.end();start++) {
+      (*start)->disconnect();
+      auto at = std::find(_dd->_an.begin(),_dd->_an.end(),*start);
+      _dd->_an.erase(at);
+   }
+   layer.erase(from,layer.end());
+}
+
+std::vector<ANode::Ptr> Restricted::pullLayer(CQueue<ANode::Ptr>& qn)
+{
+   ANode::Ptr n = qn.deQueue();
+   std::vector<ANode::Ptr> lk {};
+   const unsigned cL = n->getLayer();
+   lk.push_back(n);
+   while(!qn.empty()) {
+      if (qn.peek()->getLayer() != cL)
+         break;
+      n = qn.deQueue();
+      lk.push_back(n);         
+   }
+   return lk;
+}
+
+void Restricted::compute()
+{
+   auto root = _dd->init();
+   auto sink = _dd->target();
+   CQueue<ANode::Ptr> qn(32);
+   root->setLayer(0);
+   qn.enQueue(root);
+   while (!qn.empty()) {
+      std::vector<ANode::Ptr> lk = pullLayer(qn); // We have in lk the queue content for layer cL
+      if (lk.size() > _mxw) 
+         truncate(lk);
+      for(auto p : lk) { // loop over layer lk. p is a "parent" node.
+         std::set<int> remLabels = _dd->_labels; // deep copy
+         for(auto k = p->beginKids(); k != p->endKids();k++) 
+            remLabels.erase((*k)->_lbl);
+         for(auto l : remLabels) {
+            auto child = _dd->transition(p,l); // we get back a new node, or an already existing one.
+            if (child) {
+               const bool newNode = child->nbParents()==0; // is this a newly created node?
+               auto theCost = _dd->cost(p,l);
+               Edge::Ptr e = new (_dd->_mem) Edge(p,child,l);
+               e->_obj = theCost;
+               _dd->addArc(e); // connect to new node
+               if (_dd->neq(child,sink)) {
+                  if (newNode)
+                     qn.enQueue(child);
+               }
+               child->setLayer(std::max(child->getLayer(),p->getLayer()+1));
+            }            
+         }
+      }
+   }
+   _dd->computeBest();
+   _dd->print(std::cout);   
+}

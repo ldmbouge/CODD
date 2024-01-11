@@ -39,6 +39,7 @@ protected:
    Vec<Edge::Ptr,unsigned> _parents;
    Vec<Edge::Ptr,unsigned> _children;
    double                  _bound;
+   unsigned                _layer; // will be used in restricted / (relaxed?)
    void addArc(Edge::Ptr ep);
 public:
    friend class AbstractDD;
@@ -46,6 +47,8 @@ public:
    ANode(Pool::Ptr mem) : _parents(mem,2),_children(mem,2) {}
    virtual ~ANode() {}
    virtual void print(std::ostream& os) const = 0;
+   void setLayer(unsigned l) {  _layer = l;}
+   auto getLayer() const   { return _layer;} 
    auto nbParents() const  { return _parents.size();}
    auto nbChildren() const { return _children.size();}
    auto beginPar()  { return _parents.begin();}
@@ -54,6 +57,7 @@ public:
    auto endKids()   { return _children.end();}
    void setBound(double b) { _bound = b;}
    const auto getBound() const { return _bound;}
+   void disconnect();
    friend std::ostream& operator<<(std::ostream& os,const ANode& s);
 };
 

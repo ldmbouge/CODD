@@ -62,8 +62,8 @@ public:
          _v._sz = _at + 1;
          return *this;
       }
-      operator T() const noexcept   { return _v[_at];}
-      T operator->() const noexcept { return _v[_at];}
+      operator T() const noexcept   { return _v._data[_at];}
+      T operator->() const noexcept { return _v._data[_at];}
    };
 
    //Vec() : _mem(nullptr),_sz(0),_msz(0),_data(nullptr) {}

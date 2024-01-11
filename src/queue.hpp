@@ -118,6 +118,11 @@ public:
          return T();
       }
    }
+   T peek() {
+      if (_enter != _exit) 
+         return _data[_exit]->_val;
+      else return T();
+   }
    bool retract(const T& val) {
       assert(_cnt > 0);
       int cur = _exit;

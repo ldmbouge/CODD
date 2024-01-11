@@ -21,6 +21,15 @@ template <class T> std::ostream& operator<<(std::ostream& os,const std::set<T>& 
    return os << "}";
 }
 
+template<class T> struct std::hash<std::set<T>> {
+   std::size_t operator()(const std::set<T>& v) const noexcept {
+      std::size_t ttl = 0;
+      for(auto e : v)
+         ttl = (ttl << 3) | std::hash<T>{}(e);
+      return ttl;
+   }
+};
+
 template <typename T>
 std::set<T> operator|(const std::set<T>& s1,const std::set<T>& s2)
 {

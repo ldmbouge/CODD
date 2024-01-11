@@ -8,6 +8,7 @@
 #include <set>
 #include "hashtable.hpp"
 
+class Strategy;
 
 class AbstractDD {
 protected:
@@ -17,6 +18,10 @@ protected:
    std::set<int> _labels;
    std::vector<ANode::Ptr> _an;
    void addArc(Edge::Ptr e);
+   friend class Exact;
+   friend class Restricted;
+private:
+   Strategy* _strat;
 protected:
    virtual bool eq(ANode::Ptr f,ANode::Ptr s) const = 0;
    virtual bool neq(ANode::Ptr f,ANode::Ptr s) const = 0;
@@ -36,7 +41,36 @@ public:
    virtual double cost(ANode::Ptr src,int label) = 0;
    void compute();
    void print(std::ostream& os);
+   void setStrategy(Strategy* s) {
+      _strat = s;
+   }
 };
+
+class Strategy {
+protected:
+   AbstractDD::Ptr _dd;
+public:
+   Strategy(AbstractDD::Ptr dd) : _dd(dd) {}
+   virtual void compute() {}
+};
+
+class Exact:public Strategy {
+public:
+   Exact(AbstractDD::Ptr const dd) : Strategy(dd) {}
+   void compute();
+};
+
+template <class T> class CQueue;
+
+class Restricted: public Strategy {
+   const unsigned _mxw;
+   std::vector<ANode::Ptr> pullLayer(CQueue<ANode::Ptr>& q);
+   void truncate(std::vector<ANode::Ptr>& layer);
+public:
+   Restricted(AbstractDD::Ptr const dd,const unsigned mxw) : Strategy(dd),_mxw(mxw) {}
+   void compute();
+};
+
    
 template <typename ST,
           class Compare = std::less<double>,
@@ -82,14 +116,15 @@ private:
       else {
          auto value = new (_mem) Node<ST>(_mem,std::move(state));
          _nmap.insert(value->get(),value);
+         _an.push_back(value);
          return value;
       }
    }
    ANode::Ptr init() {
-      return makeNode(_sti());
+      return _root = makeNode(_sti());
    }
    ANode::Ptr target() {
-      return makeNode(_stt());
+      return _trg = makeNode(_stt());
    }
    ANode::Ptr transition(ANode::Ptr src,int label) {
       auto op = dynamic_cast<const Node<ST>*>(src.get());
