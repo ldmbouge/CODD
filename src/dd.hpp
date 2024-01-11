@@ -18,8 +18,10 @@ protected:
    std::set<int> _labels;
    std::vector<ANode::Ptr> _an;
    void addArc(Edge::Ptr e);
+   friend class Strategy;
    friend class Exact;
    friend class Restricted;
+   friend class Relaxed;
 private:
    Strategy* _strat;
 protected:
@@ -41,22 +43,22 @@ public:
    virtual double cost(ANode::Ptr src,int label) = 0;
    void compute();
    void print(std::ostream& os);
-   void setStrategy(Strategy* s) {
-      _strat = s;
-   }
+   void setStrategy(Strategy* s);
 };
 
 class Strategy {
 protected:
-   AbstractDD::Ptr _dd;
+   AbstractDD* _dd;
+   friend class AbstractDD;
+   std::set<int> remainingLabels(ANode::Ptr p);
 public:
-   Strategy(AbstractDD::Ptr dd) : _dd(dd) {}
+   Strategy() : _dd(nullptr) {}
    virtual void compute() {}
 };
 
 class Exact:public Strategy {
 public:
-   Exact(AbstractDD::Ptr const dd) : Strategy(dd) {}
+   Exact() : Strategy() {}
    void compute();
 };
 
@@ -67,7 +69,14 @@ class Restricted: public Strategy {
    std::vector<ANode::Ptr> pullLayer(CQueue<ANode::Ptr>& q);
    void truncate(std::vector<ANode::Ptr>& layer);
 public:
-   Restricted(AbstractDD::Ptr const dd,const unsigned mxw) : Strategy(dd),_mxw(mxw) {}
+   Restricted(const unsigned mxw) : Strategy(),_mxw(mxw) {}
+   void compute();
+};
+
+class Relaxed :public Strategy {
+   const unsigned _mxw;
+public:
+   Relaxed(const unsigned mxw) : Strategy(),_mxw(mxw) {}
    void compute();
 };
 

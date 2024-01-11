@@ -40,11 +40,12 @@ protected:
    Vec<Edge::Ptr,unsigned> _children;
    double                  _bound;
    unsigned                _layer; // will be used in restricted / (relaxed?)
+   Vec<int,unsigned>       _optLabels;
    void addArc(Edge::Ptr ep);
 public:
    friend class AbstractDD;
    typedef handle_ptr<ANode> Ptr;
-   ANode(Pool::Ptr mem) : _parents(mem,2),_children(mem,2) {}
+   ANode(Pool::Ptr mem) : _parents(mem,2),_children(mem,2),_optLabels(mem) {}
    virtual ~ANode() {}
    virtual void print(std::ostream& os) const = 0;
    void setLayer(unsigned l) {  _layer = l;}

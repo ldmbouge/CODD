@@ -20,6 +20,7 @@
 #include <iterator>
 #include "store.hpp"
 #include <assert.h>
+#include <iostream>
 
 template <class T,typename SZT = std::size_t> class Vec {
    Pool::Ptr    _mem;
@@ -71,10 +72,25 @@ public:
       : _mem(mem),_sz(0),_msz(s) {      
       _data = (_msz > 0) ? new (mem) T[_msz] : nullptr;
    }
+   Vec(const Vec& v2) : _mem(v2._mem),_sz(v2._sz),_msz(v2._msz) {
+      _data = (_msz > 0) ? new (_mem) T[_msz] : nullptr;
+      for(auto i=0u;i < _sz;i++)
+         _data[i] = v2._data[i];
+   }
    Vec(Vec&& v)
       : _mem(v._mem),_sz(v._sz),_msz(v._msz),
         _data(std::move(v._data))
    {}
+   Vec& operator=(const Vec& v) {
+      if (_msz < v._msz) {
+         _data = (v._msz > 0) ? new (_mem) T[v._msz] : nullptr;
+         _msz =  v._msz;
+      }
+      for(auto i=0u;i < v._sz;i++)
+         _data[i] = v._data[i];
+      _sz = v._sz;
+      return *this;
+   }
    Vec& operator=(Vec&& s) {
       _mem = std::move(s._mem);
       _sz = s._sz;
@@ -156,6 +172,17 @@ public:
    const_iterator cend()   const { return const_iterator(_data,_sz);}
    reverse_iterator crbegin() const { return reverse_iterator(cend());}
    reverse_iterator crend()   const { return reverse_iterator(cbegin());}
+   friend std::ostream& operator<<(std::ostream& os,const Vec<T,SZT>& v) {
+      os << "[";
+      for(auto i = 0u;i < v._sz;i++) {
+         os << v[i];
+         if (i < v._sz-1)
+            os << ',';
+      }
+      return os << "]";
+   }
 };
+
+
 
 #endif

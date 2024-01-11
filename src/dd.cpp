@@ -9,6 +9,7 @@
 #include "heap.hpp"
 #include "queue.hpp"
 
+
 AbstractDD::~AbstractDD()
 {
    std::cout << "AbstractDD::~AbstractDD(" << this << ")\n";
@@ -29,6 +30,12 @@ void printMe(ANode* n)
 {
    n->print(std::cout);
    std::cout << std::endl;
+}
+
+void AbstractDD::setStrategy(Strategy* s)
+{
+   _strat = s;
+   _strat->_dd = this;
 }
 
 void AbstractDD::compute()
@@ -143,6 +150,10 @@ void AbstractDD::computeBest()
          std::cout << "EDGE:" << *e << std::endl;
          auto ep = e->_from->_bound + e->_obj;
          cur = better(cur,ep);
+         if (cur==ep) {
+            n.node->_optLabels = e->_from->_optLabels;
+            n.node->_optLabels.push_back(e->_lbl);
+         }
       }
       std::cout << "\tCOMPUTED:" << cur << " for ";
       n.node->print(std::cout);
@@ -155,11 +166,20 @@ void AbstractDD::computeBest()
          h.decrease(at);
       }
    }
-   std::cout << "B@SINK:" << _trg->getBound() << std::endl;
+   std::cout << "B@SINK:" << _trg->getBound() << "\tLBL:" << _trg->_optLabels << std::endl;
 }
 
 // ----------------------------------------------------------------------
 // Exact DD Strategy
+
+std::set<int> Strategy::remainingLabels(ANode::Ptr p)
+{
+   std::set<int> remLabels = _dd->_labels; // deep copy
+   for(auto k = p->beginKids(); k != p->endKids();k++) 
+      remLabels.erase((*k)->_lbl);
+   return remLabels;
+}
+
 
 void Exact::compute()
 {
@@ -169,11 +189,8 @@ void Exact::compute()
    qn.enQueue(root);
    while (!qn.empty()) {
       auto p = qn.deQueue();
-      std::set<int> al {};
-      for(auto k = p->beginKids(); k != p->endKids();k++) 
-         al.insert((*k)->_lbl);
-      for(auto l : _dd->_labels) {
-         if (al.contains(l)) continue;
+      std::set<int> remLabels = remainingLabels(p);
+      for(auto l : remLabels) {     
          auto child = _dd->transition(p,l); // we get back a new node, or an already existing one.
          if (child) {
             const bool newNode = child->nbParents()==0; // is this a newly created node?
@@ -191,6 +208,9 @@ void Exact::compute()
    _dd->computeBest();
    _dd->print(std::cout);
 }
+
+// ----------------------------------------------------------------------
+// Restricted DD Strategy
 
 void Restricted::truncate(std::vector<ANode::Ptr>& layer)
 {
@@ -231,9 +251,7 @@ void Restricted::compute()
       if (lk.size() > _mxw) 
          truncate(lk);
       for(auto p : lk) { // loop over layer lk. p is a "parent" node.
-         std::set<int> remLabels = _dd->_labels; // deep copy
-         for(auto k = p->beginKids(); k != p->endKids();k++) 
-            remLabels.erase((*k)->_lbl);
+         std::set<int> remLabels = remainingLabels(p);
          for(auto l : remLabels) {
             auto child = _dd->transition(p,l); // we get back a new node, or an already existing one.
             if (child) {
@@ -253,4 +271,11 @@ void Restricted::compute()
    }
    _dd->computeBest();
    _dd->print(std::cout);   
+}
+
+// ----------------------------------------------------------------------
+// Relaxed DD Strategy
+
+void Relaxed::compute()
+{
 }
