@@ -5,6 +5,22 @@
 #include <vector>
 #include <tuple>
 #include <set>
+#include <limits>
+
+namespace std {
+   template <class T> T min(const set<T>& s) {
+      if (s.size() > 0)
+         return *s.begin();
+      else 
+         return numeric_limits<T>::max();
+   }
+   template <class T> T max(const set<T>& s) {
+      if (s.size() > 0)
+         return *(s.rbegin());
+      else 
+         return numeric_limits<T>::min();
+   }
+};
 
 template <class T> std::ostream& operator<<(std::ostream& os,const std::vector<T>& msg) {
    os << '[';

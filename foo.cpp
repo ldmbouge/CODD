@@ -6,27 +6,28 @@
 
 struct MISP {
    std::set<int> sel;
-   int           e;
+   //int           e;
    friend std::ostream& operator<<(std::ostream& os,const MISP& m) {
-      return os << "<" << m.sel << "," << m.e << ">";
+      return os << "<" << m.sel << ">";
    }
 };
 
 template<> struct std::equal_to<MISP> {
    constexpr bool operator()(const MISP& s1,const MISP& s2) const {
-      return s1.sel == s2.sel && s1.e == s2.e;
+      return s1.sel == s2.sel;// && s1.e == s2.e;
    }
 };
 
 template<> struct std::not_equal_to<MISP> {
    constexpr bool operator()(const MISP& s1,const MISP& s2) const {
-      return s1.sel != s2.sel || s1.e != s2.e;
+      return s1.sel != s2.sel;// || s1.e != s2.e;
    }
 };
 
 template<> struct std::hash<MISP> {
    std::size_t operator()(const MISP& v) const noexcept {
-      return (std::hash<std::set<int>>{}(v.sel) << 32) | std::hash<int>{}(v.e);
+      //return (std::hash<std::set<int>>{}(v.sel) << 32) | std::hash<int>{}(v.e);
+      return std::hash<std::set<int>>{}(v.sel);
    }
 };
 
@@ -65,29 +66,29 @@ int main()
       std::set<int> U {};
       for(int i=1;i < top;i++)
          U.insert(i);
-      return MISP { U, -1 };
+      return MISP { U };
    };
    const auto myTarget = []() {    // The sink state
-      return MISP { std::set<int> {}, -1 };
+      return MISP { std::set<int> {} };
    };
    auto myStf = [top,&neighbors](const MISP& s,int label) -> std::optional<MISP> { // transition function
       if (label == top)
-         return MISP { std::set<int> {}, -1}; // head to sink
+         return MISP { std::set<int> {}}; // head to sink
       else if (s.sel.contains(label)) {
          std::set<int> ns = s.sel;         
          for(int i=1;i< label;i++)
             ns.erase(i);
          for(auto ngh : neighbors[label])
             ns.erase(ngh);
-         return MISP {ns,(ns.size()==0) ? -1 : label}; // normal new state
+         return MISP {ns}; // normal new state
       } else return std::nullopt;  // return the empty optional 
    };
    const auto scf = [top](const MISP& s,int label) { // cost function (no cost on last arc to sink)
       return (label == top) ? 0 : weight[label];
    };
    const auto smf = [](const MISP& s1,const MISP& s2) -> std::optional<MISP> { // merge function
-      if (s1.e == s2.e)
-         return MISP {s1.sel & s2.sel,s1.e};
+      if (std::max(s1.sel) == std::max(s2.sel))
+         return MISP {s1.sel & s2.sel};
       else return std::nullopt; // return  the empty optional
    };
 
@@ -115,8 +116,20 @@ int main()
                    decltype(scf),
                    decltype(smf)
                    >::makeDD(&mine,myInit,myTarget,myStf,scf,smf,labels);
-   myrDD->setStrategy(new Restricted(2));
+   myrDD->setStrategy(new Restricted(1));
    myrDD->compute();
+
+   std::cout << "relaxed\n"; 
+   auto mylDD = DD<MISP,
+                   std::greater<double>, // to maximize
+                   decltype(myInit), 
+                   decltype(myTarget), // MISP(*)(),
+                   decltype(myStf),
+                   decltype(scf),
+                   decltype(smf)
+                   >::makeDD(&mine,myInit,myTarget,myStf,scf,smf,labels);
+   mylDD->setStrategy(new Relaxed(1));
+   mylDD->compute();
 
    return 0;
 }

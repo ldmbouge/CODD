@@ -38,18 +38,23 @@ class ANode {
 protected:
    Vec<Edge::Ptr,unsigned> _parents;
    Vec<Edge::Ptr,unsigned> _children;
-   double                  _bound;
-   unsigned                _layer; // will be used in restricted / (relaxed?)
    Vec<int,unsigned>       _optLabels;
+   double                  _bound;
+   unsigned                _layer:31; // will be used in restricted / (relaxed?)
+   unsigned                _exact:1;  // true if node is exact
    void addArc(Edge::Ptr ep);
 public:
    friend class AbstractDD;
    typedef handle_ptr<ANode> Ptr;
-   ANode(Pool::Ptr mem) : _parents(mem,2),_children(mem,2),_optLabels(mem) {}
+   ANode(Pool::Ptr mem) : _parents(mem,2),_children(mem,2),_optLabels(mem),_bound(0),_layer(0),_exact(1) {}
    virtual ~ANode() {}
    virtual void print(std::ostream& os) const = 0;
+   void clearParents() { _parents.clear();}
+   void clearKids() { _children.clear();}
    void setLayer(unsigned l) {  _layer = l;}
-   auto getLayer() const   { return _layer;} 
+   auto getLayer() const   { return _layer;}
+   void setExact(bool ex)  { _exact = ex;}
+   auto isExact() const    { return _exact == 1;}
    auto nbParents() const  { return _parents.size();}
    auto nbChildren() const { return _children.size();}
    auto beginPar()  { return _parents.begin();}

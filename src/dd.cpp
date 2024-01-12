@@ -93,12 +93,12 @@ void AbstractDD::saveGraph(std::ostream& os)
    for(ANode::Ptr n : _an) 
       h.insert({n,n->nbParents()});   
    h.buildHeap();
-   std::string colors[2] = {"green","red"};
+   std::string colors[2] = {"red","green"};
    os << "digraph MDD {" << std::endl;
    os << " node [style=filled gradientangle=270];\n"; 
    while (h.size() > 0) {
       auto cur = h.extractMax();
-      os << "\"" << *cur.node << "\" [color=\"" << colors[0] << "\"];\n";      
+      os << "\"" << *cur.node << "\" [color=\"" << colors[cur.node->isExact()] << "\"];\n";      
       for(auto ki = cur.node->beginKids(); ki != cur.node->endKids();ki++) {
          Edge::Ptr k = *ki;
          auto at = h.find({k->_to,0});
@@ -209,10 +209,10 @@ void Exact::compute()
    _dd->print(std::cout);
 }
 
-std::vector<ANode::Ptr> WidthBounded::pullLayer(CQueue<ANode::Ptr>& qn)
+std::list<ANode::Ptr> WidthBounded::pullLayer(CQueue<ANode::Ptr>& qn)
 {
    ANode::Ptr n = qn.deQueue();
-   std::vector<ANode::Ptr> lk {};
+   std::list<ANode::Ptr> lk {};
    const unsigned cL = n->getLayer();
    lk.push_back(n);
    while(!qn.empty()) {
@@ -227,7 +227,7 @@ std::vector<ANode::Ptr> WidthBounded::pullLayer(CQueue<ANode::Ptr>& qn)
 // ----------------------------------------------------------------------
 // Restricted DD Strategy
 
-void Restricted::truncate(std::vector<ANode::Ptr>& layer)
+void Restricted::truncate(std::list<ANode::Ptr>& layer)
 {
    auto from = layer.begin();
    std::advance(from,_mxw);
@@ -247,7 +247,7 @@ void Restricted::compute()
    root->setLayer(0);
    qn.enQueue(root);
    while (!qn.empty()) {
-      std::vector<ANode::Ptr> lk = pullLayer(qn); // We have in lk the queue content for layer cL
+      std::list<ANode::Ptr> lk = pullLayer(qn); // We have in lk the queue content for layer cL
       if (lk.size() > _mxw) 
          truncate(lk);
       for(auto p : lk) { // loop over layer lk. p is a "parent" node.
@@ -276,9 +276,64 @@ void Restricted::compute()
 // ----------------------------------------------------------------------
 // Relaxed DD Strategy
 
-void Relaxed::mergeLayer(std::vector<ANode::Ptr>& layer)
+void Relaxed::transferArcs(ANode::Ptr donor,ANode::Ptr receiver)
 {
-   
+   for(auto ei = donor->beginPar(); ei != donor->endPar();ei++) {
+      auto ep = *ei;
+      Edge::Ptr ne = new (_dd->_mem) Edge(ep->_from,receiver,ep->_lbl);
+      ne->_obj = ep->_obj;
+      _dd->addArc(ne);      
+   }
+   for(auto ei = donor->beginKids(); ei != donor->endKids();ei++) {
+      auto ep = *ei;
+      Edge::Ptr ne = new (_dd->_mem) Edge(receiver,ep->_to,ep->_lbl);
+      ne->_obj = ep->_obj;
+      _dd->addArc(ne);      
+   }
+   donor->disconnect();
+}
+
+std::list<ANode::Ptr> Relaxed::mergeLayer(std::list<ANode::Ptr>& layer)
+{
+   const auto mergesNeeded = layer.size() - _mxw;
+   auto mergesDone = 0u;
+   std::list<ANode::Ptr> delayed;
+   std::list<ANode::Ptr> final;
+   while (mergesDone < mergesNeeded && layer.size() > 0) {
+      ANode::Ptr n1 = layer.front();
+      layer.pop_front();
+      std::list<ANode::Ptr> toMerge = {n1};
+      ANode::Ptr mNode = nullptr;
+      bool newNode = true;
+      for(auto i = layer.begin();i != layer.end();i++) {
+         auto n2 = *i;
+         assert(n1->getLayer() == n2->getLayer());
+         mNode = _dd->merge(n1,n2);
+         if (mNode) {
+            toMerge.push_back(n2);
+            layer.erase(i);
+            break;
+         }
+      }
+      if (toMerge.size() == 2) {
+         mergesDone++;
+         newNode = mNode->nbParents()==0; // is this a newly created node?
+         const bool sameLayer = mNode->getLayer() == n1->getLayer();
+         mNode->setLayer(std::max(mNode->getLayer(),n1->getLayer()));
+         mNode->setExact(false);
+         for(auto d : toMerge) {
+            if (d == mNode) continue; // skip in case the node itself is the merged one
+            transferArcs(d,mNode);
+            auto at = std::find(_dd->_an.begin(),_dd->_an.end(),d);
+            _dd->_an.erase(at);
+         }
+         if (sameLayer) //   newNode && 
+            layer.push_back(mNode);
+         else delayed.push_back(mNode);
+      } else final.push_back(n1);
+   }
+   layer.insert(layer.end(),final.begin(),final.end());
+   return delayed;
 }
 
 void Relaxed::compute()
@@ -289,9 +344,12 @@ void Relaxed::compute()
    root->setLayer(0);
    qn.enQueue(root);
    while (!qn.empty()) {
-      std::vector<ANode::Ptr> lk = pullLayer(qn); // We have in lk the queue content for layer cL
+      std::list<ANode::Ptr> lk = pullLayer(qn); // We have in lk the queue content for layer cL
+      std::list<ANode::Ptr> delay;
       if (lk.size() > _mxw) 
-         mergeLayer(lk);
+         delay = mergeLayer(lk);
+      for(auto p : delay)
+         qn.enQueue(p);
       for(auto p : lk) { // loop over layer lk. p is a "parent" node.
          std::set<int> remLabels = remainingLabels(p);
          for(auto l : remLabels) {

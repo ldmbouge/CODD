@@ -4,6 +4,7 @@
 #include <algorithm>
 #include "node.hpp"
 #include <vector>
+#include <list>
 #include <optional>
 #include <set>
 #include "hashtable.hpp"
@@ -67,20 +68,21 @@ template <class T> class CQueue;
 class WidthBounded :public Strategy {
 protected:
    const unsigned _mxw;
-   std::vector<ANode::Ptr> pullLayer(CQueue<ANode::Ptr>& q);
+   std::list<ANode::Ptr> pullLayer(CQueue<ANode::Ptr>& q);
 public:
    WidthBounded(const unsigned mxw) : Strategy(),_mxw(mxw) {}
 };
 
 class Restricted: public WidthBounded {
-   void truncate(std::vector<ANode::Ptr>& layer);
+   void truncate(std::list<ANode::Ptr>& layer);
 public:
    Restricted(const unsigned mxw) : WidthBounded(mxw) {}
    void compute();
 };
 
 class Relaxed :public WidthBounded {
-   void mergeLayer(std::vector<ANode::Ptr>& layer);
+   void transferArcs(ANode::Ptr donor,ANode::Ptr receiver);
+   std::list<ANode::Ptr> mergeLayer(std::list<ANode::Ptr>& layer);
 public:
    Relaxed(const unsigned mxw) : WidthBounded(mxw) {}
    void compute();
@@ -123,13 +125,15 @@ private:
       auto v = gr ? std::numeric_limits<double>::min() : std::numeric_limits<double>::max();
       return v;
    }
-   ANode::Ptr makeNode(ST&& state) {
+   ANode::Ptr makeNode(ST&& state,bool pExact = true) {
       ANode::Ptr at = nullptr;
       auto inMap = _nmap.get(state,at);
-      if (inMap)
+      if (inMap) {
+         at->setExact(at->isExact() & pExact);
          return at;
-      else {
+      } else {
          auto value = new (_mem) Node<ST>(_mem,std::move(state));
+         value->setExact(pExact);
          _nmap.insert(value->get(),value);
          _an.push_back(value);
          return value;
@@ -145,7 +149,7 @@ private:
       auto op = dynamic_cast<const Node<ST>*>(src.get());
       auto vs = _stf(op->get(),label);
       if (vs.has_value())
-         return makeNode(std::move(vs.value()));
+         return makeNode(std::move(vs.value()),src->isExact());
       else return nullptr;
    }
    double cost(ANode::Ptr src,int label) {
