@@ -64,19 +64,25 @@ public:
 
 template <class T> class CQueue;
 
-class Restricted: public Strategy {
+class WidthBounded :public Strategy {
+protected:
    const unsigned _mxw;
    std::vector<ANode::Ptr> pullLayer(CQueue<ANode::Ptr>& q);
+public:
+   WidthBounded(const unsigned mxw) : Strategy(),_mxw(mxw) {}
+};
+
+class Restricted: public WidthBounded {
    void truncate(std::vector<ANode::Ptr>& layer);
 public:
-   Restricted(const unsigned mxw) : Strategy(),_mxw(mxw) {}
+   Restricted(const unsigned mxw) : WidthBounded(mxw) {}
    void compute();
 };
 
-class Relaxed :public Strategy {
-   const unsigned _mxw;
+class Relaxed :public WidthBounded {
+   void mergeLayer(std::vector<ANode::Ptr>& layer);
 public:
-   Relaxed(const unsigned mxw) : Strategy(),_mxw(mxw) {}
+   Relaxed(const unsigned mxw) : WidthBounded(mxw) {}
    void compute();
 };
 

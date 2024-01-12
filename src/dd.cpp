@@ -209,6 +209,21 @@ void Exact::compute()
    _dd->print(std::cout);
 }
 
+std::vector<ANode::Ptr> WidthBounded::pullLayer(CQueue<ANode::Ptr>& qn)
+{
+   ANode::Ptr n = qn.deQueue();
+   std::vector<ANode::Ptr> lk {};
+   const unsigned cL = n->getLayer();
+   lk.push_back(n);
+   while(!qn.empty()) {
+      if (qn.peek()->getLayer() != cL)
+         break;
+      n = qn.deQueue();
+      lk.push_back(n);         
+   }
+   return lk;
+}
+
 // ----------------------------------------------------------------------
 // Restricted DD Strategy
 
@@ -222,21 +237,6 @@ void Restricted::truncate(std::vector<ANode::Ptr>& layer)
       _dd->_an.erase(at);
    }
    layer.erase(from,layer.end());
-}
-
-std::vector<ANode::Ptr> Restricted::pullLayer(CQueue<ANode::Ptr>& qn)
-{
-   ANode::Ptr n = qn.deQueue();
-   std::vector<ANode::Ptr> lk {};
-   const unsigned cL = n->getLayer();
-   lk.push_back(n);
-   while(!qn.empty()) {
-      if (qn.peek()->getLayer() != cL)
-         break;
-      n = qn.deQueue();
-      lk.push_back(n);         
-   }
-   return lk;
 }
 
 void Restricted::compute()
@@ -276,6 +276,41 @@ void Restricted::compute()
 // ----------------------------------------------------------------------
 // Relaxed DD Strategy
 
+void Relaxed::mergeLayer(std::vector<ANode::Ptr>& layer)
+{
+   
+}
+
 void Relaxed::compute()
 {
+   auto root = _dd->init();
+   auto sink = _dd->target();
+   CQueue<ANode::Ptr> qn(32);
+   root->setLayer(0);
+   qn.enQueue(root);
+   while (!qn.empty()) {
+      std::vector<ANode::Ptr> lk = pullLayer(qn); // We have in lk the queue content for layer cL
+      if (lk.size() > _mxw) 
+         mergeLayer(lk);
+      for(auto p : lk) { // loop over layer lk. p is a "parent" node.
+         std::set<int> remLabels = remainingLabels(p);
+         for(auto l : remLabels) {
+            auto child = _dd->transition(p,l); // we get back a new node, or an already existing one.
+            if (child) {
+               const bool newNode = child->nbParents()==0; // is this a newly created node?
+               auto theCost = _dd->cost(p,l);
+               Edge::Ptr e = new (_dd->_mem) Edge(p,child,l);
+               e->_obj = theCost;
+               _dd->addArc(e); // connect to new node
+               if (_dd->neq(child,sink)) {
+                  if (newNode)
+                     qn.enQueue(child);
+               }
+               child->setLayer(std::max(child->getLayer(),p->getLayer()+1));
+            }            
+         }
+      }
+   }
+   _dd->computeBest();
+   _dd->print(std::cout);         
 }
