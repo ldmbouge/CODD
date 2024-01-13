@@ -64,9 +64,9 @@ struct DNode {
 };
 
 
-void AbstractDD::print(std::ostream& os)
+void AbstractDD::print(std::ostream& os,std::string gLabel)
 {
-   display();
+   display(gLabel);
    std::cout << "PRINTING: --------------------------------------------------\n";
    Heap<DNode,DNode> h(_mem,1000);
    for(ANode::Ptr n : _an) {
@@ -87,7 +87,7 @@ void AbstractDD::print(std::ostream& os)
 }
 
 
-void AbstractDD::saveGraph(std::ostream& os)
+void AbstractDD::saveGraph(std::ostream& os,std::string gLabel)
 {
    Heap<DNode,DNode> h(_mem,1000);
    for(ANode::Ptr n : _an) 
@@ -95,6 +95,7 @@ void AbstractDD::saveGraph(std::ostream& os)
    h.buildHeap();
    std::string colors[2] = {"red","green"};
    os << "digraph MDD {" << std::endl;
+   os << "label=\"" << gLabel << "\";\n"; 
    os << " node [style=filled gradientangle=270];\n"; 
    while (h.size() > 0) {
       auto cur = h.extractMax();
@@ -112,14 +113,14 @@ void AbstractDD::saveGraph(std::ostream& os)
    os << "}" << std::endl;
 }
 
-void AbstractDD::display()
+void AbstractDD::display(std::string gLabel)
 {
    char buf[256] = "/tmp/dotfile-XXXXXXX";
    mkstemp(buf);
    std::ofstream out(buf);
    std::string base = buf;
    base = base + ".pdf";
-   saveGraph(out);
+   saveGraph(out,gLabel);
    out.close();
    pid_t child = fork();
    if (child == 0) {
@@ -206,7 +207,7 @@ void Exact::compute()
       }
    }
    _dd->computeBest();
-   _dd->print(std::cout);
+   _dd->print(std::cout,"Exact");
 }
 
 std::list<ANode::Ptr> WidthBounded::pullLayer(CQueue<ANode::Ptr>& qn)
@@ -270,7 +271,7 @@ void Restricted::compute()
       }
    }
    _dd->computeBest();
-   _dd->print(std::cout);   
+   _dd->print(std::cout,"Restricted");   
 }
 
 // ----------------------------------------------------------------------
@@ -370,5 +371,5 @@ void Relaxed::compute()
       }
    }
    _dd->computeBest();
-   _dd->print(std::cout);         
+   _dd->print(std::cout,"Relaxed");         
 }

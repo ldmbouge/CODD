@@ -31,8 +31,8 @@ protected:
    virtual double better(double obj1,double obj2) const = 0;
    virtual double initialBest() const = 0;
    void computeBest();
-   void saveGraph(std::ostream& os);
-   void display();
+   void saveGraph(std::ostream& os,std::string gLabel);
+   void display(std::string gLabel);
 public:
    typedef std::shared_ptr<AbstractDD> Ptr;
    AbstractDD(Pool::Ptr p,const std::set<int>& labels) : _mem(p),_labels(labels) {}
@@ -43,7 +43,7 @@ public:
    virtual ANode::Ptr merge(const ANode::Ptr first,const ANode::Ptr snd) = 0;
    virtual double cost(ANode::Ptr src,int label) = 0;
    void compute();
-   void print(std::ostream& os);
+   void print(std::ostream& os,std::string gLabel);
    void setStrategy(Strategy* s);
 };
 
