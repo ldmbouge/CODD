@@ -1,4 +1,43 @@
-* Command to create a GCM for an import
+* C++DDOpt
+
+C++ library implement the DDOpt framework.
+It has:
+- restricted / exact / relax diagrams
+- state definition, initial, terminal and state merging functions separated
+
+** Dependencies
+You need ~graphviz~ (The ~dot~ binary) to create graph images. It happens
+automatically when the ~display~ method is called. Temporary files are created
+in ~/tmp~ and the macOS ~open~ command is used (via ~fork/execlp~)  to open the generated
+PDF.
+
+** C++ Standard
+You need a C++-20 capable compiler. gcc and clang should both work. I work on macOS, os
+I use the mainline clang coming with Xcode.
+
+The implementation uses templates and concepts to factor the code.
+
+** Build system
+This is ~cmake~. Simply do the following
+#+begin_src bash
+  mkdir build
+  cd build
+  cmake ..
+  make -j4
+#+end_src
+And it will compile the whole thing
+
+** Examples
+To be found in the ~examples~ folder
+
+** Unit test
+In the ~test~ folder
+
+** Library
+All of it in the ~src~ folder
+
+
+* Command to create a GCM for an import :noexport:
 Like 
 #+begin_src c++
   import iostream;

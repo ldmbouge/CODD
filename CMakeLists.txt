@@ -57,3 +57,15 @@ foreach (file ${tests})
 	add_dependencies(${base} ddOpt)  
 endforeach()
 
+file(GLOB examples "examples/*cpp")
+message("Tests: ${examples}")
+
+foreach (file ${examples})
+	get_filename_component(base ${file} NAME_WE)
+	get_filename_component(dir ${file} DIRECTORY)
+	message("BASE IS: [${base}]")
+	add_executable(${base} ${dir}/${base}.cpp)
+	target_link_libraries(${base} ddOpt)
+	add_dependencies(${base} ddOpt)  
+endforeach()
+
