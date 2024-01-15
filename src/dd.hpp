@@ -35,7 +35,7 @@ protected:
    void display(std::string gLabel);
 public:
    typedef std::shared_ptr<AbstractDD> Ptr;
-   AbstractDD(Pool::Ptr p,const std::set<int>& labels) : _mem(p),_labels(labels) {}
+   AbstractDD(const std::set<int>& labels);
    virtual ~AbstractDD();
    virtual ANode::Ptr init() = 0;
    virtual ANode::Ptr target() = 0;
@@ -166,14 +166,14 @@ private:
       else return nullptr;
    }
 public:
-   DD(Pool::Ptr p,IBL1 sti,IBL2 stt,STF stf,STC stc,SMF smf,const std::set<int>& labels)
-      : AbstractDD(p,labels),
+   DD(IBL1 sti,IBL2 stt,STF stf,STC stc,SMF smf,const std::set<int>& labels)
+      : AbstractDD(labels),
         _sti(sti),
         _stt(stt),
         _stf(stf),
         _stc(stc),
         _smf(smf),
-        _nmap(p,128)
+        _nmap(_mem,128)
    {}
    ~DD() {
       _nmap.clear();

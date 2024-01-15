@@ -69,13 +69,13 @@ int main()
    const auto myTarget = []() {    // The sink state
       return MISP { std::set<int> {} };
    };
-   auto myStf = [top,&neighbors](const MISP& s,int label) -> std::optional<MISP> {
+   auto myStf = [top,&neighbors](const MISP& s,const int label) -> std::optional<MISP> {
       if (label == top)
          return MISP { std::set<int> {}}; // head to sink
       else if (s.sel.contains(label)) {
          return MISP {
-            filter(s.sel,[label,&neighbors](int i) {
-               return i >= label && !neighbors[label].contains(i);
+            filter(s.sel,[label,nl = neighbors[label]](int i) {
+               return i >= label && !nl.contains(i);
             })
          };
       } else return std::nullopt;  // return the empty optional 
@@ -91,7 +91,6 @@ int main()
 
    std::cout << "LABELS:" << labels << "\n";
 
-   Pool mine;
    std::cout << "exact\n"; 
    auto myxDD = DD<MISP,
                    std::greater<double>, // to maximize
@@ -100,7 +99,7 @@ int main()
                    decltype(myStf),
                    decltype(scf),
                    decltype(smf)                   
-                   >::makeDD(&mine,myInit,myTarget,myStf,scf,smf,labels);
+                   >::makeDD(myInit,myTarget,myStf,scf,smf,labels);
    myxDD->setStrategy(new Exact);
    myxDD->compute();
 
@@ -112,7 +111,7 @@ int main()
                    decltype(myStf),
                    decltype(scf),
                    decltype(smf)
-                   >::makeDD(&mine,myInit,myTarget,myStf,scf,smf,labels);
+                   >::makeDD(myInit,myTarget,myStf,scf,smf,labels);
    myrDD->setStrategy(new Restricted(1));
    myrDD->compute();
 
@@ -124,7 +123,7 @@ int main()
                    decltype(myStf),
                    decltype(scf),
                    decltype(smf)
-                   >::makeDD(&mine,myInit,myTarget,myStf,scf,smf,labels);
+                   >::makeDD(myInit,myTarget,myStf,scf,smf,labels);
    mylDD->setStrategy(new Relaxed(1));
    mylDD->compute();
 

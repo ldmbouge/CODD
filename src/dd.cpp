@@ -9,6 +9,9 @@
 #include "heap.hpp"
 #include "queue.hpp"
 
+AbstractDD::AbstractDD(const std::set<int>& labels)
+   : _mem(new Pool),_labels(labels)
+{}
 
 AbstractDD::~AbstractDD()
 {
@@ -18,6 +21,7 @@ AbstractDD::~AbstractDD()
    _an.clear();
    _root = _trg = nullptr;
    _mem->clear();
+   delete _mem;
 }
 
 void AbstractDD::addArc(Edge::Ptr e)
