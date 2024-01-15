@@ -1,12 +1,15 @@
 #include "dd.hpp"
 #include "util.hpp"
+#include <concepts>
 #include <iostream>
 #include <set>
 #include <optional>
+#include <ranges>
+#include <algorithm>
+#include <map>
 
 struct MISP {
    std::set<int> sel;
-   //int           e;
    friend std::ostream& operator<<(std::ostream& os,const MISP& m) {
       return os << "<" << m.sel << ">";
    }
@@ -14,19 +17,18 @@ struct MISP {
 
 template<> struct std::equal_to<MISP> {
    constexpr bool operator()(const MISP& s1,const MISP& s2) const {
-      return s1.sel == s2.sel;// && s1.e == s2.e;
+      return s1.sel == s2.sel;
    }
 };
 
 template<> struct std::not_equal_to<MISP> {
    constexpr bool operator()(const MISP& s1,const MISP& s2) const {
-      return s1.sel != s2.sel;// || s1.e != s2.e;
+      return s1.sel != s2.sel;
    }
 };
 
 template<> struct std::hash<MISP> {
    std::size_t operator()(const MISP& v) const noexcept {
-      //return (std::hash<std::set<int>>{}(v.sel) << 32) | std::hash<int>{}(v.e);
       return std::hash<std::set<int>>{}(v.sel);
    }
 };
@@ -51,39 +53,34 @@ int main()
    };
    const auto labels = ns | std::set<int> { top };     // using a plain set for the labels
    constexpr const double weight[] = {0,3,4,2,2,7};    // plain array for the weights
-   std::vector<std::set<int>> neighbors(ns.size());    // computing the neigbhors using STL (not pretty) 
+   std::map<int,std::set<int>> neighbors {};  // computing the neigbhors using STL (not pretty)
    for(int i : ns) {
-      neighbors.push_back(std::set<int> {});
-      std::copy_if(begin(ns),end(ns),std::inserter(neighbors[i],neighbors[i].begin()),[i,&es](auto j) {
-         const GE e1 {i,j},e2 {j,i};
-         return std::find_if(es.begin(),es.end(),
-                             [e1,e2](auto e) { return e == e1 || e == e2;}) != es.end();
+      neighbors[i] = filter(ns,[i,&es](auto j) {
+         return j==i || member(es,[e1=GE {i,j},e2=GE {j,i}](auto e) { return e==e1 || e==e2;});
       });
-      neighbors[i].insert(i);
       std::cout << i << " -> " << neighbors[i] << std::endl;
    }
    const auto myInit = [top]() {   // The root state
-      std::set<int> U {};
-      for(int i=1;i < top;i++)
+      std::set<int> U = {}; // std::views::iota(1,top) | std::ranges::to<std::set>();
+      for(auto i : std::views::iota(1,top))
          U.insert(i);
       return MISP { U };
    };
    const auto myTarget = []() {    // The sink state
       return MISP { std::set<int> {} };
    };
-   auto myStf = [top,&neighbors](const MISP& s,int label) -> std::optional<MISP> { // transition function
+   auto myStf = [top,&neighbors](const MISP& s,int label) -> std::optional<MISP> {
       if (label == top)
          return MISP { std::set<int> {}}; // head to sink
       else if (s.sel.contains(label)) {
-         std::set<int> ns = s.sel;         
-         for(int i=1;i< label;i++)
-            ns.erase(i);
-         for(auto ngh : neighbors[label])
-            ns.erase(ngh);
-         return MISP {ns}; // normal new state
+         return MISP {
+            filter(s.sel,[label,&neighbors](int i) {
+               return i >= label && !neighbors[label].contains(i);
+            })
+         };
       } else return std::nullopt;  // return the empty optional 
    };
-   const auto scf = [top](const MISP& s,int label) { // cost function (no cost on last arc to sink)
+   const auto scf = [top](const MISP& s,int label) { // cost function 
       return (label == top) ? 0 : weight[label];
    };
    const auto smf = [](const MISP& s1,const MISP& s2) -> std::optional<MISP> { // merge function

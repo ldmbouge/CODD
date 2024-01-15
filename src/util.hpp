@@ -20,6 +20,20 @@ namespace std {
       else 
          return numeric_limits<T>::min();
    }
+   template <class T,typename Pred>
+   set<T> filter(set<T> inSet,Pred p) {
+      std::set<T> outSet = {};
+      for(const auto& v : inSet)
+         if (p(v))
+            outSet.insert(v);
+      return outSet;
+   }
+   template <class Container,class Pred>
+   bool member(const Container& cont,Pred c) {
+      for(const auto& v : cont)
+         if (c(v)) return true;
+      return false;
+   }
 };
 
 template <class T> std::ostream& operator<<(std::ostream& os,const std::vector<T>& msg) {

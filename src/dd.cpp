@@ -371,5 +371,5 @@ void Relaxed::compute()
       }
    }
    _dd->computeBest();
-   _dd->print(std::cout,"Relaxed");         
+   _dd->print(std::cout,"Relaxed DD");
 }
