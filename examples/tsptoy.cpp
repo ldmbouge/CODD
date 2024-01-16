@@ -69,22 +69,21 @@ int main()
    const auto myInit = []() {   // The root state
       return TSP { std::set<int>{},1,0 };
    };
-   const auto myTarget = [&ns,sz]() {    // The sink state
-      return TSP { ns,1,sz };
+   const auto myTarget = [sz]() {    // The sink state
+      return TSP { std::set<int>{},1,sz };
    };
    auto myStf = [sz](const TSP& s,const int label) -> std::optional<TSP> {
-      if (label==1 && s.hops < sz-1)
-         return std::nullopt;
-      if (s.hops == sz-1 && label!=1)
+      if ((label==1 && s.hops < sz-1) || (s.hops == sz-1 && label!=1))
          return std::nullopt;
       if (s.hops < sz && !s.s.contains(label) && (s.last != label)) {
-         return TSP { s.s | std::set<int>{label},label,s.hops + 1}; // head to sink
+         if (s.hops + 1 == sz)
+            return TSP { std::set<int>{}, label,s.hops + 1};
+         else
+            return TSP { s.s | std::set<int>{label},label,s.hops + 1}; // head to sink
       } else return std::nullopt;  // return the empty optional 
    };
    const auto scf = [sz,&es](const TSP& s,int label) { // cost function 
-      if (label==1 && s.hops < sz-1)
-         return 0.0;
-      if (s.hops == sz-1 && label!=1)
+      if ((label==1 && s.hops < sz-1) || (s.hops == sz-1 && label!=1))
          return 0.0;
       if (s.hops < sz && !s.s.contains(label) && (s.last != label)) {
          GE key {s.last, label};
@@ -95,9 +94,6 @@ int main()
       if (s1.last == s2.last && s1.hops == s2.hops) 
          return TSP {s1.s & s2.s , s1.last, s1.hops};
       else return std::nullopt; // return  the empty optional
-   };
-   const auto isSink = [sz](const TSP& s) {
-      return s.last == 1 && s.hops == sz;
    };
 
    std::cout << "LABELS:" << labels << "\n";
