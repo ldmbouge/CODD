@@ -24,12 +24,12 @@ void ANode::disconnect()
 {
    for(auto e : _parents) {
       assert(e->_from->_children[e->_fix] == e);
-      e->_from->_children.remove(e->_fix);
+      e->_from->_children.remove(e->_fix,[e](Edge::Ptr o) { o->_fix = e->_fix;});
    }
    _parents.clear();
    for(auto e : _children) {
       assert(e->_to->_parents[e->_tix] == e);
-      e->_to->_parents.remove(e->_tix);
+      e->_to->_parents.remove(e->_tix,[e](Edge::Ptr o) { o->_tix = e->_tix;});
    }
    _children.clear();
 }

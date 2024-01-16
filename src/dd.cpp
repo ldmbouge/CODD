@@ -103,7 +103,10 @@ void AbstractDD::saveGraph(std::ostream& os,std::string gLabel)
    os << " node [style=filled gradientangle=270];\n"; 
    while (h.size() > 0) {
       auto cur = h.extractMax();
-      os << "\"" << *cur.node << "\" [color=\"" << colors[cur.node->isExact()] << "\"];\n";      
+      os << "\"" << *cur.node << "\" [color=\"" << colors[cur.node->isExact()] << "\"";
+      if (eq(cur.node,_trg))
+         os << ",shape=box";
+      os << "];\n";      
       for(auto ki = cur.node->beginKids(); ki != cur.node->endKids();ki++) {
          Edge::Ptr k = *ki;
          auto at = h.find({k->_to,0});
@@ -138,7 +141,7 @@ void AbstractDD::display(std::string gLabel)
       execlp("open","open",base.c_str(),0);
       printf("execl2 status: %d\n",st);
    }
-   unlink(buf);
+   //unlink(buf);
 }
 
 void AbstractDD::computeBest()

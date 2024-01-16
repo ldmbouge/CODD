@@ -113,11 +113,13 @@ public:
       _sz -= 1;
       return rv;
    }
-   SZT remove(SZT i) {
+   template <class Relink>
+   SZT remove(SZT i,Relink rl) {
       assert(_sz > 0);
       assert(i >= 0 && i < _sz);
       if (i < _sz - 1)
          at(i,_data[_sz - 1]);
+      rl(_data[i]);
       _sz -= 1;
       return _sz;
    }
