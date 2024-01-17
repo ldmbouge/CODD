@@ -42,13 +42,14 @@ protected:
    double                  _bound;
    unsigned                _layer:31; // will be used in restricted / (relaxed?)
    unsigned                _exact:1;  // true if node is exact
+   unsigned                _nid;
    void addArc(Edge::Ptr ep);
 public:
    friend class AbstractDD;
    typedef handle_ptr<ANode> Ptr;
-   ANode(Pool::Ptr mem);
-   ANode(Pool::Ptr mem,const ANode& o);
-   virtual ~ANode() {}
+   ANode(Pool::Ptr mem,unsigned nid);
+   ANode(Pool::Ptr mem,unsigned nid,const ANode& o);
+   virtual ~ANode();
    virtual void print(std::ostream& os) const = 0;
    void clearParents() { _parents.clear();}
    void clearKids() { _children.clear();}
@@ -64,6 +65,7 @@ public:
    auto endKids()   { return _children.end();}
    void setBound(double b) { _bound = b;}
    const auto getBound() const { return _bound;}
+   const auto getId() const noexcept { return _nid;}
    void disconnect();
    friend std::ostream& operator<<(std::ostream& os,const ANode& s);
 };
@@ -74,12 +76,12 @@ class Node :public ANode {
    T _val;  
 public:
    typedef handle_ptr<Node<T>> Ptr;
-   Node(Pool::Ptr mem,T&& v) : ANode(mem),_val(std::move(v)) {}
+   Node(Pool::Ptr mem,T&& v,unsigned nid) : ANode(mem,nid),_val(std::move(v)) {}
    Node(Pool::Ptr mem,const Node<T>& o) : ANode(mem,o),_val(o._val) {}
    ~Node() {}
    const T& get() const {return _val;}
    void print(std::ostream& os) const {
-      os << _val << ":B=" << _bound;
+      os << _nid << ',' << _val << ",B=" << _bound;
    }
 };
 

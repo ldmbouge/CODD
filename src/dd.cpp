@@ -16,11 +16,6 @@ AbstractDD::AbstractDD(const std::set<int>& labels)
 AbstractDD::~AbstractDD()
 {
    std::cout << "AbstractDD::~AbstractDD(" << this << ")\n";
-   for(ANode::Ptr p : _an)
-      p->~ANode();
-   _an.clear();
-   _root = _trg = nullptr;
-   _mem->clear();
    delete _mem;
 }
 
@@ -89,7 +84,7 @@ void AbstractDD::print(std::ostream& os,std::string gLabel)
          Edge::Ptr k = *ki;
          os << "EDGE:" << *k << std::endl;
          auto at = h.find({k->_to,0});
-         assert(at!=-1);
+         assert(at!= nullptr);
          h.decrease(at);
       }
    }
@@ -175,7 +170,7 @@ void AbstractDD::computeBest()
       for(auto ki = n.node->beginKids(); ki != n.node->endKids();ki++) {
          Edge::Ptr k = *ki;
          auto at = h.find({k->_to,0});
-         assert(at!=-1);
+         assert(at!=nullptr);
          h.decrease(at);
       }
    }

@@ -36,6 +36,7 @@ public:
    typedef std::shared_ptr<AbstractDD> Ptr;
    AbstractDD(const std::set<int>& labels);
    virtual ~AbstractDD();
+   virtual void reset() = 0;
    virtual ANode::Ptr init() = 0;
    virtual ANode::Ptr target() = 0;
    virtual ANode::Ptr transition(ANode::Ptr src,int label) = 0;
@@ -108,6 +109,7 @@ private:
    STC _stc;
    SMF _smf;
    Hashtable<ST,ANode::Ptr> _nmap;
+   unsigned _ndId;
    bool eq(ANode::Ptr f,ANode::Ptr s) const {
       auto fp = dynamic_cast<const Node<ST>*>(f.get());
       auto sp = dynamic_cast<const Node<ST>*>(s.get());
@@ -133,7 +135,7 @@ private:
          at->setExact(at->isExact() & pExact);
          return at;
       } else {
-         auto value = new (_mem) Node<ST>(_mem,std::move(state));
+         auto value = new (_mem) Node<ST>(_mem,std::move(state),_ndId++);
          value->setExact(pExact);
          _nmap.insert(value->get(),value);
          _an.push_back(value);
@@ -174,10 +176,11 @@ public:
         _stf(stf),
         _stc(stc),
         _smf(smf),
-        _nmap(_mem,128)
+        _nmap(_mem,128),
+        _ndId(0)
    {}
    ~DD() {
-      _nmap.clear();
+      DD::reset();
    }
    template <class... Args>
    static AbstractDD::Ptr makeDD(Args&&... args) {
@@ -185,6 +188,15 @@ public:
    }
    AbstractDD::Ptr duplicate() {
       return std::make_shared<DD>(_sti,_stt,_stf,_stc,_smf,_labels);
+   }
+   void reset() {
+      _ndId = 0;
+      _nmap.clear();
+      for(auto n : _an)
+         n->~ANode();
+      _an.clear();
+      _mem->clear();
+      _root = _trg = nullptr;
    }
 };
 

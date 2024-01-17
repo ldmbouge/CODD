@@ -83,7 +83,7 @@ int main()
             return TSP { s.s | std::set<int>{label},label,s.hops + 1}; // head to sink
       } else return std::nullopt;  // return the empty optional 
    };
-   const auto scf = [sz,&es](const TSP& s,int label) { // partial cost function 
+   const auto scf = [&es](const TSP& s,int label) { // partial cost function 
       return es.at(GE {s.last,label});
    };
    const auto smf = [](const TSP& s1,const TSP& s2) -> std::optional<TSP> {
