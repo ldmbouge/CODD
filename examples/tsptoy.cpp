@@ -1,5 +1,6 @@
 #include "dd.hpp"
 #include "util.hpp"
+#include "search.hpp"
 #include <concepts>
 #include <iostream>
 #include <set>
@@ -66,13 +67,13 @@ int main()
    };
    const auto labels = ns;     // using a plain set for the labels
    const int sz = (int)ns.size();
-   const auto myInit = []() {   // The root state
+   const auto init = []() {   // The root state
       return TSP { std::set<int>{},1,0 };
    };
-   const auto myTarget = [sz]() {    // The sink state
+   const auto target = [sz]() {    // The sink state
       return TSP { std::set<int>{},1,sz };
    };
-   auto myStf = [sz](const TSP& s,const int label) -> std::optional<TSP> {
+   const auto stf = [sz](const TSP& s,const int label) -> std::optional<TSP> {
       if ((label==1 && s.hops < sz-1) || (s.hops == sz-1 && label!=1))
          return std::nullopt;
       if (s.hops < sz && !s.s.contains(label) && (s.last != label)) {
@@ -82,13 +83,8 @@ int main()
             return TSP { s.s | std::set<int>{label},label,s.hops + 1}; // head to sink
       } else return std::nullopt;  // return the empty optional 
    };
-   const auto scf = [sz,&es](const TSP& s,int label) { // cost function 
-      if ((label==1 && s.hops < sz-1) || (s.hops == sz-1 && label!=1))
-         return 0.0;
-      if (s.hops < sz && !s.s.contains(label) && (s.last != label)) {
-         GE key {s.last, label};
-         return es.at(key);
-      } else return 0.0;  // return the empty optional 
+   const auto scf = [sz,&es](const TSP& s,int label) { // partial cost function 
+      return es.at(GE {s.last,label});
    };
    const auto smf = [](const TSP& s1,const TSP& s2) -> std::optional<TSP> {
       if (s1.last == s2.last && s1.hops == s2.hops) 
@@ -98,42 +94,14 @@ int main()
 
    std::cout << "LABELS:" << labels << "\n";
 
-   std::cout << "exact\n"; 
-   auto myxDD = DD<TSP,
-                   std::less<double>, // to minimize
-                   decltype(myInit), 
-                   decltype(myTarget), // TSP(*)(),
-                   decltype(myStf),
-                   decltype(scf),
-                   decltype(smf)
-                   >::makeDD(myInit,myTarget,myStf,scf,smf,labels);
-   myxDD->setStrategy(new Exact);
-   myxDD->compute();
-
-   std::cout << "restricted\n"; 
-   auto myrDD = DD<TSP,
-                   std::less<double>, // to minimize
-                   decltype(myInit), 
-                   decltype(myTarget), // TSP(*)(),
-                   decltype(myStf),
-                   decltype(scf),
-                   decltype(smf)
-                   >::makeDD(myInit,myTarget,myStf,scf,smf,labels);
-   myrDD->setStrategy(new Restricted(1));
-   myrDD->compute();
-   
-   std::cout << "relaxed\n"; 
-   auto mylDD = DD<TSP,
-                   std::less<double>, // to minimize
-                   decltype(myInit), 
-                   decltype(myTarget), // TSP(*)(),
-                   decltype(myStf),
-                   decltype(scf),
-                   decltype(smf)
-                   >::makeDD(myInit,myTarget,myStf,scf,smf,labels);
-   mylDD->setStrategy(new Relaxed(1));
-   mylDD->compute();
-   
+   BAndB engine(DD<TSP,std::less<double>, // to minimize
+                decltype(init), 
+                decltype(target), 
+                decltype(stf),
+                decltype(scf),
+                decltype(smf)
+                >::makeDD(init,target,stf,scf,smf,labels),1);
+   engine.search();
    return 0;
 }
 

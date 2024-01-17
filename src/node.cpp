@@ -12,6 +12,25 @@ std::ostream& operator<<(std::ostream& os,const Edge& e)
    return os << "E<" << *e._from << " --- " << e._obj << "(" << e._lbl << ") ---> "  << *e._to;
 }
 
+ANode::ANode(Pool::Ptr mem)
+   : _parents(mem,2),
+     _children(mem,2),
+     _optLabels(mem),
+     _bound(0),
+     _layer(0),
+     _exact(1)
+{}
+
+ANode::ANode(Pool::Ptr mem,const ANode& o)
+   : _parents(mem,2),
+     _children(mem,2),
+     _optLabels(mem,o._optLabels),
+     _bound(o._bound),
+     _layer(0),
+     _exact(1)
+{}
+     
+
 void ANode::addArc(Edge::Ptr ep)
 {
    if (ep->_from == this)

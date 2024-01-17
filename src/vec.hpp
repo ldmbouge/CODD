@@ -67,7 +67,15 @@ public:
       T operator->() const noexcept { return _v._data[_at];}
    };
 
-   //Vec() : _mem(nullptr),_sz(0),_msz(0),_data(nullptr) {}
+   /**
+    * Copy contructor transfers the content of v2 to this new node (on the pool mem)
+    * So it's useful to copy a vector over to another pool.
+    */
+   Vec(Pool::Ptr mem,const Vec& v2) : _mem(mem),_sz(v2._sz),_msz(v2._msz)  {
+      _data = (_msz > 0) ? new (_mem) T[_msz] : nullptr;
+      for(auto i=0u;i < _sz;i++)
+         _data[i] = v2._data[i];      
+   }
    Vec(Pool::Ptr mem,SZT s = 0u)
       : _mem(mem),_sz(0),_msz(s) {      
       _data = (_msz > 0) ? new (mem) T[_msz] : nullptr;

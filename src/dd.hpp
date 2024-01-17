@@ -32,7 +32,6 @@ protected:
    virtual double initialBest() const = 0;
    void computeBest();
    void saveGraph(std::ostream& os,std::string gLabel);
-   void display(std::string gLabel);
 public:
    typedef std::shared_ptr<AbstractDD> Ptr;
    AbstractDD(const std::set<int>& labels);
@@ -45,6 +44,8 @@ public:
    void compute();
    void print(std::ostream& os,std::string gLabel);
    void setStrategy(Strategy* s);
+   void display(std::string gLabel);
+   virtual AbstractDD::Ptr duplicate() = 0;
 };
 
 class Strategy {
@@ -181,6 +182,9 @@ public:
    template <class... Args>
    static AbstractDD::Ptr makeDD(Args&&... args) {
       return std::make_shared<DD>(std::forward<Args>(args)...);
+   }
+   AbstractDD::Ptr duplicate() {
+      return std::make_shared<DD>(_sti,_stt,_stf,_stc,_smf,_labels);
    }
 };
 
