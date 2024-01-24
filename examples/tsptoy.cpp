@@ -95,7 +95,7 @@ int main()
    std::cout << "LABELS:" << labels << "\n";
 
    BAndB engine(DD<TSP,std::less<double>, // to minimize
-                decltype(init), 
+                ///decltype(init), 
                 decltype(target), 
                 decltype(stf),
                 decltype(scf),

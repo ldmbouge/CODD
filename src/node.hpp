@@ -63,6 +63,8 @@ public:
    auto endPar()    { return _parents.end();}
    auto beginKids() { return _children.begin();}
    auto endKids()   { return _children.end();}
+   auto beginOptLabels() { return _optLabels.begin();}
+   auto endOptLabels() { return _optLabels.end();}
    void setBound(double b) { _bound = b;}
    const auto getBound() const { return _bound;}
    const auto getId() const noexcept { return _nid;}
@@ -77,7 +79,7 @@ class Node :public ANode {
 public:
    typedef handle_ptr<Node<T>> Ptr;
    Node(Pool::Ptr mem,T&& v,unsigned nid) : ANode(mem,nid),_val(std::move(v)) {}
-   Node(Pool::Ptr mem,const Node<T>& o) : ANode(mem,o),_val(o._val) {}
+   Node(Pool::Ptr mem,unsigned nid,const Node<T>& o) : ANode(mem,nid,o),_val(o._val) {}
    ~Node() {}
    const T& get() const {return _val;}
    void print(std::ostream& os) const {

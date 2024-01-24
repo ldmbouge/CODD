@@ -9,6 +9,13 @@
 #include "heap.hpp"
 #include "queue.hpp"
 
+
+Bounds::Bounds(std::shared_ptr<AbstractDD> dd)
+{
+   _primal = dd->initialBest();
+   _dual   = dd->initialWorst();      
+}
+
 AbstractDD::AbstractDD(const std::set<int>& labels)
    : _mem(new Pool),_labels(labels)
 {}

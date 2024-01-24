@@ -94,7 +94,7 @@ int main()
    std::cout << "exact\n"; 
    auto myxDD = DD<MISP,
                    std::greater<double>, // to maximize
-                   decltype(myInit), 
+                   //decltype(myInit), 
                    decltype(myTarget), // MISP(*)(),
                    decltype(myStf),
                    decltype(scf),
@@ -106,7 +106,7 @@ int main()
    std::cout << "restricted\n"; 
    auto myrDD = DD<MISP,
                    std::greater<double>, // to maximize
-                   decltype(myInit), 
+                   //decltype(myInit), 
                    decltype(myTarget), // MISP(*)(),
                    decltype(myStf),
                    decltype(scf),
@@ -118,7 +118,7 @@ int main()
    std::cout << "relaxed\n"; 
    auto mylDD = DD<MISP,
                    std::greater<double>, // to maximize
-                   decltype(myInit), 
+                   //decltype(myInit), 
                    decltype(myTarget), // MISP(*)(),
                    decltype(myStf),
                    decltype(scf),
