@@ -31,6 +31,7 @@ void BAndB::search()
       restricted->compute();
       restricted->update(bnds);
       cout << bnds << endl;
+      cout << (restricted->isExact() ? "EXACT" : "INEXACT") << endl;
    }
    
 }

@@ -42,6 +42,7 @@ protected:
    ANode::Ptr _trg;
    std::set<int> _labels;
    std::vector<ANode::Ptr> _an;
+   bool _exact;
    void addArc(Edge::Ptr e);
    friend class Strategy;
    friend class Exact;
@@ -71,6 +72,7 @@ public:
    void print(std::ostream& os,std::string gLabel);
    void setStrategy(Strategy* s);
    void display(std::string gLabel);
+   bool isExact() const { return _exact;}
    virtual AbstractDD::Ptr duplicate() = 0;
    virtual void makeInitFrom(ANode::Ptr src) {}
 };

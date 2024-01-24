@@ -17,7 +17,7 @@ Bounds::Bounds(std::shared_ptr<AbstractDD> dd)
 }
 
 AbstractDD::AbstractDD(const std::set<int>& labels)
-   : _mem(new Pool),_labels(labels)
+   : _mem(new Pool),_labels(labels),_exact(true)
 {}
 
 AbstractDD::~AbstractDD()
@@ -200,6 +200,7 @@ void Exact::compute()
 {
    auto root = _dd->init();
    auto sink = _dd->target();
+   _dd->_exact = true;
    CQueue<ANode::Ptr> qn(32);
    qn.enQueue(root);
    while (!qn.empty()) {
@@ -244,6 +245,7 @@ std::list<ANode::Ptr> WidthBounded::pullLayer(CQueue<ANode::Ptr>& qn)
 
 void Restricted::truncate(std::list<ANode::Ptr>& layer)
 {
+   _dd->_exact = false;
    auto from = layer.begin();
    std::advance(from,_mxw);
    for(auto start=from;start != layer.end();start++) {
@@ -256,6 +258,7 @@ void Restricted::truncate(std::list<ANode::Ptr>& layer)
 
 void Restricted::compute()
 {
+   _dd->_exact = true;
    auto root = _dd->init();
    auto sink = _dd->target();
    CQueue<ANode::Ptr> qn(32);
@@ -336,6 +339,7 @@ std::list<ANode::Ptr> Relaxed::mergeLayer(std::list<ANode::Ptr>& layer)
          const bool sameLayer = mNode->getLayer() == n1->getLayer();
          mNode->setLayer(std::max(mNode->getLayer(),n1->getLayer()));
          mNode->setExact(false);
+         _dd->_exact = false;
          for(auto d : toMerge) {
             if (d == mNode) continue; // skip in case the node itself is the merged one
             transferArcs(d,mNode);
@@ -353,6 +357,7 @@ std::list<ANode::Ptr> Relaxed::mergeLayer(std::list<ANode::Ptr>& layer)
 
 void Relaxed::compute()
 {
+   _dd->_exact = true;
    auto root = _dd->init();
    auto sink = _dd->target();
    CQueue<ANode::Ptr> qn(32);
