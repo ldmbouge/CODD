@@ -8,7 +8,7 @@ struct QNode {
    ANode::Ptr node;
    double    bound;
    bool operator()(const QNode& a,const QNode& b) {
-      return a.bound < b.bound;
+      return a.bound > b.bound;
    }
 };
 
