@@ -34,6 +34,8 @@ class PoolMark {
    size_t   _top;
    unsigned _seg;
    PoolMark(size_t top,unsigned seg) : _top(top),_seg(seg) {}
+public:
+   PoolMark() : _top(0),_seg(0) {}
 };
 
 /**

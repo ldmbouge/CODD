@@ -21,9 +21,9 @@ class Bounds {
 public:
    Bounds(std::shared_ptr<AbstractDD> dd);
    void setPrimal(double p) { _primal = p;}
-   void setDual(double p) { _dual = p;}
+   void setDual(double p)   { _dual = p;}
    double getPrimal() const { return _primal;}
-   double getDual() const { return _dual;}
+   double getDual() const   { return _dual;}
    void setIncumbent(auto begin,auto end) {
       _inc.clear();
       for(auto it = begin;it != end;it++)
@@ -43,6 +43,7 @@ protected:
    std::set<int> _labels;
    std::vector<ANode::Ptr> _an;
    bool _exact;
+   PoolMark _baseline;
    void addArc(Edge::Ptr e);
    friend class Strategy;
    friend class Exact;
@@ -51,7 +52,6 @@ protected:
    Strategy* _strat;
    virtual bool eq(ANode::Ptr f,ANode::Ptr s) const = 0;
    virtual bool neq(ANode::Ptr f,ANode::Ptr s) const = 0;
-   virtual double better(double obj1,double obj2) const = 0;
    void computeBest();
    void saveGraph(std::ostream& os,std::string gLabel);
 public:
@@ -67,8 +67,11 @@ public:
    virtual ANode::Ptr duplicate(const ANode::Ptr src) = 0;
    virtual double initialBest() const = 0;
    virtual double initialWorst() const = 0;
+   virtual double better(double obj1,double obj2) const = 0;
    virtual void update(Bounds& bnds) const = 0;
+   double currentOpt() const { return _trg->getBound();}
    void compute();
+   std::vector<ANode::Ptr> computeCutSet();
    void print(std::ostream& os,std::string gLabel);
    void setStrategy(Strategy* s);
    void display(std::string gLabel);
@@ -85,6 +88,7 @@ protected:
 public:
    Strategy() : _dd(nullptr) {}
    virtual void compute() {}
+   virtual std::vector<ANode::Ptr> computeCutSet() { return std::vector<ANode::Ptr> {};}
    virtual bool primal() const { return false;}
    virtual bool dual() const { return false;}
 };
@@ -121,6 +125,7 @@ class Relaxed :public WidthBounded {
 public:
    Relaxed(const unsigned mxw) : WidthBounded(mxw) {}
    void compute();
+   std::vector<ANode::Ptr> computeCutSet();
    bool dual() const { return true;}
 };
 
@@ -158,23 +163,29 @@ private:
    double better(double obj1,double obj2) const {
       return Compare{}(obj1,obj2) ? obj1 : obj2;
    }
+   double dualBetter(double obj1,double obj2) const {
+      return Compare{}(obj1,obj2) ? obj2 : obj1;
+   }
    double initialBest() const {
       constexpr auto gr = std::is_same<Compare,std::greater<double>>::value;
-      auto v = gr ? std::numeric_limits<double>::min() : std::numeric_limits<double>::max();
+      auto v = gr ? -std::numeric_limits<double>::max() : std::numeric_limits<double>::max();
       return v;
    }
    double initialWorst() const {
       constexpr auto gr = std::is_same<Compare,std::greater<double>>::value;
-      auto v = !gr ? std::numeric_limits<double>::min() : std::numeric_limits<double>::max();
+      auto v = !gr ? -std::numeric_limits<double>::max() : std::numeric_limits<double>::max();
       return v;
    }
    void update(Bounds& bnds) const {
       if (_strat->primal())  {
-         bnds.setPrimal(better(_trg->getBound(),bnds.getPrimal()));
+         bnds.setPrimal(DD::better(_trg->getBound(),bnds.getPrimal()));
          bnds.setIncumbent(_trg->beginOptLabels(),_trg->endOptLabels());
       }
-      else if (_strat->dual())
-         bnds.setDual(better(bnds.getDual(),_trg->getBound()));         
+      else if (_strat->dual()) {
+         bnds.setDual(DD::dualBetter(_trg->getBound(),bnds.getDual()));
+         if (_exact)
+            bnds.setIncumbent(_trg->beginOptLabels(),_trg->endOptLabels());            
+      }
    }
    ANode::Ptr makeNode(ST&& state,bool pExact = true) {
       ANode::Ptr at = nullptr;
@@ -233,7 +244,9 @@ public:
         _smf(smf),
         _nmap(_mem,128),
         _ndId(0)
-   {}
+   {
+      _baseline = _mem->mark();
+   }
    ~DD() { DD::reset();}
    template <class... Args>
    static AbstractDD::Ptr makeDD(Args&&... args) {
@@ -261,7 +274,7 @@ public:
       for(auto n : _an)
          n->~ANode();
       _an.clear();
-      _mem->clear();
+      _mem->clear(_baseline);
       _root = _trg = nullptr;
    }
 };

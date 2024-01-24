@@ -55,6 +55,11 @@ void AbstractDD::compute()
    _strat->compute();
 }
 
+std::vector<ANode::Ptr> AbstractDD::computeCutSet()
+{
+   return _strat->computeCutSet();
+}
+
 struct DNode {
    ANode::Ptr node;
    unsigned   degree;
@@ -391,4 +396,27 @@ void Relaxed::compute()
    }
    _dd->computeBest();
    _dd->print(std::cout,"Relaxed DD");
+}
+
+std::vector<ANode::Ptr> Relaxed::computeCutSet()
+{
+   std::vector<ANode::Ptr> cs = {};
+   auto mark = _dd->_mem->mark();
+   CQueue<ANode::Ptr> qn(32);
+   qn.enQueue(_dd->_root);
+   while (qn.size() > 0) {
+      auto cur = qn.deQueue();
+      if (cur->isExact()) {
+         bool akExact = true;
+         for(auto ki = cur->beginKids(); akExact && ki != cur->endKids();ki++) 
+            akExact = (*ki)->_to->isExact();
+         if (akExact) {
+            for(auto ki = cur->beginKids(); akExact && ki != cur->endKids();ki++) {
+               qn.enQueue((*ki)->_to);
+            }
+         } else cs.push_back(cur);
+      }
+   }
+   _dd->_mem->clear(mark);
+   return cs;
 }

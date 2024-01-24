@@ -30,8 +30,27 @@ void BAndB::search()
       restricted->makeInitFrom(bbn.node);
       restricted->compute();
       restricted->update(bnds);
-      cout << bnds << endl;
+      cout << "AFTER restricted:" << bnds << endl;
       cout << (restricted->isExact() ? "EXACT" : "INEXACT") << endl;
+      if (!restricted->isExact()) {
+         relaxed->reset();
+         relaxed->makeInitFrom(bbn.node);
+         relaxed->compute();
+         bool improving = _theDD->better(relaxed->currentOpt(),bnds.getPrimal());
+         cout << "Improving? " << (improving ? "YES" : "NO") << endl;
+         relaxed->update(bnds);
+         cout << "AFTER Relax:" << bnds << endl;
+         cout << "Dual " << (relaxed->isExact() ? "EXACT" : "INEXACT") << endl;
+         if (improving) {
+            auto cs = relaxed->computeCutSet();
+            cout << "cutSet:" << endl;
+            for(auto n : cs) {
+               cout << "\tCSN:" << *n << endl;
+               auto nd = _theDD->duplicate(n); // we got a duplicate of the node.
+               pq.insertHeap(QNode {nd, nd->getBound()});
+            }
+         }         
+      }
    }
    
 }
