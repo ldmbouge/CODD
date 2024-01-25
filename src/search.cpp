@@ -46,15 +46,17 @@ void BAndB::search()
          relaxed->display("Relaxed");
          //cout << "before improve test: P=" << bnds.getPrimal() << " CR=" << relaxed->currentOpt() << endl;
          bool improving = _theDD->isBetter(relaxed->currentOpt(),bnds.getPrimal());
+         //cout << "AFTER Relax:" << (relaxed->isExact() ? "EXACT" : "INEXACT") << endl;
          if (improving) {
             //cout << "relax Improving? " << (improving ? "YES" : "NO") << endl;
             relaxed->update(bnds);
             //cout << "AFTER Relax:" << bnds << endl;
-            //cout << "AFTER Relax:" << (relaxed->isExact() ? "EXACT" : "INEXACT") << endl;
-            for(auto n : relaxed->computeCutSet()) {
-               auto nd = _theDD->duplicate(n); // we got a duplicate of the node.
-               pq.insertHeap(QNode {nd, nd->getBound()});
-            }
+            if (!relaxed->isExact())
+               for(auto n : relaxed->computeCutSet()) {
+                  auto nd = _theDD->duplicate(n); // we got a duplicate of the node.
+                  //pq.insertHeap(QNode {nd, nd->getBound()});
+                  pq.insertHeap(QNode {nd, relaxed->currentOpt()});
+               }
          }         
       }
    }

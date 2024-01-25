@@ -87,10 +87,10 @@ public:
    ~Node() {}
    const T& get() const {return _val;}
    void print(std::ostream& os) const {
-      os << _nid << ',' << _val << ",B=" << _bound << ",LBLS:[";
-      for(auto i=0u;i < _optLabels.size();i++)
-         os << _optLabels[i] << " ";
-      os << "]";
+      os << _nid << ',' << _val << ",B=" << _bound;// << ",LBLS:[";
+      //      for(auto i=0u;i < _optLabels.size();i++)
+      // os << _optLabels[i] << " ";
+      //os << "]";
    }
 };
 

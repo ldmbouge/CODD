@@ -16,21 +16,21 @@ class AbstractDD;
 
 class Bounds {
    double _primal;
-   double _dual;
+   //double _dual;
    std::vector<int> _inc;
 public:
    Bounds(std::shared_ptr<AbstractDD> dd);
    void setPrimal(double p) { _primal = p;}
-   void setDual(double p)   { _dual = p;}
+   //void setDual(double p)   { _dual = p;}
    double getPrimal() const { return _primal;}
-   double getDual() const   { return _dual;}
+   //double getDual() const   { return _dual;}
    void setIncumbent(auto begin,auto end) {
       _inc.clear();
       for(auto it = begin;it != end;it++)
          _inc.push_back(*it);
    }
    friend std::ostream& operator<<(std::ostream& os,const Bounds& b) {
-      return os << "<P:" << b._primal << "," << " D:" << b._dual << ", INC:" << b._inc << ">";
+      return os << "<P:" << b._primal << /* "," << " D:" << b._dual << */ ", INC:" << b._inc << ">";
    }
 };
 
@@ -188,7 +188,7 @@ private:
          bnds.setIncumbent(_trg->beginOptLabels(),_trg->endOptLabels());
       }
       else if (_strat->dual()) {
-         bnds.setDual(DD::dualBetter(_trg->getBound(),bnds.getDual()));
+         //bnds.setDual(DD::dualBetter(_trg->getBound(),bnds.getDual()));
          if (_exact) {
             bnds.setPrimal(DD::better(_trg->getBound(),bnds.getPrimal()));
             bnds.setIncumbent(_trg->beginOptLabels(),_trg->endOptLabels());
