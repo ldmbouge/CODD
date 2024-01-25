@@ -55,6 +55,14 @@ void AbstractDD::compute()
    _strat->compute();
 }
 
+std::vector<int> AbstractDD::incumbent()
+{
+   std::vector<int> inc {};
+   for(auto it= _trg->beginOptLabels();it != _trg->endOptLabels();it++)
+      inc.push_back(*it);
+   return inc;
+}
+
 std::vector<ANode::Ptr> AbstractDD::computeCutSet()
 {
    return _strat->computeCutSet();
@@ -226,7 +234,7 @@ void Exact::compute()
       }
    }
    _dd->computeBest();
-   _dd->print(std::cout,"Exact");
+   //_dd->print(std::cout,"Exact");
 }
 
 std::list<ANode::Ptr> WidthBounded::pullLayer(CQueue<ANode::Ptr>& qn)
@@ -292,7 +300,7 @@ void Restricted::compute()
       }
    }
    _dd->computeBest();
-   _dd->print(std::cout,"Restricted");   
+   //_dd->print(std::cout,"Restricted");   
 }
 
 // ----------------------------------------------------------------------
@@ -394,7 +402,7 @@ void Relaxed::compute()
       }
    }
    _dd->computeBest();
-   _dd->print(std::cout,"Relaxed");
+   //_dd->print(std::cout,"Relaxed");
 }
 
 std::vector<ANode::Ptr> Relaxed::computeCutSet()

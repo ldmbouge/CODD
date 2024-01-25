@@ -19,6 +19,9 @@ void BAndB::search()
    cout << "B&B searching..." << endl;
    AbstractDD::Ptr relaxed = _theDD->duplicate();
    _theDD->setStrategy(new Exact);
+   _theDD->compute();
+   _theDD->display("Exact (test)");
+   cout << "EXACT INCUMBENT:" << _theDD->incumbent() << "\n";
    relaxed->setStrategy(new Relaxed(_mxw));
    Heap<QNode,QNode> pq(&mem,32);
    pq.insertHeap(QNode { _theDD->init(), _theDD->initialWorst() } );
@@ -31,24 +34,23 @@ void BAndB::search()
       restricted->setStrategy(new Restricted(_mxw));
       restricted->makeInitFrom(bbn.node);
       restricted->compute();
-      restricted->update(bnds);
-      cout << "BNDs AFTER restricted:" << bnds << endl;
-      cout << "Restricted:" << (restricted->isExact() ? "EXACT" : "INEXACT") << endl;
+      bool primalBetter = _theDD->isBetter(restricted->currentOpt(),bnds.getPrimal());
+      if (primalBetter)
+         restricted->update(bnds);
+      //cout << "BNDs AFTER restricted:" << bnds << endl;
+      //cout << "Restricted:" << (restricted->isExact() ? "EXACT" : "INEXACT") << endl;
       if (!restricted->isExact()) {
          relaxed->reset();
          relaxed->makeInitFrom(bbn.node);
          relaxed->compute();
-         cout << "before improve test: P=" << bnds.getPrimal() << " CR=" << relaxed->currentOpt() << endl;
+         //cout << "before improve test: P=" << bnds.getPrimal() << " CR=" << relaxed->currentOpt() << endl;
          bool improving = _theDD->isBetter(relaxed->currentOpt(),bnds.getPrimal());
          if (improving) {
-            cout << "relax Improving? " << (improving ? "YES" : "NO") << endl;
+            //cout << "relax Improving? " << (improving ? "YES" : "NO") << endl;
             relaxed->update(bnds);
-            cout << "AFTER Relax:" << bnds << endl;
-            cout << "AFTER Relax:" << (relaxed->isExact() ? "EXACT" : "INEXACT") << endl;
-            auto cs = relaxed->computeCutSet();
-            cout << "cutSet:" << endl;
-            for(auto n : cs) {
-               cout << "\tCSN:" << *n << endl;
+            //cout << "AFTER Relax:" << bnds << endl;
+            //cout << "AFTER Relax:" << (relaxed->isExact() ? "EXACT" : "INEXACT") << endl;
+            for(auto n : relaxed->computeCutSet()) {
                auto nd = _theDD->duplicate(n); // we got a duplicate of the node.
                pq.insertHeap(QNode {nd, nd->getBound()});
             }

@@ -71,6 +71,7 @@ public:
    virtual double better(double obj1,double obj2) const = 0;
    virtual void update(Bounds& bnds) const = 0;
    double currentOpt() const { return _trg->getBound();}
+   std::vector<int> incumbent();
    void compute();
    std::vector<ANode::Ptr> computeCutSet();
    void print(std::ostream& os,std::string gLabel);
