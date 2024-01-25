@@ -21,7 +21,7 @@ void BAndB::search()
    AbstractDD::Ptr restricted = _theDD->duplicate();
    _theDD->setStrategy(new Exact);
    _theDD->compute();
-   _theDD->display("Exact (test)");
+   //_theDD->display("Exact (test)");
    cout << "EXACT INCUMBENT:" << _theDD->incumbent() << "\n";
    relaxed->setStrategy(new Relaxed(_mxw));
    restricted->setStrategy(new Restricted(_mxw));
@@ -44,7 +44,7 @@ void BAndB::search()
          relaxed->reset();
          relaxed->makeInitFrom(bbn.node);
          relaxed->compute();
-         relaxed->display("Relaxed");
+         //relaxed->display("Relaxed");
          //cout << "before improve test: P=" << bnds.getPrimal() << " CR=" << relaxed->currentOpt() << endl;
          bool improving = _theDD->isBetter(relaxed->currentOpt(),bnds.getPrimal());
          //cout << "AFTER Relax:" << (relaxed->isExact() ? "EXACT" : "INEXACT") << endl;
