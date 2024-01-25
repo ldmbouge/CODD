@@ -52,7 +52,7 @@ protected:
    Strategy* _strat;
    virtual bool eq(ANode::Ptr f,ANode::Ptr s) const = 0;
    virtual bool neq(ANode::Ptr f,ANode::Ptr s) const = 0;
-   void computeBest();
+   void computeBest(const std::string m);
    void saveGraph(std::ostream& os,std::string gLabel);
 public:
    typedef std::shared_ptr<AbstractDD> Ptr;
@@ -76,7 +76,7 @@ public:
    std::vector<ANode::Ptr> computeCutSet();
    void print(std::ostream& os,std::string gLabel);
    void setStrategy(Strategy* s);
-   void display(std::string gLabel);
+   void display();
    bool isExact() const { return _exact;}
    virtual AbstractDD::Ptr duplicate() = 0;
    virtual void makeInitFrom(ANode::Ptr src) {}
@@ -89,6 +89,7 @@ protected:
    std::set<int> remainingLabels(ANode::Ptr p);
 public:
    Strategy() : _dd(nullptr) {}
+   virtual const std::string getName() const = 0;
    virtual void compute() {}
    virtual std::vector<ANode::Ptr> computeCutSet() { return std::vector<ANode::Ptr> {};}
    virtual bool primal() const { return false;}
@@ -98,6 +99,7 @@ public:
 class Exact:public Strategy {
 public:
    Exact() : Strategy() {}
+   const std::string getName() const { return "Exact";}
    void compute();
    bool primal() const { return true;}
    bool dual() const { return true;}
@@ -107,16 +109,19 @@ template <class T> class CQueue;
 
 class WidthBounded :public Strategy {
 protected:
-   const unsigned _mxw;
+   unsigned _mxw;
    std::list<ANode::Ptr> pullLayer(CQueue<ANode::Ptr>& q);
 public:
    WidthBounded(const unsigned mxw) : Strategy(),_mxw(mxw) {}
+   void setWidth(unsigned  mxw) { _mxw = mxw;}
+   unsigned getWidth() const  { return _mxw;}
 };
 
 class Restricted: public WidthBounded {
    void truncate(std::list<ANode::Ptr>& layer);
 public:
    Restricted(const unsigned mxw) : WidthBounded(mxw) {}
+   const std::string getName() const { return "Restricted";}
    void compute();
    bool primal() const { return true;}
 };
@@ -126,6 +131,7 @@ class Relaxed :public WidthBounded {
    std::list<ANode::Ptr> mergeLayer(std::list<ANode::Ptr>& layer);
 public:
    Relaxed(const unsigned mxw) : WidthBounded(mxw) {}
+   const std::string getName() const { return "Relaxed";}
    void compute();
    std::vector<ANode::Ptr> computeCutSet();
    bool dual() const { return true;}
@@ -169,9 +175,6 @@ private:
    double better(double obj1,double obj2) const {
       return Compare{}(obj1,obj2) ? obj1 : obj2;
    }
-   double dualBetter(double obj1,double obj2) const {
-      return Compare{}(obj1,obj2) ? obj2 : obj1;
-   }
    double initialBest() const {
       constexpr auto gr = std::is_same<Compare,std::greater<double>>::value;
       auto v = gr ? -std::numeric_limits<double>::max() : std::numeric_limits<double>::max();
@@ -187,12 +190,9 @@ private:
          bnds.setPrimal(DD::better(_trg->getBound(),bnds.getPrimal()));
          bnds.setIncumbent(_trg->beginOptLabels(),_trg->endOptLabels());
       }
-      else if (_strat->dual()) {
-         //bnds.setDual(DD::dualBetter(_trg->getBound(),bnds.getDual()));
-         if (_exact) {
-            bnds.setPrimal(DD::better(_trg->getBound(),bnds.getPrimal()));
-            bnds.setIncumbent(_trg->beginOptLabels(),_trg->endOptLabels());
-         }
+      else if (_strat->dual() && _exact) {
+         bnds.setPrimal(DD::better(_trg->getBound(),bnds.getPrimal()));
+         bnds.setIncumbent(_trg->beginOptLabels(),_trg->endOptLabels());
       }
    }
    ANode::Ptr makeNode(ST&& state,bool pExact = true) {
@@ -210,9 +210,9 @@ private:
       }
    }
    void makeInitFrom(ANode::Ptr src) {
-      _initClosure = std::function<ANode::Ptr()>([theRoot = duplicate(src)]() {
+      _initClosure = [theRoot = duplicate(src)]() {
          return theRoot;
-      });
+      };
    }
    ANode::Ptr init() {
       return _root = _initClosure();
@@ -252,9 +252,9 @@ public:
         _ndId(0)
    {
       _baseline = _mem->mark();
-      _initClosure = std::function<ANode::Ptr()>([this]() {
+      _initClosure = [this]() {
          return makeNode(_sti());
-      });
+      };
    }
    ~DD() { DD::reset();}
    template <class... Args>

@@ -7,6 +7,7 @@
 #include <ranges>
 #include <algorithm>
 #include <map>
+#include "search.hpp"
 
 struct MISP {
    std::set<int> sel;
@@ -102,31 +103,18 @@ int main()
                    >::makeDD(myInit,myTarget,myStf,scf,smf,labels);
    myxDD->setStrategy(new Exact);
    myxDD->compute();
-
-   std::cout << "restricted\n"; 
-   auto myrDD = DD<MISP,
-                   std::greater<double>, // to maximize
-                   //decltype(myInit), 
-                   decltype(myTarget), // MISP(*)(),
-                   decltype(myStf),
-                   decltype(scf),
-                   decltype(smf)
-                   >::makeDD(myInit,myTarget,myStf,scf,smf,labels);
-   myrDD->setStrategy(new Restricted(1));
-   myrDD->compute();
-
-   std::cout << "relaxed\n"; 
-   auto mylDD = DD<MISP,
-                   std::greater<double>, // to maximize
-                   //decltype(myInit), 
-                   decltype(myTarget), // MISP(*)(),
-                   decltype(myStf),
-                   decltype(scf),
-                   decltype(smf)
-                   >::makeDD(myInit,myTarget,myStf,scf,smf,labels);
-   mylDD->setStrategy(new Relaxed(1));
-   mylDD->compute();
-
+   //myxDD->display();
+   std::cout << myxDD->incumbent() << std::endl;
+   
+   
+   BAndB engine(DD<MISP,std::greater<double>, // to maximize
+                //decltype(myInit), 
+                decltype(myTarget), // MISP(*)(),
+                decltype(myStf),
+                decltype(scf),
+                decltype(smf)                   
+                >::makeDD(myInit,myTarget,myStf,scf,smf,labels),1);
+   engine.search();
    return 0;
 }
 

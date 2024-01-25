@@ -40,7 +40,7 @@ void printMe(ANode* n)
 
 void display(AbstractDD* dd)
 {
-   dd->display("Debug");
+   dd->display();
 }
 
 void AbstractDD::setStrategy(Strategy* s)
@@ -53,6 +53,7 @@ void AbstractDD::compute()
 {
    assert(_strat);
    _strat->compute();
+   computeBest(_strat->getName());
 }
 
 std::vector<int> AbstractDD::incumbent()
@@ -90,7 +91,7 @@ struct DNode {
 
 void AbstractDD::print(std::ostream& os,std::string gLabel)
 {
-   display(gLabel);
+   display();
    std::cout << "PRINTING: --------------------------------------------------\n";
    Heap<DNode,DNode> h(_mem,1000);
    for(ANode::Ptr n : _an) {
@@ -140,8 +141,9 @@ void AbstractDD::saveGraph(std::ostream& os,std::string gLabel)
    os << "}" << std::endl;
 }
 
-void AbstractDD::display(std::string gLabel)
+void AbstractDD::display()
 {
+   const std::string gLabel = _strat->getName();
    char buf[256] = "/tmp/dotfile-XXXXXXX";
    mkstemp(buf);
    std::ofstream out(buf);
@@ -164,7 +166,7 @@ void AbstractDD::display(std::string gLabel)
    unlink(buf);
 }
 
-void AbstractDD::computeBest()
+void AbstractDD::computeBest(const std::string m)
 {
    Heap<DNode,DNode> h(_mem,1000);
    for(ANode::Ptr n : _an) 
@@ -193,7 +195,7 @@ void AbstractDD::computeBest()
          h.decrease(at);
       }
    }
-   std::cout << "B@SINK:" << _trg->getBound() << "\tLBL:" << _trg->_optLabels << std::endl;
+   std::cout << '\t' << m << " B@SINK:" << _trg->getBound() << "\tLBL:" << _trg->_optLabels << std::endl;
 }
 
 // ----------------------------------------------------------------------
@@ -233,8 +235,6 @@ void Exact::compute()
          }
       }
    }
-   _dd->computeBest();
-   //_dd->print(std::cout,"Exact");
 }
 
 std::list<ANode::Ptr> WidthBounded::pullLayer(CQueue<ANode::Ptr>& qn)
@@ -299,8 +299,6 @@ void Restricted::compute()
          }
       }
    }
-   _dd->computeBest();
-   //_dd->print(std::cout,"Restricted");   
 }
 
 // ----------------------------------------------------------------------
@@ -401,8 +399,6 @@ void Relaxed::compute()
          }
       }
    }
-   _dd->computeBest();
-   //_dd->print(std::cout,"Relaxed");
 }
 
 std::vector<ANode::Ptr> Relaxed::computeCutSet()
