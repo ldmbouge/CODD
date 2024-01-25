@@ -8,7 +8,7 @@ struct QNode {
    ANode::Ptr node;
    double    bound;
    bool operator()(const QNode& a,const QNode& b) {
-      return a.bound > b.bound;
+      return a.bound < b.bound;
    }
 };
 
@@ -21,27 +21,30 @@ void BAndB::search()
    _theDD->setStrategy(new Exact);
    relaxed->setStrategy(new Relaxed(_mxw));
    Heap<QNode,QNode> pq(&mem,32);
-   pq.insertHeap(QNode { _theDD->init(), _theDD->initialBest() } );
+   pq.insertHeap(QNode { _theDD->init(), _theDD->initialWorst() } );
    Bounds bnds(_theDD);
    while(!pq.empty()) {
-      auto bbn = pq.extractMax();     
+      auto bbn = pq.extractMax();
+      cout << "BOUNDS NOW: " << bnds << endl;
+      cout << "EXTRACTED:  " << *bbn.node << "\t(" << bbn.bound << ")" << endl;
       AbstractDD::Ptr restricted = _theDD->duplicate();
       restricted->setStrategy(new Restricted(_mxw));
       restricted->makeInitFrom(bbn.node);
       restricted->compute();
       restricted->update(bnds);
-      cout << "AFTER restricted:" << bnds << endl;
-      cout << (restricted->isExact() ? "EXACT" : "INEXACT") << endl;
+      cout << "BNDs AFTER restricted:" << bnds << endl;
+      cout << "Restricted:" << (restricted->isExact() ? "EXACT" : "INEXACT") << endl;
       if (!restricted->isExact()) {
          relaxed->reset();
          relaxed->makeInitFrom(bbn.node);
          relaxed->compute();
-         bool improving = _theDD->better(relaxed->currentOpt(),bnds.getPrimal());
-         cout << "Improving? " << (improving ? "YES" : "NO") << endl;
-         relaxed->update(bnds);
-         cout << "AFTER Relax:" << bnds << endl;
-         cout << "Dual " << (relaxed->isExact() ? "EXACT" : "INEXACT") << endl;
+         cout << "before improve test: P=" << bnds.getPrimal() << " CR=" << relaxed->currentOpt() << endl;
+         bool improving = _theDD->isBetter(relaxed->currentOpt(),bnds.getPrimal());
          if (improving) {
+            cout << "relax Improving? " << (improving ? "YES" : "NO") << endl;
+            relaxed->update(bnds);
+            cout << "AFTER Relax:" << bnds << endl;
+            cout << "AFTER Relax:" << (relaxed->isExact() ? "EXACT" : "INEXACT") << endl;
             auto cs = relaxed->computeCutSet();
             cout << "cutSet:" << endl;
             for(auto n : cs) {
@@ -52,5 +55,5 @@ void BAndB::search()
          }         
       }
    }
-   
+   cout << "Done: " << bnds << "\n";
 }

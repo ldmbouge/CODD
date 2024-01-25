@@ -67,6 +67,10 @@ public:
    auto endOptLabels() { return _optLabels.end();}
    void setBound(double b) { _bound = b;}
    const auto getBound() const { return _bound;}
+   void setIncumbent(auto begin,auto end) {
+      for(auto it = begin;it != end;it++)
+         _optLabels.push_back(*it);
+   }
    const auto getId() const noexcept { return _nid;}
    void disconnect();
    friend std::ostream& operator<<(std::ostream& os,const ANode& s);
@@ -83,7 +87,10 @@ public:
    ~Node() {}
    const T& get() const {return _val;}
    void print(std::ostream& os) const {
-      os << _nid << ',' << _val << ",B=" << _bound;
+      os << _nid << ',' << _val << ",B=" << _bound << ",LBLS:[";
+      for(auto i=0u;i < _optLabels.size();i++)
+         os << _optLabels[i] << " ";
+      os << "]";
    }
 };
 

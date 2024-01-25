@@ -67,6 +67,7 @@ public:
    virtual ANode::Ptr duplicate(const ANode::Ptr src) = 0;
    virtual double initialBest() const = 0;
    virtual double initialWorst() const = 0;
+   virtual bool   isBetter(double obj1,double obj2) const = 0;
    virtual double better(double obj1,double obj2) const = 0;
    virtual void update(Bounds& bnds) const = 0;
    double currentOpt() const { return _trg->getBound();}
@@ -150,6 +151,7 @@ private:
    SMF _smf;
    Hashtable<ST,ANode::Ptr> _nmap;
    unsigned _ndId;
+   std::function<ANode::Ptr()> _initClosure;
    bool eq(ANode::Ptr f,ANode::Ptr s) const {
       auto fp = dynamic_cast<const Node<ST>*>(f.get());
       auto sp = dynamic_cast<const Node<ST>*>(s.get());
@@ -159,6 +161,9 @@ private:
       auto fp = dynamic_cast<const Node<ST>*>(f.get());
       auto sp = dynamic_cast<const Node<ST>*>(s.get());
       return NotEqual{}(fp->get(),sp->get());
+   }
+   bool   isBetter(double obj1,double obj2) const {
+      return Compare{}(obj1,obj2);
    }
    double better(double obj1,double obj2) const {
       return Compare{}(obj1,obj2) ? obj1 : obj2;
@@ -183,8 +188,10 @@ private:
       }
       else if (_strat->dual()) {
          bnds.setDual(DD::dualBetter(_trg->getBound(),bnds.getDual()));
-         if (_exact)
-            bnds.setIncumbent(_trg->beginOptLabels(),_trg->endOptLabels());            
+         if (_exact) {
+            bnds.setPrimal(DD::better(_trg->getBound(),bnds.getPrimal()));
+            bnds.setIncumbent(_trg->beginOptLabels(),_trg->endOptLabels());
+         }
       }
    }
    ANode::Ptr makeNode(ST&& state,bool pExact = true) {
@@ -202,14 +209,12 @@ private:
       }
    }
    void makeInitFrom(ANode::Ptr src) {
-      auto op = dynamic_cast<const Node<ST>*>(src.get()); // the actual root state
-      const auto ic = [op]() {
-         return op->get();
-      };
-      _sti = std::function<ST()>(ic);
+      _initClosure = std::function<ANode::Ptr()>([theRoot = duplicate(src)]() {
+         return theRoot;
+      });
    }
    ANode::Ptr init() {
-      return _root = makeNode(_sti());
+      return _root = _initClosure();
    }
    ANode::Ptr target() {
       return _trg = makeNode(_stt());
@@ -246,6 +251,9 @@ public:
         _ndId(0)
    {
       _baseline = _mem->mark();
+      _initClosure = std::function<ANode::Ptr()>([this]() {
+         return makeNode(_sti());
+      });
    }
    ~DD() { DD::reset();}
    template <class... Args>

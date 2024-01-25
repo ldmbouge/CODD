@@ -87,7 +87,7 @@ void AbstractDD::print(std::ostream& os,std::string gLabel)
    Heap<DNode,DNode> h(_mem,1000);
    for(ANode::Ptr n : _an) {
       h.insert({n,n->nbParents()});
-      std::cout << *n << " #PAR:" << n->nbParents() << "\n";
+      //std::cout << *n << " #PAR:" << n->nbParents() << "\n";
    }
    h.buildHeap();
    while (h.size() > 0) {
@@ -164,10 +164,11 @@ void AbstractDD::computeBest()
    h.buildHeap();
    while (h.size() > 0) {
       auto n = h.extractMax();
-      double cur = (n.node->nbParents() == 0) ? 0 : initialBest();
+      //std::cout << "\tCOMPUTE START: " << *n.node << "\n";
+      double cur = (n.node->nbParents() == 0) ? n.node->getBound() : initialBest();
       for(auto pi = n.node->beginPar();pi != n.node->endPar();pi++) {
          Edge::Ptr e = *pi;
-         std::cout << "EDGE:" << *e << std::endl;
+         //std::cout << "\tEDGE:" << *e << std::endl;
          auto ep = e->_from->_bound + e->_obj;
          cur = better(cur,ep);
          if (cur==ep) {
@@ -175,9 +176,7 @@ void AbstractDD::computeBest()
             n.node->_optLabels.push_back(e->_lbl);
          }
       }
-      std::cout << "\tCOMPUTED:" << cur << " for ";
-      n.node->print(std::cout);
-      std::cout << "\n";
+      //std::cout << "\tCOMPUTED:" << cur << " for " << *n.node << "\n";
       n.node->setBound(cur);
       for(auto ki = n.node->beginKids(); ki != n.node->endKids();ki++) {
          Edge::Ptr k = *ki;
@@ -395,7 +394,7 @@ void Relaxed::compute()
       }
    }
    _dd->computeBest();
-   _dd->print(std::cout,"Relaxed DD");
+   _dd->print(std::cout,"Relaxed");
 }
 
 std::vector<ANode::Ptr> Relaxed::computeCutSet()
