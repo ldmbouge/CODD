@@ -18,11 +18,13 @@ void BAndB::search()
    using namespace std;
    cout << "B&B searching..." << endl;
    AbstractDD::Ptr relaxed = _theDD->duplicate();
+   AbstractDD::Ptr restricted = _theDD->duplicate();
    _theDD->setStrategy(new Exact);
    _theDD->compute();
    _theDD->display("Exact (test)");
    cout << "EXACT INCUMBENT:" << _theDD->incumbent() << "\n";
    relaxed->setStrategy(new Relaxed(_mxw));
+   restricted->setStrategy(new Restricted(_mxw));
    Heap<QNode,QNode> pq(&mem,32);
    pq.insertHeap(QNode { _theDD->init(), _theDD->initialWorst() } );
    Bounds bnds(_theDD);
@@ -30,8 +32,7 @@ void BAndB::search()
       auto bbn = pq.extractMax();
       cout << "BOUNDS NOW: " << bnds << endl;
       cout << "EXTRACTED:  " << *bbn.node << "\t(" << bbn.bound << ")" << endl;
-      AbstractDD::Ptr restricted = _theDD->duplicate();
-      restricted->setStrategy(new Restricted(_mxw));
+      restricted->reset();
       restricted->makeInitFrom(bbn.node);
       restricted->compute();
       bool primalBetter = _theDD->isBetter(restricted->currentOpt(),bnds.getPrimal());
