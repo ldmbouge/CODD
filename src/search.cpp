@@ -43,6 +43,7 @@ void BAndB::search()
          relaxed->reset();
          relaxed->makeInitFrom(bbn.node);
          relaxed->compute();
+         relaxed->display("Relaxed");
          //cout << "before improve test: P=" << bnds.getPrimal() << " CR=" << relaxed->currentOpt() << endl;
          bool improving = _theDD->isBetter(relaxed->currentOpt(),bnds.getPrimal());
          if (improving) {
