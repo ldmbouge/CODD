@@ -36,13 +36,6 @@ namespace std {
    }
 };
 
-template <class T> std::ostream& operator<<(std::ostream& os,const std::vector<T>& msg) {
-   os << '[';
-   for(int v : msg)
-      os << v << " ";
-   return os << ']';
-}
-
 template <class T> std::ostream& operator<<(std::ostream& os,const std::set<T>& s) {
    os << "{";
    auto cnt = 0u;
@@ -50,6 +43,22 @@ template <class T> std::ostream& operator<<(std::ostream& os,const std::set<T>& 
       os << *i << ((cnt==s.size()-1) ? "" : ",");
    return os << "}";
 }
+
+template <class T> std::ostream& operator<<(std::ostream& os,const std::vector<T>& msg) {
+   os << '[';
+   for(const T& v : msg)
+      os << v << " ";
+   return os << ']';
+}
+
+template<class T> struct std::hash<std::vector<T>> {
+   std::size_t operator()(const std::vector<T>& v) const noexcept {
+      std::size_t ttl = 0;
+      for(auto e : v)
+         ttl = (ttl << 5) | std::hash<T>{}(e);
+      return ttl;
+   }   
+};
 
 template<class T> struct std::hash<std::set<T>> {
    std::size_t operator()(const std::set<T>& v) const noexcept {
