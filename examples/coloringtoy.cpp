@@ -117,7 +117,7 @@ int main()
                 decltype(stf),
                 decltype(scf),
                 decltype(smf)
-                >::makeDD(init,target,stf,scf,smf,labels),1);
+                >::makeDD(init,target,stf,scf,smf,labels),4);
    engine.search();
    return 0;
 }
