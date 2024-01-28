@@ -169,8 +169,11 @@ void AbstractDD::display()
 void AbstractDD::computeBest(const std::string m)
 {
    Heap<DNode,DNode> h(_mem,1000);
-   for(ANode::Ptr n : _an) 
+   for(ANode::Ptr n : _an) {
       h.insert({n,n->nbParents()});
+      if (n != _root)
+         n->setBound(initialBest());
+   }
    h.buildHeap();
    while (h.size() > 0) {
       auto n = h.extractMax();
