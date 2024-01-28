@@ -37,8 +37,9 @@ void BAndB::search()
       relaxed->reset();
       relaxed->makeInitFrom(bbn.node);
       relaxed->compute();
-      //relaxed->display();
-      //int w;cin >> w;
+      // to debug
+      relaxed->display();int w;cin >> w;
+      
       bool dualBetter = _theDD->isBetter(relaxed->currentOpt(),bnds.getPrimal());
       if (dualBetter) {
          relaxed->update(bnds);

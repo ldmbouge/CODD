@@ -178,10 +178,10 @@ void AbstractDD::computeBest(const std::string m)
       double cur = (n.node->nbParents() == 0) ? n.node->getBound() : initialBest();
       for(auto pi = n.node->beginPar();pi != n.node->endPar();pi++) {
          Edge::Ptr e = *pi;
-         //std::cout << "\tEDGE:" << *e << std::endl;
          auto ep = e->_from->_bound + e->_obj;
-         cur = better(cur,ep);
-         if (cur==ep) {
+         //std::cout << "\tEDGE:" << *e << " EP=" << ep << std::endl;
+         if (isBetter(ep,cur)) {
+            cur = ep;
             n.node->_optLabels = e->_from->_optLabels;
             n.node->_optLabels.push_back(e->_lbl);
          }
