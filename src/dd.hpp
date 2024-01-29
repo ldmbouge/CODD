@@ -200,6 +200,9 @@ private:
       auto inMap = _nmap.get(state,at);
       if (inMap) {
          at->setExact(at->isExact() & pExact);
+         if (at->nbParents() == 0 && at != _root && at != _trg) {
+            _an.push_back(at); // The node was created but later removed. Put it back!
+         }
          return at;
       } else {
          auto value = new (_mem) Node<ST>(_mem,std::move(state),_ndId++);

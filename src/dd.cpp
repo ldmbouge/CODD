@@ -330,7 +330,8 @@ std::list<ANode::Ptr> Relaxed::mergeLayer(std::list<ANode::Ptr>& layer)
    auto mergesDone = 0u;
    std::list<ANode::Ptr> delayed;
    std::list<ANode::Ptr> final;
-   while (mergesDone < mergesNeeded && layer.size() > 0) {
+
+   while (mergesDone < mergesNeeded && layer.size() > 0) {      
       ANode::Ptr n1 = layer.front();
       layer.pop_front();
       std::list<ANode::Ptr> toMerge = {n1};
@@ -348,7 +349,7 @@ std::list<ANode::Ptr> Relaxed::mergeLayer(std::list<ANode::Ptr>& layer)
       }
       if (toMerge.size() == 2) {
          mergesDone++;
-         newNode = mNode->nbParents()==0; // is this a newly created node?
+         newNode = mNode->nbParents()==0; // is this a newly created node? [That test does not work]
          const bool sameLayer = mNode->getLayer() == n1->getLayer();
          mNode->setLayer(std::max(mNode->getLayer(),n1->getLayer()));
          mNode->setExact(false);
