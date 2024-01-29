@@ -5,7 +5,6 @@
 #include <iostream>
 #include <set>
 #include <optional>
-#include <ranges>
 #include <algorithm>
 #include <map>
 
@@ -49,14 +48,6 @@ struct GE {
       return e1.a < e2.a || (e1.a == e2.a && e1.b < e2.b);
    }
 };
-
-template<class T,class B>
-std::set<T> setFrom(const std::ranges::iota_view<T,B>& from) {
-   std::set<T> res {};
-   for(auto v : from)
-      res.insert(v);
-   return res;
-}
 
 int main()
 {

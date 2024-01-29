@@ -9,11 +9,13 @@
 #include <algorithm>
 #include <map>
 
-typedef std::vector<std::set<int>> Legal;
+//typedef std::set<int> GRSet;
+typedef NatSet<2> GRSet;
+
 
 struct SGRuler {
-   std::set<int> m; // set of marks
-   std::set<int> d; // set of distances
+   GRSet m; // set of marks
+   GRSet d; // set of distances
    int k;           // number of marks made
    int e;           // last mark
    friend std::ostream& operator<<(std::ostream& os,const SGRuler& m) {
@@ -35,20 +37,12 @@ template<> struct std::not_equal_to<SGRuler> {
 
 template<> struct std::hash<SGRuler> {
    std::size_t operator()(const SGRuler& v) const noexcept {
-      return (std::hash<std::set<int>>{}(v.m) << 24) |
-         (std::hash<std::set<int>>{}(v.d) << 16) |
+      return (std::hash<GRSet>{}(v.m) << 24) |
+         (std::hash<GRSet>{}(v.d) << 16) |
          (std::hash<int>{}(v.k) << 8) |
          std::hash<int>{}(v.e);
    }
 };
-
-template<class T,class B>
-std::set<T> setFrom(const std::ranges::iota_view<T,B>& from) {
-   std::set<T> res {};
-   for(auto v : from)
-      res.insert(v);
-   return res;
-}
 
 int main(int argc,char* argv[])
 {
@@ -61,22 +55,22 @@ int main(int argc,char* argv[])
    
    const auto labels = setFrom(std::views::iota(1,L+1));     // using a plain set for the labels
    const auto init = []() {   // The root state      
-      return SGRuler {std::set<int>{0},std::set<int>{},1,0};
+      return SGRuler {GRSet {0},GRSet {},1,0};
    };
    const auto target = [n]() {    // The sink state
-      return SGRuler { std::set<int>{},std::set<int>{},n,0};
+      return SGRuler {GRSet {},GRSet {},n,0};
    };
    const auto stf = [n](const SGRuler& s,const int label) -> std::optional<SGRuler> {
       int illegal = 0;
-      std::set<int> ad {};
+      GRSet ad {};
       for(auto i : s.m) {
          ad.insert(label - i);
          illegal += s.d.contains(label-i);
       }
       if (s.k < n && label > s.e && illegal == 0) {
          if (s.k == n-1) // illegal is necessarily == 0 (false)
-            return SGRuler { std::set<int>{},std::set<int>{},s.k+1,0};
-         else return SGRuler { s.m | std::set<int>{label},s.d | ad, s.k + 1,label };
+            return SGRuler { GRSet {},GRSet {},s.k+1,0};
+         else return SGRuler { s.m | GRSet {label},s.d | ad, s.k + 1,label };
       } else return std::nullopt;  // return the empty optional 
    };
    const auto scf = [](const SGRuler& s,int label) { // partial cost function 
