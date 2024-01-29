@@ -29,6 +29,10 @@ And it will compile the whole thing
 
 ** Examples
 To be found in the ~examples~ folder
+- ~coloringtoy~ tiny coloring bench (same as in python)
+- ~foo~ maximum independent set (toy size)
+- ~tstpoy~ tiny TSP instance (same as in python)
+- ~gruler~ golomb ruler (usage <size> <ubOnLabels>)
 
 ** Unit test
 In the ~test~ folder
@@ -36,6 +40,17 @@ In the ~test~ folder
 ** Library
 All of it in the ~src~ folder
 
+* Tasks
+** TODO Decent set of integer implementation
+On my own heap.
+With template overload that is size dependent (up to label 64, all ops should be O(1))
+After that, it should be O(label/64). Unless we start using the 128 bit registers ;-)
+** TODO Check and fix leaks (the cache should be deallocated, not _an)
+** TODO Implement instance reader for tsp to do bigger instances
+** TODO Implement instance reader for MISP
+** TODO Rename MISP (~foo~) to misptoy ;-)
+** TODO Implement an O(1) removal from _an
+** TODO Profile and pick up the low hanging fruits 
 
 * Command to create a GCM for an import :noexport:
 Like 
