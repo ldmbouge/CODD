@@ -31,9 +31,11 @@ void BAndB::search()
    unsigned nNode = 0;
    while(!pq.empty()) {
       auto bbn = pq.extractMax();
-      nNode++;
       cout << "BOUNDS NOW: " << bnds << endl;
       cout << "EXTRACTED:  " << *bbn.node << "\t(" << bbn.bound << ")" << endl;
+      if (!_theDD->isBetter(bbn.bound,bnds.getPrimal()))
+          continue;
+      nNode++;
       relaxed->reset();
       relaxed->makeInitFrom(bbn.node);
       relaxed->compute();
