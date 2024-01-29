@@ -31,8 +31,10 @@ void BAndB::search()
    unsigned nNode = 0;
    while(!pq.empty()) {
       auto bbn = pq.extractMax();
+#ifndef _NDEBUG     
       cout << "BOUNDS NOW: " << bnds << endl;
       cout << "EXTRACTED:  " << *bbn.node << "\t(" << bbn.bound << ")" << endl;
+#endif      
       if (!_theDD->isBetter(bbn.bound,bnds.getPrimal()))
           continue;
       nNode++;
@@ -53,7 +55,7 @@ void BAndB::search()
             restricted->update(bnds);
          if (!restricted->isExact() && !relaxed->isExact()) {
             for(auto n : relaxed->computeCutSet()) {
-               cout << "\tCS node:" << *n << endl;
+               //cout << "\tCS node:" << *n << endl;
                auto nd = _theDD->duplicate(n); // we got a duplicate of the node.
                if (nd == bbn.node) { // the cutset is the root. Only way out: increase width.
                   for(auto i=0u;i < sizeof(ddr)/sizeof(WidthBounded*);i++)

@@ -189,10 +189,12 @@ private:
       if (_strat->primal())  {
          bnds.setPrimal(DD::better(_trg->getBound(),bnds.getPrimal()));
          bnds.setIncumbent(_trg->beginOptLabels(),_trg->endOptLabels());
+         std::cout << "P TIGHEN: " << bnds << "\n";
       }
       else if (_strat->dual() && _exact) {
          bnds.setPrimal(DD::better(_trg->getBound(),bnds.getPrimal()));
          bnds.setIncumbent(_trg->beginOptLabels(),_trg->endOptLabels());
+         std::cout << "D TIGHEN: " << bnds << "\n";
       }
    }
    ANode::Ptr makeNode(ST&& state,bool pExact = true) {

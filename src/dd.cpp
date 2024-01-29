@@ -198,7 +198,9 @@ void AbstractDD::computeBest(const std::string m)
          h.decrease(at);
       }
    }
+#ifndef _NDEBUG     
    std::cout << '\t' << m << " B@SINK:" << _trg->getBound() << "\tLBL:" << _trg->_optLabels << std::endl;
+#endif   
 }
 
 // ----------------------------------------------------------------------
