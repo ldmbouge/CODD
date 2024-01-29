@@ -112,6 +112,16 @@ public:
       //std::cout << "HT(" << this << ") had: " << _nbp << " entries\n";
       _nbp = 0;
    }
+   template <class Fun>
+   void doOnAll(Fun f) {
+      for(auto i=0u;i < _mxs;i++) {
+         HTNode* cur = (_mgc[i]==_magic) ? _tab[i] : nullptr;
+         while (cur) {
+            f(cur->_key,cur->_data);
+            cur = cur->_next;
+         }
+      }
+   }
 };
 
 #endif

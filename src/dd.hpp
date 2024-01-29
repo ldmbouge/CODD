@@ -16,14 +16,11 @@ class AbstractDD;
 
 class Bounds {
    double _primal;
-   //double _dual;
    std::vector<int> _inc;
 public:
    Bounds(std::shared_ptr<AbstractDD> dd);
    void setPrimal(double p) { _primal = p;}
-   //void setDual(double p)   { _dual = p;}
    double getPrimal() const { return _primal;}
-   //double getDual() const   { return _dual;}
    void setIncumbent(auto begin,auto end) {
       _inc.clear();
       for(auto it = begin;it != end;it++)
@@ -284,9 +281,13 @@ public:
    }
    void reset() {
       _ndId = 0;
-      _nmap.clear();
-      for(auto n : _an)
+      _nmap.doOnAll([](ST& key,ANode::Ptr n) {
+         key.~ST();
          n->~ANode();
+      });
+      _nmap.clear();      
+      //for(auto n : _an)
+      //         n->~ANode();
       _an.clear();
       _mem->clear(_baseline);
       _root = _trg = nullptr;

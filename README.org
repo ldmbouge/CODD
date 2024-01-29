@@ -45,7 +45,8 @@ All of it in the ~src~ folder
 On my own heap.
 With template overload that is size dependent (up to label 64, all ops should be O(1))
 After that, it should be O(label/64). Unless we start using the 128 bit registers ;-)
-** TODO Check and fix leaks (the cache should be deallocated, not _an)
+** DONE Check and fix leaks (the cache should be deallocated, not _an)
+CLOSED: [2024-01-29 Mon 13:46]
 ** TODO Implement instance reader for tsp to do bigger instances
 ** TODO Implement instance reader for MISP
 ** TODO Rename MISP (~foo~) to misptoy ;-)
