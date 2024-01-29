@@ -354,14 +354,18 @@ std::list<ANode::Ptr> Relaxed::mergeLayer(std::list<ANode::Ptr>& layer)
          mNode->setExact(false);
          _dd->_exact = false;
          for(auto d : toMerge) {
-            if (d == mNode) continue; // skip in case the node itself is the merged one
-            transferArcs(d,mNode);
-            auto at = std::find(_dd->_an.begin(),_dd->_an.end(),d);
-            _dd->_an.erase(at);
+            if (d != mNode) { // skip in case the node itself is the merged one
+               transferArcs(d,mNode);
+               auto at = std::find(_dd->_an.begin(),_dd->_an.end(),d); // that's costly
+               assert(at != _dd->_an.end());
+               if (at != _dd->_an.end())
+                  _dd->_an.erase(at);
+            }
          }
-         if (sameLayer) //   newNode && 
-            layer.push_back(mNode);
-         else delayed.push_back(mNode);
+         if (sameLayer) {
+            if (newNode)
+               layer.push_back(mNode);
+         } else delayed.push_back(mNode);
       } else final.push_back(n1);
    }
    layer.insert(layer.end(),final.begin(),final.end());

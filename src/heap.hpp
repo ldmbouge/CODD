@@ -49,7 +49,6 @@ template <class T,class Ord = std::greater<T>> class Heap {
       Location** nd    = new (_pool) Location*[newSize];
       for(int i=0u;i < _at;i++) {
          nd[i] = _data[i];
-         nd[i]->_p = i;
       }
       for(int i=_mxs; i < newSize;i++) {
          nd[i] = newSeg + i - _mxs;
@@ -63,7 +62,8 @@ template <class T,class Ord = std::greater<T>> class Heap {
          _ms <<= 1;
       }
       _lseg[_nbs++] = newSeg;
-      _mxs = newSize;      
+      _mxs = newSize;
+      _data = nd;
    }
    void refloat(int p) noexcept {
       while(p>0) {
