@@ -10,7 +10,7 @@
 #include <map>
 
 //typedef std::set<int> GRSet;
-typedef NatSet<2> GRSet;
+typedef NatSet<2> GRSet;  // 2 double-word (128 labels)
 
 
 struct SGRuler {
