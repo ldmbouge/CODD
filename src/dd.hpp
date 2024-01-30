@@ -223,20 +223,20 @@ private:
       return _trg = makeNode(_stt());
    }
    ANode::Ptr transition(ANode::Ptr src,int label) {
-      auto op = dynamic_cast<const Node<ST>*>(src.get());
+      auto op = static_cast<const Node<ST>*>(src.get());
       auto vs = _stf(op->get(),label);
       if (vs.has_value())
          return makeNode(std::move(vs.value()),src->isExact());
       else return nullptr;
    }
    double cost(ANode::Ptr src,int label) {
-      auto op = dynamic_cast<const Node<ST>*>(src.get());
+      auto op = static_cast<const Node<ST>*>(src.get());
       auto cVal = _stc(op->get(),label);
       return cVal;
    }
    ANode::Ptr merge(const ANode::Ptr f,const ANode::Ptr s) {
-      auto fp = dynamic_cast<const Node<ST>*>(f.get());
-      auto sp = dynamic_cast<const Node<ST>*>(s.get());
+      auto fp = static_cast<const Node<ST>*>(f.get());
+      auto sp = static_cast<const Node<ST>*>(s.get());
       auto vs = _smf(fp->get(),sp->get());
       if (vs.has_value())
          return makeNode(std::move(vs.value()));
