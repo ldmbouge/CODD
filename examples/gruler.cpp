@@ -72,7 +72,7 @@ int main(int argc,char* argv[])
       }
       if (s.k < n && label > s.e && illegal == 0) {
          if (s.k == n-1) // this must be a legal move (illegal==0)
-            return SGRuler { GRSet {},GRSet {},s.k+1,0};
+            return SGRuler { GRSet {},GRSet {},n,0};
          else return SGRuler { s.m | GRSet {label},s.d | ad, s.k + 1,label };
       } else return std::nullopt;  // return the empty optional 
    };
