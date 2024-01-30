@@ -83,6 +83,7 @@ public:
    const auto getId() const noexcept { return _nid;}
    void disconnect();
    friend std::ostream& operator<<(std::ostream& os,const ANode& s);
+   friend std::ostream& operator<<(std::ostream& os,const ANList& v);
 };
 
 class ANList {
