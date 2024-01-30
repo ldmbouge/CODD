@@ -61,6 +61,7 @@ int main()
                             GE {2,4}                             
    };
    const int K = ns.size();
+   Bounds bnds;
    const auto labels = setFrom(std::views::iota(1,K+1));     // using a plain set for the labels
    const auto init = [ns,labels]() {   // The root state
       Legal A(ns.size(), GNSet {});      
@@ -109,7 +110,7 @@ int main()
                 decltype(scf),
                 decltype(smf)
                 >::makeDD(init,target,stf,scf,smf,labels),4);
-   engine.search();
+   engine.search(bnds);
    return 0;
 }
 

@@ -53,6 +53,7 @@ int main(int argc,char* argv[])
    const int n = atoi(argv[1]);
    const int L = atoi(argv[2]);
    
+   Bounds bnds;
    const auto labels = setFrom(std::views::iota(1,L+1));     // using a plain set for the labels
    const auto init = []() {   // The root state      
       return SGRuler {GRSet {0},GRSet {},1,0};
@@ -60,9 +61,10 @@ int main(int argc,char* argv[])
    const auto target = [n]() {    // The sink state
       return SGRuler {GRSet {},GRSet {},n,0};
    };
-   const auto stf = [n](const SGRuler& s,const int label) -> std::optional<SGRuler> {
+   const auto stf = [n,&bnds](const SGRuler& s,const int label) -> std::optional<SGRuler> {
       int illegal = 0;
       GRSet ad {};
+      if (label >= bnds.getPrimal()) return std::nullopt;
       //for(auto i : s.m) {
       for(auto i = s.m.begin();illegal == 0 && i != s.m.end();i++) {
          ad.insert(label - *i);
@@ -93,7 +95,7 @@ int main(int argc,char* argv[])
                 decltype(scf),
                 decltype(smf)
                 >::makeDD(init,target,stf,scf,smf,labels),4);
-   engine.search();
+   engine.search(bnds);
    return 0;
 }
 

@@ -18,7 +18,9 @@ class Bounds {
    double _primal;
    std::vector<int> _inc;
 public:
+   Bounds() {}
    Bounds(std::shared_ptr<AbstractDD> dd);
+   void attach(std::shared_ptr<AbstractDD> dd);
    void setPrimal(double p) { _primal = p;}
    double getPrimal() const { return _primal;}
    void setIncumbent(auto begin,auto end) {

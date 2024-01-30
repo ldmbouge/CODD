@@ -8,7 +8,7 @@ class BAndB {
    const unsigned  _mxw;
 public:
    BAndB(AbstractDD::Ptr dd,const unsigned width) : _theDD(dd),_mxw(width) {}
-   void search();
+   void search(Bounds& bnds);
 };  
 
 #endif
