@@ -17,13 +17,13 @@ struct MISP {
 };
 
 template<> struct std::equal_to<MISP> {
-   constexpr bool operator()(const MISP& s1,const MISP& s2) const {
+   bool operator()(const MISP& s1,const MISP& s2) const {
       return s1.sel == s2.sel;
    }
 };
 
 template<> struct std::not_equal_to<MISP> {
-   constexpr bool operator()(const MISP& s1,const MISP& s2) const {
+   bool operator()(const MISP& s1,const MISP& s2) const {
       return s1.sel != s2.sel;
    }
 };
@@ -81,7 +81,7 @@ int main()
          };
       } else return std::nullopt;  // return the empty optional 
    };
-   const auto scf = [top](const MISP& s,int label) { // cost function 
+   const auto scf = [top,weight](const MISP& s,int label) { // cost function 
       return (label == top) ? 0 : weight[label];
    };
    const auto smf = [](const MISP& s1,const MISP& s2) -> std::optional<MISP> { // merge function

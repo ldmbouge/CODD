@@ -8,6 +8,8 @@
 #include <unistd.h>
 #include "heap.hpp"
 #include "queue.hpp"
+#include <sys/types.h>
+#include <sys/wait.h>
 
 
 Bounds::Bounds(std::shared_ptr<AbstractDD> dd)

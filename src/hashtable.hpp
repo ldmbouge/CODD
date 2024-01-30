@@ -22,6 +22,7 @@
 #include <iostream>
 #include <functional>
 #include <string>
+#include <string.h>
 #include "store.hpp"
 
 template <class K,class T,class Hash = std::hash<K>,class Equal = std::equal_to<K>> class Hashtable {
@@ -72,8 +73,8 @@ public:
       //std::cout << "SIZE:" << _mxs << '\n';
       _tab = new (_pool) HTNode*[_mxs];
       _mgc = new (_pool) unsigned[_mxs];
-      bzero(_tab,sizeof(HTNode*)*_mxs);
-      bzero(_mgc,sizeof(unsigned)*_mxs);
+      memset(_tab,0,sizeof(HTNode*)*_mxs);
+      memset(_mgc,0,sizeof(unsigned)*_mxs);
       _magic = 1;
       _nbp = 0;
    }
