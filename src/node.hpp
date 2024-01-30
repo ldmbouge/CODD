@@ -40,6 +40,7 @@ protected:
    Vec<Edge::Ptr,unsigned> _children;
    Vec<int,unsigned>       _optLabels;
    double                  _bound;
+   double                  _bbound;
    unsigned                _layer:31; // will be used in restricted / (relaxed?)
    unsigned                _exact:1;  // true if node is exact
    unsigned                _nid;
@@ -66,7 +67,9 @@ public:
    auto beginOptLabels() { return _optLabels.begin();}
    auto endOptLabels() { return _optLabels.end();}
    void setBound(double b) { _bound = b;}
+   void setBackwardBound(double b) { _bbound = b;}
    const auto getBound() const { return _bound;}
+   const auto getBackwardBound() const { return _bbound;}
    void setIncumbent(auto begin,auto end) {
       for(auto it = begin;it != end;it++)
          _optLabels.push_back(*it);
@@ -87,7 +90,7 @@ public:
    ~Node() {}
    const T& get() const {return _val;}
    void print(std::ostream& os) const {
-      os << _nid << ',' << _val << ",B=" << _bound;// << ",LBLS:[";
+      os << _nid << ',' << _val << ",B=" << _bound << ",BB=" << _bbound; // << ",LBLS:[";
       //      for(auto i=0u;i < _optLabels.size();i++)
       // os << _optLabels[i] << " ";
       //os << "]";

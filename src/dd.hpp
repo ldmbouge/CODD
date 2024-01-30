@@ -52,6 +52,7 @@ protected:
    virtual bool eq(ANode::Ptr f,ANode::Ptr s) const = 0;
    virtual bool neq(ANode::Ptr f,ANode::Ptr s) const = 0;
    void computeBest(const std::string m);
+   void computeBestBackward(const std::string m);
    void saveGraph(std::ostream& os,std::string gLabel);
 public:
    typedef std::shared_ptr<AbstractDD> Ptr;

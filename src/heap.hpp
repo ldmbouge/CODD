@@ -31,7 +31,10 @@ template <class T,class Ord = std::greater<T>> class Heap {
       Location() {}
       Location(const T& val,int p) : _val(val),_p(p) {}
       T value() const noexcept { return _val;}
-      T operator*() const noexcept { return _val;}      
+      T operator*() const noexcept { return _val;}
+      friend std::ostream& operator<<(std::ostream& os,const Location& l) {
+         return os << "<" << l._p << ":" << l._val << ">";
+      }
    };
    Pool::Ptr     _pool; // where memory comes from
    Ord            _ord; // ordering object
@@ -136,7 +139,7 @@ public:
    }
    const Location* insertHeap(const T& v) noexcept {
       auto loc = insert(v);
-      heapify(_at-1);
+      refloat(_at-1);
       return loc;
    }
    void buildHeap() noexcept {

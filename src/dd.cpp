@@ -60,6 +60,7 @@ void AbstractDD::compute()
    assert(_strat);
    _strat->compute();
    computeBest(_strat->getName());
+   computeBestBackward(_strat->getName());
 }
 
 std::vector<int> AbstractDD::incumbent()
@@ -208,6 +209,42 @@ void AbstractDD::computeBest(const std::string m)
    std::cout << '\t' << m << " B@SINK:" << _trg->getBound() << "\tLBL:" << _trg->_optLabels << std::endl;
 #endif   
 }
+
+void AbstractDD::computeBestBackward(const std::string m)
+{
+   Heap<DNode,DNode> h(_mem,1000);
+   for(ANode::Ptr n : _an) {
+      h.insert({n,n->nbChildren()});
+      if (n != _trg)
+         n->setBackwardBound(initialBest());
+   }
+   h.buildHeap();
+   while (h.size() > 0) {
+      auto n = h.extractMax();
+      //std::cout << "\tCOMPUTE START: " << *n.node << "\n";
+      double cur = (n.node->nbChildren() == 0) ? n.node->getBackwardBound() : initialBest();
+      for(auto ci = n.node->beginKids();ci != n.node->endKids();ci++) {
+         Edge::Ptr e = *ci;
+         auto ep = e->_to->_bbound + e->_obj;
+         //std::cout << "\tEDGE:" << *e << " EP=" << ep << std::endl;
+         if (isBetter(ep,cur)) {
+            cur = ep;
+         }
+      }
+      //std::cout << "\tCOMPUTED:" << cur << " for " << *n.node << "\n";
+      n.node->setBackwardBound(cur);
+      for(auto pi = n.node->beginPar(); pi != n.node->endPar();pi++) {
+         Edge::Ptr k = *pi;
+         auto at = h.find({k->_from,0});
+         assert(at!=nullptr);
+         h.decrease(at);
+      }
+   }
+#ifndef _NDEBUG     
+   std::cout << '\t' << m << " B@ROOT:" << _trg->getBackwardBound() << std::endl;
+#endif   
+}
+
 
 // ----------------------------------------------------------------------
 // Exact DD Strategy

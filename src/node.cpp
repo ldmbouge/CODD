@@ -17,6 +17,7 @@ ANode::ANode(Pool::Ptr mem,unsigned nid)
      _children(mem,2),
      _optLabels(mem),
      _bound(0),
+     _bbound(0),
      _layer(0),
      _exact(1),
      _nid(nid)
@@ -28,6 +29,7 @@ ANode::ANode(Pool::Ptr mem,unsigned nid,const ANode& o)
      _children(mem,2),
      _optLabels(mem,o._optLabels),
      _bound(o._bound),
+     _bbound(o._bbound),
      _layer(0),
      _exact(1),
      _nid(nid)
