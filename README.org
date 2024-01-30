@@ -41,7 +41,8 @@ In the ~test~ folder
 All of it in the ~src~ folder
 
 * Tasks
-** TODO Decent set of integer implementation
+** DONE Decent set of integer implementation
+CLOSED: [2024-01-29 Mon 19:01]
 On my own heap.
 With template overload that is size dependent (up to label 64, all ops should be O(1))
 After that, it should be O(label/64). Unless we start using the 128 bit registers ;-)
