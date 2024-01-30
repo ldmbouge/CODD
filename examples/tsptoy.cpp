@@ -65,6 +65,7 @@ int main()
                              {GE {4,2}, 25},
                              {GE {4,3}, 30}
    };
+   Bounds bnds;
    const auto labels = ns;     // using a plain set for the labels
    const int sz = (int)ns.size();
    const auto init = []() {   // The root state
@@ -101,7 +102,7 @@ int main()
                 decltype(scf),
                 decltype(smf)
                 >::makeDD(init,target,stf,scf,smf,labels),1);
-   engine.search();
+   engine.search(bnds);
    return 0;
 }
 

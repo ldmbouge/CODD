@@ -12,11 +12,12 @@ struct QNode {
    }
 };
 
-void BAndB::search()
+void BAndB::search(Bounds& bnds)
 {
    Pool mem;
    using namespace std;
    cout << "B&B searching..." << endl;
+   bnds.attach(_theDD);
    AbstractDD::Ptr relaxed = _theDD->duplicate();
    AbstractDD::Ptr restricted = _theDD->duplicate();
    WidthBounded* ddr[2];
@@ -25,7 +26,7 @@ void BAndB::search()
    restricted->setStrategy(ddr[1] = new Restricted(_mxw));
    Heap<QNode,QNode> pq(&mem,32);
    pq.insertHeap(QNode { _theDD->init(), _theDD->initialWorst() } );
-   Bounds bnds(_theDD);
+   //Bounds bnds(_theDD);
    unsigned nNode = 0;
    while(!pq.empty()) {
       auto bbn = pq.extractMax();

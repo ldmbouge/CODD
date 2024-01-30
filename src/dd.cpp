@@ -15,7 +15,11 @@
 Bounds::Bounds(std::shared_ptr<AbstractDD> dd)
 {
    _primal = dd->initialBest();
-   //_dual   = dd->initialWorst();      
+}
+
+void Bounds::attach(std::shared_ptr<AbstractDD> dd)
+{
+   _primal = dd->initialBest();
 }
 
 AbstractDD::AbstractDD(const GNSet& labels)

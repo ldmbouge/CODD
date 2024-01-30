@@ -166,7 +166,7 @@ public:
    std::size_t hash() const noexcept {
       std::size_t hv = 0;
       for(auto i = 0;i < nbw;i++)
-         hv = hv | _t[i];
+         hv = hv ^ _t[i];
       return hv;
    }
 };

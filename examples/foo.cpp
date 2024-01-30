@@ -52,6 +52,7 @@ int main()
                                 GE {4,2}, GE {4,3}, GE {4,5},
                                 GE {5,4}
    };
+   Bounds bnds;
    const auto labels = ns | GNSet { top };     // using a plain set for the labels
    constexpr const double weight[] = {0,3,4,2,2,7};    // plain array for the weights
    std::map<int,GNSet> neighbors {};  // computing the neigbhors using STL (not pretty)
@@ -115,7 +116,7 @@ int main()
                 decltype(scf),
                 decltype(smf)                   
                 >::makeDD(myInit,myTarget,myStf,scf,smf,labels),1);
-   engine.search();
+   engine.search(bnds);
    return 0;
 }
 
