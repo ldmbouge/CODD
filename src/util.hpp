@@ -58,7 +58,12 @@ public:
          assert((*it >> 6) <= nbw-1);
          insert(*it);
       }
-   }  
+   }
+   NatSet& operator=(const NatSet& s) noexcept {
+      for(int i=0;i<nbw;i++)
+         _t[i] = s._t[i];
+      return *this;
+   }
    constexpr unsigned short nbWords() const noexcept { return nbw;}
    constexpr unsigned short largestPossible() const noexcept { return nbw*64;}
    void clear() noexcept {
@@ -157,6 +162,12 @@ public:
       for(auto i = 0;i < nbw;i++)
          nw += s1._t[i] == s2._t[i];
       return nw == nbw;
+   }
+   std::size_t hash() const noexcept {
+      std::size_t hv = 0;
+      for(auto i = 0;i < nbw;i++)
+         hv = hv | _t[i];
+      return hv;
    }
 };
 
@@ -395,10 +406,7 @@ template<class T> struct std::hash<std::set<T>> {
 
 template<unsigned short sz> struct std::hash<NatSet<sz>> {
    std::size_t operator()(const NatSet<2>& v) const noexcept {
-      std::size_t ttl = 0;
-      for(auto e = v.cbegin(); e != v.cend();e++)
-         ttl = (ttl << 3) | std::hash<int>{}(*e);
-      return ttl;
+      return v.hash();
    }
 };
 

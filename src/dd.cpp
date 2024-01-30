@@ -1,5 +1,5 @@
 #include "dd.hpp"
-#include "util.h"
+#include "util.hpp"
 #include <iostream>
 #include <fstream>
 #include <iomanip>

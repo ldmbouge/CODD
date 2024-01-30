@@ -63,12 +63,13 @@ int main(int argc,char* argv[])
    const auto stf = [n](const SGRuler& s,const int label) -> std::optional<SGRuler> {
       int illegal = 0;
       GRSet ad {};
-      for(auto i : s.m) {
-         ad.insert(label - i);
-         illegal += s.d.contains(label-i);
+      //for(auto i : s.m) {
+      for(auto i = s.m.begin();illegal == 0 && i != s.m.end();i++) {
+         ad.insert(label - *i);
+         illegal += s.d.contains(label- *i);
       }
       if (s.k < n && label > s.e && illegal == 0) {
-         if (s.k == n-1) // illegal is necessarily == 0 (false)
+         if (s.k == n-1) // this must be a legal move (illegal==0)
             return SGRuler { GRSet {},GRSet {},s.k+1,0};
          else return SGRuler { s.m | GRSet {label},s.d | ad, s.k + 1,label };
       } else return std::nullopt;  // return the empty optional 
