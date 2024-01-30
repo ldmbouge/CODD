@@ -8,6 +8,7 @@
 #include <limits>
 #include <initializer_list>
 #include <ranges>
+#include <assert.h>
 
 namespace std {
    template <class T> T min(const set<T>& s) {
@@ -40,48 +41,44 @@ namespace std {
 
 template <unsigned short nbw=1> 
 class NatSet {
-   static constexpr unsigned short _mxw = nbw;
-   static constexpr unsigned short _nbp = nbw * 64;
    unsigned long long _t[nbw];
 public:
    NatSet() {
-      for(auto i=0u;i < _mxw;i++)
+      for(auto i=0u;i < nbw;i++)
          _t[i]=0;
    }
    NatSet(const NatSet& s) {
-      for(int i=0;i<_mxw;i++)
+      for(int i=0;i<nbw;i++)
          _t[i] = s._t[i];
    }
    NatSet(std::initializer_list<int> l) {
-      for(auto i=0u;i < _mxw;i++)
+      for(auto i=0u;i < nbw;i++)
          _t[i]=0;
       for(auto it = l.begin();it!=l.end();it++) {
          assert((*it >> 6) <= nbw-1);
          insert(*it);
       }
    }  
-   constexpr unsigned short nbWords() const noexcept { return _mxw;}
-   constexpr unsigned short largestPossible() const noexcept { return _nbp;}
+   constexpr unsigned short nbWords() const noexcept { return nbw;}
+   constexpr unsigned short largestPossible() const noexcept { return nbw*64;}
    void clear() noexcept {
-      for(short i=0;i < _mxw;i++)
+      for(short i=0;i < nbw;i++)
          _t[i] = 0;
    }
    int size() const noexcept {
       int ttl = 0;
-      for(short i=0;i < _mxw;++i)
+      for(short i=0;i < nbw;++i)
          ttl += __builtin_popcountll(_t[i]);
       return ttl;
    }
    void insert(int p) noexcept         { _t[p >> 6] |= (1ull << (p & 63));}
    bool contains(int p) const noexcept { return (_t[p >> 6] &  (1ull << (p & 63))) != 0;}
    void unionWith(const NatSet& ps) noexcept {
-      assert(_mxw == ps._mxw);
-      for(short i=0;i < _mxw;++i)
+      for(short i=0;i < nbw;++i)
          _t[i] |= ps._t[i]; 
    }
    void interWith(const NatSet& ps) noexcept {
-      assert(_mxw == ps._mxw);
-      for(short i=0;i < _mxw;i++)
+      for(short i=0;i < nbw;i++)
          _t[i] &= ps._t[i];
    }
    class iterator { 
@@ -157,9 +154,9 @@ public:
    }
    friend bool operator==(const NatSet& s1,const NatSet& s2) {
       unsigned short nw = 0;
-      for(auto i = 0;i < _mxw;i++)
+      for(auto i = 0;i < nbw;i++)
          nw += s1._t[i] == s2._t[i];
-      return nw == _mxw;
+      return nw == nbw;
    }
 };
 
@@ -170,15 +167,7 @@ class GNSet {
    unsigned short _nbp;
    unsigned long long *_t;
 public:
-   GNSet() : _mxw(0),_nbp(0),_t(nullptr) {}
-   GNSet(const GNSet& s) {
-      _mxw = s._mxw;
-      _nbp = s._nbp;
-      _t   = new unsigned long long[_mxw];
-      for(int i=0;i<_mxw;i++)
-         _t[i] = s._t[i];
-   }   
-   GNSet(unsigned short nb) {
+   GNSet(unsigned short nb=64) {
       _mxw = (nb >> 6) + (((nb & 63) != 0) ? 1 : 0);
       _nbp = nb;
       if (_mxw) {
@@ -186,11 +175,38 @@ public:
          for(int i=0;i<_mxw;i++) _t[i]=0;
       } else _t = nullptr;
    }
-   GNSet(unsigned long long* buf,unsigned short nb) {
-      _mxw = (nb >> 6) + (((nb & 63) != 0) ? 1 : 0);
-      _nbp = nb;
-      _t   = buf;
-      for(int i=0;i<_mxw;i++) _t[i]=0;
+   GNSet(const GNSet& s) {
+      _mxw = s._mxw;
+      _nbp = s._nbp;
+      _t   = new unsigned long long[_mxw];
+      for(int i=0;i<_mxw;i++)
+         _t[i] = s._t[i];
+   }   
+   GNSet(std::initializer_list<int> l) {
+      _mxw = 1;
+      auto nb = (l.end() - l.begin()) >> 6;
+      _nbp  = nb << 6;
+      while (nb >= _mxw) _mxw <<= 1;
+      _t = new unsigned long long[_mxw];
+      for(auto i=0u;i < _mxw;i++)
+         _t[i]=0;
+      for(auto it = l.begin();it!=l.end();it++) {
+         insert(*it);
+      }
+   }
+   ~GNSet() {
+      delete[] _t;
+   }
+   GNSet& operator=(const GNSet& s) {
+      if (s._mxw != _mxw) {
+         delete[] _t;
+         _mxw = s._mxw;
+         _t = new unsigned long long[_mxw];
+      }
+      _nbp = s._nbp;      
+      for(int i=0;i<_mxw;i++)
+         _t[i] = s._t[i];
+      return *this;
    }
    short nbWords() const noexcept { return _mxw;}
    int largestPossible() const noexcept { return _nbp;}
@@ -204,7 +220,26 @@ public:
          ttl += __builtin_popcountll(_t[i]);
       return ttl;
    }
-   void insert(int p) noexcept         { _t[p >> 6] |= (1ull << (p & 63));}
+   void insert(int p) noexcept         {
+      const int i = p >> 6;
+      const auto old = _mxw;
+      if (i >= _mxw) {
+         while(i >= _mxw) _mxw <<= 1;
+         auto np = new unsigned long long[_mxw];
+         for(int i=0;i < old;i++)
+            np[i] = _t[i];
+         for(int i=old;i < _mxw;i++)
+            np[i] = 0;
+         delete []_t;
+         _t = np;
+      }      
+      _t[i] |= (1ull << (p & 63));
+   }
+   void remove(int p) noexcept {
+      const int i = p >> 6;
+      if (i < _mxw) 
+         _t[i] &= ~(1ull << (p & 63));      
+   }
    bool contains(int p) const noexcept { return (_t[p >> 6] &  (1ull << (p & 63))) != 0;}
    void unionWith(const GNSet& ps) noexcept {
       assert(_mxw == ps._mxw);
@@ -230,6 +265,7 @@ public:
       }
    }
    void interWith(const GNSet& ps) noexcept {
+      assert(_mxw == ps._mxw);
       for(short i=0;i < _mxw;i++)
          _t[i] &= ps._t[i];
    }
@@ -244,6 +280,13 @@ public:
             _cw = _t[_cwi];         
       }
       iterator(unsigned long long* t,unsigned short nbw) : _t(t),_nbw(nbw),_cwi(nbw),_cw(0) {} // end constructor
+      iterator& operator=(const iterator i) {
+         _t = i._t;
+         assert(_nbw == i._nbw);
+         _cwi = i._cwi;
+         _cw  = i._cw;
+         return *this;
+      }
    public:
       using iterator_category = std::forward_iterator_tag;
       using value_type = short;
@@ -265,12 +308,56 @@ public:
    };
    iterator begin() const { return iterator(_t,_mxw,0);}
    iterator end()   const { return iterator(_t,_mxw);}
+   iterator rbegin() const {
+      int lw = _mxw - 1;
+      while (_t[lw]==0) lw--;
+      auto c = iterator(_t,_mxw,lw);
+      auto last = c;
+      auto found = c;
+      while (c._cwi == last._cwi) {
+         found = c;
+         c++;         
+      }
+      return found;
+   }
    friend std::ostream& operator<<(std::ostream& os,const GNSet& ps) {
-      os << '[' << ps.size() << ']' << '{';
-      for(short i : ps) os << i << ' ';
+      os << '{';
+      auto cnt = 0;
+      for(auto i=ps.begin();i!= ps.end();i++,cnt++)
+         os << *i << ((cnt==ps.size()-1) ? "" : ",");
       return os << '}';
    }
+   friend bool operator==(const GNSet& s1,const GNSet& s2) {
+      if (s1._mxw == s2._mxw) {
+         unsigned short nw = 0;
+         for(auto i = 0;i < s1._mxw;i++)
+            nw += s1._t[i] == s2._t[i];
+         return nw == s1._mxw;
+      } else return false;
+   }
 };
+
+
+inline int min(const GNSet& s) {
+   if (s.size() > 0)
+      return *s.begin();
+   else 
+      return std::numeric_limits<int>::max();
+}
+inline int max(const GNSet& s) {
+   if (s.size() > 0)
+      return *(s.rbegin());
+   else 
+      return std::numeric_limits<int>::min();
+}
+template <typename Pred>
+GNSet filter(const GNSet& inSet,Pred p) {
+   GNSet outSet = {};
+   for(const auto& v : inSet)
+      if (p(v))
+         outSet.insert(v);
+   return outSet;
+}
 
 
 template <class T> std::ostream& operator<<(std::ostream& os,const std::set<T>& s) {
@@ -317,6 +404,15 @@ template<unsigned short sz> struct std::hash<NatSet<sz>> {
 
 typedef struct std::hash<NatSet<1>> NS1;
 typedef struct std::hash<NatSet<2>> NS2;
+
+template <> struct std::hash<GNSet> {
+   std::size_t operator()(const GNSet& v) const noexcept {
+      std::size_t ttl = 0;
+      for(auto e : v)
+         ttl = (ttl << 3) | std::hash<int>{}(e);
+      return ttl;
+   }
+};
 
 
 template <typename T>
@@ -395,8 +491,8 @@ inline NatSet<2> operator&(const NatSet<2>& s1,const NatSet<2>& s2)
 
 
 template<class T,class B>
-std::set<T> setFrom(const std::ranges::iota_view<T,B>& from) {
-   std::set<T> res {};
+GNSet setFrom(const std::ranges::iota_view<T,B>& from) {
+   GNSet res {};
    for(auto v : from)
       res.insert(v);
    return res;

@@ -21,8 +21,6 @@ void BAndB::search()
    AbstractDD::Ptr restricted = _theDD->duplicate();
    WidthBounded* ddr[2];
    _theDD->setStrategy(new Exact);
-   //_theDD->compute();
-   //_theDD->display();
    relaxed->setStrategy(ddr[0] = new Relaxed(_mxw));
    restricted->setStrategy(ddr[1] = new Restricted(_mxw));
    Heap<QNode,QNode> pq(&mem,32);
@@ -42,8 +40,7 @@ void BAndB::search()
       relaxed->makeInitFrom(bbn.node);
       relaxed->compute();
       // to debug
-      //relaxed->display();int w;cin >> w;
-      
+      //relaxed->display();int w;cin >> w;      
       bool dualBetter = _theDD->isBetter(relaxed->currentOpt(),bnds.getPrimal());
       if (dualBetter) {
          relaxed->update(bnds);
@@ -55,7 +52,6 @@ void BAndB::search()
             restricted->update(bnds);
          if (!restricted->isExact() && !relaxed->isExact()) {
             for(auto n : relaxed->computeCutSet()) {
-               //cout << "\tCS node:" << *n << endl;
                auto nd = _theDD->duplicate(n); // we got a duplicate of the node.
                if (nd == bbn.node) { // the cutset is the root. Only way out: increase width.
                   for(auto i=0u;i < sizeof(ddr)/sizeof(WidthBounded*);i++)
@@ -68,7 +64,6 @@ void BAndB::search()
    }
    cout << "Done: " << bnds << "\t #nodes:" <<  nNode << "\n";
 }
-
 /*
 void BAndB::search()
 {
@@ -85,8 +80,10 @@ void BAndB::search()
    Bounds bnds(_theDD);
    while(!pq.empty()) {
       auto bbn = pq.extractMax();
+#ifndef _NDEBUG      
       cout << "BOUNDS NOW: " << bnds << endl;
       cout << "EXTRACTED:  " << *bbn.node << "\t(" << bbn.bound << ")" << endl;
+#endif      
       restricted->reset();
       restricted->makeInitFrom(bbn.node);
       restricted->compute();

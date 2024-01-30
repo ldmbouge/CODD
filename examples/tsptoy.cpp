@@ -10,7 +10,7 @@
 #include <map>
 
 struct TSP {
-   std::set<int> s;
+   GNSet  s;
    int last;
    int hops;
    friend std::ostream& operator<<(std::ostream& os,const TSP& m) {
@@ -32,7 +32,7 @@ template<> struct std::not_equal_to<TSP> {
 
 template<> struct std::hash<TSP> {
    std::size_t operator()(const TSP& v) const noexcept {
-      return (std::hash<std::set<int>>{}(v.s) << 24) |
+      return (std::hash<GNSet>{}(v.s) << 24) |
          (std::hash<int>{}(v.last) << 16) |
          std::hash<int>{}(v.hops);
    }
@@ -51,7 +51,7 @@ struct GE {
 int main()
 {
    // using STL containers for the graph
-   const std::set<int> ns = {1,2,3,4};//,5,6,7,8,9,10,11,12,13,14,15};
+   const GNSet ns = {1,2,3,4};//,5,6,7,8,9,10,11,12,13,14,15};
    const std::map<GE,double> es = { {GE {1,2}, 10},
                              {GE {1,3}, 15},
                              {GE {1,4}, 20},
@@ -68,19 +68,19 @@ int main()
    const auto labels = ns;     // using a plain set for the labels
    const int sz = (int)ns.size();
    const auto init = []() {   // The root state
-      return TSP { std::set<int>{},1,0 };
+      return TSP { GNSet{},1,0 };
    };
    const auto target = [sz]() {    // The sink state
-      return TSP { std::set<int>{},1,sz };
+      return TSP { GNSet{},1,sz };
    };
    const auto stf = [sz](const TSP& s,const int label) -> std::optional<TSP> {
       if ((label==1 && s.hops < sz-1) || (s.hops == sz-1 && label!=1))
          return std::nullopt;
       if (s.hops < sz && !s.s.contains(label) && (s.last != label)) {
          if (s.hops + 1 == sz)
-            return TSP { std::set<int>{}, label,s.hops + 1};
+            return TSP { GNSet{}, label,s.hops + 1};
          else
-            return TSP { s.s | std::set<int>{label},label,s.hops + 1}; // head to sink
+            return TSP { s.s | GNSet{label},label,s.hops + 1}; // head to sink
       } else return std::nullopt;  // return the empty optional 
    };
    const auto scf = [&es](const TSP& s,int label) { // partial cost function 

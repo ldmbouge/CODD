@@ -37,7 +37,7 @@ protected:
    Pool::Ptr _mem;
    ANode::Ptr _root;
    ANode::Ptr _trg;
-   std::set<int> _labels;
+   GNSet   _labels;
    std::vector<ANode::Ptr> _an;
    bool _exact;
    PoolMark _baseline;
@@ -53,7 +53,7 @@ protected:
    void saveGraph(std::ostream& os,std::string gLabel);
 public:
    typedef std::shared_ptr<AbstractDD> Ptr;
-   AbstractDD(const std::set<int>& labels);
+   AbstractDD(const GNSet& labels);
    virtual ~AbstractDD();
    virtual void reset() = 0;
    virtual ANode::Ptr init() = 0;
@@ -83,7 +83,7 @@ class Strategy {
 protected:
    AbstractDD* _dd;
    friend class AbstractDD;
-   std::set<int> remainingLabels(ANode::Ptr p);
+   GNSet remainingLabels(ANode::Ptr p);
 public:
    Strategy() : _dd(nullptr) {}
    virtual const std::string getName() const = 0;
@@ -243,7 +243,7 @@ private:
       else return nullptr;
    }
 public:
-   DD(std::function<ST()> sti,IBL2 stt,STF stf,STC stc,SMF smf,const std::set<int>& labels)
+   DD(std::function<ST()> sti,IBL2 stt,STF stf,STC stc,SMF smf,const GNSet& labels)
       : AbstractDD(labels),
         _sti(sti),
         _stt(stt),

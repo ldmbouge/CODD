@@ -16,7 +16,7 @@ Bounds::Bounds(std::shared_ptr<AbstractDD> dd)
    //_dual   = dd->initialWorst();      
 }
 
-AbstractDD::AbstractDD(const std::set<int>& labels)
+AbstractDD::AbstractDD(const GNSet& labels)
    : _mem(new Pool),_labels(labels),_exact(true)
 {}
 
@@ -206,11 +206,11 @@ void AbstractDD::computeBest(const std::string m)
 // ----------------------------------------------------------------------
 // Exact DD Strategy
 
-std::set<int> Strategy::remainingLabels(ANode::Ptr p)
+GNSet Strategy::remainingLabels(ANode::Ptr p)
 {
-   std::set<int> remLabels = _dd->_labels; // deep copy
-   for(auto k = p->beginKids(); k != p->endKids();k++) 
-      remLabels.erase((*k)->_lbl);
+   GNSet remLabels = _dd->_labels; // deep copy
+   //   for(auto k = p->beginKids(); k != p->endKids();k++) 
+   //      remLabels.erase((*k)->_lbl);
    return remLabels;
 }
 
@@ -224,7 +224,7 @@ void Exact::compute()
    qn.enQueue(root);
    while (!qn.empty()) {
       auto p = qn.deQueue();
-      std::set<int> remLabels = remainingLabels(p);
+      auto remLabels = remainingLabels(p);
       for(auto l : remLabels) {     
          auto child = _dd->transition(p,l); // we get back a new node, or an already existing one.
          if (child) {
@@ -286,7 +286,7 @@ void Restricted::compute()
       if (lk.size() > _mxw) 
          truncate(lk);
       for(auto p : lk) { // loop over layer lk. p is a "parent" node.
-         std::set<int> remLabels = remainingLabels(p);
+         auto remLabels = remainingLabels(p);
          for(auto l : remLabels) {
             auto child = _dd->transition(p,l); // we get back a new node, or an already existing one.
             if (child) {
@@ -391,7 +391,7 @@ void Relaxed::compute()
       for(auto p : delay)
          qn.enQueue(p);
       for(auto p : lk) { // loop over layer lk. p is a "parent" node.
-         std::set<int> remLabels = remainingLabels(p);
+         auto remLabels = remainingLabels(p);
          for(auto l : remLabels) {
             auto child = _dd->transition(p,l); // we get back a new node, or an already existing one.
             if (child) {

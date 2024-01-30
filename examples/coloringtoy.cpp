@@ -8,7 +8,7 @@
 #include <algorithm>
 #include <map>
 
-typedef std::vector<std::set<int>> Legal;
+typedef std::vector<GNSet> Legal;
 
 struct COLOR {
    Legal s;
@@ -52,7 +52,7 @@ struct GE {
 int main()
 {
    // using STL containers for the graph
-   const std::set<int> ns = {0,1,2,3,4};//,5,6,7,8,9,10,11,12,13,14,15};
+   const GNSet ns = {0,1,2,3,4};//,5,6,7,8,9,10,11,12,13,14,15};
    const std::set<GE> es = {GE {0,3},
                             GE {0,4},
                             GE {1,2},
@@ -63,7 +63,7 @@ int main()
    const int K = ns.size();
    const auto labels = setFrom(std::views::iota(1,K+1));     // using a plain set for the labels
    const auto init = [ns,labels]() {   // The root state
-      Legal A(ns.size(), std::set<int>{});      
+      Legal A(ns.size(), GNSet {});      
       for(auto v : ns)
          A[v] = labels;
       //A[0] = std::set<int>{1};
@@ -78,8 +78,8 @@ int main()
          for(auto vIdx = s.vtx+1;vIdx < (int)B.size();vIdx++)
             if ((es.contains(GE {s.vtx,vIdx}) || es.contains(GE {vIdx,s.vtx})) &&
                 s.s[vIdx].contains(label))
-               B[vIdx].erase(label);
-         B[s.vtx] = std::set<int>{label};
+               B[vIdx].remove(label);
+         B[s.vtx] = GNSet {label};
          if (s.vtx+1 == K)
             return COLOR { Legal {},0, K };
          else
@@ -92,7 +92,7 @@ int main()
    };
    const auto smf = [K](const COLOR& s1,const COLOR& s2) -> std::optional<COLOR> {
       if (s1.last == s2.last && s1.vtx == s2.vtx) {
-         Legal B(s1.s.size(),std::set<int>{});
+         Legal B(s1.s.size(),GNSet {});
          for(auto i=0;i < K;i++) 
             B[i] = s1.s[i] | s2.s[i];         
          return COLOR {B , s1.last, s1.vtx};
