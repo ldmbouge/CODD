@@ -157,13 +157,13 @@ private:
    unsigned _ndId;
    std::function<ANode::Ptr()> _initClosure;
    bool eq(ANode::Ptr f,ANode::Ptr s) const {
-      auto fp = dynamic_cast<const Node<ST>*>(f.get());
-      auto sp = dynamic_cast<const Node<ST>*>(s.get());
+      auto fp = static_cast<const Node<ST>*>(f.get());
+      auto sp = static_cast<const Node<ST>*>(s.get());
       return Equal{}(fp->get(),sp->get());
    }
    bool neq(ANode::Ptr f,ANode::Ptr s) const {
-      auto fp = dynamic_cast<const Node<ST>*>(f.get());
-      auto sp = dynamic_cast<const Node<ST>*>(s.get());
+      auto fp = static_cast<const Node<ST>*>(f.get());
+      auto sp = static_cast<const Node<ST>*>(s.get());
       return NotEqual{}(fp->get(),sp->get());
    }
    bool   isBetter(double obj1,double obj2) const {
@@ -268,7 +268,7 @@ public:
    }
    ANode::Ptr duplicate(const ANode::Ptr src) {
       ANode::Ptr at = nullptr;
-      auto sp = dynamic_cast<const Node<ST>*>(src.get());
+      auto sp = static_cast<const Node<ST>*>(src.get());
       auto inMap = _nmap.get(sp->get(),at);
       if (inMap) {
          return at;
