@@ -215,8 +215,8 @@ void AbstractDD::computeBest(const std::string m)
 GNSet Strategy::remainingLabels(ANode::Ptr p)
 {
    GNSet remLabels = _dd->_labels; // deep copy
-   //   for(auto k = p->beginKids(); k != p->endKids();k++) 
-   //      remLabels.erase((*k)->_lbl);
+   for(auto k = p->beginKids(); k != p->endKids();k++) 
+      remLabels.remove((*k)->_lbl);
    return remLabels;
 }
 
