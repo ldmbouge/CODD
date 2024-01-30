@@ -387,7 +387,7 @@ void Relaxed::compute()
    qn.enQueue(root);
    while (!qn.empty()) {
       std::list<ANode::Ptr> lk = pullLayer(qn); // We have in lk the queue content for layer cL
-      std::list<ANode::Ptr> delay;
+      std::list<ANode::Ptr> delay; // nodes whose layer was "increase". Need to go back in queue
       if (lk.size() > _mxw) 
          delay = mergeLayer(lk);
       for(auto p : delay)
