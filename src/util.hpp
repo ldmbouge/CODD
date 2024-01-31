@@ -9,9 +9,9 @@
 #include <initializer_list>
 #include <ranges>
 #include <assert.h>
-#if defined(__x86_64__)
-#include <intrin.h>
-#endif
+//#if defined(__x86_64__)
+//#include <intrin.h>
+//#endif
 
 
 namespace std {
