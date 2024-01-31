@@ -1,4 +1,5 @@
 #include "dd.hpp"
+#include "node.hpp"
 #include "util.hpp"
 #include <iostream>
 #include <fstream>
@@ -320,8 +321,9 @@ void Restricted::truncate(std::list<ANode::Ptr>& layer)
    std::advance(from,_mxw);
    for(auto start=from;start != layer.end();start++) {
       (*start)->disconnect();
-      auto at = std::find(_dd->_an.begin(),_dd->_an.end(),*start);
-      _dd->_an.erase(at);
+      //auto at = std::find(_dd->_an.begin(),_dd->_an.end(),*start);
+      //_dd->_an.erase(at);
+      _dd->_an.remove(*start);
    }
    layer.erase(from,layer.end());
 }
@@ -412,10 +414,11 @@ std::list<ANode::Ptr> Relaxed::mergeLayer(std::list<ANode::Ptr>& layer)
          for(auto d : toMerge) {
             if (d != mNode) { // skip in case the node itself is the merged one
                transferArcs(d,mNode);
-               auto at = std::find(_dd->_an.begin(),_dd->_an.end(),d); // that's costly
-               assert(at != _dd->_an.end());
-               if (at != _dd->_an.end())
-                  _dd->_an.erase(at);
+               //auto at = std::find(_dd->_an.begin(),_dd->_an.end(),d); // that's costly
+               //assert(at != _dd->_an.end());
+               //if (at != _dd->_an.end())
+               //_dd->_an.erase(at);
+               _dd->_an.remove(d);
             }
          }
          if (sameLayer) {

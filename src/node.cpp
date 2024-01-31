@@ -1,6 +1,10 @@
 #include "node.hpp"
 #include <iostream>
 
+void print(const ANList& l) {
+   std::cout << l << "\n";
+}
+
 std::ostream& operator<<(std::ostream& os,const ANode& s)
 {
    s.print(os);
@@ -20,7 +24,9 @@ ANode::ANode(Pool::Ptr mem,unsigned nid)
      _bbound(0),
      _layer(0),
      _exact(1),
-     _nid(nid)
+     _nid(nid),
+     _next(nullptr),
+     _prev(nullptr)
      
 {}
 
@@ -32,8 +38,10 @@ ANode::ANode(Pool::Ptr mem,unsigned nid,const ANode& o)
      _bbound(o._bbound),
      _layer(0),
      _exact(1),
-     _nid(nid)
-     
+     _nid(nid),
+     _next(nullptr),
+     _prev(nullptr)
+    
 {}
 
 ANode::~ANode()

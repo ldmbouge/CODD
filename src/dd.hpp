@@ -33,14 +33,13 @@ public:
    }
 };
 
-
 class AbstractDD {
 protected:
    Pool::Ptr _mem;
    ANode::Ptr _root;
    ANode::Ptr _trg;
    GNSet   _labels;
-   std::list<ANode::Ptr> _an;
+   ANList      _an;
    bool _exact;
    PoolMark _baseline;
    void addArc(Edge::Ptr e);
