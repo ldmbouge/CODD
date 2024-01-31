@@ -209,7 +209,7 @@ private:
       } else {
          auto value = new (_mem) Node<ST>(_mem,std::move(state),_ndId++);
          value->setExact(pExact);
-         _nmap.insert(value->get(),value);
+         _nmap.safeInsert(value->get(),value);
          _an.push_back(value);
          return value;
       }
@@ -277,7 +277,7 @@ public:
          return at;
       } else {
          auto nn = new (_mem) Node<ST>(_mem,_ndId++,*sp);
-         _nmap.insert(nn->get(),nn);
+         _nmap.safeInsert(nn->get(),nn);
          _an.push_back(nn);
          return nn;
       }

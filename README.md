@@ -1,24 +1,27 @@
 
 # Table of Contents
 
-1.  [C++DDOpt](#org4f34ee7)
-    1.  [Dependencies](#orga57ae86)
-    2.  [C++ Standard](#orgca33d9d)
-    3.  [Build system](#org2bad4be)
-    4.  [Examples](#orga88e4a4)
-    5.  [Unit test](#orgbf2f109)
-    6.  [Library](#orgced5e48)
-2.  [Tasks](#org2642a52)
-    1.  [Decent set of integer implementation](#orgf14d530)
-    2.  [Check and fix leaks (the cache should be deallocated, not \_an)](#org0fec76c)
-    3.  [Implement instance reader for tsp to do bigger instances](#org321b4da)
-    4.  [Implement instance reader for MISP](#org69ac622)
-    5.  [Rename MISP (`foo`) to misptoy ;-)](#orgec68b25)
-    6.  [Implement an O(1) removal from \_an](#orgc3bbad0)
-    7.  [Profile and pick up the low hanging fruits](#org70238b8)
+1.  [C++DDOpt](#orgd83ee0d)
+    1.  [Dependencies](#org116bc10)
+    2.  [C++ Standard](#orgdd64fdb)
+    3.  [Build system](#orga319374)
+    4.  [Examples](#orgd8f8440)
+    5.  [Unit test](#org28b73e6)
+    6.  [Library](#org2ce19b9)
+2.  [Tasks](#org8a5c4c8)
+    1.  [Decent set of integer implementation](#orgbcc1555)
+    2.  [Check and fix leaks (the cache should be deallocated, not \_an)](#org3c4baf9)
+    3.  [Implement instance reader for tsp to do bigger instances](#org69cb0e3)
+    4.  [Implement instance reader for MISP](#orga16bfec)
+    5.  [Rename MISP (`foo`) to misptoy ;-)](#org0efee95)
+    6.  [Implement an O(1) removal from \_an](#org48792c3)
+    7.  [Profile and pick up the low hanging fruits](#org700f692)
+    8.  [Fix calls to find in order to remove from \_an](#orga9fe759)
+    9.  [Fix calls to find before updateKey in heaps](#org5081633)
+    10. [Change the makeNode / duplicate so that hash is computed only once (not twice).](#org6584e9b)
 
 
-<a id="org4f34ee7"></a>
+<a id="orgd83ee0d"></a>
 
 # C++DDOpt
 
@@ -29,7 +32,7 @@ It has:
 -   state definition, initial, terminal and state merging functions separated
 
 
-<a id="orga57ae86"></a>
+<a id="org116bc10"></a>
 
 ## Dependencies
 
@@ -39,7 +42,7 @@ in `/tmp` and the macOS `open` command is used (via `fork/execlp`)  to open the 
 PDF.
 
 
-<a id="orgca33d9d"></a>
+<a id="orgdd64fdb"></a>
 
 ## C++ Standard
 
@@ -49,7 +52,7 @@ I use the mainline clang coming with Xcode.
 The implementation uses templates and concepts to factor the code.
 
 
-<a id="org2bad4be"></a>
+<a id="orga319374"></a>
 
 ## Build system
 
@@ -63,7 +66,7 @@ This is `cmake`. Simply do the following
 And it will compile the whole thing
 
 
-<a id="orga88e4a4"></a>
+<a id="orgd8f8440"></a>
 
 ## Examples
 
@@ -75,26 +78,26 @@ To be found in the `examples` folder
 -   `gruler` golomb ruler (usage <size> <ubOnLabels>)
 
 
-<a id="orgbf2f109"></a>
+<a id="org28b73e6"></a>
 
 ## Unit test
 
 In the `test` folder
 
 
-<a id="orgced5e48"></a>
+<a id="org2ce19b9"></a>
 
 ## Library
 
 All of it in the `src` folder
 
 
-<a id="org2642a52"></a>
+<a id="org8a5c4c8"></a>
 
 # Tasks
 
 
-<a id="orgf14d530"></a>
+<a id="orgbcc1555"></a>
 
 ## DONE Decent set of integer implementation
 
@@ -103,32 +106,58 @@ With template overload that is size dependent (up to label 64, all ops should be
 After that, it should be O(label/64). Unless we start using the 128 bit registers ;-)
 
 
-<a id="org0fec76c"></a>
+<a id="org3c4baf9"></a>
 
 ## DONE Check and fix leaks (the cache should be deallocated, not \_an)
 
 
-<a id="org321b4da"></a>
+<a id="org69cb0e3"></a>
 
 ## TODO Implement instance reader for tsp to do bigger instances
 
 
-<a id="org69ac622"></a>
+<a id="orga16bfec"></a>
 
 ## TODO Implement instance reader for MISP
 
 
-<a id="orgec68b25"></a>
+<a id="org0efee95"></a>
 
 ## TODO Rename MISP (`foo`) to misptoy ;-)
 
 
-<a id="orgc3bbad0"></a>
+<a id="org48792c3"></a>
 
 ## TODO Implement an O(1) removal from \_an
 
 
-<a id="org70238b8"></a>
+<a id="org700f692"></a>
 
-## TODO Profile and pick up the low hanging fruits
+## DONE Profile and pick up the low hanging fruits
+
+
+<a id="orga9fe759"></a>
+
+## TODO Fix calls to find in order to remove from \_an
+
+-   Those should be O(1) via locators.
+-   Adopt Vec<T> rather than the std::vector<T> for \_an
+-   Create a Vec<T> version that is location aware
+-   Implement the trick to O(1) removal (affects mergeLayer / truncate)
+
+
+<a id="org5081633"></a>
+
+## TODO Fix calls to find before updateKey in heaps
+
+-   Heap is already location aware
+-   We need to track the location (by node id, we have those)
+-   Then use the location to have an O(1) operation (affects computeBest & computeBestBackward)
+
+
+<a id="org6584e9b"></a>
+
+## TODO Change the makeNode / duplicate so that hash is computed only once (not twice).
+
+-   Use opaque ADT in Hashtable to support that
 
