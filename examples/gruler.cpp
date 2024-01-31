@@ -79,12 +79,21 @@ int main(int argc,char* argv[])
    const auto target = [n]() {    // The sink state
       return SGRuler {GRSet {},GRSet {},n,0};
    };
-   const auto stf = [n,&bnds,&OPT](const SGRuler& s,const int label) -> std::optional<SGRuler> {
+   const auto stf = [n,&bnds,&OPT,L](const SGRuler& s,const int label) -> std::optional<SGRuler> {
       int illegal = 0;
       GRSet ad {};
+      
       if (label >= bnds.getPrimal()) return std::nullopt;
-      if (label + OPT[n-s.k-1] >= bnds.getPrimal()) {
-	 //std::cout << "pruned suboptimal transition due to sub-ruler length" << std::endl;
+ //     if (label + OPT[n-s.k-1] >= bnds.getPrimal()) return std::nullopt;
+
+      if (label + OPT[n-s.k] >= L+1) {	 
+	 /*std::cout << "pruned suboptimal transition due to sub-ruler length" << std::endl;
+	 std::cout << "label = " << label;
+	 std::cout << ", n = " << n;
+	 std::cout << ", k = " << s.k;
+	 std::cout << ", OPT[" << n-s.k << "] = " << OPT[n-s.k];
+	 std::cout << " >= L+1 = " << L+1 << std::endl;
+*/
 	 return std::nullopt; // cannot improve
       }
       for(auto i : s.m) {
@@ -110,6 +119,20 @@ int main(int argc,char* argv[])
 
    std::cout << "LABELS:" << labels << "\n";
 
+   /*
+   auto myxDD = DD<SGRuler,std::less<double>, // to minimize
+                ///decltype(init), 
+                decltype(target), 
+                decltype(stf),
+                decltype(scf),
+                decltype(smf)
+                >::makeDD(init,target,stf,scf,smf,labels);
+   myxDD->setStrategy(new Exact);
+   myxDD->compute();
+
+   std::cout << myxDD->incumbent() << std::endl;
+   return 0;
+*/
    BAndB engine(DD<SGRuler,std::less<double>, // to minimize
                 ///decltype(init), 
                 decltype(target), 
