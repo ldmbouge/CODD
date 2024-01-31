@@ -52,7 +52,25 @@ int main(int argc,char* argv[])
    }
    const int n = atoi(argv[1]);
    const int L = atoi(argv[2]);
+
+   std::map<int, int> OPT = {
+	{ 0, 0 },
+	{ 1, 0 },
+	{ 2, 1 },
+	{ 3, 3 },
+	{ 4, 6 },
+	{ 5, 11 },
+	{ 6, 17 },
+	{ 7, 25 },
+	{ 8, 34 },
+	{ 9, 44 },
+	{ 10, 55 },
+	{ 11, 72 },
+	{ 12, 85 }
+   };
    
+   //std::cout << "OPT[3] = "<< OPT[3] << std::endl;
+
    Bounds bnds;
    const auto labels = setFrom(std::views::iota(1,L+1));     // using a plain set for the labels
    const auto init = []() {   // The root state      
@@ -61,10 +79,14 @@ int main(int argc,char* argv[])
    const auto target = [n]() {    // The sink state
       return SGRuler {GRSet {},GRSet {},n,0};
    };
-   const auto stf = [n,&bnds](const SGRuler& s,const int label) -> std::optional<SGRuler> {
+   const auto stf = [n,&bnds,&OPT](const SGRuler& s,const int label) -> std::optional<SGRuler> {
       int illegal = 0;
       GRSet ad {};
       if (label >= bnds.getPrimal()) return std::nullopt;
+      if (label + OPT[n-s.k-1] >= bnds.getPrimal()) {
+	 //std::cout << "pruned suboptimal transition due to sub-ruler length" << std::endl;
+	 return std::nullopt; // cannot improve
+      }
       for(auto i : s.m) {
          ad.insert(label - i);
          illegal += s.d.contains(label- i);
@@ -94,7 +116,7 @@ int main(int argc,char* argv[])
                 decltype(stf),
                 decltype(scf),
                 decltype(smf)
-                >::makeDD(init,target,stf,scf,smf,labels),4);
+                >::makeDD(init,target,stf,scf,smf,labels),64);
    engine.search(bnds);
    return 0;
 }
