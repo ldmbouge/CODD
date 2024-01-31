@@ -63,9 +63,14 @@ CLOSED: [2024-01-31 Wed 07:28]
 - Heap is already location aware
 - We need to track the location (by node id, we have those)
 - Then use the location to have an O(1) operation (affects computeBest & computeBestBackward)
-** TODO Change the makeNode / duplicate so that hash is computed only once (not twice).
-- Use opaque ADT in Hashtable to support that
-
+** DONE Change the makeNode / duplicate so that hash is computed only once (not twice).
+CLOSED: [2024-01-31 Wed 14:54]
+- Use opaque ADT in Hashtable to support that (HTAt is the opaque type)
+** Experiment with permanent state cache
+- segregate Edge allocator
+- keep the node cache (at least for relaxed) so that they get reused
+- clear the edge allocator since those must be rebuild
+- runs the risk of runaway node cache. Maybe clear periodically? (Every 10K B&B node)
 
 * Command to create a GCM for an import :noexport:
 Like 
