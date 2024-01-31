@@ -54,8 +54,8 @@ protected:
 public:
    friend class AbstractDD;
    friend class ANList;
-   ANode(Pool::Ptr mem,unsigned nid);
-   ANode(Pool::Ptr mem,unsigned nid,const ANode& o);
+   ANode(Pool::Ptr mem,unsigned nid,bool exact);
+   ANode(Pool::Ptr mem,unsigned nid,const ANode& o,bool exact);
    virtual ~ANode();
    virtual void print(std::ostream& os) const = 0;
    void clearParents() { _parents.clear();}
@@ -171,8 +171,8 @@ class Node :public ANode {
    T _val;  
 public:
    typedef handle_ptr<Node<T>> Ptr;
-   Node(Pool::Ptr mem,T&& v,unsigned nid) : ANode(mem,nid),_val(std::move(v)) {}
-   Node(Pool::Ptr mem,unsigned nid,const Node<T>& o) : ANode(mem,nid,o),_val(o._val) {}
+   Node(Pool::Ptr mem,T&& v,unsigned nid,bool exact) : ANode(mem,nid,exact),_val(std::move(v)) {}
+   Node(Pool::Ptr mem,unsigned nid,const Node<T>& o) : ANode(mem,nid,o,true),_val(o._val) {}
    ~Node() {}
    const T& get() const {return _val;}
    void print(std::ostream& os) const {

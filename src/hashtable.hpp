@@ -93,6 +93,35 @@ public:
       _mgc[at] = _magic;
       ++_nbp;
    }
+   class HTAt {
+      friend class Hashtable<K,T,Hash,Equal>;
+      std::size_t _at;
+      bool       _inc; // true if query is in the hashtable
+      HTAt(std::size_t at,bool inc) : _at(at),_inc(inc) {}
+   public:
+      operator bool() const { return _inc;}
+   };
+   HTAt getLoc(const K& key,T& val) const noexcept {
+      std::size_t at = _hash(key) % _mxs;
+      assert(at >= 0);
+      assert(at < _mxs);
+      HTNode* cur =  (_mgc[at]==_magic) ? _tab[at] : nullptr;
+      while (cur != nullptr) {
+         if (_equal(cur->_key,key)) {
+            val = cur->_data;
+            return HTAt(at, true);
+         }
+         cur = cur->_next;
+      }
+      return HTAt(at, false);      
+   }
+   void safeInsertAt(const HTAt& loc,const K& key,const T& val) {
+      assert(loc._inc == false);
+      HTNode* head = (_mgc[loc._at]==_magic) ? _tab[loc._at] : nullptr;
+      _tab[loc._at] = new (_pool) HTNode {key,val,head};
+      _mgc[loc._at] = _magic;
+      ++_nbp;      
+   }
    void safeInsert(const K& key,const T& val) noexcept {
       std::size_t at = _hash(key) % _mxs;
       HTNode* head = (_mgc[at]==_magic) ? _tab[at] : nullptr;

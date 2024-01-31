@@ -198,17 +198,15 @@ private:
    }
    ANode::Ptr makeNode(ST&& state,bool pExact = true) {
       ANode::Ptr at = nullptr;
-      auto inMap = _nmap.get(state,at);
+      auto inMap = _nmap.getLoc(state,at);
       if (inMap) {
          at->setExact(at->isExact() & pExact);
-         if (at->nbParents() == 0 && at != _root && at != _trg) {
-            _an.push_back(at); // The node was created but later removed. Put it back!
-         }
+         if (at->nbParents() == 0 && at != _root && at != _trg) 
+            _an.push_back(at); // The node was created but later removed. Put it back!         
          return at;
       } else {
-         auto value = new (_mem) Node<ST>(_mem,std::move(state),_ndId++);
-         value->setExact(pExact);
-         _nmap.safeInsert(value->get(),value);
+         auto value = new (_mem) Node<ST>(_mem,std::move(state),_ndId++,pExact);
+         _nmap.safeInsertAt(inMap,value->get(),value);
          _an.push_back(value);
          return value;
       }
