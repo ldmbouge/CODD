@@ -245,7 +245,7 @@ void AbstractDD::computeBestBackward(const std::string m)
       n.node->setBackwardBound(cur);
       for(auto pi = n.node->beginPar(); pi != n.node->endPar();pi++) {
          Edge::Ptr k = *pi;
-         auto at = nl[k->_to->getId()];
+         auto at = nl[k->_from->getId()];
          assert(at!=nullptr);
          h.decrease(at);
       }
