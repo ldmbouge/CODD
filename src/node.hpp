@@ -2,6 +2,8 @@
 #define __NODE_H
 
 #include <functional>
+#include <iterator>
+
 #include "vec.hpp"
 
 template<typename T>
@@ -34,7 +36,10 @@ struct Edge {
    friend std::ostream& operator<<(std::ostream& os,const Edge& e);
 };
 
+class ANList;
 class ANode {
+public:
+   typedef handle_ptr<ANode> Ptr;
 protected:
    Vec<Edge::Ptr,unsigned> _parents;
    Vec<Edge::Ptr,unsigned> _children;
@@ -44,10 +49,11 @@ protected:
    unsigned                _layer:31; // will be used in restricted / (relaxed?)
    unsigned                _exact:1;  // true if node is exact
    unsigned                _nid;
+   ANode::Ptr              _next,_prev;
    void addArc(Edge::Ptr ep);
 public:
    friend class AbstractDD;
-   typedef handle_ptr<ANode> Ptr;
+   friend class ANList;
    ANode(Pool::Ptr mem,unsigned nid);
    ANode(Pool::Ptr mem,unsigned nid,const ANode& o);
    virtual ~ANode();
@@ -79,6 +85,85 @@ public:
    friend std::ostream& operator<<(std::ostream& os,const ANode& s);
 };
 
+class ANList {
+   ANode::Ptr _head,_tail;
+public:
+   ANList() : _head(nullptr),_tail(nullptr) {}
+   ANList(const ANList& l) : _head(l._head),_tail(l._tail) {}
+   ~ANList() { _head = _tail = nullptr;}
+   std::size_t size() const noexcept {
+      ANode::Ptr cur = _head;
+      std::size_t s = 0;
+      while(cur) {
+         cur = cur->_next;
+         ++s;
+      }
+      return s;
+   }
+   void push_back(ANode::Ptr n) noexcept {
+      assert(n->_next == nullptr && n->_prev == nullptr);
+      if (_head==nullptr) {
+         _head = _tail = n;
+         n->_next = n->_prev = nullptr;
+      } else {
+         n->_prev = _tail;
+         n->_next = nullptr;
+         if (_tail) _tail->_next = n;
+         _tail = n;
+      }
+   }
+   void remove(ANode::Ptr n) noexcept {
+      assert(confirmMembership(n)==true);
+      ANode::Ptr pv = n->_prev, nx = n->_next;
+      if (pv) pv->_next = nx;
+      else _head = nx;
+      if (nx) nx->_prev = pv;
+      else _tail = pv;
+      n->_prev = n->_next = nullptr;
+   }
+   bool confirmMembership(ANode::Ptr n) {
+      ANode::Ptr cur = _head;
+      while (cur && cur != n)
+         cur = cur->_next;
+      return cur == n;
+   }
+   void clear() noexcept {
+      _head = _tail = nullptr;
+   }
+   class iterator { 
+      ANode::Ptr _data;
+      iterator(ANode::Ptr d) : _data(d) {}
+   public:
+      using iterator_category = std::input_iterator_tag;
+      using value_type = ANode::Ptr;
+      using difference_type = long;
+      using pointer = ANode::Ptr*;
+      using reference = ANode::Ptr&;
+      iterator& operator++()   { _data = _data->_next; return *this;}
+      iterator operator++(int) { iterator retval = *this; ++(*this); return retval;}
+      iterator& operator--()   { _data = _data->_prev; return *this;}
+      iterator operator--(int) { iterator retval = *this; --(*this); return retval;}
+      bool operator==(iterator other) const noexcept {return _data == other._data;}
+      bool operator!=(iterator other) const noexcept {return !(*this == other);}
+      ANode::Ptr operator*() const noexcept { return _data;}
+      friend class ANList;
+   };
+   iterator begin() const noexcept { return iterator(_head);}
+   iterator end()   const noexcept { return iterator(nullptr);}
+   friend std::ostream& operator<<(std::ostream& os,const ANList& v) {
+      os << "[";
+      ANode::Ptr cur = v._head;
+      while (cur) {
+         os << *cur;
+         if (cur->_next)
+            os << ',';
+         cur = cur->_next;
+      }
+      return os << "]";
+   }
+};
+
+void print(const ANList& l);
 
 template <typename T> requires Printable<T> && Hashable<T>
 class Node :public ANode {

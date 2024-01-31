@@ -1,4 +1,5 @@
 #include "dd.hpp"
+#include "node.hpp"
 #include "util.hpp"
 #include <iostream>
 #include <fstream>
@@ -101,7 +102,7 @@ void AbstractDD::print(std::ostream& os,std::string gLabel)
    display();
    std::cout << "PRINTING: --------------------------------------------------\n";
    Heap<DNode,DNode> h(_mem,1000);
-   for(ANode::Ptr n : _an) {
+   for(auto n : _an) {
       h.insert({n,n->nbParents()});
       //std::cout << *n << " #PAR:" << n->nbParents() << "\n";
    }
@@ -122,7 +123,7 @@ void AbstractDD::print(std::ostream& os,std::string gLabel)
 void AbstractDD::saveGraph(std::ostream& os,std::string gLabel)
 {
    Heap<DNode,DNode> h(_mem,1000);
-   for(ANode::Ptr n : _an) 
+   for(auto n : _an) 
       h.insert({n,n->nbParents()});   
    h.buildHeap();
    std::string colors[2] = {"red","green"};
@@ -181,7 +182,7 @@ void AbstractDD::computeBest(const std::string m)
       mxId = std::max(n->getId(),mxId);
    auto nl = new (_mem) Heap<DNode,DNode>::Location*[mxId+1];
    memset(nl,0,sizeof(Heap<DNode,DNode>::Location*)*(mxId+1));
-   for(ANode::Ptr n : _an) {
+   for(auto n : _an) {
       nl[n->getId()] = h.insert({n,n->nbParents()});
       if (n != _root)
          n->setBound(initialBest());
@@ -223,7 +224,7 @@ void AbstractDD::computeBestBackward(const std::string m)
       mxId = std::max(n->getId(),mxId);
    auto nl = new (_mem) Heap<DNode,DNode>::Location*[mxId+1];
    memset(nl,0,sizeof(Heap<DNode,DNode>::Location*)*(mxId+1));
-   for(ANode::Ptr n : _an) {
+   for(auto n : _an) {
       nl[n->getId()] = h.insert({n,n->nbChildren()});
       if (n != _trg)
          n->setBackwardBound(initialBest());
@@ -245,7 +246,7 @@ void AbstractDD::computeBestBackward(const std::string m)
       n.node->setBackwardBound(cur);
       for(auto pi = n.node->beginPar(); pi != n.node->endPar();pi++) {
          Edge::Ptr k = *pi;
-         auto at = nl[k->_to->getId()];
+         auto at = nl[k->_from->getId()];
          assert(at!=nullptr);
          h.decrease(at);
       }
@@ -320,8 +321,9 @@ void Restricted::truncate(std::list<ANode::Ptr>& layer)
    std::advance(from,_mxw);
    for(auto start=from;start != layer.end();start++) {
       (*start)->disconnect();
-      auto at = std::find(_dd->_an.begin(),_dd->_an.end(),*start);
-      _dd->_an.erase(at);
+      //auto at = std::find(_dd->_an.begin(),_dd->_an.end(),*start);
+      //_dd->_an.erase(at);
+      _dd->_an.remove(*start);
    }
    layer.erase(from,layer.end());
 }
@@ -412,10 +414,11 @@ std::list<ANode::Ptr> Relaxed::mergeLayer(std::list<ANode::Ptr>& layer)
          for(auto d : toMerge) {
             if (d != mNode) { // skip in case the node itself is the merged one
                transferArcs(d,mNode);
-               auto at = std::find(_dd->_an.begin(),_dd->_an.end(),d); // that's costly
-               assert(at != _dd->_an.end());
-               if (at != _dd->_an.end())
-                  _dd->_an.erase(at);
+               //auto at = std::find(_dd->_an.begin(),_dd->_an.end(),d); // that's costly
+               //assert(at != _dd->_an.end());
+               //if (at != _dd->_an.end())
+               //_dd->_an.erase(at);
+               _dd->_an.remove(d);
             }
          }
          if (sameLayer) {
