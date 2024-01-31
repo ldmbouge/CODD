@@ -101,7 +101,7 @@ void AbstractDD::print(std::ostream& os,std::string gLabel)
    display();
    std::cout << "PRINTING: --------------------------------------------------\n";
    Heap<DNode,DNode> h(_mem,1000);
-   for(ANode::Ptr n : _an) {
+   for(auto n : _an) {
       h.insert({n,n->nbParents()});
       //std::cout << *n << " #PAR:" << n->nbParents() << "\n";
    }
@@ -122,7 +122,7 @@ void AbstractDD::print(std::ostream& os,std::string gLabel)
 void AbstractDD::saveGraph(std::ostream& os,std::string gLabel)
 {
    Heap<DNode,DNode> h(_mem,1000);
-   for(ANode::Ptr n : _an) 
+   for(auto n : _an) 
       h.insert({n,n->nbParents()});   
    h.buildHeap();
    std::string colors[2] = {"red","green"};
@@ -181,7 +181,7 @@ void AbstractDD::computeBest(const std::string m)
       mxId = std::max(n->getId(),mxId);
    auto nl = new (_mem) Heap<DNode,DNode>::Location*[mxId+1];
    memset(nl,0,sizeof(Heap<DNode,DNode>::Location*)*(mxId+1));
-   for(ANode::Ptr n : _an) {
+   for(auto n : _an) {
       nl[n->getId()] = h.insert({n,n->nbParents()});
       if (n != _root)
          n->setBound(initialBest());
@@ -223,7 +223,7 @@ void AbstractDD::computeBestBackward(const std::string m)
       mxId = std::max(n->getId(),mxId);
    auto nl = new (_mem) Heap<DNode,DNode>::Location*[mxId+1];
    memset(nl,0,sizeof(Heap<DNode,DNode>::Location*)*(mxId+1));
-   for(ANode::Ptr n : _an) {
+   for(auto n : _an) {
       nl[n->getId()] = h.insert({n,n->nbChildren()});
       if (n != _trg)
          n->setBackwardBound(initialBest());
