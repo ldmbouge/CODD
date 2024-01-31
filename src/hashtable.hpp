@@ -93,6 +93,13 @@ public:
       _mgc[at] = _magic;
       ++_nbp;
    }
+   void safeInsert(const K& key,const T& val) noexcept {
+      std::size_t at = _hash(key) % _mxs;
+      HTNode* head = (_mgc[at]==_magic) ? _tab[at] : nullptr;
+      _tab[at] = new (_pool) HTNode {key,val,head};
+      _mgc[at] = _magic;
+      ++_nbp;
+   }
    bool get(const K& key,T& val) const noexcept {
       std::size_t at = _hash(key) % _mxs;
       assert(at >= 0);

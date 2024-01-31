@@ -52,7 +52,20 @@ CLOSED: [2024-01-29 Mon 13:46]
 ** TODO Implement instance reader for MISP
 ** TODO Rename MISP (~foo~) to misptoy ;-)
 ** TODO Implement an O(1) removal from _an
-** TODO Profile and pick up the low hanging fruits 
+** DONE Profile and pick up the low hanging fruits 
+CLOSED: [2024-01-30 Tue 22:13]
+** TODO Fix calls to find in order to remove from _an
+- Those should be O(1) via locators.
+- Adopt Vec<T> rather than the std::vector<T> for _an
+- Create a Vec<T> version that is location aware
+- Implement the trick to O(1) removal (affects mergeLayer / truncate)
+** TODO Fix calls to find before updateKey in heaps
+- Heap is already location aware
+- We need to track the location (by node id, we have those)
+- Then use the location to have an O(1) operation (affects computeBest & computeBestBackward)
+** TODO Change the makeNode / duplicate so that hash is computed only once (not twice).
+- Use opaque ADT in Hashtable to support that
+
 
 * Command to create a GCM for an import :noexport:
 Like 
