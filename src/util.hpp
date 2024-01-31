@@ -9,6 +9,10 @@
 #include <initializer_list>
 #include <ranges>
 #include <assert.h>
+#if defined(__x86_64__)
+#include <intrin.h>
+#endif
+
 
 namespace std {
    template <class T> T min(const set<T>& s) {
