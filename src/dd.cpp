@@ -176,6 +176,7 @@ void AbstractDD::display()
 
 void AbstractDD::computeBest(const std::string m)
 {
+   //std::cout << "ANSZ:" << _an.size() << "\n";
    Heap<DNode,DNode> h(_mem,1000);
    unsigned mxId = 0;
    for(auto n : _an) 

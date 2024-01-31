@@ -51,15 +51,14 @@ CLOSED: [2024-01-29 Mon 13:46]
 ** TODO Implement instance reader for tsp to do bigger instances
 ** TODO Implement instance reader for MISP
 ** TODO Rename MISP (~foo~) to misptoy ;-)
-** TODO Implement an O(1) removal from _an
 ** DONE Profile and pick up the low hanging fruits 
 CLOSED: [2024-01-30 Tue 22:13]
-** TODO Fix calls to find in order to remove from _an
+** DONE Fix calls to find in order to remove from _an
+CLOSED: [2024-01-31 Wed 12:23]
 - Those should be O(1) via locators.
-- Adopt Vec<T> rather than the std::vector<T> for _an
-- Create a Vec<T> version that is location aware
 - Implement the trick to O(1) removal (affects mergeLayer / truncate)
-** CANCELLED Fix calls to find before updateKey in heaps
+- I now directly link the ANode with each other. It avoids the needs for location. Removal can still be O(1).
+** DONE Fix calls to find before updateKey in heaps
 CLOSED: [2024-01-31 Wed 07:28]
 - Heap is already location aware
 - We need to track the location (by node id, we have those)

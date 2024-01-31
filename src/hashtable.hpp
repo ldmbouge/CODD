@@ -70,7 +70,7 @@ public:
          }
       }
       _mxs = low >= tsz ? _primes[tsz-1] :  _primes[low];
-      //std::cout << "SIZE:" << _mxs << '\n';
+      std::cout << "sz(Hashtable):" << _mxs << '\n';
       _tab = new (_pool) HTNode*[_mxs];
       _mgc = new (_pool) unsigned[_mxs];
       memset(_tab,0,sizeof(HTNode*)*_mxs);

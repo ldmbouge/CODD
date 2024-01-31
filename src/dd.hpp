@@ -252,7 +252,7 @@ public:
         _stf(stf),
         _stc(stc),
         _smf(smf),
-        _nmap(_mem,128),
+        _nmap(_mem,2048),
         _ndId(0)
    {
       _baseline = _mem->mark();
@@ -288,8 +288,6 @@ public:
          n->~ANode();
       });
       _nmap.clear();      
-      //for(auto n : _an)
-      //         n->~ANode();
       _an.clear();
       _mem->clear(_baseline);
       _root = _trg = nullptr;
