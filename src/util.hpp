@@ -94,7 +94,9 @@ public:
          : _t(t),_cwi(at),_cw((at < nbw) ? t[at] : 0)
       {
          while (_cw == 0 && ++_cwi < nbw) 
-            _cw = _t[_cwi];         
+            _cw = _t[_cwi];
+         _cw = (_cwi < nbw) * _cw;
+         assert(_cwi >= nbw || _cw <= _t[_cwi]);
       }
       iterator(const unsigned long long* t) : _t(t),_cwi(nbw),_cw(0) {} // end constructor
    public:
@@ -104,10 +106,13 @@ public:
       using pointer = short*;
       using reference = short&;
       iterator& operator++()  noexcept {
+         assert(_cwi >= nbw || _cw <= _t[_cwi]);
          long long test = _cw & -_cw;  // only leaves LSB at 1
          _cw ^= test;                  // clear LSB
          while (_cw == 0 && ++_cwi < nbw)  // all bits at zero-> done with this word.            
-            _cw = _t[_cwi];        
+            _cw = _t[_cwi];
+         _cw = (_cwi < nbw) * _cw;
+         assert(_cwi >= nbw || _cw <= _t[_cwi]);
          return *this;
       }
       iterator operator++(int) { iterator retval = *this; ++(*this); return retval;}

@@ -65,10 +65,10 @@ int main(int argc,char* argv[])
       int illegal = 0;
       GRSet ad {};
       if (label >= bnds.getPrimal()) return std::nullopt;
-      //for(auto i : s.m) {
-      for(auto i = s.m.begin();illegal == 0 && i != s.m.end();i++) {
-         ad.insert(label - *i);
-         illegal += s.d.contains(label- *i);
+      for(auto i : s.m) {
+         ad.insert(label - i);
+         illegal += s.d.contains(label- i);
+         if (illegal) break;
       }
       if (s.k < n && label > s.e && illegal == 0) {
          if (s.k == n-1) // this must be a legal move (illegal==0)

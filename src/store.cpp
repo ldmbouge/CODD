@@ -44,7 +44,8 @@ void* Pool::allocate(std::size_t sz)
       sz = (sz | 0xF) + 1; // increase to align
    assert((sz & 0xF) == 0 && sz != 0);           // check alignment
    auto s = _store[_seg];
-   while(_top + sz >= s->_sz) {
+   while(_top + sz > s->_sz) {
+      assert(_top != 0);
       ++_seg;
       if (_seg >= _nbSeg) {
          if (_nbSeg == _mxs) {
