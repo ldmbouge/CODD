@@ -261,6 +261,7 @@ public:
       assert(_mxw == ps._mxw);
       switch (_mxw) {
          case 1: _t[0] |= ps._t[0];break;
+            /*
 #if defined(__x86_64__)
          case 2: {
             __m128i op0 = *(__m128i*)_t;
@@ -274,6 +275,7 @@ public:
             _t[2] |= ps._t[2];
          }break;
 #endif
+            */
          default: {
             for(short i=0;i < _mxw;++i)
                _t[i] |= ps._t[i]; 
