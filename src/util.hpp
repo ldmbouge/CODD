@@ -13,7 +13,6 @@
 //#include <intrin.h>
 //#endif
 
-
 namespace std {
    template <class T> T min(const set<T>& s) {
       if (s.size() > 0)
@@ -43,6 +42,14 @@ namespace std {
    }
 };
 
+/**
+ * Bounded Set for Naturals [0..64*nbw)
+ * It does not resizes and all storage is self-contained.
+ * It is a bit-vector implementation (64 values to a double-word).
+ * insert / remove / contains are O(1)
+ * size and operator== are O(1)   (provided a constant number of words, otherwise Theta(n/64)
+ * unionWith / interWith are O(1) (provided a constant number of words, otherwise Theta(n/64)
+ */
 template <unsigned short nbw=1> 
 class NatSet {
    unsigned long long _t[nbw];
@@ -82,13 +89,15 @@ public:
    }
    void insert(int p) noexcept         { _t[p >> 6] |= (1ull << (p & 63));}
    bool contains(int p) const noexcept { return (_t[p >> 6] &  (1ull << (p & 63))) != 0;}
-   void unionWith(const NatSet& ps) noexcept {
+   NatSet& unionWith(const NatSet& ps) noexcept {
       for(short i=0;i < nbw;++i)
-         _t[i] |= ps._t[i]; 
+         _t[i] |= ps._t[i];
+      return *this;
    }
-   void interWith(const NatSet& ps) noexcept {
+   NatSet& interWith(const NatSet& ps) noexcept {
       for(short i=0;i < nbw;i++)
          _t[i] &= ps._t[i];
+      return *this;
    }
    class iterator { 
       const unsigned long long*    _t;
@@ -172,6 +181,8 @@ public:
          nw += s1._t[i] == s2._t[i];
       return nw == nbw;
    }
+   friend NatSet operator|(const NatSet& s1,const NatSet& s2) { return NatSet(s1).unionWith(s2);}
+   friend NatSet operator&(const NatSet& s1,const NatSet& s2) { return NatSet(s1).interWith(s2);}
    std::size_t hash() const noexcept {
       std::size_t hv = 0;
       for(auto i = 0;i < nbw;i++)
@@ -181,7 +192,14 @@ public:
 };
 
 
-
+/**
+ * General Set for Naturals [0..+MAX_INT)
+ * It automatically resizes (on the C++ Heap) to adapt to insertions.
+ * It is a bit-vector implementation (64 values to a double-word).
+ * insert / remove / contains are O(1)
+ * size and operator== are O(1)   (provided a constant number of words, otherwise Theta(n/64)
+ * unionWith / interWith are O(1) (provided a constant number of words, otherwise Theta(n/64)
+ */
 class GNSet {
    unsigned short _mxw;
    unsigned short _nbp;
@@ -261,7 +279,7 @@ public:
          _t[i] &= ~(1ull << (p & 63));      
    }
    bool contains(int p) const noexcept { return (_t[p >> 6] &  (1ull << (p & 63))) != 0;}
-   void unionWith(const GNSet& ps) noexcept {
+   GNSet& unionWith(const GNSet& ps) noexcept {
       assert(_mxw == ps._mxw);
       switch (_mxw) {
          case 1: _t[0] |= ps._t[0];break;
@@ -285,11 +303,13 @@ public:
                _t[i] |= ps._t[i]; 
          }
       }
+      return *this;
    }
-   void interWith(const GNSet& ps) noexcept {
+   GNSet& interWith(const GNSet& ps) noexcept {
       assert(_mxw == ps._mxw);
       for(short i=0;i < _mxw;i++)
          _t[i] &= ps._t[i];
+      return  *this;
    }
    class iterator { 
       unsigned long long*    _t;
@@ -357,6 +377,8 @@ public:
          return nw == s1._mxw;
       } else return false;
    }
+   friend GNSet operator|(const GNSet& s1,const GNSet& s2) { return GNSet(s1).unionWith(s2);}
+   friend GNSet operator&(const GNSet& s1,const GNSet& s2) { return GNSet(s1).interWith(s2);}
 };
 
 
@@ -421,9 +443,11 @@ template<unsigned short sz> struct std::hash<NatSet<sz>> {
    }
 };
 
+// instantiation of the hash template for 64 and 128 bit sized NatSet.
 typedef struct std::hash<NatSet<1>> NS1;
 typedef struct std::hash<NatSet<2>> NS2;
 
+// Hash for General Nat Set
 template <> struct std::hash<GNSet> {
    std::size_t operator()(const GNSet& v) const noexcept {
       std::size_t ttl = 0;
@@ -452,7 +476,6 @@ std::set<T> operator&(const std::set<T>& s1,const std::set<T>& s2)
    return r;
 }
 
-
 template <typename T>
 std::set<T> remove(const std::set<T>& s1,const T& v) {
    std::set<T> r;
@@ -462,52 +485,6 @@ std::set<T> remove(const std::set<T>& s1,const T& v) {
    }
    return r;
 }
-
-
-
-
-inline GNSet operator|(const GNSet& s1,const GNSet& s2)
-{
-   GNSet r(s1);
-   r.unionWith(s2);
-   return r;
-}
-
-inline GNSet operator&(const GNSet& s1,const GNSet& s2)
-{
-   GNSet r(s1);
-   r.interWith(s2);
-   return r;
-}
-
-inline NatSet<1> operator|(const NatSet<1>& s1,const NatSet<1>& s2)
-{
-   NatSet<1> r(s1);
-   r.unionWith(s2);
-   return r;
-}
-
-inline NatSet<1> operator&(const NatSet<1>& s1,const NatSet<1>& s2)
-{
-   NatSet<1> r(s1);
-   r.interWith(s2);
-   return r;
-}
-
-inline NatSet<2> operator|(const NatSet<2>& s1,const NatSet<2>& s2)
-{
-   NatSet<2> r(s1);
-   r.unionWith(s2);
-   return r;
-}
-
-inline NatSet<2> operator&(const NatSet<2>& s1,const NatSet<2>& s2)
-{
-   NatSet<2> r(s1);
-   r.interWith(s2);
-   return r;
-}
-
 
 template<class T,class B>
 GNSet setFrom(const std::ranges::iota_view<T,B>& from) {

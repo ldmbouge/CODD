@@ -40,7 +40,7 @@ protected:
    ANode::Ptr _root;
    ANode::Ptr _trg;
    GNSet   _labels;
-   std::vector<ANode::Ptr> _an;
+   std::list<ANode::Ptr> _an;
    bool _exact;
    PoolMark _baseline;
    void addArc(Edge::Ptr e);
