@@ -23,19 +23,21 @@
 #include "store.hpp"
 
 template <class T,class Ord = std::greater<T>> class Heap {
+public:
    class Location {
       T _val;
       int _p;
       friend class Heap<T,Ord>;
-   public:
       Location() {}
       Location(const T& val,int p) : _val(val),_p(p) {}
+   public:
       T value() const noexcept { return _val;}
       T operator*() const noexcept { return _val;}
       friend std::ostream& operator<<(std::ostream& os,const Location& l) {
          return os << "<" << l._p << ":" << l._val << ">";
       }
    };
+private:
    Pool::Ptr     _pool; // where memory comes from
    Ord            _ord; // ordering object
    Location**    _data; // location pointers

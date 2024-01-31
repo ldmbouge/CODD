@@ -176,8 +176,13 @@ void AbstractDD::display()
 void AbstractDD::computeBest(const std::string m)
 {
    Heap<DNode,DNode> h(_mem,1000);
+   unsigned mxId = 0;
+   for(auto n : _an) 
+      mxId = std::max(n->getId(),mxId);
+   auto nl = new (_mem) Heap<DNode,DNode>::Location*[mxId+1];
+   memset(nl,0,sizeof(Heap<DNode,DNode>::Location*)*(mxId+1));
    for(ANode::Ptr n : _an) {
-      h.insert({n,n->nbParents()});
+      nl[n->getId()] = h.insert({n,n->nbParents()});
       if (n != _root)
          n->setBound(initialBest());
    }
@@ -200,7 +205,7 @@ void AbstractDD::computeBest(const std::string m)
       n.node->setBound(cur);
       for(auto ki = n.node->beginKids(); ki != n.node->endKids();ki++) {
          Edge::Ptr k = *ki;
-         auto at = h.find({k->_to,0});
+         auto at = nl[k->_to->getId()];
          assert(at!=nullptr);
          h.decrease(at);
       }
@@ -213,8 +218,13 @@ void AbstractDD::computeBest(const std::string m)
 void AbstractDD::computeBestBackward(const std::string m)
 {
    Heap<DNode,DNode> h(_mem,1000);
+   unsigned mxId = 0;
+   for(auto n : _an) 
+      mxId = std::max(n->getId(),mxId);
+   auto nl = new (_mem) Heap<DNode,DNode>::Location*[mxId+1];
+   memset(nl,0,sizeof(Heap<DNode,DNode>::Location*)*(mxId+1));
    for(ANode::Ptr n : _an) {
-      h.insert({n,n->nbChildren()});
+      nl[n->getId()] = h.insert({n,n->nbChildren()});
       if (n != _trg)
          n->setBackwardBound(initialBest());
    }
@@ -235,7 +245,7 @@ void AbstractDD::computeBestBackward(const std::string m)
       n.node->setBackwardBound(cur);
       for(auto pi = n.node->beginPar(); pi != n.node->endPar();pi++) {
          Edge::Ptr k = *pi;
-         auto at = h.find({k->_from,0});
+         auto at = nl[k->_to->getId()];
          assert(at!=nullptr);
          h.decrease(at);
       }

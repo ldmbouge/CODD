@@ -59,7 +59,8 @@ CLOSED: [2024-01-30 Tue 22:13]
 - Adopt Vec<T> rather than the std::vector<T> for _an
 - Create a Vec<T> version that is location aware
 - Implement the trick to O(1) removal (affects mergeLayer / truncate)
-** TODO Fix calls to find before updateKey in heaps
+** CANCELLED Fix calls to find before updateKey in heaps
+CLOSED: [2024-01-31 Wed 07:28]
 - Heap is already location aware
 - We need to track the location (by node id, we have those)
 - Then use the location to have an O(1) operation (affects computeBest & computeBestBackward)
