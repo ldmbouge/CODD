@@ -119,8 +119,9 @@ int main(int argc,char* argv[])
 
    std::cout << "LABELS:" << labels << "\n";
 
+   
    /*
-   auto myxDD = DD<SGRuler,std::less<double>, // to minimize
+     auto myxDD = DD<SGRuler,std::less<double>, // to minimize
                 ///decltype(init), 
                 decltype(target), 
                 decltype(stf),
@@ -128,11 +129,13 @@ int main(int argc,char* argv[])
                 decltype(smf)
                 >::makeDD(init,target,stf,scf,smf,labels);
    myxDD->setStrategy(new Exact);
+   bnds.setPrimal(1000);
    myxDD->compute();
 
    std::cout << myxDD->incumbent() << std::endl;
    return 0;
-*/
+   */
+   
    BAndB engine(DD<SGRuler,std::less<double>, // to minimize
                 ///decltype(init), 
                 decltype(target), 
