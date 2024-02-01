@@ -84,7 +84,7 @@ int main(int argc,char* argv[])
       GRSet ad {};
       
       if (label >= bnds.getPrimal()) return std::nullopt;
- //     if (label + OPT[n-s.k-1] >= bnds.getPrimal()) return std::nullopt;
+      if (label + OPT[n-s.k] >= bnds.getPrimal()) return std::nullopt;
 
       if (label + OPT[n-s.k] >= L+1) {	 
 	 /*std::cout << "pruned suboptimal transition due to sub-ruler length" << std::endl;
