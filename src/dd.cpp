@@ -382,6 +382,13 @@ void Relaxed::transferArcs(ANode::Ptr donor,ANode::Ptr receiver)
 
 std::list<ANode::Ptr> Relaxed::mergeLayer(std::list<ANode::Ptr>& layer)
 {
+   layer.sort([](const ANode::Ptr& a,const ANode::Ptr& b) {
+        return a->getBound() > b->getBound();
+   });
+   //for(auto n : layer)
+   //      std::cout << n->getBound() << " ";
+   //   std::cout << std::endl;
+   
    const auto mergesNeeded = layer.size() - _mxw;
    auto mergesDone = 0u;
    std::list<ANode::Ptr> delayed;
@@ -436,6 +443,18 @@ void Relaxed::compute()
    qn.enQueue(root);
    while (!qn.empty()) {
       std::list<ANode::Ptr> lk = pullLayer(qn); // We have in lk the queue content for layer cL
+
+      for(auto nd : lk) {
+         double cur = (nd->nbParents() == 0) ? nd->getBound() : _dd->initialBest();
+         for(auto pi = nd->beginPar();pi != nd->endPar();pi++) {
+            Edge::Ptr e = *pi;
+            auto ep = e->_from->getBound() + e->_obj;
+            if (_dd->isBetter(ep,cur)) 
+               cur = ep;            
+         }        
+         nd->setBound(cur);
+      }
+      
       std::list<ANode::Ptr> delay; // nodes whose layer was "increase". Need to go back in queue
       if (lk.size() > _mxw) 
          delay = mergeLayer(lk);

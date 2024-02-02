@@ -87,14 +87,15 @@ int main(int argc,char* argv[])
       if (label + OPT[n-s.k] >= bnds.getPrimal()) return std::nullopt;
 
       if (label + OPT[n-s.k] >= L+1) {	 
-	 /*std::cout << "pruned suboptimal transition due to sub-ruler length" << std::endl;
-	 std::cout << "label = " << label;
-	 std::cout << ", n = " << n;
-	 std::cout << ", k = " << s.k;
-	 std::cout << ", OPT[" << n-s.k << "] = " << OPT[n-s.k];
-	 std::cout << " >= L+1 = " << L+1 << std::endl;
-*/
-	 return std::nullopt; // cannot improve
+         /*
+           //std::cout << "pruned suboptimal transition due to sub-ruler length" << std::endl;
+           std::cout << "label = " << label
+                     << ", n = " << n
+                     << ", k = " << s.k
+                     << ", OPT[" << n-s.k << "] = " << OPT[n-s.k]
+                     << " >= L+1 = " << L+1 << std::endl;
+         */
+         return std::nullopt; // cannot improve
       }
       for(auto i : s.m) {
          ad.insert(label - i);
