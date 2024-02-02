@@ -397,7 +397,7 @@ std::list<ANode::Ptr> Relaxed::mergeLayer(std::list<ANode::Ptr>& layer)
    while (mergesDone < mergesNeeded && layer.size() > 0) {      
       ANode::Ptr n1 = layer.front();
       layer.pop_front();
-      std::list<ANode::Ptr> toMerge = {n1};
+      ANode::Ptr toMerge[2] = {n1,nullptr};
       ANode::Ptr mNode = nullptr;
       bool newNode = true;
       for(auto i = layer.begin();i != layer.end();i++) {
@@ -405,19 +405,20 @@ std::list<ANode::Ptr> Relaxed::mergeLayer(std::list<ANode::Ptr>& layer)
          assert(n1->getLayer() == n2->getLayer());
          mNode = _dd->merge(n1,n2);
          if (mNode) {
-            toMerge.push_back(n2);
+            toMerge[1] = n2;
             layer.erase(i);
             break;
          }
       }
-      if (toMerge.size() == 2) {
+      if (toMerge[1]) {
          mergesDone++;
          newNode = mNode->nbParents()==0; // is this a newly created node? [That test does not work]
          const bool sameLayer = mNode->getLayer() == n1->getLayer();
          mNode->setLayer(std::max(mNode->getLayer(),n1->getLayer()));
          mNode->setExact(false);
          _dd->_exact = false;
-         for(auto d : toMerge) {
+         for(auto i = 0; i < 2;i++) {
+            auto d = toMerge[i];            
             if (d != mNode) { // skip in case the node itself is the merged one
                transferArcs(d,mNode);
                _dd->_an.remove(d);
