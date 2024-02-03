@@ -60,12 +60,12 @@ public:
    virtual void print(std::ostream& os) const = 0;
    void clearParents() { _parents.clear();}
    void clearKids() { _children.clear();}
-   void setLayer(unsigned l) {  _layer = l;}
-   auto getLayer() const   { return _layer;}
-   void setExact(bool ex)  { _exact = ex;}
-   auto isExact() const    { return _exact == 1;}
-   auto nbParents() const  { return _parents.size();}
-   auto nbChildren() const { return _children.size();}
+   void setLayer(unsigned l) noexcept {  _layer = l;}
+   auto getLayer() const noexcept     { return _layer;}
+   void setExact(bool ex) noexcept    { _exact = ex;}
+   auto isExact() const noexcept      { return _exact == 1;}
+   auto nbParents() const noexcept    { return _parents.size();}
+   auto nbChildren() const noexcept   { return _children.size();}
    auto beginPar()  { return _parents.begin();}
    auto endPar()    { return _parents.end();}
    auto beginKids() { return _children.begin();}

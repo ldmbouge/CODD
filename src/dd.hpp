@@ -10,6 +10,7 @@
 #include <functional>
 #include "hashtable.hpp"
 #include "util.hpp"
+#include "msort.hpp"
 
 class Strategy;
 class AbstractDD;
@@ -106,10 +107,102 @@ public:
 
 template <class T> class CQueue;
 
+class NDArray {
+   ANode::Ptr*   _tab;
+   std::size_t    _mx;
+   std::size_t    _sz;
+   std::size_t    _st;
+   std::size_t _holes;
+public:
+   NDArray(std::size_t isz=128) : _mx(isz),_sz(0),_st(0),_holes(0) {
+      _tab = new ANode::Ptr[_mx];
+   }
+   ~NDArray() { delete[] _tab;}
+   std::size_t size() const noexcept { return _sz - _st - _holes;}
+   void push_back(ANode::Ptr n) noexcept {
+      if (_sz == _mx) {
+         auto p = new ANode::Ptr[_mx << 1];
+         for(size_t i = 0;i < _sz;i++)
+            p[i] = _tab[i];
+         delete[] _tab;
+         _tab = p;
+         _mx <<= 1;
+      }
+      _tab[_sz++] = n;
+   }
+   ANode::Ptr operator[](std::size_t i) const noexcept { return _tab[i];}
+   void clear() noexcept { _sz = 0;_st = 0;_holes = 0;} 
+   class iterator { 
+      ANode::Ptr* const _data;
+      std::size_t        _num;
+      std::size_t        _end;
+      iterator(const NDArray* d,std::size_t num) : _data(d->_tab),_num(num),_end(d->_sz) {
+         while(_num < _end && _data[_num] == nullptr) ++_num;
+      }
+   public:
+      using iterator_category = std::input_iterator_tag;
+      using value_type = ANode::Ptr;
+      using difference_type = long;
+      using pointer = ANode::Ptr*;
+      using reference = ANode::Ptr&;
+      iterator& operator++()   {
+         _num = _num + 1;
+         while(_num < _end && _data[_num] == nullptr) ++_num;
+         return *this;
+      }
+      iterator operator++(int) { iterator retval = *this; ++(*this); return retval;}
+      iterator& operator--()   {
+         _num = _num - 1;
+         while(_num>0 && _data[_num] == nullptr) --_num;
+         return *this;
+      }
+      iterator operator--(int) { iterator retval = *this; --(*this); return retval;}
+      bool operator==(iterator other) const noexcept { return _num == other._num;}
+      bool operator!=(iterator other) const noexcept { return _num != other._num;;}
+      ANode::Ptr operator*() const noexcept {return _data[_num];}
+      friend class NDArray;
+   };
+   iterator at(std::size_t ofs) const noexcept { return iterator(this,ofs);}
+   iterator begin() const noexcept { return iterator(this,_st);}
+   iterator end()   const noexcept { return iterator(this,_sz);}
+   void erase(iterator at) noexcept {
+      _tab[at._num] = nullptr;
+      _holes++;
+   }
+   void eraseSuffix(iterator from) noexcept {
+      assert(_holes == 0);
+      _sz = from._num;
+   }
+   ANode::Ptr front() noexcept {
+      auto p = _st;
+      while(p < _sz && _tab[p] == nullptr) {
+         ++p;
+         --_holes;
+      }
+      _st = p;
+      assert(p < _sz);
+      assert(_tab[p] != nullptr);
+      return _tab[p];
+   }
+   void pop_front() noexcept   {
+      auto p = _st;
+      while(p < _sz && _tab[p] == nullptr) {
+         ++p;
+         --_holes;
+      }
+      _tab[p] = nullptr;
+      _st = p+1;
+   }
+   void sort(auto cmp) {
+      mergeSort(_tab,_sz,cmp);
+   }
+};
+
 class WidthBounded :public Strategy {
 protected:
    unsigned _mxw;
-   std::list<ANode::Ptr> pullLayer(CQueue<ANode::Ptr>& q);
+   NDArray  _nda;
+   NDArray& pullLayer(CQueue<ANode::Ptr>& q);
 public:
    WidthBounded(const unsigned mxw) : Strategy(),_mxw(mxw) {}
    void setWidth(unsigned  mxw) { _mxw = mxw;}
@@ -117,7 +210,7 @@ public:
 };
 
 class Restricted: public WidthBounded {
-   void truncate(std::list<ANode::Ptr>& layer);
+   void truncate(NDArray& layer);
 public:
    Restricted(const unsigned mxw) : WidthBounded(mxw) {}
    const std::string getName() const { return "Restricted";}
@@ -127,7 +220,7 @@ public:
 
 class Relaxed :public WidthBounded {
    void transferArcs(ANode::Ptr donor,ANode::Ptr receiver);
-   std::list<ANode::Ptr> mergeLayer(std::list<ANode::Ptr>& layer);
+   std::list<ANode::Ptr> mergeLayer(NDArray& layer);
 public:
    Relaxed(const unsigned mxw) : WidthBounded(mxw) {}
    const std::string getName() const { return "Relaxed";}

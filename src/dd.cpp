@@ -11,6 +11,7 @@
 #include "queue.hpp"
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <stdlib.h>
 
 
 Bounds::Bounds(std::shared_ptr<AbstractDD> dd)
@@ -297,34 +298,37 @@ void Exact::compute()
    }
 }
 
-std::list<ANode::Ptr> WidthBounded::pullLayer(CQueue<ANode::Ptr>& qn)
+NDArray& WidthBounded::pullLayer(CQueue<ANode::Ptr>& qn)
 {
    ANode::Ptr n = qn.deQueue();
-   std::list<ANode::Ptr> lk {};
+   _nda.clear();
    const unsigned cL = n->getLayer();
-   lk.push_back(n);
+   _nda.push_back(n);
    while(!qn.empty()) {
       if (qn.peek()->getLayer() != cL)
          break;
       n = qn.deQueue();
-      lk.push_back(n);         
+      _nda.push_back(n);         
    }
-   return lk;
+   return _nda;
 }
 
 // ----------------------------------------------------------------------
 // Restricted DD Strategy
 
-void Restricted::truncate(std::list<ANode::Ptr>& layer)
+void Restricted::truncate(NDArray& layer)
 {
+   /*   layer.sort([](const ANode::Ptr& a,const ANode::Ptr& b) {
+       return a->getBound() >= b->getBound();
+   });
+   */
    _dd->_exact = false;
-   auto from = layer.begin();
-   std::advance(from,_mxw);
+   auto from = layer.at(_mxw);
    for(auto start=from;start != layer.end();start++) {
       (*start)->disconnect();
       _dd->_an.remove(*start);
    }
-   layer.erase(from,layer.end());
+   layer.eraseSuffix(from);
 }
 
 void Restricted::compute()
@@ -335,8 +339,8 @@ void Restricted::compute()
    CQueue<ANode::Ptr> qn(32);
    root->setLayer(0);
    qn.enQueue(root);
-   while (!qn.empty()) {
-      std::list<ANode::Ptr> lk = pullLayer(qn); // We have in lk the queue content for layer cL
+   while (!qn.empty()) { 
+      auto& lk = pullLayer(qn); // We have in lk the queue content for layer cL
       if (lk.size() > _mxw) 
          truncate(lk);
       for(auto p : lk) { // loop over layer lk. p is a "parent" node.
@@ -380,26 +384,21 @@ void Relaxed::transferArcs(ANode::Ptr donor,ANode::Ptr receiver)
    donor->disconnect();
 }
 
-std::list<ANode::Ptr> Relaxed::mergeLayer(std::list<ANode::Ptr>& layer)
+std::list<ANode::Ptr> Relaxed::mergeLayer(NDArray& layer)
 {
    layer.sort([](const ANode::Ptr& a,const ANode::Ptr& b) {
-        return a->getBound() > b->getBound();
+       return a->getBound() >= b->getBound();
    });
-   //for(auto n : layer)
-   //      std::cout << n->getBound() << " ";
-   //   std::cout << std::endl;
-   
    const auto mergesNeeded = layer.size() - _mxw;
    auto mergesDone = 0u;
    std::list<ANode::Ptr> delayed;
-   std::list<ANode::Ptr> final;
+   NDArray final;
 
    while (mergesDone < mergesNeeded && layer.size() > 0) {      
       ANode::Ptr n1 = layer.front();
       layer.pop_front();
       ANode::Ptr toMerge[2] = {n1,nullptr};
       ANode::Ptr mNode = nullptr;
-      bool newNode = true;
       for(auto i = layer.begin();i != layer.end();i++) {
          auto n2 = *i;
          assert(n1->getLayer() == n2->getLayer());
@@ -412,7 +411,7 @@ std::list<ANode::Ptr> Relaxed::mergeLayer(std::list<ANode::Ptr>& layer)
       }
       if (toMerge[1]) {
          mergesDone++;
-         newNode = mNode->nbParents()==0; // is this a newly created node? [That test does not work]
+         const bool newNode = mNode->nbParents()==0; // is this a newly created node? 
          const bool sameLayer = mNode->getLayer() == n1->getLayer();
          mNode->setLayer(std::max(mNode->getLayer(),n1->getLayer()));
          mNode->setExact(false);
@@ -430,7 +429,7 @@ std::list<ANode::Ptr> Relaxed::mergeLayer(std::list<ANode::Ptr>& layer)
          } else delayed.push_back(mNode);
       } else final.push_back(n1);
    }
-   layer.insert(layer.end(),final.begin(),final.end());
+   for(auto n : final) layer.push_back(n);
    return delayed;
 }
 
@@ -443,7 +442,7 @@ void Relaxed::compute()
    root->setLayer(0);
    qn.enQueue(root);
    while (!qn.empty()) {
-      std::list<ANode::Ptr> lk = pullLayer(qn); // We have in lk the queue content for layer cL
+      auto& lk = pullLayer(qn); // We have in lk the queue content for layer cL
 
       for(auto nd : lk) {
          double cur = (nd->nbParents() == 0) ? nd->getBound() : _dd->initialBest();
