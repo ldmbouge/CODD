@@ -47,11 +47,12 @@ template<> struct std::hash<SGRuler> {
 int main(int argc,char* argv[])
 {
    if (argc < 3) {
-      std::cout << "Usage gruler <#marks> <#ubLen>\n";
+      std::cout << "Usage gruler <#marks> <#ubLen> <maxWidth>\n";
       exit(1);
    }
    const int n = atoi(argv[1]);
    const int L = atoi(argv[2]);
+   const int w = argc==4 ? atoi(argv[3]) : 64;
 
    std::map<int, int> OPT = {
 	{ 0, 0 },
@@ -80,12 +81,10 @@ int main(int argc,char* argv[])
       return SGRuler {GRSet {},GRSet {},n,0};
    };
    const auto stf = [n,&bnds,&OPT,L](const SGRuler& s,const int label) -> std::optional<SGRuler> {
-      int illegal = 0;
-      GRSet ad {};
-      
+      if (s.k >= n || label <= s.e) return std::nullopt; // test earlier to avoid expensive tests
+      //if (label < s.k * (s.k-1)/2) return  std::nullopt; // this should help, but it changes branching (more nodes)a
       if (label >= bnds.getPrimal()) return std::nullopt;
       if (label + OPT[n-s.k] >= bnds.getPrimal()) return std::nullopt;
-
       if (label + OPT[n-s.k] >= L+1) {	 
          /*
            //std::cout << "pruned suboptimal transition due to sub-ruler length" << std::endl;
@@ -97,12 +96,14 @@ int main(int argc,char* argv[])
          */
          return std::nullopt; // cannot improve
       }
+      int illegal = 0;
+      GRSet ad {};
       for(auto i : s.m) {
          ad.insert(label - i);
          illegal += s.d.contains(label- i);
          if (illegal) break;
       }
-      if (s.k < n && label > s.e && illegal == 0) {
+      if (illegal == 0) {
          if (s.k == n-1) // this must be a legal move (illegal==0)
             return SGRuler { GRSet {},GRSet {},n,0};
          else return SGRuler { s.m | GRSet {label},s.d | ad, s.k + 1,label };
@@ -143,7 +144,7 @@ int main(int argc,char* argv[])
                 decltype(stf),
                 decltype(scf),
                 decltype(smf)
-                >::makeDD(init,target,stf,scf,smf,labels),64);
+                >::makeDD(init,target,stf,scf,smf,labels),w);
    engine.search(bnds);
    return 0;
 }
