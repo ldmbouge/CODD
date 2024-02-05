@@ -44,10 +44,10 @@ ANode::ANode(Pool::Ptr mem,unsigned nid,const ANode& o,bool exact)
     
 {}
 
+/*
 ANode::~ANode()
-{
-   //std::cout << "~ANode(" << _nid << ")\n";
-}
+{}
+*/
 
 void ANode::addArc(Edge::Ptr ep)
 {

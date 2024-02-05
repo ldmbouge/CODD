@@ -118,6 +118,9 @@ int main(int argc,char* argv[])
       }
       else return std::nullopt; // return  the empty optional
    };
+   const auto sEq = [n](const SGRuler& s) -> bool {
+      return s.k == n;
+   };
 
    std::cout << "LABELS:" << labels << "\n";
 
@@ -143,8 +146,9 @@ int main(int argc,char* argv[])
                 decltype(target), 
                 decltype(stf),
                 decltype(scf),
-                decltype(smf)
-                >::makeDD(init,target,stf,scf,smf,labels),w);
+                decltype(smf),
+                decltype(sEq)                
+                >::makeDD(init,target,stf,scf,smf,sEq,labels),w);
    engine.search(bnds);
    return 0;
 }

@@ -49,8 +49,8 @@ protected:
    friend class Restricted;
    friend class Relaxed;
    Strategy* _strat;
+   virtual bool eqSink(ANode::Ptr s) const = 0;
    virtual bool eq(ANode::Ptr f,ANode::Ptr s) const = 0;
-   virtual bool neq(ANode::Ptr f,ANode::Ptr s) const = 0;
    void computeBest(const std::string m);
    void computeBestBackward(const std::string m);
    void saveGraph(std::ostream& os,std::string gLabel);
@@ -232,22 +232,22 @@ public:
 
 template <typename ST,
           class Compare = std::less<double>,
-          //typename IBL1 = ST(*)(),
           typename IBL2 = ST(*)(),
           typename STF  = std::optional<ST>(*)(const ST&,int),
           typename STC  = double(*)(const ST&,int),
           typename SMF  = std::optional<ST>(*)(const ST&,const ST&),
-          class Equal = std::equal_to<ST>,
-          class NotEqual=std::not_equal_to<ST>>
+          typename EQSink = bool(*)(const ST&),
+          class Equal = std::equal_to<ST>
+          >
 requires Printable<ST> && Hashable<ST>
 class DD :public AbstractDD {
 private:
    std::function<ST()> _sti;
-   //IBL1 _sti;
    IBL2 _stt;
    STF _stf;
    STC _stc;
    SMF _smf;
+   EQSink _eqs;
    Hashtable<ST,ANode::Ptr> _nmap;
    unsigned _ndId;
    std::function<ANode::Ptr()> _initClosure;
@@ -256,10 +256,9 @@ private:
       auto sp = static_cast<const Node<ST>*>(s.get());
       return Equal{}(fp->get(),sp->get());
    }
-   bool neq(ANode::Ptr f,ANode::Ptr s) const {
-      auto fp = static_cast<const Node<ST>*>(f.get());
+   bool eqSink(ANode::Ptr s) const {
       auto sp = static_cast<const Node<ST>*>(s.get());
-      return NotEqual{}(fp->get(),sp->get());
+      return _eqs(sp->get());
    }
    bool   isBetter(double obj1,double obj2) const {
       return Compare{}(obj1,obj2);
@@ -336,14 +335,16 @@ private:
       else return nullptr;
    }
 public:
-   DD(std::function<ST()> sti,IBL2 stt,STF stf,STC stc,SMF smf,const GNSet& labels)
+   DD(std::function<ST()> sti,IBL2 stt,STF stf,STC stc,SMF smf,EQSink eqs,const GNSet& labels)
       : AbstractDD(labels),
         _sti(sti),
         _stt(stt),
         _stf(stf),
         _stc(stc),
         _smf(smf),
-        _nmap(_mem,2048),
+        _eqs(eqs),
+        _nmap(_mem,200000),
+        //_nmap(_mem,1024),
         _ndId(0)
    {
       _baseline = _mem->mark();
@@ -357,7 +358,7 @@ public:
       return AbstractDD::Ptr(new DD(std::forward<Args>(args)...));
    }
    AbstractDD::Ptr duplicate() {
-      return AbstractDD::Ptr(new DD(_sti,_stt,_stf,_stc,_smf,_labels));
+      return AbstractDD::Ptr(new DD(_sti,_stt,_stf,_stc,_smf,_eqs,_labels));
    }
    ANode::Ptr duplicate(const ANode::Ptr src) {
       ANode::Ptr at = nullptr;
@@ -376,7 +377,8 @@ public:
       _ndId = 0;
       _nmap.doOnAll([](ST& key,ANode::Ptr n) {
          key.~ST();
-         n->~ANode();
+         auto np = static_cast<const Node<ST>*>(n.get());
+         np->~Node<ST>();
       });
       _nmap.clear();      
       _an.clear();

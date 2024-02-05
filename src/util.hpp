@@ -371,10 +371,10 @@ public:
    }
    friend bool operator==(const GNSet& s1,const GNSet& s2) {
       if (s1._mxw == s2._mxw) {
-         unsigned short nw = 0;
-         for(auto i = 0;i < s1._mxw;i++)
-            nw += s1._t[i] == s2._t[i];
-         return nw == s1._mxw;
+         bool eq = true;
+         for(auto i = 0;eq && i < s1._mxw;i++) 
+            eq = eq && (s1._t[i] == s2._t[i]);         
+         return eq;
       } else return false;
    }
    friend GNSet operator|(const GNSet& s1,const GNSet& s2) { return GNSet(s1).unionWith(s2);}
@@ -422,8 +422,8 @@ template <class T> std::ostream& operator<<(std::ostream& os,const std::vector<T
 template<class T> struct std::hash<std::vector<T>> {
    std::size_t operator()(const std::vector<T>& v) const noexcept {
       std::size_t ttl = 0;
-      for(auto e : v)
-         ttl = (ttl << 5) | std::hash<T>{}(e);
+      for(const auto& e : v)
+         ttl = (ttl << 5) ^ std::hash<T>{}(e);
       return ttl;
    }   
 };
@@ -431,7 +431,7 @@ template<class T> struct std::hash<std::vector<T>> {
 template<class T> struct std::hash<std::set<T>> {
    std::size_t operator()(const std::set<T>& v) const noexcept {
       std::size_t ttl = 0;
-      for(auto e : v)
+      for(const auto& e : v)
          ttl = (ttl << 3) | std::hash<T>{}(e);
       return ttl;
    }

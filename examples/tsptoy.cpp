@@ -92,6 +92,10 @@ int main()
          return TSP {s1.s & s2.s , s1.last, s1.hops};
       else return std::nullopt; // return  the empty optional
    };
+   const auto eqs = [sz](const TSP& s) -> bool {
+      return s.last == 1 && s.hops == sz;
+   };
+
 
    std::cout << "LABELS:" << labels << "\n";
 
@@ -100,8 +104,9 @@ int main()
                 decltype(target), 
                 decltype(stf),
                 decltype(scf),
-                decltype(smf)
-                >::makeDD(init,target,stf,scf,smf,labels),1);
+                decltype(smf),
+                decltype(eqs)
+                >::makeDD(init,target,stf,scf,smf,eqs,labels),1);
    engine.search(bnds);
    return 0;
 }

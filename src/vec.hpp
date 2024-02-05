@@ -89,6 +89,7 @@ public:
       : _mem(v._mem),_sz(v._sz),_msz(v._msz),
         _data(std::move(v._data))
    {}
+   ~Vec() {}
    Vec& operator=(const Vec& v) {
       if (_msz < v._msz) {
          _data = (v._msz > 0) ? new (_mem) T[v._msz] : nullptr;

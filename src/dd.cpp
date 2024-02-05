@@ -274,7 +274,7 @@ GNSet Strategy::remainingLabels(ANode::Ptr p)
 void Exact::compute()
 {
    auto root = _dd->init();
-   auto sink = _dd->target();
+   _dd->target();
    _dd->_exact = true;
    CQueue<ANode::Ptr> qn(32);
    qn.enQueue(root);
@@ -289,7 +289,7 @@ void Exact::compute()
             Edge::Ptr e = new (_dd->_mem) Edge(p,child,l);
             e->_obj = theCost;
             _dd->addArc(e); // connect to new node
-            if (_dd->neq(child,sink)) {
+            if (!_dd->eqSink(child)) {
                if (newNode)
                   qn.enQueue(child);
             }
@@ -335,7 +335,7 @@ void Restricted::compute()
 {
    _dd->_exact = true;
    auto root = _dd->init();
-   auto sink = _dd->target();
+   _dd->target();
    CQueue<ANode::Ptr> qn(32);
    root->setLayer(0);
    qn.enQueue(root);
@@ -353,7 +353,7 @@ void Restricted::compute()
                Edge::Ptr e = new (_dd->_mem) Edge(p,child,l);
                e->_obj = theCost;
                _dd->addArc(e); // connect to new node
-               if (_dd->neq(child,sink)) {
+               if (!_dd->eqSink(child)) {
                   if (newNode)
                      qn.enQueue(child);
                }
@@ -437,7 +437,7 @@ void Relaxed::compute()
 {
    _dd->_exact = true;
    auto root = _dd->init();
-   auto sink = _dd->target();
+   _dd->target();
    CQueue<ANode::Ptr> qn(32);
    root->setLayer(0);
    qn.enQueue(root);
@@ -470,7 +470,7 @@ void Relaxed::compute()
                Edge::Ptr e = new (_dd->_mem) Edge(p,child,l);
                e->_obj = theCost;
                _dd->addArc(e); // connect to new node
-               if (_dd->neq(child,sink)) {
+               if (!_dd->eqSink(child)) {
                   if (newNode)
                      qn.enQueue(child);
                }

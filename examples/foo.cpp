@@ -91,6 +91,9 @@ int main()
          return MISP {s1.sel & s2.sel};
       else return std::nullopt; // return  the empty optional
    };
+   const auto eqs = [](const MISP& s) -> bool {
+      return s.sel.size() == 0;
+   };
 
    std::cout << "LABELS:" << labels << "\n";
 
@@ -101,8 +104,9 @@ int main()
                    decltype(myTarget), // MISP(*)(),
                    decltype(myStf),
                    decltype(scf),
-                   decltype(smf)                   
-                   >::makeDD(myInit,myTarget,myStf,scf,smf,labels);
+                   decltype(smf),
+                   decltype(eqs)
+                   >::makeDD(myInit,myTarget,myStf,scf,smf,eqs,labels);
    myxDD->setStrategy(new Exact);
    myxDD->compute();
    //myxDD->display();
@@ -114,8 +118,9 @@ int main()
                 decltype(myTarget), // MISP(*)(),
                 decltype(myStf),
                 decltype(scf),
-                decltype(smf)                   
-                >::makeDD(myInit,myTarget,myStf,scf,smf,labels),1);
+                decltype(smf),
+                decltype(eqs)                   
+                >::makeDD(myInit,myTarget,myStf,scf,smf,eqs,labels),1);
    engine.search(bnds);
    return 0;
 }

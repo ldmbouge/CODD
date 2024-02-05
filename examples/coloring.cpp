@@ -3,6 +3,7 @@
 #include "search.hpp"
 #include <concepts>
 #include <iostream>
+#include <fstream>
 #include <set>
 #include <optional>
 #include <algorithm>
@@ -47,19 +48,66 @@ struct GE {
    friend bool operator<(const GE& e1,const GE& e2) {
       return e1.a < e2.a || (e1.a == e2.a && e1.b < e2.b);
    }
+   friend std::ostream& operator<<(std::ostream& os,const GE& e) {
+      return os  << e.a << "-->" << e.b;
+   }
 };
 
-int main()
+struct Instance {
+   int nv;
+   int ne;
+   std::set<GE> edges;
+   Instance() {}
+   Instance(Instance&& i) : nv(i.nv),ne(i.ne),edges(std::move(i.edges)) {}
+   GNSet vertices() {
+      return setFrom(std::views::iota(0,nv+1));
+   }
+};
+
+Instance readFile(const char* fName)
 {
+   Instance i;
+   using namespace std;
+   ifstream f(fName);
+   while (!f.eof()) {
+      char c;
+      f >> c;
+      switch(c) {
+         case 'c': {
+            std::string line;
+            std::getline(f,line);
+         }break;
+         case 'p': {
+            string w;
+            f >> w >> i.nv >> i.ne;
+         }break;
+         case 'e': {
+            GE edge;
+            f >> edge.a >> edge.b;
+            edge.a--,edge.b--;      // make it zero-based
+            i.edges.insert(edge);
+         }break;
+      }
+   }
+   f.close();
+   return i;
+}
+
+int main(int argc,char* argv[])
+{
+   if (argc < 2) {
+      std::cout << "usage: coloring <fname> <width>\n";
+      exit(1);
+   }
+   const char* fName = argv[1];
+   const int w = argc==3 ? atoi(argv[2]) : 64;
+   Instance instance = readFile(fName);
+   std::cout << "read instance:" << instance.nv << " " << instance.ne << "\n";
+   std::cout << instance.edges << "\n";
+   std::cout << "Width=" << w << "\n";
    // using STL containers for the graph
-   const GNSet ns = {0,1,2,3,4};//,5,6,7,8,9,10,11,12,13,14,15};
-   const std::set<GE> es = {GE {0,3},
-                            GE {0,4},
-                            GE {1,2},
-                            GE {1,3},
-                            GE {1,4},                            
-                            GE {2,4}                             
-   };
+   const GNSet ns = instance.vertices();
+   const std::set<GE> es = instance.edges;
    const int K = ns.size();
    Bounds bnds;
    const auto labels = setFrom(std::views::iota(1,K+1));     // using a plain set for the labels
@@ -67,7 +115,6 @@ int main()
       Legal A(ns.size(), GNSet {});      
       for(auto v : ns)
          A[v] = labels;
-      //A[0] = std::set<int>{1};
       return COLOR {A,0,0 };
    };
    const auto target = [K]() {    // The sink state
@@ -113,7 +160,7 @@ int main()
                 decltype(scf),
                 decltype(smf),
                 decltype(eqs)
-                >::makeDD(init,target,stf,scf,smf,eqs,labels),4);
+                >::makeDD(init,target,stf,scf,smf,eqs,labels),w);
    engine.search(bnds);
    return 0;
 }

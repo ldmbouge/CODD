@@ -42,6 +42,7 @@ void BAndB::search(Bounds& bnds)
       relaxed->reset();
       relaxed->makeInitFrom(bbn.node);
       relaxed->compute();
+      //std::cout << "." << std::flush;
       // to debug
       //relaxed->display();int w;cin >> w;      
       bool dualBetter = _theDD->isBetter(relaxed->currentOpt(),bnds.getPrimal());
@@ -50,6 +51,8 @@ void BAndB::search(Bounds& bnds)
          restricted->reset();
          restricted->makeInitFrom(bbn.node);
          restricted->compute();
+         //std::cout << "R" << std::flush;
+
          bool primalBetter = _theDD->isBetter(restricted->currentOpt(),bnds.getPrimal());
          if (primalBetter)
             restricted->update(bnds);

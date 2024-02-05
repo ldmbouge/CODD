@@ -56,8 +56,8 @@ public:
    friend class ANList;
    ANode(Pool::Ptr mem,unsigned nid,bool exact);
    ANode(Pool::Ptr mem,unsigned nid,const ANode& o,bool exact);
-   virtual ~ANode();
-   virtual void print(std::ostream& os) const = 0;
+   //~ANode();
+   void print(std::ostream& os) const {}
    void clearParents() { _parents.clear();}
    void clearKids() { _children.clear();}
    void setLayer(unsigned l) noexcept {  _layer = l;}
@@ -173,7 +173,6 @@ public:
    typedef handle_ptr<Node<T>> Ptr;
    Node(Pool::Ptr mem,T&& v,unsigned nid,bool exact) : ANode(mem,nid,exact),_val(std::move(v)) {}
    Node(Pool::Ptr mem,unsigned nid,const Node<T>& o) : ANode(mem,nid,o,true),_val(o._val) {}
-   ~Node() {}
    const T& get() const {return _val;}
    void print(std::ostream& os) const {
       os << _nid << ',' << _val << ",B=" << _bound << ",BB=" << _bbound; // << ",LBLS:[";
