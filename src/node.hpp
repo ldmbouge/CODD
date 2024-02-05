@@ -114,12 +114,10 @@ public:
       }
    }
    void remove(ANode::Ptr n) noexcept {
-      assert(confirmMembership(n)==true);
-      ANode::Ptr pv = n->_prev, nx = n->_next;
-      if (pv) pv->_next = nx;
-      else _head = nx;
-      if (nx) nx->_prev = pv;
-      else _tail = pv;
+      //assert(confirmMembership(n)==true);
+      const ANode::Ptr pv = n->_prev, nx = n->_next;
+      (pv ? pv->_next : _head) = nx;
+      (nx ? nx->_prev : _tail) = pv;
       n->_prev = n->_next = nullptr;
    }
    bool confirmMembership(ANode::Ptr n) {

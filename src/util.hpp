@@ -371,10 +371,10 @@ public:
    }
    friend bool operator==(const GNSet& s1,const GNSet& s2) {
       if (s1._mxw == s2._mxw) {
-         bool eq = true;
-         for(auto i = 0;eq && i < s1._mxw;i++) 
-            eq = eq && (s1._t[i] == s2._t[i]);         
-         return eq;
+         int  c = s1._mxw;
+         auto a = s1._t,b = s2._t;
+         while(c-- && *a++ == *b++);
+         return c<0;
       } else return false;
    }
    friend GNSet operator|(const GNSet& s1,const GNSet& s2) { return GNSet(s1).unionWith(s2);}
@@ -493,5 +493,93 @@ GNSet setFrom(const std::ranges::iota_view<T,B>& from) {
       res.insert(v);
    return res;
 }
+
+
+template <class T> class FArray {
+   T*            _tab;
+   std::size_t    _mx;
+public:
+   //FArray() : _mx(0),_tab(nullptr) {}
+   FArray(std::size_t isz=128) : _mx(isz) {
+      _tab = new T[_mx];
+   }
+   FArray(std::size_t isz,const T& value) : _mx(isz) {
+      _tab = new T[_mx];
+      for(auto i=0u;i < _mx;i++)
+         _tab[i] = value;
+   }
+   FArray(const FArray& t) : _mx(t._mx) {
+      _tab = new T[_mx];
+      for(auto i=0u;i < _mx;i++)
+         _tab[i] = t._tab[i];
+   }
+   FArray(FArray&& t) : _tab(t._tab),_mx(t._mx) {
+      t._tab = nullptr;
+   }
+   ~FArray() { if (_tab) delete[] _tab;}
+   FArray& operator=(const FArray& t) {
+      if (_mx != t._mx) {
+         delete []_tab;
+         _mx = t._mx;
+         _tab = new T[_mx];
+      }
+      for(auto i=0u;i < _mx;i++)
+         _tab[i] = t._tab[i];      
+      return *this;
+   }
+   std::size_t size() const noexcept { return _mx;}
+   T& operator[](std::size_t i) noexcept { return _tab[i];}
+   T operator[](std::size_t i) const noexcept { return _tab[i];}
+   class iterator { 
+      T* const      _data;
+      std::size_t    _num;
+      iterator(const FArray* d,std::size_t num) : _data(d->_tab),_num(num) {}
+   public:
+      using iterator_category = std::input_iterator_tag;
+      using value_type = T;
+      using difference_type = long;
+      using pointer = T*;
+      using reference = T&;
+      iterator& operator++()   { ++_num;return *this;}
+      iterator operator++(int) { iterator retval = *this; ++(*this); return retval;}
+      bool operator==(iterator other) const noexcept { return _num == other._num;}
+      bool operator!=(iterator other) const noexcept { return _num != other._num;;}
+      T operator*() const noexcept {return _data[_num];}
+      T& operator*() noexcept {return _data[_num];}
+      friend class FArray;
+   };
+   iterator begin() const noexcept { return iterator(this,0);}
+   iterator end()   const noexcept { return iterator(this,_mx);}
+   friend bool operator==(const FArray& a1,const FArray& a2) {
+      if (a1._mx == a2._mx) {
+         int  c = a1._mx;
+         auto a = a1._tab,b = a2._tab;
+         while(c-- && *a++ == *b++);
+         return c<0;
+      } else return false;
+   }
+   friend struct std::hash<FArray<T>>;
+};
+
+template<class T> struct std::hash<FArray<T>> {
+   std::size_t operator()(const FArray<T>& v) const noexcept {
+      std::size_t ttl = 0;
+      for(auto i=0u;i < v._mx;i++) {
+         auto e = v._tab[i]; 
+         ttl = (ttl << 5) ^ std::hash<T>{}(e);
+      }
+      //for(const auto& e : v)
+      //ttl = (ttl << 5) ^ std::hash<T>{}(e);
+      return ttl;
+   }   
+};
+
+template <class T> std::ostream& operator<<(std::ostream& os,const FArray<T>& msg) {
+   os << '[';
+   for(const T& v : msg)
+      os << v << " ";
+   return os << ']';
+}
+
 
 #endif

@@ -22,12 +22,6 @@ template<> struct std::equal_to<MISP> {
    }
 };
 
-template<> struct std::not_equal_to<MISP> {
-   bool operator()(const MISP& s1,const MISP& s2) const {
-      return s1.sel != s2.sel;
-   }
-};
-
 template<> struct std::hash<MISP> {
    std::size_t operator()(const MISP& v) const noexcept {
       return std::hash<GNSet>{}(v.sel);

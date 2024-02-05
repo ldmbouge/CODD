@@ -24,12 +24,6 @@ template<> struct std::equal_to<TSP> {
    }
 };
 
-template<> struct std::not_equal_to<TSP> {
-   constexpr bool operator()(const TSP& s1,const TSP& s2) const {
-      return s1.last != s2.last || s1.hops != s2.hops || s1.s != s2.s;
-   }
-};
-
 template<> struct std::hash<TSP> {
    std::size_t operator()(const TSP& v) const noexcept {
       return (std::hash<GNSet>{}(v.s) << 24) |

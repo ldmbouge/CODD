@@ -387,8 +387,10 @@ void Relaxed::transferArcs(ANode::Ptr donor,ANode::Ptr receiver)
 std::list<ANode::Ptr> Relaxed::mergeLayer(NDArray& layer)
 {
    layer.sort([](const ANode::Ptr& a,const ANode::Ptr& b) {
-       return a->getBound() >= b->getBound();
+      return a->getBound() >= b->getBound();
+      //return a->getId() >= b->getId();      
    });
+   
    const auto mergesNeeded = layer.size() - _mxw;
    auto mergesDone = 0u;
    std::list<ANode::Ptr> delayed;

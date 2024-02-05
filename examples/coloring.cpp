@@ -9,7 +9,8 @@
 #include <algorithm>
 #include <map>
 
-typedef std::vector<GNSet> Legal;
+//typedef std::vector<GNSet> Legal;
+typedef FArray<GNSet> Legal;
 
 struct COLOR {
    Legal s;
@@ -23,12 +24,6 @@ struct COLOR {
 template<> struct std::equal_to<COLOR> {
    constexpr bool operator()(const COLOR& s1,const COLOR& s2) const {
       return s1.last == s2.last && s1.vtx==s2.vtx && s1.s == s2.s;
-   }
-};
-
-template<> struct std::not_equal_to<COLOR> {
-   constexpr bool operator()(const COLOR& s1,const COLOR& s2) const {
-      return s1.last != s2.last || s1.vtx != s2.vtx || s1.s != s2.s;
    }
 };
 
@@ -115,7 +110,7 @@ int main(int argc,char* argv[])
       Legal A(ns.size(), GNSet {});      
       for(auto v : ns)
          A[v] = labels;
-      return COLOR {A,0,0 };
+      return COLOR { std::move(A),0,0 };
    };
    const auto target = [K]() {    // The sink state
       return COLOR { Legal{},0,K};
@@ -131,7 +126,7 @@ int main(int argc,char* argv[])
          if (s.vtx+1 == K)
             return COLOR { Legal {},0, K };
          else
-            return COLOR {B, std::max(label,s.last), s.vtx + 1};
+            return COLOR { std::move(B), std::max(label,s.last), s.vtx + 1};
       } 
       else return std::nullopt;  // return the empty optional 
    };

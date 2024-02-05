@@ -29,12 +29,6 @@ template<> struct std::equal_to<SGRuler> {
    }
 };
 
-template<> struct std::not_equal_to<SGRuler> {
-   constexpr bool operator()(const SGRuler& s1,const SGRuler& s2) const {
-      return s1.k != s2.k || s1.e != s2.e || s1.m != s2.m;
-   }
-};
-
 template<> struct std::hash<SGRuler> {
    std::size_t operator()(const SGRuler& v) const noexcept {
       return (std::hash<GRSet>{}(v.m) << 24) |

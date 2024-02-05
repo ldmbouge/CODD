@@ -9,6 +9,7 @@
 #include <map>
 
 typedef std::vector<GNSet> Legal;
+//typedef FArray<GNSet> Legal;
 
 struct COLOR {
    Legal s;
