@@ -8,7 +8,7 @@
 #include <optional>
 #include <set>
 #include <functional>
-#include "hashtable.hpp"
+#include "lighthash.hpp"
 #include "util.hpp"
 #include "msort.hpp"
 
@@ -248,7 +248,7 @@ private:
    STC _stc;
    SMF _smf;
    EQSink _eqs;
-   Hashtable<ST,ANode::Ptr> _nmap;
+   LHashtable<ST> _nmap;
    unsigned _ndId;
    std::function<ANode::Ptr()> _initClosure;
    bool eq(ANode::Ptr f,ANode::Ptr s) const {
@@ -289,7 +289,7 @@ private:
       }
    }
    ANode::Ptr makeNode(ST&& state,bool pExact = true) {
-      ANode::Ptr at = nullptr;
+      Node<ST>* at = nullptr;
       auto inMap = _nmap.getLoc(state,at);
       if (inMap) {
          at->setExact(at->isExact() & pExact);
@@ -298,7 +298,7 @@ private:
          return at;
       } else {
          auto value = new (_mem) Node<ST>(_mem,std::move(state),_ndId++,pExact);
-         _nmap.safeInsertAt(inMap,value->get(),value);
+         _nmap.safeInsertAt(inMap,value);
          _an.push_back(value);
          return value;
       }
@@ -361,22 +361,21 @@ public:
       return AbstractDD::Ptr(new DD(_sti,_stt,_stf,_stc,_smf,_eqs,_labels));
    }
    ANode::Ptr duplicate(const ANode::Ptr src) {
-      ANode::Ptr at = nullptr;
+      Node<ST>* at = nullptr;
       auto sp = static_cast<const Node<ST>*>(src.get());
-      auto inMap = _nmap.get(sp->get(),at);
+      auto inMap = _nmap.getLoc(sp->get(),at);
       if (inMap) {
          return at;
       } else {
          auto nn = new (_mem) Node<ST>(_mem,_ndId++,*sp);
-         _nmap.safeInsert(nn->get(),nn);
+         _nmap.safeInsertAt(inMap,nn);
          _an.push_back(nn);
          return nn;
       }
    }
    void reset() {
       _ndId = 0;
-      _nmap.doOnAll([](ST& key,ANode::Ptr n) {
-         key.~ST();
+      _nmap.doOnAll([](ANode::Ptr n) {
          auto np = static_cast<const Node<ST>*>(n.get());
          np->~Node<ST>();
       });

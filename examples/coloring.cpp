@@ -16,6 +16,9 @@ struct COLOR {
    Legal s;
    int last;
    int vtx;
+   COLOR(const COLOR& c) : s(c.s),last(c.last),vtx(c.vtx) {}
+   COLOR(COLOR&& c) : s(std::move(c.s)),last(c.last),vtx(c.vtx) {}
+   COLOR(Legal&& s,int l,int v) : s(std::move(s)),last(l),vtx(v) {}
    friend std::ostream& operator<<(std::ostream& os,const COLOR& m) {
       return os << "<" << m.s << ',' << m.last << ',' << m.vtx << ">";
    }
@@ -138,7 +141,7 @@ int main(int argc,char* argv[])
          Legal B(s1.s.size(),GNSet {});
          for(auto i=0;i < K;i++) 
             B[i] = s1.s[i] | s2.s[i];         
-         return COLOR {B , s1.last, s1.vtx};
+         return COLOR { std::move(B) , s1.last, s1.vtx};
       }
       else return std::nullopt; // return  the empty optional
    };

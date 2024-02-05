@@ -3,7 +3,6 @@
 
 #include <functional>
 #include <iterator>
-
 #include "vec.hpp"
 
 template<typename T>

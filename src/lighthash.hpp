@@ -15,8 +15,8 @@
  * Contributions by Waldemar Cruz, Rebecca Gentzel, Willem Jan Van Hoeve
  */
 
-#ifndef __DDOPT_HASHTABLE_H
-#define __DDOPT_HASHTABLE_H
+#ifndef __DDOPT_LIGHTHASHTABLE_H
+#define __DDOPT_LIGHTHASHTABLE_H
 
 #include <algorithm>
 #include <iostream>
@@ -24,12 +24,12 @@
 #include <string>
 #include <string.h>
 #include "store.hpp"
+#include "node.hpp"
 
-template <class K,class T,class Hash = std::hash<K>,class Equal = std::equal_to<K>> class Hashtable {
+template <class ST,class Hash = std::hash<ST>,class Equal = std::equal_to<ST>> class LHashtable {
    struct HTNode {
-      K _key;
-      T _data;
-      HTNode* _next;
+      Node<ST>* _data;
+      HTNode*   _next;
    };
    static constexpr const std::size_t _primes[] = {
       2,547,1229,1993,2749,3581,4421,5281,6143,7001,7927,8837,9739,10663,11677,12569,13513,14533,15413,16411,
@@ -46,14 +46,13 @@ template <class K,class T,class Hash = std::hash<K>,class Equal = std::equal_to<
       198943,200191,201511,202717,203971,205213,206383,207569,208739,209939
    };
    Pool::Ptr _pool;
-   Hash _hash;
    HTNode**  _tab;
    unsigned* _mgc;
    std::size_t  _mxs;
    unsigned _magic;
    unsigned _nbp;   // number of pairs
 public:
-   Hashtable(Pool::Ptr p,std::size_t sz) : _pool(p) {
+   LHashtable(Pool::Ptr p,std::size_t sz) : _pool(p) {
       constexpr const std::size_t tsz = sizeof(_primes)/sizeof(std::size_t);
       std::size_t low=0,up = tsz - 1;
       while (low <= up) {
@@ -68,7 +67,7 @@ public:
          }
       }
       _mxs = low >= tsz ? _primes[tsz-1] :  _primes[low];
-      std::cout << "sz(Hashtable):" << _mxs << '\n';
+      std::cout << "sz(LightHashtable):" << _mxs << '\n';
       _tab = new (_pool) HTNode*[_mxs];
       _mgc = new (_pool) unsigned[_mxs];
       memset(_tab,0,sizeof(HTNode*)*_mxs);
@@ -76,36 +75,21 @@ public:
       _magic = 1;
       _nbp = 0;
    }
-   void insert(const K& key,const T& val) noexcept {
-      std::size_t at = _hash(key) % _mxs;
-      HTNode* head = (_mgc[at]==_magic) ? _tab[at] : nullptr;
-      HTNode* cur = head;
-      while (cur != nullptr) {
-         if (Equal{}(cur->_key,key)) {
-            cur->_data = val;
-            return ;
-         }
-         cur = cur->_next;
-      }
-      _tab[at] = new (_pool) HTNode {key,val,head};
-      _mgc[at] = _magic;
-      ++_nbp;
-   }
    class HTAt {
-      friend class Hashtable<K,T,Hash,Equal>;
+      friend class LHashtable<ST,Hash,Equal>;
       std::size_t _at;
       bool       _inc; // true if query is in the hashtable
       HTAt(std::size_t at,bool inc) : _at(at),_inc(inc) {}
    public:
-      operator bool() const { return _inc;}
+      operator bool() const noexcept { return _inc;}
    };
-   HTAt getLoc(const K& key,T& val) const noexcept {
-      std::size_t at = _hash(key) % _mxs;
+   HTAt getLoc(const ST& key,Node<ST>*& val) const noexcept {
+      std::size_t at = Hash{}(key) % _mxs;
       assert(at >= 0);
       assert(at < _mxs);
       HTNode* cur =  (_mgc[at]==_magic) ? _tab[at] : nullptr;
       while (cur != nullptr) {
-         if (Equal{}(cur->_key,key)) {
+         if (Equal{}(cur->_data->get(),key)) {
             val = cur->_data;
             return HTAt(at, true);
          }
@@ -113,33 +97,12 @@ public:
       }
       return HTAt(at, false);      
    }
-   void safeInsertAt(const HTAt& loc,const K& key,const T& val) {
+   void safeInsertAt(const HTAt& loc,Node<ST>* val) {
       assert(loc._inc == false);
       HTNode* head = (_mgc[loc._at]==_magic) ? _tab[loc._at] : nullptr;
-      _tab[loc._at] = new (_pool) HTNode {key,val,head};
+      _tab[loc._at] = new (_pool) HTNode {val,head};
       _mgc[loc._at] = _magic;
       ++_nbp;      
-   }
-   void safeInsert(const K& key,const T& val) noexcept {
-      std::size_t at = _hash(key) % _mxs;
-      HTNode* head = (_mgc[at]==_magic) ? _tab[at] : nullptr;
-      _tab[at] = new (_pool) HTNode {key,val,head};
-      _mgc[at] = _magic;
-      ++_nbp;
-   }
-   bool get(const K& key,T& val) const noexcept {
-      std::size_t at = _hash(key) % _mxs;
-      assert(at >= 0);
-      assert(at < _mxs);
-      HTNode* cur =  (_mgc[at]==_magic) ? _tab[at] : nullptr;
-      while (cur != nullptr) {
-         if (Equal{}(cur->_key,key)) {
-            val = cur->_data;
-            return true;
-         }
-         cur = cur->_next;
-      }
-      return false;      
    }
    unsigned size() const noexcept { return _nbp;}
    void clear() noexcept {
@@ -152,7 +115,7 @@ public:
       for(auto i=0u;i < _mxs;i++) {
          HTNode* cur = (_mgc[i]==_magic) ? _tab[i] : nullptr;
          while (cur) {
-            f(cur->_key,cur->_data);
+            f(cur->_data);
             cur = cur->_next;
          }
       }
