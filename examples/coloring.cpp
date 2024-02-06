@@ -150,9 +150,9 @@ int main(int argc,char* argv[])
    };
    const auto smf = [K](const COLOR& s1,const COLOR& s2) -> std::optional<COLOR> {
       if (s1.last == s2.last && s1.vtx == s2.vtx) {
-         Legal B(s1.s.size(),GNSet {});
+         Legal B(s1.s);
          for(auto i=0;i < K;i++) 
-            B[i] = s1.s[i] | s2.s[i];         
+            B[i].unionWith(s2.s[i]);         
          return COLOR { std::move(B) , s1.last, s1.vtx};
       }
       else return std::nullopt; // return  the empty optional
