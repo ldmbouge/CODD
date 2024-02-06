@@ -219,7 +219,13 @@ public:
       _t   = new unsigned long long[_mxw];
       for(int i=0;i<_mxw;i++)
          _t[i] = s._t[i];
-   }   
+   }
+   GNSet(GNSet&& s) {
+      _mxw = s._mxw;
+      _nbp = s._nbp;
+      _t = s._t;
+      s._t = nullptr;      
+   }
    GNSet(std::initializer_list<int> l) {
       _mxw = 1;
       auto nb = (l.end() - l.begin()) >> 6;
@@ -233,7 +239,7 @@ public:
       }
    }
    ~GNSet() {
-      delete[] _t;
+      if (_t) delete[] _t;
    }
    GNSet& operator=(const GNSet& s) {
       if (s._mxw != _mxw) {
@@ -244,6 +250,14 @@ public:
       _nbp = s._nbp;      
       for(int i=0;i<_mxw;i++)
          _t[i] = s._t[i];
+      return *this;
+   }
+   GNSet& operator=(GNSet&& s) {
+      if (_t) delete[] _t;      
+      _mxw = s._mxw;
+      _nbp = s._nbp;
+      _t = s._t;
+      s._t = nullptr;
       return *this;
    }
    short nbWords() const noexcept { return _mxw;}
@@ -383,8 +397,8 @@ public:
          hv = std::rotl(hv,2) ^ _t[i];
       return hv;
    }   
-   friend GNSet operator|(const GNSet& s1,const GNSet& s2) { return GNSet(s1).unionWith(s2);}
-   friend GNSet operator&(const GNSet& s1,const GNSet& s2) { return GNSet(s1).interWith(s2);}
+   friend GNSet operator|(const GNSet& s1,const GNSet& s2) { return std::move(GNSet(s1).unionWith(s2));}
+   friend GNSet operator&(const GNSet& s1,const GNSet& s2) { return std::move(GNSet(s1).interWith(s2));}
 };
 
 
@@ -530,7 +544,7 @@ public:
    }
    std::size_t size() const noexcept { return _mx;}
    T& operator[](std::size_t i) noexcept { return _tab[i];}
-   T operator[](std::size_t i) const noexcept { return _tab[i];}
+   const T& operator[](std::size_t i) const noexcept { return _tab[i];}
    class iterator { 
       T* const      _data;
       std::size_t    _num;
