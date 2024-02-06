@@ -514,9 +514,11 @@ template <class T> class FArray {
    T*            _tab;
    std::size_t    _mx;
 public:
-   //FArray() : _mx(0),_tab(nullptr) {}
-   FArray(std::size_t isz=128) : _mx(isz) {
-      _tab = new T[_mx];
+   FArray() : _tab(nullptr),_mx(0) {}
+   FArray(std::size_t isz) : _mx(isz) {
+      if (_mx > 0)
+         _tab = new T[_mx];
+      else _tab = nullptr;
    }
    FArray(std::size_t isz,const T& value) : _mx(isz) {
       _tab = new T[_mx];
@@ -540,6 +542,13 @@ public:
       }
       for(auto i=0u;i < _mx;i++)
          _tab[i] = t._tab[i];      
+      return *this;
+   }
+   FArray& operator=(FArray&& a) {
+      if (_tab) delete[] _tab;
+      _mx = a._mx;
+      _tab = a._tab;
+      a._tab = nullptr;
       return *this;
    }
    std::size_t size() const noexcept { return _mx;}

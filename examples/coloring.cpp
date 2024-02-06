@@ -55,10 +55,18 @@ struct Instance {
    int nv;
    int ne;
    std::set<GE> edges;
-   Instance() {}
+   FArray<GNSet> adj;
+   Instance() : adj(0) {}
    Instance(Instance&& i) : nv(i.nv),ne(i.ne),edges(std::move(i.edges)) {}
    GNSet vertices() {
       return setFrom(std::views::iota(0,nv+1));
+   }
+   void convert() {
+      adj = FArray<GNSet>(nv);
+      for(const auto& e : edges) {
+         adj[e.a].insert(e.b);
+         adj[e.b].insert(e.a);
+      }         
    }
 };
 
@@ -70,6 +78,7 @@ Instance readFile(const char* fName)
    while (!f.eof()) {
       char c;
       f >> c;
+      if (f.eof()) break;
       switch(c) {
          case 'c': {
             std::string line;
@@ -83,11 +92,15 @@ Instance readFile(const char* fName)
             GE edge;
             f >> edge.a >> edge.b;
             edge.a--,edge.b--;      // make it zero-based
+            std::cout << edge << "\n";
+            assert(edge.a >=0);
+            assert(edge.b >=0);
             i.edges.insert(edge);
          }break;
       }
    }
    f.close();
+   i.convert();
    return i;
 }
 
@@ -106,6 +119,7 @@ int main(int argc,char* argv[])
    // using STL containers for the graph
    const GNSet ns = instance.vertices();
    const std::set<GE> es = instance.edges;
+   const FArray adj = instance.adj;
    const int K = ns.size();
    Bounds bnds;
    const auto labels = setFrom(std::views::iota(1,K+1));     // using a plain set for the labels
@@ -118,18 +132,16 @@ int main(int argc,char* argv[])
    const auto target = [K]() {    // The sink state
       return COLOR { Legal{},0,K};
    };
-   const auto stf = [K,es](const COLOR& s,const int label) -> std::optional<COLOR> {
-      if (s.vtx < K && s.s[s.vtx].contains(label) && label <= s.last+1) {
-         Legal B = s.s;
-         for(auto vIdx = s.vtx+1;vIdx < (int)B.size();vIdx++)
-            if ((es.contains(GE {s.vtx,vIdx}) || es.contains(GE {vIdx,s.vtx})) &&
-                s.s[vIdx].contains(label))
-               B[vIdx].remove(label);
-         B[s.vtx] = GNSet {label};
+   const auto stf = [K,&adj](const COLOR& s,const int label) -> std::optional<COLOR> {
+      if (s.vtx < K && label <= s.last+1 && s.s[s.vtx].contains(label)) {
          if (s.vtx+1 == K)
             return COLOR { Legal {},0, K };
-         else
-            return COLOR { std::move(B), std::max(label,s.last), s.vtx + 1};
+         Legal B = s.s;
+         for(auto vIdx = s.vtx+1;vIdx < (int)B.size();vIdx++)
+            if (adj[s.vtx].contains(vIdx) && s.s[vIdx].contains(label))
+               B[vIdx].remove(label);
+         B[s.vtx] = GNSet {label};
+         return COLOR { std::move(B), std::max(label,s.last), s.vtx + 1};
       } 
       else return std::nullopt;  // return the empty optional 
    };
