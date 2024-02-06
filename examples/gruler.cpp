@@ -97,10 +97,11 @@ int main(int argc,char* argv[])
          illegal += s.d.contains(label- i);
          if (illegal) break;
       }
+      ad.unionWith(s.d);
       if (illegal == 0) {
          if (s.k == n-1) // this must be a legal move (illegal==0)
             return SGRuler { GRSet {},GRSet {},n,0};
-         else return SGRuler { s.m | GRSet {label},s.d | ad, s.k + 1,label };
+         else return SGRuler { s.m | GRSet {label},ad, s.k + 1,label };
       } else return std::nullopt;  // return the empty optional 
    };
    const auto scf = [](const SGRuler& s,int label) { // partial cost function 
