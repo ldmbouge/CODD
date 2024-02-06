@@ -32,8 +32,8 @@ template<> struct std::equal_to<COLOR> {
 
 template<> struct std::hash<COLOR> {
    std::size_t operator()(const COLOR& v) const noexcept {
-      return (std::hash<Legal>{}(v.s) << 16) |
-         (std::hash<int>{}(v.last) << 8) |
+      return (std::hash<Legal>{}(v.s) << 16) ^
+         (std::hash<int>{}(v.last) << 8) ^
          std::hash<int>{}(v.vtx);
    }
 };

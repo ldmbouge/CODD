@@ -377,6 +377,12 @@ public:
          return c<0;
       } else return false;
    }
+   std::size_t hash() const noexcept {
+      std::size_t hv = 0;
+      for(auto i = 0;i < _mxw;i++)
+         hv = std::rotl(hv,2) ^ _t[i];
+      return hv;
+   }   
    friend GNSet operator|(const GNSet& s1,const GNSet& s2) { return GNSet(s1).unionWith(s2);}
    friend GNSet operator&(const GNSet& s1,const GNSet& s2) { return GNSet(s1).interWith(s2);}
 };
@@ -449,12 +455,7 @@ typedef struct std::hash<NatSet<2>> NS2;
 
 // Hash for General Nat Set
 template <> struct std::hash<GNSet> {
-   std::size_t operator()(const GNSet& v) const noexcept {
-      std::size_t ttl = 0;
-      for(auto e : v)
-         ttl = (ttl << 3) | std::hash<int>{}(e);
-      return ttl;
-   }
+   std::size_t operator()(const GNSet& v) const noexcept { return v.hash();}
 };
 
 
