@@ -70,6 +70,7 @@ public:
    virtual bool   isBetter(double obj1,double obj2) const = 0;
    virtual double better(double obj1,double obj2) const = 0;
    virtual void update(Bounds& bnds) const = 0;
+   virtual void printNode(ANode::Ptr n) const = 0;
    double currentOpt() const { return _trg->getBound();}
    std::vector<int> incumbent();
    void compute();
@@ -357,6 +358,11 @@ public:
    static AbstractDD::Ptr makeDD(Args&&... args) {
       return AbstractDD::Ptr(new DD(std::forward<Args>(args)...));
    }
+   void printNode(ANode::Ptr n) const {
+      auto sp = static_cast<const Node<ST>*>(n.get());
+      sp->print(std::cout);
+      std::cout << std::endl;
+   }
    AbstractDD::Ptr duplicate() {
       return AbstractDD::Ptr(new DD(_sti,_stt,_stf,_stc,_smf,_eqs,_labels));
    }
@@ -375,8 +381,7 @@ public:
    }
    void reset() {
       _ndId = 0;
-      _nmap.doOnAll([](ANode::Ptr n) {
-         auto np = static_cast<const Node<ST>*>(n.get());
+      _nmap.doOnAll([](Node<ST>* np) {
          np->~Node<ST>();
       });
       _nmap.clear();      

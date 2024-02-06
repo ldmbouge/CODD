@@ -40,12 +40,6 @@ void AbstractDD::addArc(Edge::Ptr e)
    e->_to->addArc(e);
 }
 
-void printMe(ANode* n)
-{
-   n->print(std::cout);
-   std::cout << std::endl;
-}
-
 void display(AbstractDD* dd)
 {
    dd->display();

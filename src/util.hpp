@@ -423,7 +423,7 @@ template<class T> struct std::hash<std::vector<T>> {
    std::size_t operator()(const std::vector<T>& v) const noexcept {
       std::size_t ttl = 0;
       for(const auto& e : v)
-         ttl = (ttl << 5) ^ std::hash<T>{}(e);
+         ttl = std::rotl(ttl,3) ^ std::hash<T>{}(e);
       return ttl;
    }   
 };
@@ -564,12 +564,8 @@ public:
 template<class T> struct std::hash<FArray<T>> {
    std::size_t operator()(const FArray<T>& v) const noexcept {
       std::size_t ttl = 0;
-      for(auto i=0u;i < v._mx;i++) {
-         auto e = v._tab[i]; 
-         ttl = (ttl << 5) ^ std::hash<T>{}(e);
-      }
-      //for(const auto& e : v)
-      //ttl = (ttl << 5) ^ std::hash<T>{}(e);
+      for(auto i=0u;i < v._mx;i++) 
+         ttl = std::rotl(ttl,3) ^ std::hash<T>{}(v._tab[i]);
       return ttl;
    }   
 };

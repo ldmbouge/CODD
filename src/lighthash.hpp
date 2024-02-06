@@ -22,6 +22,7 @@
 #include <iostream>
 #include <functional>
 #include <string>
+#include <limits>
 #include <string.h>
 #include "store.hpp"
 #include "node.hpp"
@@ -106,8 +107,40 @@ public:
    }
    unsigned size() const noexcept { return _nbp;}
    void clear() noexcept {
+      /*      std::cout << "LHT(" << this << ") had: " << _nbp << " / " << _mxs << " entries\n";
+      unsigned lc = std::numeric_limits<unsigned>::min();
+      unsigned nec = 0;
+      std::size_t idxll = 0;
+      double ssq = 0;
+      double s   = 0;
+      for(auto i=0u;i <_mxs;i++) {
+         HTNode* cur = (_mgc[i]==_magic) ? _tab[i] : nullptr;
+         nec += (cur != nullptr);
+         unsigned nn = 0;
+         while (cur) {
+            ++nn;
+            cur = cur->_next;
+         }
+         ssq += (nn*nn);
+         s   += nn;
+         lc =  std::max(lc,nn);
+         if (nn == lc)
+            idxll = i;
+      }
+      double asq = ssq / _mxs;
+      double as  = s / _mxs;
+      double dev = sqrt(asq - (as*as));
+      std::cout << "\tL(chain)    = " << lc << " IDX:" << idxll << "\n";
+      std::cout << "\t#NE(chains) = " << nec << "\n";
+      std::cout << "\t#E(chains)  = " << _mxs - nec << "\n";
+      std::cout << "\tDEV         = " << dev << "\n";
+      HTNode* cur = (_mgc[idxll]==_magic) ? _tab[idxll] : nullptr;
+      while(cur) {
+         std::cout << cur->_data->get() << "\n";
+         cur = cur->_next;
+      }
+      */
       ++_magic;
-      //std::cout << "HT(" << this << ") had: " << _nbp << " entries\n";
       _nbp = 0;
    }
    template <class Fun>
