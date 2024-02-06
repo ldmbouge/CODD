@@ -380,6 +380,7 @@ void Relaxed::transferArcs(ANode::Ptr donor,ANode::Ptr receiver)
 
 std::list<ANode::Ptr> Relaxed::mergeLayer(NDArray& layer)
 {
+   std::cout << "\tLSZ:" << layer.size() << "\t L:" << (*layer.begin())->getLayer() << "\n";
    layer.sort([](const ANode::Ptr& a,const ANode::Ptr& b) {
       return a->getBound() >= b->getBound();
       //return a->getId() >= b->getId();      
@@ -408,7 +409,7 @@ std::list<ANode::Ptr> Relaxed::mergeLayer(NDArray& layer)
       if (toMerge[1]) {
          mergesDone++;
          const bool newNode = mNode->nbParents()==0; // is this a newly created node? 
-         const bool sameLayer = mNode->getLayer() == n1->getLayer();
+         const bool sameLayer = mNode->getLayer() <= n1->getLayer();
          mNode->setLayer(std::max(mNode->getLayer(),n1->getLayer()));
          mNode->setExact(false);
          _dd->_exact = false;
@@ -437,6 +438,7 @@ void Relaxed::compute()
    CQueue<ANode::Ptr> qn(32);
    root->setLayer(0);
    qn.enQueue(root);
+   std::cout << "RELAX...\n"; 
    while (!qn.empty()) {
       auto& lk = pullLayer(qn); // We have in lk the queue content for layer cL
 
@@ -454,6 +456,7 @@ void Relaxed::compute()
       std::list<ANode::Ptr> delay; // nodes whose layer was "increase". Need to go back in queue
       if (lk.size() > _mxw) 
          delay = mergeLayer(lk);
+      std::cout <<  "\tDelayed... " << delay.size() << "\n";
       for(auto p : delay)
          qn.enQueue(p);
       for(auto p : lk) { // loop over layer lk. p is a "parent" node.
