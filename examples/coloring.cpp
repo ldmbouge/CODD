@@ -124,15 +124,14 @@ int main(int argc,char* argv[])
    Bounds bnds;
    const auto labels = setFrom(std::views::iota(1,K+1));     // using a plain set for the labels
    const auto init = [ns,labels]() {   // The root state
-      Legal A(ns.size(), GNSet {});      
-      for(auto v : ns)
-         A[v] = labels;
+      Legal A(ns.size(), labels);      
       return COLOR { std::move(A),0,0 };
    };
    const auto target = [K]() {    // The sink state
       return COLOR { Legal{},0,K};
    };
-   const auto stf = [K,&adj](const COLOR& s,const int label) -> std::optional<COLOR> {
+   const auto stf = [K,&adj,&bnds](const COLOR& s,const int label) -> std::optional<COLOR> {
+      if (label >= bnds.getPrimal()) return std::nullopt;
       if (s.vtx < K && label <= s.last+1 && s.s[s.vtx].contains(label)) {
          if (s.vtx+1 == K)
             return COLOR { Legal {},0, K };
@@ -140,11 +139,6 @@ int main(int argc,char* argv[])
          for(auto vIdx : adj[s.vtx])
             if (s.s[vIdx].contains(label))
                B[vIdx].remove(label);
-         /*
-         for(auto vIdx = s.vtx+1;vIdx < K;vIdx++)
-            if (adj[s.vtx].contains(vIdx) && s.s[vIdx].contains(label))
-               B[vIdx].remove(label);
-         */
          B[s.vtx] = GNSet {label};
          return COLOR { std::move(B), std::max(label,s.last), s.vtx + 1};
       } 
