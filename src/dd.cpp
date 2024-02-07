@@ -208,7 +208,8 @@ void AbstractDD::computeBest(const std::string m)
       }
    }
 #ifndef _NDEBUG     
-   std::cout << '\t' << m << " B@SINK:" << _trg->getBound() << "\tLBL:" << _trg->_optLabels << std::endl;
+   std::cout << '\t' << m << " B@SINK:" << _trg->getBound() << "\tLBL:"
+             << _trg->_optLabels << std::endl;
 #endif   
 }
 
@@ -408,8 +409,16 @@ std::list<ANode::Ptr> Relaxed::mergeLayer(NDArray& layer)
       }
       if (toMerge[1]) {
          mergesDone++;
-         const bool newNode = mNode->nbParents()==0; // is this a newly created node? 
-         const bool sameLayer = mNode->getLayer() <= n1->getLayer();
+         const bool newNode = mNode->nbParents()==0; // is this a newly created node?
+         if (!newNode && mNode->getLayer() < n1->getLayer()) {
+            std::cout << "newNode = " << (newNode ? "T" : "F") << "\n";
+            std::cout << "L<: " << mNode->getLayer() << " <  " << n1->getLayer() << "\n";
+            _dd->printNode(n1);std::cout << "\n";
+            _dd->printNode(n1);std::cout << "\n";
+            _dd->printNode(mNode);std::cout << "\n";
+            char c;std::cin>>c;
+         }
+         const bool sameLayer = mNode->getLayer() == n1->getLayer();
          mNode->setLayer(std::max(mNode->getLayer(),n1->getLayer()));
          mNode->setExact(false);
          _dd->_exact = false;
