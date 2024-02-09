@@ -11,7 +11,7 @@ struct QNode {
       return a.bound < b.bound;
    }
    friend std::ostream& operator<<(std::ostream& os,const QNode& q) {
-      return os << "QNode[" << *q.node << "," << q.bound << "]";
+      return os << "QNode[(" << q.node->getId() << ',' << q.node->getBound() << ',' << q.node->getBackwardBound() << ")," << q.bound << "]";
    }
 };
 
@@ -34,10 +34,12 @@ void BAndB::search(Bounds& bnds)
       auto bbn = pq.extractMax();
 #ifndef _NDEBUG     
       cout << "BOUNDS NOW: " << bnds << endl;
-      cout << "EXTRACTED:  " << *bbn.node << "\t(" << bbn.bound << ")" << " SZ:" << pq.size() << endl;
+      cout << "EXTRACTED:  " << bbn.node->getId();
+      //_theDD->printNode(bbn.node);
+      cout << "\t(" << bbn.bound << ")" << " SZ:" << pq.size() << endl;
 #endif      
       if (!_theDD->isBetter(bbn.bound,bnds.getPrimal()))
-          continue;
+         continue;
       nNode++;
       relaxed->reset();
       relaxed->makeInitFrom(bbn.node);
@@ -58,13 +60,11 @@ void BAndB::search(Bounds& bnds)
             restricted->update(bnds);
          if (!restricted->isExact() && !relaxed->isExact()) {
             for(auto n : relaxed->computeCutSet()) {
-               //std::cout << "\tCS=" << *n << std::endl;
                auto nd = _theDD->duplicate(n); // we got a duplicate of the node.
                if (nd == bbn.node) { // the cutset is the root. Only way out: increase width.
                   for(auto i=0u;i < sizeof(ddr)/sizeof(WidthBounded*);i++)
                      ddr[i]->setWidth(ddr[i]->getWidth() + 1);
                }
-               //pq.insertHeap(QNode {nd, relaxed->currentOpt()});
                pq.insertHeap(QNode {nd, nd->getBound()+nd->getBackwardBound()});
             }
          }

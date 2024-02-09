@@ -73,7 +73,9 @@ template <typename T> class CQueue  {
       _mask = _mxs - 1;
    }
 public:
-   CQueue(int sz = 32) : _mxs(sz),_mxSeg(8),_nbs(1) {
+   CQueue(int sz = 32) : _mxSeg(8),_nbs(1) {
+      _mxs = 1;
+      while (_mxs <= sz) _mxs <<= 1; // mxs must be a power of 2.
       _locs = new Location<T>[_mxs];
       _vlocs = new Location<T>*[_mxSeg];
       _data = new Location<T>*[_mxs];
@@ -97,8 +99,7 @@ public:
    int size() const noexcept   { return _cnt;}
    bool empty() const noexcept { return _enter == _exit;}
    Location<T>* enQueue(const T& v) {
-      int nb = (_mxs + _enter - _exit) & _mask;
-      if (nb == _mxs - 1) resize();
+      if (_cnt == _mxs - 1) resize();
       Location<T>* at = _data[_enter];
       at->_val = v;
       at->_pos = _enter;
@@ -151,6 +152,16 @@ public:
       loc->_val = T();
       --_cnt;
       assert(_cnt>=0);
+   }
+   template <class Fun>
+   void doOnAll(Fun f) {
+      int k = _exit;
+      int n = 0;
+      while(n) {
+         f(_data[k]);
+         k = (k + 1) & _mask;
+         n--;
+      }
    }
 };
 

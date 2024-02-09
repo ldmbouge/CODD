@@ -13,7 +13,7 @@ std::ostream& operator<<(std::ostream& os,const ANode& s)
 
 std::ostream& operator<<(std::ostream& os,const Edge& e)
 {
-   return os << "E<" << *e._from << " --- " << e._obj << "(" << e._lbl << ") ---> "  << *e._to;
+   return os << "E<" << e._from->getId() << " --- " << e._obj << "(" << e._lbl << ") ---> "  << e._to->getId();
 }
 
 ANode::ANode(Pool::Ptr mem,unsigned nid,bool exact)
