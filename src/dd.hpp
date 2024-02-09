@@ -18,8 +18,10 @@ class AbstractDD;
 class Bounds {
    double _primal;
    std::vector<int> _inc;
+   std::function<void(const std::vector<int>&)> _checker;
 public:
    Bounds() {}
+   Bounds(std::function<void(const std::vector<int>&)> checker) : _checker(checker) {}
    Bounds(std::shared_ptr<AbstractDD> dd);
    void attach(std::shared_ptr<AbstractDD> dd);
    void setPrimal(double p) { _primal = p;}
@@ -28,6 +30,8 @@ public:
       _inc.clear();
       for(auto it = begin;it != end;it++)
          _inc.push_back(*it);
+      if (_checker)
+         _checker(_inc);
    }
    friend std::ostream& operator<<(std::ostream& os,const Bounds& b) {
       return os << "<P:" << b._primal << /* "," << " D:" << b._dual << */ ", INC:" << b._inc << ">";
