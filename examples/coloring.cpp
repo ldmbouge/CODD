@@ -147,13 +147,13 @@ int main(int argc,char* argv[])
          if (s.vtx+1 == K)
             return COLOR { Legal {},0, K };
          Legal B = s.s;
-         for(auto vIdx = s.vtx+1;vIdx < K;vIdx++)
-            if ((es.contains(GE {s.vtx,vIdx}) || es.contains(GE {vIdx,s.vtx})) &&
-                s.s[vIdx].contains(label))
-               B[vIdx].remove(label);
-         // for(auto vIdx : adj[s.vtx])
-         //    if (s.s[vIdx].contains(label))
+         // for(auto vIdx = s.vtx+1;vIdx < K;vIdx++)
+         //    if ((es.contains(GE {s.vtx,vIdx}) || es.contains(GE {vIdx,s.vtx})) &&
+         //        s.s[vIdx].contains(label))
          //       B[vIdx].remove(label);
+         for(auto vIdx : adj[s.vtx])
+            if (s.s[vIdx].contains(label))
+               B[vIdx].remove(label);
          B[s.vtx] = GNSet {label};
          return COLOR { std::move(B), std::max(label,s.last), s.vtx + 1};
       } 

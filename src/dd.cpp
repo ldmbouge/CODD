@@ -308,6 +308,19 @@ NDArray& WidthBounded::pullLayer(CQueue<ANode::Ptr>& qn)
    return _nda;
 }
 
+std::size_t WidthBounded::estimate(CQueue<ANode::Ptr>& qn)
+{
+   ANode::Ptr n = qn.peek();
+   auto layer = n->getLayer();
+   std::size_t nb = 0;
+   qn.doOnAll([layer,&nb](auto aNodeLoc) {
+      // std::cout << "aNodeLoc->value()->getLayer() = " << aNodeLoc->value()->getLayer();
+      // std::cout << " TRG: " << layer << "\n";
+      nb += aNodeLoc->value()->getLayer()==layer;
+   });
+   return nb;
+}
+
 // ----------------------------------------------------------------------
 // Restricted DD Strategy
 
@@ -336,6 +349,9 @@ void Restricted::compute()
    qn.enQueue(root);
    while (!qn.empty()) { 
       auto& lk = pullLayer(qn); // We have in lk the queue content for layer cL
+      //auto nbnx = estimate(qn);
+      //auto n = qn.peek();
+      //std::cout << "L:" << (n ? n->getLayer()  : -1) <<  "#NX:" << nbnx << "\n";
       if (lk.size() > _mxw) 
          truncate(lk);
       for(auto p : lk) { // loop over layer lk. p is a "parent" node.
@@ -348,14 +364,22 @@ void Restricted::compute()
                Edge::Ptr e = new (_dd->_mem) Edge(p,child,l);
                e->_obj = theCost;
                _dd->addArc(e); // connect to new node
-               if (!_dd->eqSink(child)) {
-                  if (newNode)
-                     qn.enQueue(child);
-               }
                child->setLayer(std::max(child->getLayer(),p->getLayer()+1));
+               if (!_dd->eqSink(child)) {
+                  if (newNode) {
+                     qn.enQueue(child);
+                     auto nbNode = estimate(qn);
+                     //std::cout << "#NODES: " << nbNode << "\n";
+                     if (nbNode > _mxw) {
+                        //std::cout << "JUMP..." << nbNode << '/' << _mxw << "\n";
+                        goto next;
+                     }
+                  }
+               }
             }            
          }
-      }
+      }         
+   next:
    }
 }
 

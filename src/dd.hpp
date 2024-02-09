@@ -135,6 +135,13 @@ public:
       }
       _tab[_sz++] = n;
    }
+   void push_front(ANode::Ptr n) noexcept {
+      assert(_st>0);
+      if (_st == 0)
+         push_back(n);
+      else
+         _tab[--_st] = n;
+   }
    ANode::Ptr operator[](std::size_t i) const noexcept { return _tab[i];}
    void clear() noexcept { _sz = 0;_st = 0;_holes = 0;} 
    class iterator { 
@@ -208,6 +215,7 @@ protected:
    unsigned _mxw;
    NDArray  _nda;
    NDArray& pullLayer(CQueue<ANode::Ptr>& q);
+   std::size_t estimate(CQueue<ANode::Ptr>& q);
 public:
    WidthBounded(const unsigned mxw) : Strategy(),_mxw(mxw) {}
    void setWidth(unsigned  mxw) { _mxw = mxw;}

@@ -156,7 +156,7 @@ public:
    template <class Fun>
    void doOnAll(Fun f) {
       int k = _exit;
-      int n = 0;
+      int n = _cnt;
       while(n) {
          f(_data[k]);
          k = (k + 1) & _mask;
