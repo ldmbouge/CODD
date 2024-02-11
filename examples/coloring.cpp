@@ -141,7 +141,7 @@ int main(int argc,char* argv[])
    const auto target = [K]() {    // The sink state
       return COLOR { Legal{},0,K};
    };
-   const auto stf = [K,&adj,&es,&bnds](const COLOR& s,const int label) -> std::optional<COLOR> {
+   const auto stf = [K,&adj,&bnds](const COLOR& s,const int label) -> std::optional<COLOR> {
       if (label >= bnds.getPrimal()) return std::nullopt;
       if (s.vtx < K && label <= s.last+1 && s.s[s.vtx].contains(label)) {
          if (s.vtx+1 == K)

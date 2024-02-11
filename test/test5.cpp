@@ -1,8 +1,8 @@
-#include "msort.hpp"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <cstdio>
+#include "msort.hpp"
 
 int main() {
    /*
@@ -18,7 +18,7 @@ int main() {
    mergeSort<int>(ov,sizeof(ov)/sizeof(int),[](int a,int b) {
       return a < b;
    });
-   for(auto i=0;i < sizeof(ov)/sizeof(int);i++)
+   for(auto i=0u;i < sizeof(ov)/sizeof(int);i++)
       printf("%d ",ov[i]);
    return 0;
 }

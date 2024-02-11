@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.8)
 
-project(foo VERSION 1.0)
-
+project(C++DDOpt VERSION 1.0)
 
 # ------------------------------------------------------------------------
 # Let's go for Debug by default
@@ -36,35 +35,46 @@ include_directories(src)
 file(GLOB files "*.cpp")
 message("${files}")
 
+# ----------------------------------------------------------------------
+# Library
+
 foreach (file ${files})
 	get_filename_component(base ${file} NAME_WE)
 	get_filename_component(dir ${file} DIRECTORY)
-	message("BASE IS: [${base}]")
+#	message("BASE    IS: [${base}]")
+	message("HEADERS IS: [${PROJECT_SOURCE_DIR}/src]")
+	target_include_directories(${base} PRIVATE ${PROJECT_SOURCE_DIR}/src)
 	add_executable(${base} ${dir}/${base}.cpp)
 	target_link_libraries(${base} ddOpt)
 	add_dependencies(${base} ddOpt)
 endforeach()
 
+
+message("------------------------------------------------------------")
 file(GLOB tests "test/*cpp")
 message("Tests: ${tests}")
 
 foreach (file ${tests})
 	get_filename_component(base ${file} NAME_WE)
 	get_filename_component(dir ${file} DIRECTORY)
-	message("BASE IS: [${base}]")
+#	message("BASE IS: [${base}]")
+#	message("HEADERS IS: [${PROJECT_SOURCE_DIR}/src]")
 	add_executable(${base} ${dir}/${base}.cpp)
+	target_include_directories(${base} PRIVATE ${PROJECT_SOURCE_DIR}/src)
 	target_link_libraries(${base} ddOpt)
 	add_dependencies(${base} ddOpt)  
 endforeach()
 
+message("------------------------------------------------------------")
 file(GLOB examples "examples/*cpp")
-message("Tests: ${examples}")
+message("Examples: ${examples}")
 
 foreach (file ${examples})
 	get_filename_component(base ${file} NAME_WE)
 	get_filename_component(dir ${file} DIRECTORY)
-	message("BASE IS: [${base}]")
+#	message("BASE IS: [${base}]")
 	add_executable(${base} ${dir}/${base}.cpp)
+	target_include_directories(${base} PRIVATE ${PROJECT_SOURCE_DIR}/src)
 	target_link_libraries(${base} ddOpt)
 	add_dependencies(${base} ddOpt)  
 endforeach()

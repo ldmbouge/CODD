@@ -411,8 +411,8 @@ std::list<ANode::Ptr> Relaxed::mergeLayer(NDArray& layer)
       return a->getBound() >= b->getBound();
       //return a->getId() >= b->getId();      
    });  
-   const auto mergesNeeded = layer.size() - _mxw;
-   auto mergesDone = 0u;
+   //const auto mergesNeeded = layer.size() - _mxw;
+   //auto mergesDone = 0u;
    std::list<ANode::Ptr> delayed;
    NDArray final;
    //   while (mergesDone < mergesNeeded && layer.size() > 0) {
@@ -437,7 +437,7 @@ std::list<ANode::Ptr> Relaxed::mergeLayer(NDArray& layer)
       if (toMerge[1]) {
          // neither nodes are in layer anymore. If the merge result
          // is one of them, it needs to be added back
-         mergesDone++;
+         //mergesDone++;
          const bool newNode = mNode->nbParents()==0; // is this a newly created node?
          if (newNode) mNode->setLayer(n1->getLayer());
 
