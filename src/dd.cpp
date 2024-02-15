@@ -156,14 +156,14 @@ void AbstractDD::display()
    out.close();
    pid_t child = fork();
    if (child == 0) {
-      int st = execlp("dot","dot","-Tpdf","-O",buf,0);
+      int st = execlp("dot","dot","-Tpdf","-O",buf,NULL);
       printf("execl status: %d\n",st);
    }
    int st = 0;
    waitpid(child,&st,0);
    child = fork();
    if (child == 0) {
-      execlp("open","open",base.c_str(),0);
+      execlp("open","open",base.c_str(),NULL);
       printf("execl2 status: %d\n",st);
    }
    unlink(buf);
@@ -379,7 +379,7 @@ void Restricted::compute()
             }            
          }
       }         
-   next:
+   next:;
    }
 }
 

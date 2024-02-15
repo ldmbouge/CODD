@@ -8,6 +8,7 @@
 #include <limits>
 #include <initializer_list>
 #include <ranges>
+#include <bit>
 #include <assert.h>
 //#if defined(__x86_64__)
 //#include <intrin.h>

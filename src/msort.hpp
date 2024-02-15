@@ -34,7 +34,7 @@ template <typename T,typename F>
 void mergeSort(T* c,std::size_t sz,const F& cmp)
 {
    T* aux = (T*)alloca(sizeof(T)*sz);
-   memcpy(aux,c,sizeof(T)*sz);
+   for(auto i=0u;i < sz;i++) aux[i] = c[i];
    mergeSortAux(c,0,sz,cmp,aux);
 }
 
