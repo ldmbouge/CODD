@@ -41,7 +41,42 @@ namespace std {
          if (c(v)) return true;
       return false;
    }
+   template <class Container,class AccType,typename Fop>
+   AccType foldl(const Container& c,Fop op,AccType acc) {
+      for(const auto& v : c) 
+         acc = op(acc,v);
+      return acc;
+   }
+   inline unsigned char revBitsOfByte(unsigned char b) {
+      b = ((b * 0x80200802ULL) & 0x0884422110ULL) * 0x0101010101ULL >> 32;
+      return b;
+   }
+   inline unsigned long long revBitsOfWord(unsigned long long w) {
+      unsigned long long out;
+      unsigned char* sw = (unsigned char*)&w;
+      unsigned char* dw = (unsigned char*)&out;
+      for(int i=0;i < 7;i++)
+         dw[i] = revBitsOfByte(sw[7-i]);
+      return out;
+   }
+   inline constexpr unsigned long long revBitsOfLong(unsigned long long v) noexcept {
+      // swap odd and even bits
+      v = ((v >> 1) & 0x5555555555555555) | ((v & 0x5555555555555555) << 1);
+      // swap consecutive pairs
+      v = ((v >> 2) & 0x3333333333333333) | ((v & 0x3333333333333333) << 2);
+      // swap nibbles ... 
+      v = ((v >> 4) & 0x0F0F0F0F0F0F0F0F) | ((v & 0x0F0F0F0F0F0F0F0F) << 4);
+      // swap bytes
+      v = ((v >> 8) & 0x00FF00FF00FF00FF) | ((v & 0x00FF00FF00FF00FF) << 8);
+      // swap 2-byte long pairs
+      v = ((v >> 16) & 0x0000FFFF0000FFFF) | ((v & 0x0000FFFF0000FFFF) << 16);
+      // swap 4-byte ints
+      v = ( v >> 32             ) | ( v               << 32);
+      return v;
+   }
 };
+
+
 
 /**
  * Bounded Set for Naturals [0..64*nbw)
@@ -63,6 +98,38 @@ public:
       for(int i=0;i<nbw;i++)
          _t[i] = s._t[i];
    }
+  NatSet(int ofs,const NatSet& s) {
+      int lw = nbw-1;
+      while(lw >= 0 && s._t[lw]==0) lw--;
+      const auto lvinLW = 63 - __builtin_clzll(s._t[lw]);
+      const auto lv = (lw * 64) + lvinLW;
+      const auto dec = ofs - lv;
+      switch(lw) {
+        case 0: {
+           _t[0] = std::revBitsOfLong(s._t[0]) >> (63 - lv);
+            for(int i=lw+1;i < nbw;i++) _t[i] = 0; 
+        }break;
+        default: {
+            for(int i=0;i <= lw;i++)
+               _t[lw-i] = std::revBitsOfLong(s._t[i]);
+            for(int i=lw+1;i < nbw;i++) _t[i] = 0;  
+            const auto nbs = __builtin_ffsll(_t[0])-1;
+            unsigned long long inb = 0;
+            for(int i=lw;i >= 0;i--) {
+                const auto ds = _t[i] & ((1ull << nbs)-1);
+                _t[i] = (_t[i] >> nbs) | (inb << (64 - nbs));
+                inb = ds;
+            }
+         }
+      }
+      unsigned long long inb = 0;
+      auto mask = (dec < 64) ? (1ull << dec)-1 : 0xffffffffffffffff;
+      for(int i=0;i< nbw;i++) {
+         unsigned long long outb = std::rotl(_t[i],dec) & mask;
+         _t[i] = inb | ((dec < 64)*(_t[i] << dec));
+         inb = outb;
+      }
+   }  
    NatSet(std::initializer_list<int> l) {
       for(auto i=0u;i < nbw;i++)
          _t[i]=0;
@@ -182,6 +249,7 @@ public:
          nw += s1._t[i] == s2._t[i];
       return nw == nbw;
    }
+   friend NatSet operator-(int l,const NatSet& s2)            { return NatSet(l,s2);}
    friend NatSet operator|(const NatSet& s1,const NatSet& s2) { return NatSet(s1).unionWith(s2);}
    friend NatSet operator&(const NatSet& s1,const NatSet& s2) { return NatSet(s1).interWith(s2);}
    std::size_t hash() const noexcept {

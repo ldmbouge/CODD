@@ -4,6 +4,8 @@ C++ library implement the DDOpt framework.
 It has:
 - restricted / exact / relax diagrams
 - state definition, initial, terminal and state merging functions separated
+- equivalence predicate for sink.
+- restricted construction is truly bounded now (not truncation based).
 
 ** Dependencies
 You need ~graphviz~ (The ~dot~ binary) to create graph images. It happens
@@ -25,7 +27,11 @@ This is ~cmake~. Simply do the following
   cmake ..
   make -j4
 #+end_src
-And it will compile the whole thing
+And it will compile the whole thing. To compile in optimized mode, simply change
+the variable ~CMAKE_BUILD_TYPE~ from ~Debug~ to ~Release~ as shown below:
+#+begin_src bash
+  cmake .. -DCMAKE_BUILD_TYPE=Release
+#+end_src
 
 ** Examples
 To be found in the ~examples~ folder
@@ -49,6 +55,7 @@ After that, it should be O(label/64). Unless we start using the 128 bit register
 ** DONE Check and fix leaks (the cache should be deallocated, not _an)
 CLOSED: [2024-01-29 Mon 13:46]
 ** TODO Implement instance reader for tsp to do bigger instances
+Done for coloring.
 ** TODO Implement instance reader for MISP
 ** TODO Rename MISP (~foo~) to misptoy ;-)
 ** DONE Profile and pick up the low hanging fruits 
@@ -67,10 +74,12 @@ CLOSED: [2024-01-31 Wed 07:28]
 CLOSED: [2024-01-31 Wed 14:54]
 - Use opaque ADT in Hashtable to support that (HTAt is the opaque type)
 ** Experiment with permanent state cache
-- segregate Edge allocator
-- keep the node cache (at least for relaxed) so that they get reused
-- clear the edge allocator since those must be rebuild
-- runs the risk of runaway node cache. Maybe clear periodically? (Every 10K B&B node)
+*** segregate Edge allocator
+*** DONE keep the node cache (at least for relaxed) so that they get reused
+This did not work. It creates and keeps far too many nodes. Collision lists were getting too long. It's far easier to clear and rebuild as many DDs are quite small. 
+CLOSED: [2024-02-15 Thu 16:46]
+*** clear the edge allocator since those must be rebuild
+*** runs the risk of runaway node cache. Maybe clear periodically? (Every 10K B&B node)
 
 * Command to create a GCM for an import :noexport:
 Like 

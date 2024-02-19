@@ -31,9 +31,9 @@ template<> struct std::equal_to<SGRuler> {
 
 template<> struct std::hash<SGRuler> {
    std::size_t operator()(const SGRuler& v) const noexcept {
-      return (std::hash<GRSet>{}(v.m) << 24) |
-         (std::hash<GRSet>{}(v.d) << 16) |
-         (std::hash<int>{}(v.k) << 8) |
+      return std::rotl(std::hash<GRSet>{}(v.m),20) |
+         std::rotl(std::hash<GRSet>{}(v.d),10)  | 
+         std::rotl(std::hash<int>{}(v.k),8) |
          std::hash<int>{}(v.e);
    }
 };
@@ -76,32 +76,16 @@ int main(int argc,char* argv[])
    };
    const auto stf = [n,&bnds,&OPT,L](const SGRuler& s,const int label) -> std::optional<SGRuler> {
       if (s.k >= n || label <= s.e) return std::nullopt; // test earlier to avoid expensive tests
-      //if (label < s.k * (s.k-1)/2) return  std::nullopt; // this should help, but it changes branching (more nodes)a
-      if (label >= bnds.getPrimal()) return std::nullopt;
+      if (label < s.k * (s.k-1)/2) return  std::nullopt; // this does help a bit.
+      if (label >= bnds.getPrimal()) return std::nullopt; // No point trying a label that exceeds the ub
       if (label + OPT[n-s.k] >= bnds.getPrimal()) return std::nullopt;
-      if (label + OPT[n-s.k] >= L+1) {	 
-         /*
-           //std::cout << "pruned suboptimal transition due to sub-ruler length" << std::endl;
-           std::cout << "label = " << label
-                     << ", n = " << n
-                     << ", k = " << s.k
-                     << ", OPT[" << n-s.k << "] = " << OPT[n-s.k]
-                     << " >= L+1 = " << L+1 << std::endl;
-         */
-         return std::nullopt; // cannot improve
-      }
-      int illegal = 0;
-      GRSet ad {};
-      for(auto i : s.m) {
-         ad.insert(label - i);
-         illegal += s.d.contains(label- i);
-         if (illegal) break;
-      }
-      ad.unionWith(s.d);
-      if (illegal == 0) {
-         if (s.k == n-1) // this must be a legal move (illegal==0)
+      if (label + OPT[n-s.k] >= L+1) return std::nullopt; // cannot improve      
+      bool legal = !std::foldl(s.m,[label,&s](bool acc,int i) { return acc || s.d.contains(label - i);},false);
+      if (legal) { // this must be a legal move (illegal==0)
+         if (s.k == n-1)  // this moves goes to the sink
             return SGRuler { GRSet {},GRSet {},n,0};
-         else return SGRuler { s.m | GRSet {label},ad, s.k + 1,label };
+         else 
+            return SGRuler { s.m | GRSet {label},(label - s.m) | s.d, s.k + 1,label };         
       } else return std::nullopt;  // return the empty optional 
    };
    const auto scf = [](const SGRuler& s,int label) { // partial cost function 
