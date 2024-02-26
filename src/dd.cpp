@@ -259,10 +259,11 @@ void AbstractDD::computeBestBackward(const std::string m)
 
 GNSet Strategy::remainingLabels(ANode::Ptr p)
 {
-   GNSet remLabels = _dd->_labels; // deep copy
+   return _dd->getLabels(p);
+   /*GNSet remLabels = _dd->_labels; // deep copy
    for(auto k = p->beginKids(); k != p->endKids();k++) 
       remLabels.remove((*k)->_lbl);
-   return remLabels;
+      return remLabels;   */
 }
 
 

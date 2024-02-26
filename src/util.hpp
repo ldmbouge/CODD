@@ -297,6 +297,17 @@ public:
       _t = s._t;
       s._t = nullptr;      
    }
+   GNSet(int lb,int ub) {
+      auto nb = ub >>  6;
+      _nbp = nb << 6;
+      _mxw = nb + ((ub & 0x3F) ? 1 : 0);
+      _t = new unsigned long long[_mxw];
+      for(auto i = lb;i <= ub;i++) {
+         const int ix = i >> 6;
+         assert(ix >= 0 && ix < _mxw);
+         _t[ix] |= (1ull << (i & 63));         
+      }
+   }
    GNSet(std::initializer_list<int> l) {
       _mxw = 1;
       auto nb = (l.end() - l.begin()) >> 6;

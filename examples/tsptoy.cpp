@@ -68,6 +68,9 @@ int main()
    const auto target = [sz]() {    // The sink state
       return TSP { GNSet{},1,sz };
    };
+   const auto lgf = [](const TSP& s) -> GNSet {
+      return GNSet(1,4);
+   };
    const auto stf = [sz](const TSP& s,const int label) -> std::optional<TSP> {
       if ((label==1 && s.hops < sz-1) || (s.hops == sz-1 && label!=1))
          return std::nullopt;
@@ -95,12 +98,13 @@ int main()
 
    BAndB engine(DD<TSP,std::less<double>, // to minimize
                 ///decltype(init), 
-                decltype(target), 
+                decltype(target),
+                decltype(lgf),
                 decltype(stf),
                 decltype(scf),
                 decltype(smf),
                 decltype(eqs)
-                >::makeDD(init,target,stf,scf,smf,eqs,labels),1);
+                >::makeDD(init,target,lgf,stf,scf,smf,eqs,labels),1);
    engine.search(bnds);
    return 0;
 }

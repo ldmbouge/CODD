@@ -65,6 +65,9 @@ int main()
    const auto myTarget = []() {    // The sink state
       return MISP { GNSet {} };
    };
+   const auto lgf = [top](const MISP& s) -> GNSet {
+      return GNSet(1,top);
+   };
    auto myStf = [top,&neighbors](const MISP& s,const int label) -> std::optional<MISP> {
       if (label == top)
          return MISP { GNSet {}}; // head to sink
@@ -96,11 +99,12 @@ int main()
                    std::greater<double>, // to maximize
                    //decltype(myInit), 
                    decltype(myTarget), // MISP(*)(),
+                   decltype(lgf),
                    decltype(myStf),
                    decltype(scf),
                    decltype(smf),
                    decltype(eqs)
-                   >::makeDD(myInit,myTarget,myStf,scf,smf,eqs,labels);
+                   >::makeDD(myInit,myTarget,lgf,myStf,scf,smf,eqs,labels);
    myxDD->setStrategy(new Exact);
    myxDD->compute();
    //myxDD->display();
@@ -110,11 +114,12 @@ int main()
    BAndB engine(DD<MISP,std::greater<double>, // to maximize
                 //decltype(myInit), 
                 decltype(myTarget), // MISP(*)(),
+                decltype(lgf),
                 decltype(myStf),
                 decltype(scf),
                 decltype(smf),
                 decltype(eqs)                   
-                >::makeDD(myInit,myTarget,myStf,scf,smf,eqs,labels),1);
+                >::makeDD(myInit,myTarget,lgf,myStf,scf,smf,eqs,labels),1);
    engine.search(bnds);
    return 0;
 }

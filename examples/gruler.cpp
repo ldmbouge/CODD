@@ -74,12 +74,12 @@ int main(int argc,char* argv[])
    const auto target = [n]() {    // The sink state
       return SGRuler {GRSet {},GRSet {},n,0};
    };
-   const auto stf = [n,&bnds,&OPT,L](const SGRuler& s,const int label) -> std::optional<SGRuler> {
-      if (s.k >= n || label <= s.e) return std::nullopt; // test earlier to avoid expensive tests
-      if (label < s.k * (s.k-1)/2) return  std::nullopt; // this does help a bit.
-      if (label >= bnds.getPrimal()) return std::nullopt; // No point trying a label that exceeds the ub
-      if (label + OPT[n-s.k] >= bnds.getPrimal()) return std::nullopt;
-      if (label + OPT[n-s.k] >= L+1) return std::nullopt; // cannot improve      
+   const auto lgf = [n,&bnds,&OPT,L](const SGRuler& s) -> GNSet {
+      auto ub = std::min({(int)bnds.getPrimal() - OPT[n-s.k] - 1,L+1 - OPT[n-s.k]});
+      auto lb = std::max({s.e+1,(int)std::ceil(s.k * (s.k -1)/2)});
+      return GNSet(lb,ub);
+   };
+   const auto stf = [n](const SGRuler& s,const int label) -> std::optional<SGRuler> {
       bool legal = !std::foldl(s.m,[label,&s](bool acc,int i) { return acc || s.d.contains(label - i);},false);
       if (legal) { // this must be a legal move (illegal==0)
          if (s.k == n-1)  // this moves goes to the sink
@@ -122,12 +122,13 @@ int main(int argc,char* argv[])
    
    BAndB engine(DD<SGRuler,std::less<double>, // to minimize
                 ///decltype(init), 
-                decltype(target), 
+                decltype(target),
+                decltype(lgf),
                 decltype(stf),
                 decltype(scf),
                 decltype(smf),
                 decltype(sEq)                
-                >::makeDD(init,target,stf,scf,smf,sEq,labels),w);
+                >::makeDD(init,target,lgf,stf,scf,smf,sEq,labels),w);
    engine.search(bnds);
    return 0;
 }

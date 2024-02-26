@@ -141,16 +141,17 @@ int main(int argc,char* argv[])
    const auto target = [K]() {    // The sink state
       return COLOR { Legal{},0,K};
    };
-   const auto stf = [K,&adj,&bnds](const COLOR& s,const int label) -> std::optional<COLOR> {
-      if (label >= bnds.getPrimal()) return std::nullopt;
-      if (s.vtx < K && label <= s.last+1 && s.s[s.vtx].contains(label)) {
+   const auto lgf = [K,&bnds](const COLOR& s) -> GNSet {
+      if (s.vtx >= K)
+         return GNSet(0);
+      auto ub = std::min({(int)bnds.getPrimal(),s.last+1});
+      return GNSet(1,ub);
+   };
+   const auto stf = [K,&adj](const COLOR& s,const int label) -> std::optional<COLOR> {
+      if (s.s[s.vtx].contains(label)) {
          if (s.vtx+1 == K)
             return COLOR { Legal {},0, K };
          Legal B = s.s;
-         // for(auto vIdx = s.vtx+1;vIdx < K;vIdx++)
-         //    if ((es.contains(GE {s.vtx,vIdx}) || es.contains(GE {vIdx,s.vtx})) &&
-         //        s.s[vIdx].contains(label))
-         //       B[vIdx].remove(label);
          for(auto vIdx : adj[s.vtx])
             if (s.s[vIdx].contains(label))
                B[vIdx].remove(label);
@@ -179,12 +180,13 @@ int main(int argc,char* argv[])
 
    BAndB engine(DD<COLOR,std::less<double>, // to minimize
                 ///decltype(init), 
-                decltype(target), 
+                decltype(target),
+                decltype(lgf),
                 decltype(stf),
                 decltype(scf),
                 decltype(smf),
                 decltype(eqs)
-                >::makeDD(init,target,stf,scf,smf,eqs,labels),w);
+                >::makeDD(init,target,lgf,stf,scf,smf,eqs,labels),w);
    engine.search(bnds);
    return 0;
 }

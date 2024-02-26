@@ -74,8 +74,14 @@ int main()
    const auto target = [K]() {    // The sink state
       return COLOR { Legal{},0,K};
    };
+   const auto lgf = [K,&bnds](const COLOR& s) -> GNSet {
+      if (s.vtx >= K)
+         return GNSet(0);
+      auto ub = std::min({(int)bnds.getPrimal(),s.last+1});
+      return GNSet(1,ub);
+   };
    const auto stf = [K,es](const COLOR& s,const int label) -> std::optional<COLOR> {
-      if (s.vtx < K && s.s[s.vtx].contains(label) && label <= s.last+1) {
+      if (s.s[s.vtx].contains(label)) {
          Legal B = s.s;
          for(auto vIdx = s.vtx+1;vIdx < (int)B.size();vIdx++)
             if ((es.contains(GE {s.vtx,vIdx}) || es.contains(GE {vIdx,s.vtx})) &&
@@ -109,12 +115,13 @@ int main()
 
    BAndB engine(DD<COLOR,std::less<double>, // to minimize
                 ///decltype(init), 
-                decltype(target), 
+                decltype(target),
+                decltype(lgf),
                 decltype(stf),
                 decltype(scf),
                 decltype(smf),
                 decltype(eqs)
-                >::makeDD(init,target,stf,scf,smf,eqs,labels),4);
+                >::makeDD(init,target,lgf,stf,scf,smf,eqs,labels),4);
    engine.search(bnds);
    return 0;
 }

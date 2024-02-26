@@ -75,6 +75,7 @@ public:
    virtual double better(double obj1,double obj2) const = 0;
    virtual void update(Bounds& bnds) const = 0;
    virtual void printNode(ANode::Ptr n) const = 0;
+   virtual GNSet getLabels(ANode::Ptr src) const = 0;
    double currentOpt() const { return _trg->getBound();}
    std::vector<int> incumbent();
    void compute();
@@ -246,6 +247,7 @@ public:
 template <typename ST,
           class Compare = std::less<double>,
           typename IBL2 = ST(*)(),
+          typename LGF  = GNSet(*)(const ST&),
           typename STF  = std::optional<ST>(*)(const ST&,int),
           typename STC  = double(*)(const ST&,int),
           typename SMF  = std::optional<ST>(*)(const ST&,const ST&),
@@ -257,6 +259,7 @@ class DD :public AbstractDD {
 private:
    std::function<ST()> _sti;
    IBL2 _stt;
+   LGF _lgf;
    STF _stf;
    STC _stc;
    SMF _smf;
@@ -327,6 +330,10 @@ private:
    ANode::Ptr target() {
       return _trg = makeNode(_stt());
    }
+   GNSet getLabels(ANode::Ptr src) const {
+      auto op = static_cast<const Node<ST>*>(src.get());
+      return std::move(_lgf(op->get()));
+   }
    ANode::Ptr transition(ANode::Ptr src,int label) {
       auto op = static_cast<const Node<ST>*>(src.get());
       auto vs = _stf(op->get(),label);
@@ -348,10 +355,11 @@ private:
       else return nullptr;
    }
 public:
-   DD(std::function<ST()> sti,IBL2 stt,STF stf,STC stc,SMF smf,EQSink eqs,const GNSet& labels)
+   DD(std::function<ST()> sti,IBL2 stt,LGF lgf,STF stf,STC stc,SMF smf,EQSink eqs,const GNSet& labels)
       : AbstractDD(labels),
         _sti(sti),
         _stt(stt),
+        _lgf(lgf),
         _stf(stf),
         _stc(stc),
         _smf(smf),
@@ -376,7 +384,7 @@ public:
       std::cout << std::endl;
    }
    AbstractDD::Ptr duplicate() {
-      return AbstractDD::Ptr(new DD(_sti,_stt,_stf,_stc,_smf,_eqs,_labels));
+      return AbstractDD::Ptr(new DD(_sti,_stt,_lgf,_stf,_stc,_smf,_eqs,_labels));
    }
    ANode::Ptr duplicate(const ANode::Ptr src) {
       Node<ST>* at = nullptr;
