@@ -235,6 +235,7 @@ public:
 class Relaxed :public WidthBounded {
    void transferArcs(ANode::Ptr donor,ANode::Ptr receiver);
    std::list<ANode::Ptr> mergeLayer(NDArray& layer);
+   void tighten(ANode::Ptr nd) noexcept;
 public:
    Relaxed(const unsigned mxw) : WidthBounded(mxw) {}
    const std::string getName() const { return "Relaxed";}
@@ -337,9 +338,11 @@ private:
    ANode::Ptr transition(ANode::Ptr src,int label) {
       auto op = static_cast<const Node<ST>*>(src.get());
       auto vs = _stf(op->get(),label);
-      if (vs.has_value())
-         return makeNode(std::move(vs.value()),src->isExact());
-      else return nullptr;
+      if (vs.has_value()) {
+         ANode::Ptr rv = makeNode(std::move(vs.value()),src->isExact());
+         rv->setBound(initialBest());
+         return rv;
+      } else return nullptr;
    }
    double cost(ANode::Ptr src,int label) {
       auto op = static_cast<const Node<ST>*>(src.get());
@@ -350,8 +353,17 @@ private:
       auto fp = static_cast<const Node<ST>*>(f.get());
       auto sp = static_cast<const Node<ST>*>(s.get());
       auto vs = _smf(fp->get(),sp->get());
-      if (vs.has_value())
-         return makeNode(std::move(vs.value()));
+      if (vs.has_value()) {
+         //std::cout << "B(M1):" << fp->getBound() << "\n";
+         //std::cout << "B(M2):" << sp->getBound() << "\n";
+         ANode::Ptr rv = makeNode(std::move(vs.value()));
+         if (isBetter(fp->getBound(),sp->getBound()))
+            rv->setBound(fp->getBound());
+         else
+            rv->setBound(sp->getBound());                
+         //std::cout << "B(RV):" << rv->getBound() << "\n";
+         return rv;
+      }
       else return nullptr;
    }
 public:

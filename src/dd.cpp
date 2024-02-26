@@ -391,16 +391,14 @@ void Relaxed::transferArcs(ANode::Ptr donor,ANode::Ptr receiver)
 {
    for(auto ei = donor->beginPar(); ei != donor->endPar();ei++) {
       auto ep = *ei;
-      Edge::Ptr ne = new (_dd->_mem) Edge(ep->_from,receiver,ep->_lbl);
-      ne->_obj = ep->_obj;
-      _dd->addArc(ne);      
+      ep->_to = receiver;
+      _dd->addArc(ep);
    }
    assert(donor->nbChildren()==0);
    for(auto ei = donor->beginKids(); ei != donor->endKids();ei++) {
       auto ep = *ei;
-      Edge::Ptr ne = new (_dd->_mem) Edge(receiver,ep->_to,ep->_lbl);
-      ne->_obj = ep->_obj;
-      _dd->addArc(ne);      
+      ep->_from = receiver;
+      _dd->addArc(ep);
    }
    donor->disconnect();
 }
@@ -441,10 +439,6 @@ std::list<ANode::Ptr> Relaxed::mergeLayer(NDArray& layer)
          //mergesDone++;
          const bool newNode = mNode->nbParents()==0; // is this a newly created node?
          if (newNode) mNode->setLayer(n1->getLayer());
-
-         //mNode->setBound(0);
-         //mNode->setBackwardBound(0);
-
          const bool sameLayer = mNode->getLayer() == n1->getLayer();
          mNode->setLayer(std::max(mNode->getLayer(),n1->getLayer()));
          mNode->setExact(false);
@@ -469,29 +463,85 @@ std::list<ANode::Ptr> Relaxed::mergeLayer(NDArray& layer)
    return delayed;
 }
 
+void Relaxed::tighten(ANode::Ptr nd) noexcept
+{
+   double cur  = (nd->nbParents() == 0) ? nd->getBound() : _dd->initialBest();
+   for(auto pi = nd->beginPar();pi != nd->endPar();pi++) {
+      Edge::Ptr e = *pi;
+      auto ep = e->_from->getBound() + e->_obj;
+      if (_dd->isBetter(ep,cur)) 
+         cur = ep;            
+   }  
+   if (_dd->isBetter(cur,nd->getBound())) 
+      std::cout << "TIGHT: " << nd->getBound() << "/" << cur << "\n";
+   nd->setBound(cur);
+}
+
+
+struct ANodeComparator {
+   constexpr bool operator()(const ANode::Ptr& e1,const ANode::Ptr& e2) const {
+      return e1->getBound() > e2->getBound();
+   }
+};
+
+class LQueue {
+   //std::set<ANode::Ptr,ANodeComparator> _next;
+   std::list<ANode::Ptr> _next;
+   CQueue<ANode::Ptr>                _rest;
+public:
+   LQueue() : _next(),_rest(1024) {}
+   void enQueue(ANode::Ptr n) noexcept {
+      _next.push_back(n);
+      /*if (_next.size() == 0)
+         _next.push_back(n);
+      else {
+         if ((*_next.begin())->getLayer() == n->getLayer()) {
+            if (n->getBound() > _next.front()->getBound())
+               _next.push_front(n);
+            else  if (n->getBound() < _next.back()->getBound()) { // larger than last 
+               _next.push_back(n);  // add at the end
+            } else {
+               auto b = _next.begin(),e = _next.end();
+               while (b != e && (*b)->getBound() > n->getBound())
+                  b++;
+               _next.insert(b,n);
+            }
+         } else {
+            _rest.enQueue(n);
+         }
+         } */    
+   }
+   bool empty() const noexcept {
+      return size() == 0;
+   }
+   std::size_t size() const noexcept {
+      return _next.size();// + _rest.size();
+   }
+   NDArray& pullLayer(NDArray& nda) noexcept { 
+      nda.clear();
+      for(auto n : _next)
+         nda.push_back(n);
+      _next.clear();
+      return nda;
+   }   
+};
+
 void Relaxed::compute()
 {
    _dd->_exact = true;
    auto root = _dd->init();
    _dd->target();
    CQueue<ANode::Ptr> qn(1024);
+   //LQueue qn;
    root->setLayer(0);
    qn.enQueue(root);
    //std::cout << "RELAX...\n";
    while (!qn.empty()) {
       auto& lk = pullLayer(qn); // We have in lk the queue content for layer cL
-        
-      for(auto nd : lk) {
-         double cur = (nd->nbParents() == 0) ? nd->getBound() : _dd->initialBest();
-         for(auto pi = nd->beginPar();pi != nd->endPar();pi++) {
-            Edge::Ptr e = *pi;
-            auto ep = e->_from->getBound() + e->_obj;
-            if (_dd->isBetter(ep,cur)) 
-               cur = ep;            
-         }        
-         nd->setBound(cur);
-      }
+      //auto& lk = qn.pullLayer(_nda);
 
+      //std::cout << "pullLayer:" << lk.size() << std::endl;
+      //for(auto nd : lk) tighten(nd);           
       //std::cout << "PROCESSING: " << (*lk.begin())->getLayer() << "\n";
 
       if (lk.size() > _mxw)  {
@@ -511,11 +561,14 @@ void Relaxed::compute()
                Edge::Ptr e = new (_dd->_mem) Edge(p,child,l);
                e->_obj = theCost;
                _dd->addArc(e); // connect to new node
+               auto ep = p->getBound() + e->_obj;
+               if (_dd->isBetter(ep,child->getBound()))
+                  child->setBound(ep);
+               child->setLayer(std::max(child->getLayer(),p->getLayer()+1));               
                if (!_dd->eqSink(child)) {
                   if (newNode)
                      qn.enQueue(child);
                }
-               child->setLayer(std::max(child->getLayer(),p->getLayer()+1));
             }            
          }
       }

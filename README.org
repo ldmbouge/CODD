@@ -80,6 +80,12 @@ This did not work. It creates and keeps far too many nodes. Collision lists were
 CLOSED: [2024-02-15 Thu 16:46]
 *** clear the edge allocator since those must be rebuild
 *** runs the risk of runaway node cache. Maybe clear periodically? (Every 10K B&B node)
+** DONE Implement a label generator
+CLOSED: [2024-02-26 Mon 11:36] SCHEDULED: <2024-02-26 Mon>
+** DONE Cleanup the edge transfer (no more allocating, just moving)
+CLOSED: [2024-02-26 Mon 11:37] SCHEDULED: <2024-02-26 Mon>
+** TODO Change relax to merge as we go
+SCHEDULED: <2024-02-27 Tue>
 
 * Command to create a GCM for an import :noexport:
 Like 
