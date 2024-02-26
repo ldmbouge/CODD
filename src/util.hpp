@@ -98,25 +98,28 @@ public:
       for(int i=0;i<nbw;i++)
          _t[i] = s._t[i];
    }
-  NatSet(int ofs,const NatSet& s) {
+   NatSet(NatSet&& s) {
+      memcpy(_t,s._t,sizeof(_t));
+   }
+   NatSet(int ofs,const NatSet& s) {  // returns { ofs - v | v in S }
       int lw = nbw-1;
       while(lw >= 0 && s._t[lw]==0) lw--;
       const auto lvinLW = 63 - __builtin_clzll(s._t[lw]);
       const auto lv = (lw * 64) + lvinLW;
       const auto dec = ofs - lv;
       switch(lw) {
-        case 0: {
-           _t[0] = std::revBitsOfLong(s._t[0]) >> (63 - lv);
+         case 0: {
+            _t[0] = std::revBitsOfLong(s._t[0]) >> (63 - lv);
             for(int i=lw+1;i < nbw;i++) _t[i] = 0; 
-        }break;
-        default: {
+         }break;
+         default: {
             for(int i=0;i <= lw;i++)
                _t[lw-i] = std::revBitsOfLong(s._t[i]);
             for(int i=lw+1;i < nbw;i++) _t[i] = 0;  
             const auto nbs = __builtin_ffsll(_t[0])-1;
             unsigned long long inb = 0;
             for(int i=lw;i >= 0;i--) {
-                const auto ds = _t[i] & ((1ull << nbs)-1);
+               const auto ds = _t[i] & ((1ull << nbs)-1);
                 _t[i] = (_t[i] >> nbs) | (inb << (64 - nbs));
                 inb = ds;
             }
@@ -139,8 +142,7 @@ public:
       }
    }
    NatSet& operator=(const NatSet& s) noexcept {
-      for(int i=0;i<nbw;i++)
-         _t[i] = s._t[i];
+      memcpy(_t,s._t,sizeof(_t));
       return *this;
    }
    constexpr unsigned short nbWords() const noexcept { return nbw;}
@@ -249,9 +251,9 @@ public:
          nw += s1._t[i] == s2._t[i];
       return nw == nbw;
    }
-   friend NatSet operator-(int l,const NatSet& s2)            { return NatSet(l,s2);}
-   friend NatSet operator|(const NatSet& s1,const NatSet& s2) { return NatSet(s1).unionWith(s2);}
-   friend NatSet operator&(const NatSet& s1,const NatSet& s2) { return NatSet(s1).interWith(s2);}
+   friend NatSet operator-(int l,const NatSet& s2) noexcept            { return NatSet(l,s2);}
+   friend NatSet operator|(const NatSet& s1,const NatSet& s2) noexcept { return NatSet(s1).unionWith(s2);}
+   friend NatSet operator&(const NatSet& s1,const NatSet& s2) noexcept { return NatSet(s1).interWith(s2);}
    std::size_t hash() const noexcept {
       std::size_t hv = 0;
       for(auto i = 0;i < nbw;i++)
