@@ -479,7 +479,7 @@ void Relaxed::tighten(ANode::Ptr nd) noexcept
 
 
 struct ANodeComparator {
-   constexpr bool operator()(const ANode::Ptr& e1,const ANode::Ptr& e2) const {
+   bool operator()(const ANode::Ptr& e1,const ANode::Ptr& e2) const {
       return e1->getBound() > e2->getBound();
    }
 };

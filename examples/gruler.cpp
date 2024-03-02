@@ -8,6 +8,7 @@
 #include <ranges>
 #include <algorithm>
 #include <map>
+#include <math.h>
 
 //typedef std::set<int> GRSet;
 typedef NatSet<2> GRSet;  // 2 double-word (128 labels)
