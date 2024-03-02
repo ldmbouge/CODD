@@ -302,6 +302,7 @@ public:
       _nbp = nb << 6;
       _mxw = nb + ((ub & 0x3F) ? 1 : 0);
       _t = new unsigned long long[_mxw];
+      for(int i=0;i<_mxw;i++) _t[i]=0;
       for(auto i = lb;i <= ub;i++) {
          const int ix = i >> 6;
          assert(ix >= 0 && ix < _mxw);
