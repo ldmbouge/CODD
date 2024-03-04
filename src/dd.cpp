@@ -545,14 +545,14 @@ void Relaxed::compute()
    _dd->_exact = true;
    auto root = _dd->init();
    _dd->target();
-   //CQueue<ANode::Ptr> qn(1024);
-   LQueue qn(*this);
+   CQueue<ANode::Ptr> qn(1024);
+   //LQueue qn(*this);
    root->setLayer(0);
    qn.enQueue(root);
    //std::cout << "RELAX...\n";
    while (!qn.empty()) {
-      //auto& lk = pullLayer(qn); // We have in lk the queue content for layer cL
-      auto& lk = qn.pullLayer(_nda);
+      auto& lk = pullLayer(qn); // We have in lk the queue content for layer cL
+      //auto& lk = qn.pullLayer(_nda);
 
       //std::cout << "pullLayer:" << lk.size() << std::endl;
       //for(auto nd : lk) tighten(nd);           
