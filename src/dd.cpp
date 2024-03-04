@@ -442,7 +442,7 @@ ANode::Ptr Relaxed::mergeOne(NDArray& layer,NDArray& final)
       }
       if (sameLayer) {
          if (newNode || addIt) 
-            layer.push_back(mNode);
+            layer.push_front(mNode);
       } else delayed = mNode;
    } else final.push_back(n1);
    return delayed;
