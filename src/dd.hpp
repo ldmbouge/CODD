@@ -178,9 +178,11 @@ public:
    iterator at(std::size_t ofs) const noexcept { return iterator(this,ofs);}
    iterator begin() const noexcept { return iterator(this,_st);}
    iterator end()   const noexcept { return iterator(this,_sz);}
-   void erase(iterator at) noexcept {
+   iterator erase(iterator at) noexcept {
       _tab[at._num] = nullptr;
       _holes++;
+      at++; // advance the iterator to next legit position
+      return at;      
    }
    void eraseSuffix(iterator from) noexcept {
       assert(_holes == 0);
@@ -242,6 +244,7 @@ public:
    void compute();
    std::vector<ANode::Ptr> computeCutSet();
    bool dual() const { return true;}
+   ANode::Ptr mergeOne(NDArray& layer,NDArray& final);
 };
 
 

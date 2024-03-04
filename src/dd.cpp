@@ -403,63 +403,64 @@ void Relaxed::transferArcs(ANode::Ptr donor,ANode::Ptr receiver)
    donor->disconnect();
 }
 
+ANode::Ptr Relaxed::mergeOne(NDArray& layer,NDArray& final)
+{
+   ANode::Ptr n1 = layer.front();
+   layer.pop_front();
+   ANode::Ptr toMerge[2] = {n1,nullptr};
+   ANode::Ptr mNode = nullptr;
+   for(auto i = layer.begin();i != layer.end();i++) {
+      auto n2 = *i;
+      assert(n1->getLayer() == n2->getLayer());
+      assert(n1->nbChildren()==0);
+      assert(n2->nbChildren()==0);         
+      mNode = _dd->merge(n1,n2);
+      if (mNode) {
+         assert(mNode->nbChildren()==0);         
+         toMerge[1] = n2;
+         layer.erase(i);            
+         break;
+      }
+   }
+   ANode::Ptr delayed = nullptr;
+   if (toMerge[1]) {
+      // neither nodes are in layer anymore. If the merge result
+      // is one of them, it needs to be added back
+      const bool newNode = mNode->nbParents()==0; // is this a newly created node?
+      if (newNode) mNode->setLayer(n1->getLayer());
+      const bool sameLayer = mNode->getLayer() == n1->getLayer();
+      mNode->setLayer(std::max(mNode->getLayer(),n1->getLayer()));
+      mNode->setExact(false);
+      _dd->_exact = false;
+      bool addIt = false;
+      for(auto i = 0; i < 2;i++) {
+         auto d = toMerge[i];            
+         if (d != mNode) { // skip in case the node itself is the merged one
+            transferArcs(d,mNode);
+            _dd->_an.remove(d);
+         } else addIt = true;
+      }
+      if (sameLayer) {
+         if (newNode || addIt) 
+            layer.push_back(mNode);
+      } else delayed = mNode;
+   } else final.push_back(n1);
+   return delayed;
+}
+
 std::list<ANode::Ptr> Relaxed::mergeLayer(NDArray& layer)
 {
    //std::cout << "\tLSZ:" << layer.size() << "\t L:" << (*layer.begin())->getLayer();
    layer.sort([](const ANode::Ptr& a,const ANode::Ptr& b) {
       return a->getBound() >= b->getBound();
-      //return a->getId() >= b->getId();      
    });  
-   //const auto mergesNeeded = layer.size() - _mxw;
-   //auto mergesDone = 0u;
    std::list<ANode::Ptr> delayed;
    NDArray final;
-   //   while (mergesDone < mergesNeeded && layer.size() > 0) {
-   while (final.size() + layer.size() > _mxw && layer.size() > 0) {      
-      ANode::Ptr n1 = layer.front();
-      layer.pop_front();
-      ANode::Ptr toMerge[2] = {n1,nullptr};
-      ANode::Ptr mNode = nullptr;
-      for(auto i = layer.begin();i != layer.end();i++) {
-         auto n2 = *i;
-         assert(n1->getLayer() == n2->getLayer());
-         assert(n1->nbChildren()==0);
-         assert(n2->nbChildren()==0);         
-         mNode = _dd->merge(n1,n2);
-         if (mNode) {
-            assert(mNode->nbChildren()==0);         
-            toMerge[1] = n2;
-            layer.erase(i);            
-            break;
-         }
-      }
-      if (toMerge[1]) {
-         // neither nodes are in layer anymore. If the merge result
-         // is one of them, it needs to be added back
-         //mergesDone++;
-         const bool newNode = mNode->nbParents()==0; // is this a newly created node?
-         if (newNode) mNode->setLayer(n1->getLayer());
-         const bool sameLayer = mNode->getLayer() == n1->getLayer();
-         mNode->setLayer(std::max(mNode->getLayer(),n1->getLayer()));
-         mNode->setExact(false);
-         _dd->_exact = false;
-         bool addIt = false;
-         for(auto i = 0; i < 2;i++) {
-            auto d = toMerge[i];            
-            if (d != mNode) { // skip in case the node itself is the merged one
-               transferArcs(d,mNode);
-               _dd->_an.remove(d);
-            } else addIt = true;
-         }
-         if (sameLayer) {
-            if (newNode || addIt) 
-               layer.push_back(mNode);
-         } else delayed.push_back(mNode);
-      } else final.push_back(n1);
+   while (final.size() + layer.size() > _mxw && layer.size() > 0) {
+      auto dn = mergeOne(layer,final);
+      if (dn) delayed.push_back(dn);
    }
-   for(auto n : final) layer.push_back(n);
-   //std::cout << "\t after SZ=" << layer.size() << "\t FINAL:" << final.size() << " DELAY:" << delayed.size() << "\n";
-   //std::cout << "M needed:" << mergesNeeded << " M done: " << mergesDone << "\n";
+   for(auto n : final) layer.push_front(n);
    return delayed;
 }
 
@@ -485,17 +486,16 @@ struct ANodeComparator {
 };
 
 class LQueue {
-   //std::set<ANode::Ptr,ANodeComparator> _next;
    std::list<ANode::Ptr> _next;
-   CQueue<ANode::Ptr>                _rest;
+   std::list<ANode::Ptr> _rest;
+   Relaxed&              _dd;
 public:
-   LQueue() : _next(),_rest(1024) {}
+   LQueue(Relaxed& dd) : _next(),_rest(),_dd(dd) {}
    void enQueue(ANode::Ptr n) noexcept {
-      _next.push_back(n);
-      /*if (_next.size() == 0)
+      if (_next.size() == 0)
          _next.push_back(n);
       else {
-         if ((*_next.begin())->getLayer() == n->getLayer()) {
+         if (_next.front()->getLayer() == n->getLayer()) {
             if (n->getBound() > _next.front()->getBound())
                _next.push_front(n);
             else  if (n->getBound() < _next.back()->getBound()) { // larger than last 
@@ -506,22 +506,36 @@ public:
                   b++;
                _next.insert(b,n);
             }
+            //            if (_next.size() > _dd.getWidth())
+            //               _dd->mergeOne();            
          } else {
-            _rest.enQueue(n);
+            _rest.push_back(n);
          }
-         } */    
+      }
    }
    bool empty() const noexcept {
       return size() == 0;
    }
    std::size_t size() const noexcept {
-      return _next.size();// + _rest.size();
+      return _next.size() + _rest.size();
    }
    NDArray& pullLayer(NDArray& nda) noexcept { 
       nda.clear();
       for(auto n : _next)
          nda.push_back(n);
-      _next.clear();
+      _next.clear();      
+      auto layer = (_rest.size() > 0) ? _rest.front()->getLayer() : -1;
+      for(auto i = _rest.begin(); i != _rest.end();) {
+         if ((*i)->getLayer() != layer)            
+            break;
+         std::cout << "adding: " << (*i)->getId() << "\n" << std::flush;
+         _next.push_back(*i);
+         i = _rest.erase(i);
+      }
+      //for(auto n : nda) 
+      // std::cout << n->getBound() << " ";      
+      //std::cout << "\n";
+      //std::cout << nda.size() << " ";
       return nda;
    }   
 };
@@ -531,14 +545,14 @@ void Relaxed::compute()
    _dd->_exact = true;
    auto root = _dd->init();
    _dd->target();
-   CQueue<ANode::Ptr> qn(1024);
-   //LQueue qn;
+   //CQueue<ANode::Ptr> qn(1024);
+   LQueue qn(*this);
    root->setLayer(0);
    qn.enQueue(root);
    //std::cout << "RELAX...\n";
    while (!qn.empty()) {
-      auto& lk = pullLayer(qn); // We have in lk the queue content for layer cL
-      //auto& lk = qn.pullLayer(_nda);
+      //auto& lk = pullLayer(qn); // We have in lk the queue content for layer cL
+      auto& lk = qn.pullLayer(_nda);
 
       //std::cout << "pullLayer:" << lk.size() << std::endl;
       //for(auto nd : lk) tighten(nd);           
