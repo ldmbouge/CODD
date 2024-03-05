@@ -104,6 +104,11 @@ public:
    NatSet(int ofs,const NatSet& s) {  // returns { ofs - v | v in S }
       int lw = nbw-1;
       while(lw >= 0 && s._t[lw]==0) lw--;
+      if (lw < 0) {
+         for(auto i=0u;i < nbw;i++)
+            _t[i]=0;
+         return;
+      }
       const auto lvinLW = 63 - __builtin_clzll(s._t[lw]);
       const auto lv = (lw * 64) + lvinLW;
       const auto dec = ofs - lv;

@@ -403,6 +403,75 @@ void Relaxed::transferArcs(ANode::Ptr donor,ANode::Ptr receiver)
    donor->disconnect();
 }
 
+NDAction Relaxed::mergePair(ANode::Ptr mNode,ANode::Ptr toMerge[2])
+{
+   assert(toMerge[0] != nullptr && toMerge[1] != nullptr);
+   // Neither toMerge[0], nor toMerge[1] are in the layer
+   // mNode could be
+   // 1. A brand new node NOT in the layer
+   // 2. A node already in the layer but not in toMerge
+   // 3. A node already in the layer that is one of toMerge[i] 
+   const bool newNode = mNode->nbParents()==0; // is this a brand new node
+   if (newNode) mNode->setLayer(toMerge[0]->getLayer()); // give it a layer
+   const bool sameLayer = mNode->getLayer() == toMerge[0]->getLayer(); // layer not changing?
+   mNode->setLayer(std::max(mNode->getLayer(),toMerge[0]->getLayer()));// possibly set layer
+   mNode->setExact(false); // surely inexact now 
+   _dd->_exact = false;    // DD inexact as well
+   bool addIt = false;
+   for(auto i = 0; i < 2;i++) {
+      auto d = toMerge[i];            
+      if (d != mNode) { // skip in case the node itself is the merged one
+         transferArcs(d,mNode);
+         _dd->_an.remove(d);
+      } else addIt = true; // d == mNode -> so we do need to add it (toMerge were removed)
+   }
+   return NDAction { mNode, sameLayer ? ((newNode || addIt) ?
+                                         NDAction::InFront : NDAction::Noop)
+                     : NDAction::Delay };
+}
+
+ANode::Ptr Relaxed::mergeOne(NDArray& layer,NDArray& final)
+{   
+   //for(auto i = layer.begin(); i != layer.end();) {
+   auto i = layer.begin();
+      auto n1 = *i;   
+      ANode::Ptr toMerge[2] = {n1,nullptr};
+      ANode::Ptr mNode = nullptr;
+      auto j = i;
+      for(++j;j != layer.end();++j) {
+         auto n2 = *j;
+         assert(n1->getLayer() == n2->getLayer());
+         assert(n1->nbChildren()==0);
+         assert(n2->nbChildren()==0);         
+         mNode = _dd->merge(n1,n2);
+         if (mNode) {
+            assert(mNode->nbChildren()==0);         
+            toMerge[1] = n2;
+            break;
+         }
+      }
+      if (toMerge[1]) {
+         i.erase();
+         j.erase();
+         NDAction act = mergePair(mNode,toMerge);
+         switch(act.act) {
+            case NDAction::Delay:
+               return act.node;
+            case NDAction::InFront:
+               layer.push_front(act.node);
+               return nullptr;
+            case NDAction::Noop:
+               return nullptr;
+         }
+      } else {
+         i.erase();
+         final.push_back(n1);
+      }
+      //}
+   return nullptr;
+}
+
+/*
 ANode::Ptr Relaxed::mergeOne(NDArray& layer,NDArray& final)
 {
    ANode::Ptr n1 = layer.front();
@@ -424,29 +493,20 @@ ANode::Ptr Relaxed::mergeOne(NDArray& layer,NDArray& final)
    }
    ANode::Ptr delayed = nullptr;
    if (toMerge[1]) {
-      // neither nodes are in layer anymore. If the merge result
-      // is one of them, it needs to be added back
-      const bool newNode = mNode->nbParents()==0; // is this a newly created node?
-      if (newNode) mNode->setLayer(n1->getLayer());
-      const bool sameLayer = mNode->getLayer() == n1->getLayer();
-      mNode->setLayer(std::max(mNode->getLayer(),n1->getLayer()));
-      mNode->setExact(false);
-      _dd->_exact = false;
-      bool addIt = false;
-      for(auto i = 0; i < 2;i++) {
-         auto d = toMerge[i];            
-         if (d != mNode) { // skip in case the node itself is the merged one
-            transferArcs(d,mNode);
-            _dd->_an.remove(d);
-         } else addIt = true;
+      auto act = mergePair(mNode,toMerge);
+      switch(act.act) {
+         case NDAction::Delay:
+            return act.node;
+         case NDAction::InFront:
+            layer.push_front(act.node);
+            return nullptr;
+         case NDAction::Noop:
+            return nullptr;
       }
-      if (sameLayer) {
-         if (newNode || addIt) 
-            layer.push_front(mNode);
-      } else delayed = mNode;
    } else final.push_back(n1);
    return delayed;
 }
+*/
 
 std::list<ANode::Ptr> Relaxed::mergeLayer(NDArray& layer)
 {

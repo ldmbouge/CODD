@@ -146,11 +146,11 @@ public:
    ANode::Ptr operator[](std::size_t i) const noexcept { return _tab[i];}
    void clear() noexcept { _sz = 0;_st = 0;_holes = 0;} 
    class iterator { 
-      ANode::Ptr* const _data;
+      NDArray*            _nd;
       std::size_t        _num;
       std::size_t        _end;
-      iterator(const NDArray* d,std::size_t num) : _data(d->_tab),_num(num),_end(d->_sz) {
-         while(_num < _end && _data[_num] == nullptr) ++_num;
+      iterator(NDArray* d,std::size_t num) : _nd(d),_num(num),_end(d->_sz) {
+         while(_num < _end && _nd->_tab[_num] == nullptr) ++_num;
       }
    public:
       using iterator_category = std::input_iterator_tag;
@@ -160,24 +160,42 @@ public:
       using reference = ANode::Ptr&;
       iterator& operator++()   {
          _num = _num + 1;
-         while(_num < _end && _data[_num] == nullptr) ++_num;
+         while(_num < _end && _nd->_tab[_num] == nullptr) ++_num;
          return *this;
       }
       iterator operator++(int) { iterator retval = *this; ++(*this); return retval;}
       iterator& operator--()   {
          _num = _num - 1;
-         while(_num>0 && _data[_num] == nullptr) --_num;
+         while(_num>0 && _nd->_tab[_num] == nullptr) --_num;
          return *this;
       }
       iterator operator--(int) { iterator retval = *this; --(*this); return retval;}
       bool operator==(iterator other) const noexcept { return _num == other._num;}
       bool operator!=(iterator other) const noexcept { return _num != other._num;;}
-      ANode::Ptr operator*() const noexcept {return _data[_num];}
+      ANode::Ptr operator*() const noexcept {return _nd->_tab[_num];}
+      iterator& erase() {
+         _nd->_tab[_num] = nullptr;
+         _nd->_holes++;
+         _num++;
+         while(_num < _end && _nd->_tab[_num] == nullptr) ++_num;
+         return *this;
+      }
       friend class NDArray;
+      friend std::ostream& operator<<(std::ostream& os,const iterator& i) {
+         return os << '[' << i._num  << ']';
+      }
    };
-   iterator at(std::size_t ofs) const noexcept { return iterator(this,ofs);}
-   iterator begin() const noexcept { return iterator(this,_st);}
-   iterator end()   const noexcept { return iterator(this,_sz);}
+   iterator at(std::size_t ofs) noexcept { return iterator(this,ofs);}
+   iterator begin() noexcept {
+      auto from = _st;
+      while(from < _sz && _tab[from] == nullptr) {
+         ++from;
+         --_holes;
+      }
+      _st = from;
+      return iterator(this,from);
+   }
+   iterator end()   noexcept { return iterator(this,_sz);}
    iterator erase(iterator at) noexcept {
       _tab[at._num] = nullptr;
       _holes++;
@@ -234,6 +252,13 @@ public:
    bool primal() const { return true;}
 };
 
+
+struct NDAction {
+   enum Action { Delay,InFront,Noop};
+   ANode::Ptr node;
+   enum Action act;
+};
+
 class Relaxed :public WidthBounded {
    void transferArcs(ANode::Ptr donor,ANode::Ptr receiver);
    std::list<ANode::Ptr> mergeLayer(NDArray& layer);
@@ -244,6 +269,7 @@ public:
    void compute();
    std::vector<ANode::Ptr> computeCutSet();
    bool dual() const { return true;}
+   NDAction mergePair(ANode::Ptr mNode,ANode::Ptr toMerge[2]);
    ANode::Ptr mergeOne(NDArray& layer,NDArray& final);
 };
 
