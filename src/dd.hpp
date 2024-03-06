@@ -261,8 +261,7 @@ struct NDAction {
 
 class Relaxed :public WidthBounded {
    void transferArcs(ANode::Ptr donor,ANode::Ptr receiver);
-   std::list<ANode::Ptr> mergeLayer(auto& layer);
-   void tighten(ANode::Ptr nd) noexcept;
+   template <typename Fun> void mergeLayer(auto& layer,Fun f);
 public:
    Relaxed(const unsigned mxw) : WidthBounded(mxw) {}
    const std::string getName() const { return "Relaxed";}

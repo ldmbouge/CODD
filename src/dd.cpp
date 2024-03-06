@@ -432,72 +432,53 @@ NDAction Relaxed::mergePair(ANode::Ptr mNode,ANode::Ptr toMerge[2])
 
 ANode::Ptr Relaxed::mergeOne(auto& layer,auto& skip)
 {   
-   //for(auto i = layer.begin(); i != layer.end();) {
    auto i = layer.begin();
-      auto n1 = *i;   
-      ANode::Ptr toMerge[2] = {n1,nullptr};
-      ANode::Ptr mNode = nullptr;
-      auto j = i;
-      for(++j;j != layer.end();++j) {
-         auto n2 = *j;
-         assert(n1->getLayer() == n2->getLayer());
-         assert(n1->nbChildren()==0);
-         assert(n2->nbChildren()==0);         
-         mNode = _dd->merge(n1,n2);
-         if (mNode) {
-            assert(mNode->nbChildren()==0);         
-            toMerge[1] = n2;
-            break;
-         }
+   auto n1 = *i;   
+   ANode::Ptr toMerge[2] = {n1,nullptr};
+   ANode::Ptr mNode = nullptr;
+   auto j = i;
+   for(++j;j != layer.end();++j) {
+      auto n2 = *j;
+      assert(n1->getLayer() == n2->getLayer());
+      assert(n1->nbChildren()==0);
+      assert(n2->nbChildren()==0);         
+      mNode = _dd->merge(n1,n2);
+      if (mNode) {
+         assert(mNode->nbChildren()==0);         
+         toMerge[1] = n2;
+         break;
       }
-      if (toMerge[1]) {
-         i = layer.erase(i);
-         j = layer.erase(j);
-         NDAction act = mergePair(mNode,toMerge);
-         switch(act.act) {
-            case NDAction::Delay:
-               return act.node;
-            case NDAction::InFront:
-               layer.push_front(act.node);
-               return nullptr;
-            case NDAction::Noop:
-               return nullptr;
-         }
-      } else {
-         i = layer.erase(i);
-         skip.push_back(n1);
+   }
+   if (toMerge[1]) {
+      i = layer.erase(i);
+      j = layer.erase(j);
+      NDAction act = mergePair(mNode,toMerge);
+      switch(act.act) {
+         case NDAction::Delay:
+            return act.node;
+         case NDAction::InFront:
+            layer.push_front(act.node);
+            return nullptr;
+         case NDAction::Noop:
+            return nullptr;
       }
-      //}
+   } else {
+      i = layer.erase(i);
+      skip.push_back(n1);
+   }
    return nullptr;
 }
 
-std::list<ANode::Ptr> Relaxed::mergeLayer(auto& layer)
+
+template <typename Fun> void Relaxed::mergeLayer(auto& layer,Fun f)
 {
-   //std::cout << "\tLSZ:" << layer.size() << "\t L:" << (*layer.begin())->getLayer();
-   std::list<ANode::Ptr> delayed;
    std::list<ANode::Ptr> skip;
    while (skip.size() + layer.size() > _mxw && layer.size() > 0) {
-      auto dn = mergeOne(layer,skip);
-      if (dn) delayed.push_back(dn);
+      auto dn = mergeOne(layer,skip); // skipped nodes are not willing to  merge with anything.
+      if (dn) f(dn); // delayed node saw an increase in layer. Back in the overall queue via f
    }
-   layer.splice(layer.begin(),std::move(skip));
-   return delayed;
+   layer.splice(layer.begin(),std::move(skip)); // put the skipped guys back in
 }
-
-void Relaxed::tighten(ANode::Ptr nd) noexcept
-{
-   double cur  = (nd->nbParents() == 0) ? nd->getBound() : _dd->initialBest();
-   for(auto pi = nd->beginPar();pi != nd->endPar();pi++) {
-      Edge::Ptr e = *pi;
-      auto ep = e->_from->getBound() + e->_obj;
-      if (_dd->isBetter(ep,cur)) 
-         cur = ep;            
-   }  
-   if (_dd->isBetter(cur,nd->getBound())) 
-      std::cout << "TIGHT: " << nd->getBound() << "/" << cur << "\n";
-   nd->setBound(cur);
-}
-
 
 struct ANodeComparator {
    bool operator()(const ANode::Ptr& e1,const ANode::Ptr& e2) const {
@@ -558,17 +539,12 @@ void Relaxed::compute()
       //auto& lk = pullLayer(qn); // We have in lk the queue content for layer cL
       auto lk = qn.pullLayer();
 
-      //std::cout << "pullLayer:" << lk.size() << std::endl;
-      //for(auto nd : lk) tighten(nd);           
-      //std::cout << "PROCESSING: " << (*lk.begin())->getLayer() << "\n";
-
       if (lk.size() > _mxw)  {
-         auto delay = mergeLayer(lk); // nodes whose layer was "increase". Need to go back in queue
-         //std::cout <<  "\tDelayed... " << delay.size() << "\n";
-         for(auto p : delay)
-            qn.enQueue(p);
+         mergeLayer(lk,[&qn](ANode::Ptr delayed) {
+            qn.enQueue(delayed);  // nodes whose layer was "increase". Need to go back in queue
+         }); 
       }
-    
+   
       for(auto p : lk) { // loop over layer lk. p is a "parent" node.
          auto remLabels = remainingLabels(p);
          for(auto l : remLabels) {
