@@ -490,15 +490,28 @@ class LQueue {
    std::list<ANode::Ptr> _next;
    std::list<ANode::Ptr> _rest;
    Relaxed&              _dd;
+   void insertInNext(ANode::Ptr n) {
+      _next.push_front(n);
+   }
 public:
    LQueue(Relaxed& dd) : _next(),_rest(),_dd(dd) {}
    void enQueue(ANode::Ptr n) noexcept {
       if (_next.size() == 0)
          _next.push_back(n);
       else {
-         if (_next.front()->getLayer() == n->getLayer())
-            _next.push_back(n);
-         else 
+         if (_next.front()->getLayer() == n->getLayer()) {
+            insertInNext(n);
+            if (_next.size() > 2 *  _dd.getWidth()) {
+               _next.sort([](const ANode::Ptr& a,const ANode::Ptr& b) {
+                  return a->getBound() >= b->getBound();
+               });
+               //std::cout << "(" << _next.size() << " ";
+               _dd.mergeLayer(_next,[this](ANode::Ptr dn)  {
+                  _rest.push_back(dn);
+               });
+               //std::cout << " -> " << _next.size() << ") ";
+            }
+         } else 
             _rest.push_back(n);         
       }
    }
@@ -512,7 +525,7 @@ public:
       std::list<ANode::Ptr> retVal = std::move(_next);
       retVal.sort([](const ANode::Ptr& a,const ANode::Ptr& b) {
          return a->getBound() >= b->getBound();
-      });     
+      });
       auto layer = (_rest.size() > 0) ? _rest.front()->getLayer() : -1;
       for(auto i = _rest.begin(); i != _rest.end();) {
          if ((*i)->getLayer() != layer)            
@@ -539,11 +552,11 @@ void Relaxed::compute()
       //auto& lk = pullLayer(qn); // We have in lk the queue content for layer cL
       auto lk = qn.pullLayer();
 
-      if (lk.size() > _mxw)  {
-         mergeLayer(lk,[&qn](ANode::Ptr delayed) {
-            qn.enQueue(delayed);  // nodes whose layer was "increase". Need to go back in queue
-         }); 
-      }
+      // if (lk.size() > _mxw)  {
+      //    mergeLayer(lk,[&qn](ANode::Ptr delayed) {
+      //       qn.enQueue(delayed);  // nodes whose layer was "increase". Need to go back in queue
+      //    }); 
+      // }
    
       for(auto p : lk) { // loop over layer lk. p is a "parent" node.
          auto remLabels = remainingLabels(p);
