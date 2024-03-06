@@ -261,7 +261,7 @@ struct NDAction {
 
 class Relaxed :public WidthBounded {
    void transferArcs(ANode::Ptr donor,ANode::Ptr receiver);
-   std::list<ANode::Ptr> mergeLayer(NDArray& layer);
+   std::list<ANode::Ptr> mergeLayer(auto& layer);
    void tighten(ANode::Ptr nd) noexcept;
 public:
    Relaxed(const unsigned mxw) : WidthBounded(mxw) {}
@@ -270,7 +270,7 @@ public:
    std::vector<ANode::Ptr> computeCutSet();
    bool dual() const { return true;}
    NDAction mergePair(ANode::Ptr mNode,ANode::Ptr toMerge[2]);
-   ANode::Ptr mergeOne(NDArray& layer,NDArray& final);
+   ANode::Ptr mergeOne(auto& layer,auto& final);
 };
 
 

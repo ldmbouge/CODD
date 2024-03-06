@@ -430,7 +430,7 @@ NDAction Relaxed::mergePair(ANode::Ptr mNode,ANode::Ptr toMerge[2])
                      : NDAction::Delay };
 }
 
-ANode::Ptr Relaxed::mergeOne(NDArray& layer,NDArray& final)
+ANode::Ptr Relaxed::mergeOne(auto& layer,auto& skip)
 {   
    //for(auto i = layer.begin(); i != layer.end();) {
    auto i = layer.begin();
@@ -451,8 +451,8 @@ ANode::Ptr Relaxed::mergeOne(NDArray& layer,NDArray& final)
          }
       }
       if (toMerge[1]) {
-         i.erase();
-         j.erase();
+         i = layer.erase(i);
+         j = layer.erase(j);
          NDAction act = mergePair(mNode,toMerge);
          switch(act.act) {
             case NDAction::Delay:
@@ -464,63 +464,23 @@ ANode::Ptr Relaxed::mergeOne(NDArray& layer,NDArray& final)
                return nullptr;
          }
       } else {
-         i.erase();
-         final.push_back(n1);
+         i = layer.erase(i);
+         skip.push_back(n1);
       }
       //}
    return nullptr;
 }
 
-/*
-ANode::Ptr Relaxed::mergeOne(NDArray& layer,NDArray& final)
-{
-   ANode::Ptr n1 = layer.front();
-   layer.pop_front();
-   ANode::Ptr toMerge[2] = {n1,nullptr};
-   ANode::Ptr mNode = nullptr;
-   for(auto i = layer.begin();i != layer.end();i++) {
-      auto n2 = *i;
-      assert(n1->getLayer() == n2->getLayer());
-      assert(n1->nbChildren()==0);
-      assert(n2->nbChildren()==0);         
-      mNode = _dd->merge(n1,n2);
-      if (mNode) {
-         assert(mNode->nbChildren()==0);         
-         toMerge[1] = n2;
-         layer.erase(i);            
-         break;
-      }
-   }
-   ANode::Ptr delayed = nullptr;
-   if (toMerge[1]) {
-      auto act = mergePair(mNode,toMerge);
-      switch(act.act) {
-         case NDAction::Delay:
-            return act.node;
-         case NDAction::InFront:
-            layer.push_front(act.node);
-            return nullptr;
-         case NDAction::Noop:
-            return nullptr;
-      }
-   } else final.push_back(n1);
-   return delayed;
-}
-*/
-
-std::list<ANode::Ptr> Relaxed::mergeLayer(NDArray& layer)
+std::list<ANode::Ptr> Relaxed::mergeLayer(auto& layer)
 {
    //std::cout << "\tLSZ:" << layer.size() << "\t L:" << (*layer.begin())->getLayer();
-   layer.sort([](const ANode::Ptr& a,const ANode::Ptr& b) {
-      return a->getBound() >= b->getBound();
-   });  
    std::list<ANode::Ptr> delayed;
-   NDArray final;
-   while (final.size() + layer.size() > _mxw && layer.size() > 0) {
-      auto dn = mergeOne(layer,final);
+   std::list<ANode::Ptr> skip;
+   while (skip.size() + layer.size() > _mxw && layer.size() > 0) {
+      auto dn = mergeOne(layer,skip);
       if (dn) delayed.push_back(dn);
    }
-   for(auto n : final) layer.push_front(n);
+   layer.splice(layer.begin(),std::move(skip));
    return delayed;
 }
 
@@ -555,22 +515,10 @@ public:
       if (_next.size() == 0)
          _next.push_back(n);
       else {
-         if (_next.front()->getLayer() == n->getLayer()) {
-            if (n->getBound() > _next.front()->getBound())
-               _next.push_front(n);
-            else  if (n->getBound() < _next.back()->getBound()) { // larger than last 
-               _next.push_back(n);  // add at the end
-            } else {
-               auto b = _next.begin(),e = _next.end();
-               while (b != e && (*b)->getBound() > n->getBound())
-                  b++;
-               _next.insert(b,n);
-            }
-            //            if (_next.size() > _dd.getWidth())
-            //               _dd->mergeOne();            
-         } else {
-            _rest.push_back(n);
-         }
+         if (_next.front()->getLayer() == n->getLayer())
+            _next.push_back(n);
+         else 
+            _rest.push_back(n);         
       }
    }
    bool empty() const noexcept {
@@ -579,11 +527,11 @@ public:
    std::size_t size() const noexcept {
       return _next.size() + _rest.size();
    }
-   NDArray& pullLayer(NDArray& nda) noexcept { 
-      nda.clear();
-      for(auto n : _next)
-         nda.push_back(n);
-      _next.clear();      
+   std::list<ANode::Ptr> pullLayer() noexcept {
+      std::list<ANode::Ptr> retVal = std::move(_next);
+      retVal.sort([](const ANode::Ptr& a,const ANode::Ptr& b) {
+         return a->getBound() >= b->getBound();
+      });     
       auto layer = (_rest.size() > 0) ? _rest.front()->getLayer() : -1;
       for(auto i = _rest.begin(); i != _rest.end();) {
          if ((*i)->getLayer() != layer)            
@@ -592,11 +540,7 @@ public:
          _next.push_back(*i);
          i = _rest.erase(i);
       }
-      //for(auto n : nda) 
-      // std::cout << n->getBound() << " ";      
-      //std::cout << "\n";
-      //std::cout << nda.size() << " ";
-      return nda;
+      return retVal;
    }   
 };
 
@@ -605,14 +549,14 @@ void Relaxed::compute()
    _dd->_exact = true;
    auto root = _dd->init();
    _dd->target();
-   CQueue<ANode::Ptr> qn(1024);
-   //LQueue qn(*this);
+   //CQueue<ANode::Ptr> qn(1024);
+   LQueue qn(*this);
    root->setLayer(0);
    qn.enQueue(root);
    //std::cout << "RELAX...\n";
    while (!qn.empty()) {
-      auto& lk = pullLayer(qn); // We have in lk the queue content for layer cL
-      //auto& lk = qn.pullLayer(_nda);
+      //auto& lk = pullLayer(qn); // We have in lk the queue content for layer cL
+      auto lk = qn.pullLayer();
 
       //std::cout << "pullLayer:" << lk.size() << std::endl;
       //for(auto nd : lk) tighten(nd);           
