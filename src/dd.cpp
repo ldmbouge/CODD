@@ -55,7 +55,12 @@ void AbstractDD::compute()
 {
    assert(_strat);
    _strat->compute();
-   computeBest(_strat->getName());
+   /*   if (_strat->dual()) {
+      auto tb0 = _trg->getBound();
+      computeBest(_strat->getName());
+      auto tb1 = _trg->getBound();
+      assert(tb0 == tb1);
+      }*/
    computeBestBackward(_strat->getName());
 }
 
@@ -198,7 +203,7 @@ void AbstractDD::computeBest(const std::string m)
             n.node->_optLabels.push_back(e->_lbl);
          }
       }
-      //std::cout << "\tCOMPUTED:" << cur << " for " << n.node->getId() << "\n";
+      //std::cout << "\tCOMPUTED:" << cur << " for " << n.node->getId() << "\tHELD:" << n.node->getBound() << "\n";
       n.node->setBound(cur);
       for(auto ki = n.node->beginKids(); ki != n.node->endKids();ki++) {
          Edge::Ptr k = *ki;
@@ -292,6 +297,7 @@ void Exact::compute()
          }
       }
    }
+   _dd->computeBest(getName());
 }
 
 NDArray& WidthBounded::pullLayer(CQueue<ANode::Ptr>& qn)
@@ -382,6 +388,7 @@ void Restricted::compute()
       }         
    next:;
    }
+   _dd->computeBest(getName());
 }
 
 // ----------------------------------------------------------------------
@@ -480,6 +487,23 @@ template <typename Fun> void Relaxed::mergeLayer(auto& layer,Fun f)
    layer.splice(layer.begin(),std::move(skip)); // put the skipped guys back in
 }
 
+void Relaxed::tighten(ANode::Ptr nd) noexcept
+{
+   double cur  = (nd->nbParents() == 0 && nd != _dd->_trg) ? nd->getBound() : _dd->initialBest();
+   for(auto pi = nd->beginPar();pi != nd->endPar();pi++) {
+      Edge::Ptr e = *pi;
+      auto ep = e->_from->getBound() + e->_obj;
+      if (_dd->isBetter(ep,cur)) {
+         cur = ep;
+         nd->_optLabels = e->_from->_optLabels;
+         nd->_optLabels.push_back(e->_lbl);
+      }
+   }  
+   if (_dd->isBetter(cur,nd->getBound())) 
+      std::cout << "TIGHT: " << nd->getBound() << "/" << cur << "\n";
+   nd->setBound(cur);
+}
+
 struct ANodeComparator {
    bool operator()(const ANode::Ptr& e1,const ANode::Ptr& e2) const {
       return e1->getBound() > e2->getBound();
@@ -505,11 +529,11 @@ public:
                _next.sort([](const ANode::Ptr& a,const ANode::Ptr& b) {
                   return a->getBound() >= b->getBound();
                });
-               //std::cout << "(" << _next.size() << " ";
+               std::cout << "(" << _next.size() << " ";
                _dd.mergeLayer(_next,[this](ANode::Ptr dn)  {
                   _rest.push_back(dn);
                });
-               //std::cout << " -> " << _next.size() << ") ";
+               std::cout << " -> " << _next.size() << ") ";
             }
          } else 
             _rest.push_back(n);         
@@ -552,11 +576,11 @@ void Relaxed::compute()
       //auto& lk = pullLayer(qn); // We have in lk the queue content for layer cL
       auto lk = qn.pullLayer();
 
-      // if (lk.size() > _mxw)  {
-      //    mergeLayer(lk,[&qn](ANode::Ptr delayed) {
-      //       qn.enQueue(delayed);  // nodes whose layer was "increase". Need to go back in queue
-      //    }); 
-      // }
+      if (lk.size() > _mxw)  {
+         mergeLayer(lk,[&qn](ANode::Ptr delayed) {
+            qn.enQueue(delayed);  // nodes whose layer was "increase". Need to go back in queue
+         }); 
+      }
    
       for(auto p : lk) { // loop over layer lk. p is a "parent" node.
          auto remLabels = remainingLabels(p);
@@ -569,8 +593,11 @@ void Relaxed::compute()
                e->_obj = theCost;
                _dd->addArc(e); // connect to new node
                auto ep = p->getBound() + e->_obj;
-               if (_dd->isBetter(ep,child->getBound()))
+               if (_dd->isBetter(ep,child->getBound())) {
                   child->setBound(ep);
+                  //child->_optLabels = p->_optLabels;
+                  //child->_optLabels.push_back(e->_lbl);
+               }
                child->setLayer(std::max(child->getLayer(),p->getLayer()+1));               
                if (!_dd->eqSink(child)) {
                   if (newNode)
@@ -580,6 +607,8 @@ void Relaxed::compute()
          }
       }
    }
+   _dd->computeBest(getName());
+   //tighten(_dd->_trg);
 }
 
 std::vector<ANode::Ptr> Relaxed::computeCutSet()

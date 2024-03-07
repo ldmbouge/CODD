@@ -52,6 +52,7 @@ protected:
    void addArc(Edge::Ptr ep);
 public:
    friend class AbstractDD;
+   friend class Relaxed;
    friend class ANList;
    ANode(Pool::Ptr mem,unsigned nid,bool exact);
    ANode(Pool::Ptr mem,unsigned nid,const ANode& o,bool exact);
