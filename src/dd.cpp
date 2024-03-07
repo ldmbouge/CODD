@@ -55,12 +55,6 @@ void AbstractDD::compute()
 {
    assert(_strat);
    _strat->compute();
-   /*   if (_strat->dual()) {
-      auto tb0 = _trg->getBound();
-      computeBest(_strat->getName());
-      auto tb1 = _trg->getBound();
-      assert(tb0 == tb1);
-      }*/
    computeBestBackward(_strat->getName());
 }
 
@@ -271,12 +265,7 @@ void AbstractDD::computeBestBackward(const std::string m)
 GNSet Strategy::remainingLabels(ANode::Ptr p)
 {
    return _dd->getLabels(p);
-   /*GNSet remLabels = _dd->_labels; // deep copy
-   for(auto k = p->beginKids(); k != p->endKids();k++) 
-      remLabels.remove((*k)->_lbl);
-      return remLabels;   */
 }
-
 
 void Exact::compute()
 {
@@ -339,10 +328,6 @@ std::size_t WidthBounded::estimate(CQueue<ANode::Ptr>& qn)
 
 void Restricted::truncate(NDArray& layer)
 {
-   /*   layer.sort([](const ANode::Ptr& a,const ANode::Ptr& b) {
-       return a->getBound() >= b->getBound();
-   });
-   */
    _dd->_exact = false;
    auto from = layer.at(_mxw);
    for(auto start=from;start != layer.end();start++) {
@@ -362,9 +347,6 @@ void Restricted::compute()
    qn.enQueue(root);
    while (!qn.empty()) { 
       auto& lk = pullLayer(qn); // We have in lk the queue content for layer cL
-      //auto nbnx = estimate(qn);
-      //auto n = qn.peek();
-      //std::cout << "L:" << (n ? n->getLayer()  : -1) <<  "#NX:" << nbnx << "\n";
       if (lk.size() > _mxw) 
          truncate(lk);
       for(auto p : lk) { // loop over layer lk. p is a "parent" node.
@@ -505,8 +487,6 @@ void Relaxed::tighten(ANode::Ptr nd) noexcept
          nd->_optLabels.push_back(e->_lbl);
       }
    }  
-   //if (_dd->isBetter(cur,nd->getBound())) 
-   //std::cout << "TIGHT: " << nd->getBound() << "/" << cur << "\n";
    nd->setBound(cur);
 }
 
@@ -535,11 +515,9 @@ public:
                _next.sort([](const ANode::Ptr& a,const ANode::Ptr& b) {
                   return a->getBound() >= b->getBound();
                });
-               //std::cout << "(" << _next.size() << " ";
                _dd.mergeLayer(_next,[this](ANode::Ptr dn)  {
                   _rest.push_back(dn);
                });
-               //std::cout << " -> " << _next.size() << ") ";
             }
          } else 
             _rest.push_back(n);         
@@ -573,21 +551,12 @@ void Relaxed::compute()
    _dd->_exact = true;
    auto root = _dd->init();
    _dd->target();
-   //CQueue<ANode::Ptr> qn(1024);
    LQueue qn(*this);
    root->setLayer(0);
    qn.enQueue(root);
-   //std::cout << "RELAX...\n";
    while (!qn.empty()) {
-      //auto& lk = pullLayer(qn); // We have in lk the queue content for layer cL
       auto lk = qn.pullLayer();
 
-      // if (lk.size() > _mxw)  {
-      //    mergeLayer(lk,[&qn](ANode::Ptr delayed) {
-      //       qn.enQueue(delayed);  // nodes whose layer was "increase". Need to go back in queue
-      //    }); 
-      // }
-   
       for(auto p : lk) { // loop over layer lk. p is a "parent" node.
          auto remLabels = remainingLabels(p);
          for(auto l : remLabels) {
