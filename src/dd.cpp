@@ -132,7 +132,9 @@ void AbstractDD::saveGraph(std::ostream& os,std::string gLabel)
    os << " node [style=filled gradientangle=270];\n"; 
    while (h.size() > 0) {
       auto cur = h.extractMax();
-      os << "\"" << *cur.node << "\" [fillcolor=\"" << colors[cur.node->isExact()] << "\"";
+      os << "\"";
+      printNode(os,cur.node);
+      os << "\" [fillcolor=\"" << colors[cur.node->isExact()] << "\"";
       if (eq(cur.node,_trg))
          os << ",shape=box,color=black";
       os << "];\n";      
@@ -142,7 +144,11 @@ void AbstractDD::saveGraph(std::ostream& os,std::string gLabel)
          h.decrease(at);
          ANode::Ptr from = k->_from;
          ANode::Ptr to   = k->_to;
-         os << "\"" << *from << "\" ->" << "\"" << *to << "\"";
+         os << "\"";
+         printNode(os,from);
+         os << "\" ->" << "\"";
+         printNode(os,to);
+         os << "\"";
          os << " [ label=\"" << k->_obj << "(" << k->_lbl << ")" << "\" ];\n";
       }
    }
