@@ -505,8 +505,8 @@ void Relaxed::tighten(ANode::Ptr nd) noexcept
          nd->_optLabels.push_back(e->_lbl);
       }
    }  
-   if (_dd->isBetter(cur,nd->getBound())) 
-      std::cout << "TIGHT: " << nd->getBound() << "/" << cur << "\n";
+   //if (_dd->isBetter(cur,nd->getBound())) 
+   //std::cout << "TIGHT: " << nd->getBound() << "/" << cur << "\n";
    nd->setBound(cur);
 }
 
@@ -535,11 +535,11 @@ public:
                _next.sort([](const ANode::Ptr& a,const ANode::Ptr& b) {
                   return a->getBound() >= b->getBound();
                });
-               std::cout << "(" << _next.size() << " ";
+               //std::cout << "(" << _next.size() << " ";
                _dd.mergeLayer(_next,[this](ANode::Ptr dn)  {
                   _rest.push_back(dn);
                });
-               std::cout << " -> " << _next.size() << ") ";
+               //std::cout << " -> " << _next.size() << ") ";
             }
          } else 
             _rest.push_back(n);         
@@ -582,11 +582,11 @@ void Relaxed::compute()
       //auto& lk = pullLayer(qn); // We have in lk the queue content for layer cL
       auto lk = qn.pullLayer();
 
-      if (lk.size() > _mxw)  {
-         mergeLayer(lk,[&qn](ANode::Ptr delayed) {
-            qn.enQueue(delayed);  // nodes whose layer was "increase". Need to go back in queue
-         }); 
-      }
+      // if (lk.size() > _mxw)  {
+      //    mergeLayer(lk,[&qn](ANode::Ptr delayed) {
+      //       qn.enQueue(delayed);  // nodes whose layer was "increase". Need to go back in queue
+      //    }); 
+      // }
    
       for(auto p : lk) { // loop over layer lk. p is a "parent" node.
          auto remLabels = remainingLabels(p);
@@ -601,8 +601,8 @@ void Relaxed::compute()
                auto ep = p->getBound() + e->_obj;
                if (_dd->isBetter(ep,child->getBound())) {
                   child->setBound(ep);
-                  //child->_optLabels = p->_optLabels;
-                  //child->_optLabels.push_back(e->_lbl);
+                  child->_optLabels = p->_optLabels;
+                  child->_optLabels.push_back(e->_lbl);
                }
                child->setLayer(std::max(child->getLayer(),p->getLayer()+1));               
                if (!_dd->eqSink(child)) {
@@ -613,8 +613,8 @@ void Relaxed::compute()
          }
       }
    }
-   _dd->computeBest(getName());
-   //tighten(_dd->_trg);
+   //_dd->computeBest(getName());
+   tighten(_dd->_trg);
 }
 
 std::vector<ANode::Ptr> Relaxed::computeCutSet()
