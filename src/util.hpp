@@ -281,7 +281,7 @@ class GNSet {
    unsigned short _nbp;
    unsigned long long *_t;
 public:
-   GNSet(unsigned short nb=64) {
+   GNSet(unsigned short nb=64) { // 64 values ... so 0 .. 63 -> 1 word (65 values -> 0..64 -> 2 words)
       _mxw = (nb >> 6) + (((nb & 63) != 0) ? 1 : 0);
       _nbp = nb;
       if (_mxw) {
@@ -303,15 +303,27 @@ public:
       s._t = nullptr;      
    }
    GNSet(int lb,int ub) {
-      auto nb = ub >>  6;
-      _nbp = nb << 6;
-      _mxw = nb + ((ub & 0x3F) ? 1 : 0);
-      _t = new unsigned long long[_mxw];
-      for(int i=0;i<_mxw;i++) _t[i]=0;
-      for(auto i = lb;i <= ub;i++) {
-         const int ix = i >> 6;
-         assert(ix >= 0 && ix < _mxw);
-         _t[ix] |= (1ull << (i & 63));         
+      //auto nb = ub >>  6;
+      //_mxw = nb + ((ub & 0x3F) ? 1 : 0);
+      if (lb > ub) {
+         _mxw = 0;
+         _nbp = 0;
+         _t   = nullptr;
+      } else {
+         ++ub;
+         assert(ub >= 0);
+         assert(lb <= ub);
+         _mxw = (ub >> 6) + (((ub & 63) != 0) ? 1 : 0);
+         //_mxw = (1 << (64 - __builtin_clzll(ub))) >> 6;
+         assert(_mxw > 0);
+         _nbp = _mxw << 6;
+         _t = new unsigned long long[_mxw];
+         for(int i=0;i<_mxw;i++) _t[i]=0;
+         for(auto i = lb;i < ub;i++) {
+            const int ix = i >> 6;
+            assert(ix >= 0 && ix < _mxw);
+            _t[ix] |= (1ull << (i & 63));         
+         }
       }
    }
    GNSet(std::initializer_list<int> l) {
@@ -377,6 +389,7 @@ public:
    }
    void remove(int p) noexcept {
       const int i = p >> 6;
+      assert(i>=0 && i < _mxw);
       if (i < _mxw) 
          _t[i] &= ~(1ull << (p & 63));      
    }
@@ -420,7 +433,7 @@ public:
       unsigned long long    _cw; // current word
       iterator(unsigned long long* t,unsigned short nbw,unsigned short at)
          : _t(t),_nbw(nbw),_cwi(at),_cw((at < nbw) ? t[at] : 0) {
-         while (_cw == 0 && ++_cwi < _nbw) 
+         while (_cw == 0 && _t && ++_cwi < _nbw) 
             _cw = _t[_cwi];         
       }
       iterator(unsigned long long* t,unsigned short nbw) : _t(t),_nbw(nbw),_cwi(nbw),_cw(0) {} // end constructor
@@ -546,7 +559,7 @@ template<class T> struct std::hash<std::set<T>> {
 };
 
 template<unsigned short sz> struct std::hash<NatSet<sz>> {
-   std::size_t operator()(const NatSet<2>& v) const noexcept {
+   std::size_t operator()(const NatSet<sz>& v) const noexcept {
       return v.hash();
    }
 };
@@ -554,6 +567,8 @@ template<unsigned short sz> struct std::hash<NatSet<sz>> {
 // instantiation of the hash template for 64 and 128 bit sized NatSet.
 typedef struct std::hash<NatSet<1>> NS1;
 typedef struct std::hash<NatSet<2>> NS2;
+typedef struct std::hash<NatSet<3>> NS3;
+typedef struct std::hash<NatSet<4>> NS4;
 
 // Hash for General Nat Set
 template <> struct std::hash<GNSet> {
