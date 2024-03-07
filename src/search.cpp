@@ -46,7 +46,8 @@ void BAndB::search(Bounds& bnds)
       relaxed->compute();
       //std::cout << "." << std::flush;
       // to debug
-      //relaxed->display();int w;cin >> w;      
+      //relaxed->display();
+      
       bool dualBetter = _theDD->isBetter(relaxed->currentOpt(),bnds.getPrimal());
       if (dualBetter) {
          relaxed->update(bnds);

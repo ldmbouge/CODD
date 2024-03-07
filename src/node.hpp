@@ -172,11 +172,12 @@ public:
    Node(Pool::Ptr mem,unsigned nid,const Node<T>& o) : ANode(mem,nid,o,true),_val(o._val) {}
    const T& get() const {return _val;}
    void print(std::ostream& os) const {
-      os << _nid << ',' << _val << ",B=" << _bound << ",BB=" << _bbound; // << ",LBLS:[";
-      //      for(auto i=0u;i < _optLabels.size();i++)
-      // os << _optLabels[i] << " ";
-      //os << "]";
+      os << _nid << ',' << _val << ",B=" << _bound << ",BB=" << _bbound << ",LBLS:[";
+      for(auto i=0u;i < _optLabels.size();i++)
+         os << _optLabels[i] << " ";
+      os << "]";
    }
 };
+
 
 #endif
