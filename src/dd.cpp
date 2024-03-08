@@ -492,12 +492,6 @@ void Relaxed::tighten(ANode::Ptr nd) noexcept
    nd->setBound(cur);
 }
 
-// struct ANodeComparator {
-//    bool operator()(const ANode::Ptr& e1,const ANode::Ptr& e2) const {
-//       return e1->getBound() > e2->getBound();
-//    }
-// };
-
 class LQueue {
    std::list<ANode::Ptr> _next;
    std::list<ANode::Ptr> _rest;
@@ -513,13 +507,12 @@ public:
       else {
          if (_next.front()->getLayer() == n->getLayer()) {
             insertInNext(n);
-            if (_next.size() > 2 *  _dd.getWidth()) {
+            //eager currently disabled. It seems to cause an issue with knapsack (loose optimality)
+            //and it's not -yet- clear why.            
+            if (0 && _next.size() > 2 *  _dd.getWidth()) {
                _next.sort([dd = _dd.theDD()](const ANode::Ptr& a,const ANode::Ptr& b) {
                   return !dd->isBetter(a->getBound(),b->getBound());
                });
-               // for(auto n : _next)
-               //    std::cout << n->getBound() << " ";               
-               // std::cout << "\n";
                _dd.mergeLayer(_next,[this](ANode::Ptr dn)  {
                   _rest.push_back(dn);
                });
@@ -536,9 +529,15 @@ public:
    }
    std::list<ANode::Ptr> pullLayer() noexcept {
       std::list<ANode::Ptr> retVal = std::move(_next);
+
+      //sort and collapse the layer via merging when the layer is pulled.
       retVal.sort([dd = _dd.theDD()](const ANode::Ptr& a,const ANode::Ptr& b) {
          return !dd->isBetter(a->getBound(),b->getBound());
       });
+      _dd.mergeLayer(retVal,[this](ANode::Ptr dn)  {
+         _rest.push_back(dn);
+      });
+
       auto layer = (_rest.size() > 0) ? _rest.front()->getLayer() : -1;
       for(auto i = _rest.begin(); i != _rest.end();) {
          if ((*i)->getLayer() != layer)            
@@ -587,8 +586,8 @@ void Relaxed::compute()
          }
       }
    }
-   _dd->computeBest(getName());
-   //tighten(_dd->_trg);
+   //_dd->computeBest(getName());
+   tighten(_dd->_trg);
 }
 
 std::vector<ANode::Ptr> Relaxed::computeCutSet()
