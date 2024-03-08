@@ -340,13 +340,16 @@ private:
       auto inMap = _nmap.getLoc(state,at);
       if (inMap) {
          at->setExact(at->isExact() & pExact);
-         if (at->nbParents() == 0 && at != _root && at != _trg) 
-            _an.push_back(at); // The node was created but later removed. Put it back!         
+         if (at->nbParents() == 0 && at != _root && at != _trg) {
+            _an.push_back(at); // The node was created but later removed. Put it back!
+            at->setBound(initialBest()); // it was deleted... so bound is reset now.
+         }
          return at;
       } else {
          auto value = new (_mem) Node<ST>(_mem,std::move(state),_ndId++,pExact);
          _nmap.safeInsertAt(inMap,value);
          _an.push_back(value);
+         value->setBound(initialBest());
          return value;
       }
    }
@@ -370,7 +373,7 @@ private:
       auto vs = _stf(op->get(),label);
       if (vs.has_value()) {
          ANode::Ptr rv = makeNode(std::move(vs.value()),src->isExact());
-         rv->setBound(initialBest());
+         //rv->setBound(initialBest());
          return rv;
       } else return nullptr;
    }
@@ -412,7 +415,9 @@ public:
    {
       _baseline = _mem->mark();
       _initClosure = [this]() {
-         return makeNode(_sti());
+         ANode::Ptr retVal = makeNode(_sti());
+         retVal->setBound(0);
+         return retVal;
       };
    }
    ~DD() { DD::reset();}
@@ -423,7 +428,7 @@ public:
    void printNode(std::ostream& os,ANode::Ptr n) const {
       auto sp = static_cast<const Node<ST>*>(n.get());
       sp->print(os);
-      os << std::endl;
+      //os << std::endl;
    }
    AbstractDD::Ptr duplicate() {
       return AbstractDD::Ptr(new DD(_sti,_stt,_lgf,_stf,_stc,_smf,_eqs,_labels));

@@ -40,9 +40,6 @@ void BAndB::search(Bounds& bnds)
       cout << "EXTRACTED:  " << bbn.node->getId() << " ::: ";
       _theDD->printNode(cout,bbn.node);
       cout << "\t(" << bbn.bound << ")" << " SZ:" << pq.size() << endl;
-      // std::cout << "----------------------------------------------------------------------\n"; 
-      // std::cout << "HEAP TOP:\n" << pq << "\n";
-      // std::cout << "----------------------------------------------------------------------\n"; 
 #endif      
       if (!_theDD->isBetter(bbn.bound,bnds.getPrimal()))
          continue;
@@ -50,11 +47,6 @@ void BAndB::search(Bounds& bnds)
       relaxed->reset();
       relaxed->makeInitFrom(bbn.node);
       relaxed->compute();
-      //std::cout << "." << std::flush;
-      // to debug
-      // relaxed->display();
-      // sleep(1);
-      // char ch;std::cin >> ch;
       
       bool dualBetter = _theDD->isBetter(relaxed->currentOpt(),bnds.getPrimal());
       if (dualBetter) {
@@ -74,22 +66,15 @@ void BAndB::search(Bounds& bnds)
                   for(auto i=0u;i < sizeof(ddr)/sizeof(WidthBounded*);i++)
                      ddr[i]->setWidth(ddr[i]->getWidth() + 1);
                }
-               // std::cout << "----------------------------------------------------------------------\n"; 
-               // std::cout << "HEAP BEFORE:\n" << pq << "\n";
-               // std::cout << "----------------------------------------------------------------------\n"; 
                pq.insertHeap(QNode {nd, nd->getBound()+nd->getBackwardBound()});
-               // std::cout << "ADDING BB:";
-               // relaxed->printNode(std::cout,nd);
-               // std::cout << "\n";
-               // std::cout << "----------------------------------------------------------------------\n"; 
-               // std::cout << "HEAP AFTER:\n" << pq << "\n";
-               // std::cout << "----------------------------------------------------------------------\n"; 
             }
          }
       }
    }
    cout << "Done: " << bnds << "\t #nodes:" <<  nNode << "\n";
 }
+
+
 /*
 void BAndB::search()
 {

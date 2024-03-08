@@ -171,7 +171,7 @@ void AbstractDD::display()
       execlp("open","open",base.c_str(),NULL);
       printf("execl2 status: %d\n",st);
    }
-   unlink(buf);
+   //unlink(buf);
 }
 
 typedef Heap<DNode> DegHeap;
