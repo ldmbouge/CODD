@@ -62,7 +62,10 @@ int main(int argc,char* argv[])
 	{ 9, 44 },
 	{ 10, 55 },
 	{ 11, 72 },
-	{ 12, 85 }
+	{ 12, 85 },
+    { 13, 106},
+    { 14, 127},
+    { 15, 151}
    };
    
    //std::cout << "OPT[3] = "<< OPT[3] << std::endl;
@@ -78,7 +81,7 @@ int main(int argc,char* argv[])
    const auto lgf = [n,&bnds,&OPT,L](const SGRuler& s) -> GNSet {
       auto ub = L+1;
       if (s.k <= n/2)
-        ub = std::min({(int)std::floor(((int)bnds.getPrimal()-1)/2) - OPT[std::floor(n/2)-s.k], (int)std::floor((L+1)/2) - OPT[std::floor(n/2)-s.k]});
+        ub = std::min({(int)std::floor(((int)bnds.getPrimal())/2) - OPT[std::floor(n/2)-s.k], (int)std::floor((L+1)/2) - OPT[std::floor(n/2)-s.k]});
       else 
         ub = std::min({(int)bnds.getPrimal() - OPT[n-s.k] - 1,L+1 - OPT[n-s.k]});
       auto lb = std::max({s.e+1,(int)std::ceil(s.k * (s.k -1)/2)});
