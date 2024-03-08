@@ -11,7 +11,7 @@
 #include <math.h>
 
 //typedef std::set<int> GRSet;
-typedef NatSet<2> GRSet;  // 2 double-word (128 labels)
+typedef NatSet<4> GRSet;  // 4 double-word (256 labels)
 
 
 struct SGRuler {

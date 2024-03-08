@@ -95,7 +95,7 @@ void AbstractDD::print(std::ostream& os,std::string gLabel)
 {
    display();
    std::cout << "PRINTING: --------------------------------------------------\n";
-   Heap<DNode,DNode> h(_mem,1000);
+   Heap<DNode> h(_mem,1000,[](const DNode& a,const DNode& b) { return a.degree < b.degree;});
    for(auto n : _an) {
       h.insert({n,n->nbParents()});
       //std::cout << *n << " #PAR:" << n->nbParents() << "\n";
@@ -116,7 +116,7 @@ void AbstractDD::print(std::ostream& os,std::string gLabel)
 
 void AbstractDD::saveGraph(std::ostream& os,std::string gLabel)
 {
-   Heap<DNode,DNode> h(_mem,1000);
+   Heap<DNode> h(_mem,1000,[](const DNode& a,const DNode& b) { return a.degree < b.degree;});
    for(auto n : _an) 
       h.insert({n,n->nbParents()});   
    h.buildHeap();
@@ -174,15 +174,17 @@ void AbstractDD::display()
    unlink(buf);
 }
 
+typedef Heap<DNode> DegHeap;
+
 void AbstractDD::computeBest(const std::string m)
 {
    //std::cout << "ANSZ:" << _an.size() << "\n";
-   Heap<DNode,DNode> h(_mem,1000);
+   DegHeap h(_mem,1000,[](const DNode& a,const DNode& b) { return a.degree < b.degree;});
    unsigned mxId = 0;
    for(auto n : _an) 
       mxId = std::max(n->getId(),mxId);
-   auto nl = new (_mem) Heap<DNode,DNode>::Location*[mxId+1];
-   memset(nl,0,sizeof(Heap<DNode,DNode>::Location*)*(mxId+1));
+   auto nl = new (_mem) DegHeap::Location*[mxId+1];
+   memset(nl,0,sizeof(DegHeap::Location*)*(mxId+1));
    for(auto n : _an) {
       nl[n->getId()] = h.insert({n,n->nbParents()});
       if (n != _root)
@@ -220,12 +222,12 @@ void AbstractDD::computeBest(const std::string m)
 
 void AbstractDD::computeBestBackward(const std::string m)
 {
-   Heap<DNode,DNode> h(_mem,1000);
+   DegHeap h(_mem,1000,[](const DNode& a,const DNode& b) { return a.degree < b.degree;});
    unsigned mxId = 0;
    for(auto n : _an) 
       mxId = std::max(n->getId(),mxId);
-   auto nl = new (_mem) Heap<DNode,DNode>::Location*[mxId+1];
-   memset(nl,0,sizeof(Heap<DNode,DNode>::Location*)*(mxId+1));
+   auto nl = new (_mem) DegHeap::Location*[mxId+1];
+   memset(nl,0,sizeof(DegHeap::Location*)*(mxId+1));
    for(auto n : _an) {
       nl[n->getId()] = h.insert({n,n->nbChildren()});
       if (n != _trg)

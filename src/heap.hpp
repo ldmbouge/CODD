@@ -22,7 +22,7 @@
 #include <functional>
 #include "store.hpp"
 
-template <class T,class Ord = std::greater<T>> class Heap {
+template <class T,typename Ord = bool(*)(const T&,const T&)> class Heap {
 public:
    class Location {
       T _val;
@@ -39,7 +39,6 @@ public:
    };
 private:
    Pool::Ptr     _pool; // where memory comes from
-   Ord            _ord; // ordering object
    Location**    _data; // location pointers
    Location**    _lseg; // list of location segments
    // current size of segment and insertion point
@@ -48,6 +47,7 @@ private:
    // segments for location allocation
    int             _ms; // maximum number of segments 
    int            _nbs; // number of segments
+   Ord            _ord;
    void resize() noexcept {
       const int newSize = _mxs << 1; // double
       Location* newSeg = new (_pool) Location[_mxs];
@@ -105,8 +105,8 @@ private:
       }
    }
 public:
-   Heap(Pool::Ptr p,int sz)
-      : _pool(p),_mxs(sz),_at(1),_ms(32),_nbs(0)
+   Heap(Pool::Ptr p,int sz,Ord ord)
+      : _pool(p),_mxs(sz),_at(1),_ms(32),_nbs(0),_ord(ord)
    {
       _lseg = new (_pool) Location*[_ms];
       auto cs = _lseg[_nbs++] = new (_pool) Location[_mxs];
@@ -150,14 +150,16 @@ public:
    }
    T extractMax() noexcept {
       Location* rv = _data[1];
-      _data[1] = _data[--_at];
+      std::swap(_data[1],_data[_at-1]);
+      _data[_at - 1]->_p = _at - 1;
       _data[1]->_p = 1;
+      --_at;
       heapify(1);
       return rv->_val;
    }
    friend std::ostream& operator<<(std::ostream& os,const Heap<T,Ord>& h) {
       for(int i=1;i < h._at;i++) 
-         os << i << ":" << h._data[i]->_val << "\n";      
+         os << "   " << i << ":" << h._data[i]->_val << "\n";      
       return os;
    }
 };
