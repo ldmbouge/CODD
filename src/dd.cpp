@@ -55,7 +55,6 @@ void AbstractDD::compute()
 {
    assert(_strat);
    _strat->compute();
-   computeBest(_strat->getName());
    computeBestBackward(_strat->getName());
 }
 
@@ -96,7 +95,7 @@ void AbstractDD::print(std::ostream& os,std::string gLabel)
 {
    display();
    std::cout << "PRINTING: --------------------------------------------------\n";
-   Heap<DNode,DNode> h(_mem,1000);
+   Heap<DNode> h(_mem,1000,[](const DNode& a,const DNode& b) { return a.degree < b.degree;});
    for(auto n : _an) {
       h.insert({n,n->nbParents()});
       //std::cout << *n << " #PAR:" << n->nbParents() << "\n";
@@ -117,7 +116,7 @@ void AbstractDD::print(std::ostream& os,std::string gLabel)
 
 void AbstractDD::saveGraph(std::ostream& os,std::string gLabel)
 {
-   Heap<DNode,DNode> h(_mem,1000);
+   Heap<DNode> h(_mem,1000,[](const DNode& a,const DNode& b) { return a.degree < b.degree;});
    for(auto n : _an) 
       h.insert({n,n->nbParents()});   
    h.buildHeap();
@@ -127,7 +126,9 @@ void AbstractDD::saveGraph(std::ostream& os,std::string gLabel)
    os << " node [style=filled gradientangle=270];\n"; 
    while (h.size() > 0) {
       auto cur = h.extractMax();
-      os << "\"" << *cur.node << "\" [fillcolor=\"" << colors[cur.node->isExact()] << "\"";
+      os << "\"";
+      printNode(os,cur.node);
+      os << "\" [fillcolor=\"" << colors[cur.node->isExact()] << "\"";
       if (eq(cur.node,_trg))
          os << ",shape=box,color=black";
       os << "];\n";      
@@ -137,7 +138,11 @@ void AbstractDD::saveGraph(std::ostream& os,std::string gLabel)
          h.decrease(at);
          ANode::Ptr from = k->_from;
          ANode::Ptr to   = k->_to;
-         os << "\"" << *from << "\" ->" << "\"" << *to << "\"";
+         os << "\"";
+         printNode(os,from);
+         os << "\" ->" << "\"";
+         printNode(os,to);
+         os << "\"";
          os << " [ label=\"" << k->_obj << "(" << k->_lbl << ")" << "\" ];\n";
       }
    }
@@ -169,15 +174,17 @@ void AbstractDD::display()
    unlink(buf);
 }
 
+typedef Heap<DNode> DegHeap;
+
 void AbstractDD::computeBest(const std::string m)
 {
    //std::cout << "ANSZ:" << _an.size() << "\n";
-   Heap<DNode,DNode> h(_mem,1000);
+   DegHeap h(_mem,1000,[](const DNode& a,const DNode& b) { return a.degree < b.degree;});
    unsigned mxId = 0;
    for(auto n : _an) 
       mxId = std::max(n->getId(),mxId);
-   auto nl = new (_mem) Heap<DNode,DNode>::Location*[mxId+1];
-   memset(nl,0,sizeof(Heap<DNode,DNode>::Location*)*(mxId+1));
+   auto nl = new (_mem) DegHeap::Location*[mxId+1];
+   memset(nl,0,sizeof(DegHeap::Location*)*(mxId+1));
    for(auto n : _an) {
       nl[n->getId()] = h.insert({n,n->nbParents()});
       if (n != _root)
@@ -198,7 +205,7 @@ void AbstractDD::computeBest(const std::string m)
             n.node->_optLabels.push_back(e->_lbl);
          }
       }
-      //std::cout << "\tCOMPUTED:" << cur << " for " << n.node->getId() << "\n";
+      //std::cout << "\tCOMPUTED:" << cur << " for " << n.node->getId() << "\tHELD:" << n.node->getBound() << "\n";
       n.node->setBound(cur);
       for(auto ki = n.node->beginKids(); ki != n.node->endKids();ki++) {
          Edge::Ptr k = *ki;
@@ -215,12 +222,12 @@ void AbstractDD::computeBest(const std::string m)
 
 void AbstractDD::computeBestBackward(const std::string m)
 {
-   Heap<DNode,DNode> h(_mem,1000);
+   DegHeap h(_mem,1000,[](const DNode& a,const DNode& b) { return a.degree < b.degree;});
    unsigned mxId = 0;
    for(auto n : _an) 
       mxId = std::max(n->getId(),mxId);
-   auto nl = new (_mem) Heap<DNode,DNode>::Location*[mxId+1];
-   memset(nl,0,sizeof(Heap<DNode,DNode>::Location*)*(mxId+1));
+   auto nl = new (_mem) DegHeap::Location*[mxId+1];
+   memset(nl,0,sizeof(DegHeap::Location*)*(mxId+1));
    for(auto n : _an) {
       nl[n->getId()] = h.insert({n,n->nbChildren()});
       if (n != _trg)
@@ -260,12 +267,7 @@ void AbstractDD::computeBestBackward(const std::string m)
 GNSet Strategy::remainingLabels(ANode::Ptr p)
 {
    return _dd->getLabels(p);
-   /*GNSet remLabels = _dd->_labels; // deep copy
-   for(auto k = p->beginKids(); k != p->endKids();k++) 
-      remLabels.remove((*k)->_lbl);
-      return remLabels;   */
 }
-
 
 void Exact::compute()
 {
@@ -292,6 +294,7 @@ void Exact::compute()
          }
       }
    }
+   _dd->computeBest(getName());
 }
 
 NDArray& WidthBounded::pullLayer(CQueue<ANode::Ptr>& qn)
@@ -327,10 +330,6 @@ std::size_t WidthBounded::estimate(CQueue<ANode::Ptr>& qn)
 
 void Restricted::truncate(NDArray& layer)
 {
-   /*   layer.sort([](const ANode::Ptr& a,const ANode::Ptr& b) {
-       return a->getBound() >= b->getBound();
-   });
-   */
    _dd->_exact = false;
    auto from = layer.at(_mxw);
    for(auto start=from;start != layer.end();start++) {
@@ -350,9 +349,6 @@ void Restricted::compute()
    qn.enQueue(root);
    while (!qn.empty()) { 
       auto& lk = pullLayer(qn); // We have in lk the queue content for layer cL
-      //auto nbnx = estimate(qn);
-      //auto n = qn.peek();
-      //std::cout << "L:" << (n ? n->getLayer()  : -1) <<  "#NX:" << nbnx << "\n";
       if (lk.size() > _mxw) 
          truncate(lk);
       for(auto p : lk) { // loop over layer lk. p is a "parent" node.
@@ -382,6 +378,7 @@ void Restricted::compute()
       }         
    next:;
    }
+   _dd->computeBest(getName());
 }
 
 // ----------------------------------------------------------------------
@@ -403,80 +400,97 @@ void Relaxed::transferArcs(ANode::Ptr donor,ANode::Ptr receiver)
    donor->disconnect();
 }
 
-std::list<ANode::Ptr> Relaxed::mergeLayer(NDArray& layer)
+NDAction Relaxed::mergePair(ANode::Ptr mNode,ANode::Ptr toMerge[2])
 {
-   //std::cout << "\tLSZ:" << layer.size() << "\t L:" << (*layer.begin())->getLayer();
-   layer.sort([](const ANode::Ptr& a,const ANode::Ptr& b) {
-      return a->getBound() >= b->getBound();
-      //return a->getId() >= b->getId();      
-   });  
-   //const auto mergesNeeded = layer.size() - _mxw;
-   //auto mergesDone = 0u;
-   std::list<ANode::Ptr> delayed;
-   NDArray final;
-   //   while (mergesDone < mergesNeeded && layer.size() > 0) {
-   while (final.size() + layer.size() > _mxw && layer.size() > 0) {      
-      ANode::Ptr n1 = layer.front();
-      layer.pop_front();
-      ANode::Ptr toMerge[2] = {n1,nullptr};
-      ANode::Ptr mNode = nullptr;
-      for(auto i = layer.begin();i != layer.end();i++) {
-         auto n2 = *i;
-         assert(n1->getLayer() == n2->getLayer());
-         assert(n1->nbChildren()==0);
-         assert(n2->nbChildren()==0);         
-         mNode = _dd->merge(n1,n2);
-         if (mNode) {
-            assert(mNode->nbChildren()==0);         
-            toMerge[1] = n2;
-            layer.erase(i);            
-            break;
-         }
-      }
-      if (toMerge[1]) {
-         // neither nodes are in layer anymore. If the merge result
-         // is one of them, it needs to be added back
-         //mergesDone++;
-         const bool newNode = mNode->nbParents()==0; // is this a newly created node?
-         if (newNode) mNode->setLayer(n1->getLayer());
-         const bool sameLayer = mNode->getLayer() == n1->getLayer();
-         mNode->setLayer(std::max(mNode->getLayer(),n1->getLayer()));
-         mNode->setExact(false);
-         _dd->_exact = false;
-         bool addIt = false;
-         for(auto i = 0; i < 2;i++) {
-            auto d = toMerge[i];            
-            if (d != mNode) { // skip in case the node itself is the merged one
-               transferArcs(d,mNode);
-               _dd->_an.remove(d);
-            } else addIt = true;
-         }
-         if (sameLayer) {
-            if (newNode || addIt) 
-               layer.push_back(mNode);
-         } else delayed.push_back(mNode);
-      } else final.push_back(n1);
+   assert(toMerge[0] != nullptr && toMerge[1] != nullptr);
+   // Neither toMerge[0], nor toMerge[1] are in the layer
+   // mNode could be
+   // 1. A brand new node NOT in the layer
+   // 2. A node already in the layer but not in toMerge
+   // 3. A node already in the layer that is one of toMerge[i] 
+   const bool newNode = mNode->nbParents()==0; // is this a brand new node
+   if (newNode) mNode->setLayer(toMerge[0]->getLayer()); // give it a layer
+   const bool sameLayer = mNode->getLayer() == toMerge[0]->getLayer(); // layer not changing?
+   mNode->setLayer(std::max(mNode->getLayer(),toMerge[0]->getLayer()));// possibly set layer
+   mNode->setExact(false); // surely inexact now 
+   _dd->_exact = false;    // DD inexact as well
+   bool addIt = false;
+   for(auto i = 0; i < 2;i++) {
+      auto d = toMerge[i];            
+      if (d != mNode) { // skip in case the node itself is the merged one
+         transferArcs(d,mNode);
+         _dd->_an.remove(d);
+      } else addIt = true; // d == mNode -> so we do need to add it (toMerge were removed)
    }
-   for(auto n : final) layer.push_back(n);
-   //std::cout << "\t after SZ=" << layer.size() << "\t FINAL:" << final.size() << " DELAY:" << delayed.size() << "\n";
-   //std::cout << "M needed:" << mergesNeeded << " M done: " << mergesDone << "\n";
-   return delayed;
+   return NDAction { mNode, sameLayer ? ((newNode || addIt) ?
+                                         NDAction::InFront : NDAction::Noop)
+                     : NDAction::Delay };
+}
+
+ANode::Ptr Relaxed::mergeOne(auto& layer,auto& skip)
+{   
+   auto i = layer.begin();
+   auto n1 = *i;   
+   ANode::Ptr toMerge[2] = {n1,nullptr};
+   ANode::Ptr mNode = nullptr;
+   auto j = i;
+   for(++j;j != layer.end();++j) {
+      auto n2 = *j;
+      assert(n1->getLayer() == n2->getLayer());
+      assert(n1->nbChildren()==0);
+      assert(n2->nbChildren()==0);         
+      mNode = _dd->merge(n1,n2);
+      if (mNode) {
+         assert(mNode->nbChildren()==0);         
+         toMerge[1] = n2;
+         break;
+      }
+   }
+   if (toMerge[1]) {
+      i = layer.erase(i);
+      j = layer.erase(j);
+      NDAction act = mergePair(mNode,toMerge);
+      switch(act.act) {
+         case NDAction::Delay:
+            return act.node;
+         case NDAction::InFront:
+            layer.push_front(act.node);
+            return nullptr;
+         case NDAction::Noop:
+            return nullptr;
+      }
+   } else {
+      i = layer.erase(i);
+      skip.push_back(n1);
+   }
+   return nullptr;
+}
+
+
+template <typename Fun> void Relaxed::mergeLayer(auto& layer,Fun f)
+{
+   std::list<ANode::Ptr> skip;
+   while (skip.size() + layer.size() > _mxw && layer.size() > 0) {
+      auto dn = mergeOne(layer,skip); // skipped nodes are not willing to  merge with anything.
+      if (dn) f(dn); // delayed node saw an increase in layer. Back in the overall queue via f
+   }
+   layer.splice(layer.begin(),std::move(skip)); // put the skipped guys back in
 }
 
 void Relaxed::tighten(ANode::Ptr nd) noexcept
 {
-   double cur  = (nd->nbParents() == 0) ? nd->getBound() : _dd->initialBest();
+   double cur  = (nd->nbParents() == 0 && nd != _dd->_trg) ? nd->getBound() : _dd->initialBest();
    for(auto pi = nd->beginPar();pi != nd->endPar();pi++) {
       Edge::Ptr e = *pi;
       auto ep = e->_from->getBound() + e->_obj;
-      if (_dd->isBetter(ep,cur)) 
-         cur = ep;            
+      if (_dd->isBetter(ep,cur)) {
+         cur = ep;
+         nd->_optLabels = e->_from->_optLabels;
+         nd->_optLabels.push_back(e->_lbl);
+      }
    }  
-   if (_dd->isBetter(cur,nd->getBound())) 
-      std::cout << "TIGHT: " << nd->getBound() << "/" << cur << "\n";
    nd->setBound(cur);
 }
-
 
 struct ANodeComparator {
    bool operator()(const ANode::Ptr& e1,const ANode::Ptr& e2) const {
@@ -485,44 +499,52 @@ struct ANodeComparator {
 };
 
 class LQueue {
-   //std::set<ANode::Ptr,ANodeComparator> _next;
    std::list<ANode::Ptr> _next;
-   CQueue<ANode::Ptr>                _rest;
+   std::list<ANode::Ptr> _rest;
+   Relaxed&              _dd;
+   void insertInNext(ANode::Ptr n) {
+      _next.push_front(n);
+   }
 public:
-   LQueue() : _next(),_rest(1024) {}
+   LQueue(Relaxed& dd) : _next(),_rest(),_dd(dd) {}
    void enQueue(ANode::Ptr n) noexcept {
-      _next.push_back(n);
-      /*if (_next.size() == 0)
+      if (_next.size() == 0)
          _next.push_back(n);
       else {
-         if ((*_next.begin())->getLayer() == n->getLayer()) {
-            if (n->getBound() > _next.front()->getBound())
-               _next.push_front(n);
-            else  if (n->getBound() < _next.back()->getBound()) { // larger than last 
-               _next.push_back(n);  // add at the end
-            } else {
-               auto b = _next.begin(),e = _next.end();
-               while (b != e && (*b)->getBound() > n->getBound())
-                  b++;
-               _next.insert(b,n);
+         if (_next.front()->getLayer() == n->getLayer()) {
+            insertInNext(n);
+            if (_next.size() > 2 *  _dd.getWidth()) {
+               _next.sort([](const ANode::Ptr& a,const ANode::Ptr& b) {
+                  return a->getBound() >= b->getBound();
+               });
+               _dd.mergeLayer(_next,[this](ANode::Ptr dn)  {
+                  _rest.push_back(dn);
+               });
             }
-         } else {
-            _rest.enQueue(n);
-         }
-         } */    
+         } else 
+            _rest.push_back(n);         
+      }
    }
    bool empty() const noexcept {
       return size() == 0;
    }
    std::size_t size() const noexcept {
-      return _next.size();// + _rest.size();
+      return _next.size() + _rest.size();
    }
-   NDArray& pullLayer(NDArray& nda) noexcept { 
-      nda.clear();
-      for(auto n : _next)
-         nda.push_back(n);
-      _next.clear();
-      return nda;
+   std::list<ANode::Ptr> pullLayer() noexcept {
+      std::list<ANode::Ptr> retVal = std::move(_next);
+      retVal.sort([](const ANode::Ptr& a,const ANode::Ptr& b) {
+         return a->getBound() >= b->getBound();
+      });
+      auto layer = (_rest.size() > 0) ? _rest.front()->getLayer() : -1;
+      for(auto i = _rest.begin(); i != _rest.end();) {
+         if ((*i)->getLayer() != layer)            
+            break;
+         std::cout << "adding: " << (*i)->getId() << "\n" << std::flush;
+         _next.push_back(*i);
+         i = _rest.erase(i);
+      }
+      return retVal;
    }   
 };
 
@@ -531,26 +553,12 @@ void Relaxed::compute()
    _dd->_exact = true;
    auto root = _dd->init();
    _dd->target();
-   CQueue<ANode::Ptr> qn(1024);
-   //LQueue qn;
+   LQueue qn(*this);
    root->setLayer(0);
    qn.enQueue(root);
-   //std::cout << "RELAX...\n";
    while (!qn.empty()) {
-      auto& lk = pullLayer(qn); // We have in lk the queue content for layer cL
-      //auto& lk = qn.pullLayer(_nda);
+      auto lk = qn.pullLayer();
 
-      //std::cout << "pullLayer:" << lk.size() << std::endl;
-      //for(auto nd : lk) tighten(nd);           
-      //std::cout << "PROCESSING: " << (*lk.begin())->getLayer() << "\n";
-
-      if (lk.size() > _mxw)  {
-         auto delay = mergeLayer(lk); // nodes whose layer was "increase". Need to go back in queue
-         //std::cout <<  "\tDelayed... " << delay.size() << "\n";
-         for(auto p : delay)
-            qn.enQueue(p);
-      }
-    
       for(auto p : lk) { // loop over layer lk. p is a "parent" node.
          auto remLabels = remainingLabels(p);
          for(auto l : remLabels) {
@@ -562,8 +570,11 @@ void Relaxed::compute()
                e->_obj = theCost;
                _dd->addArc(e); // connect to new node
                auto ep = p->getBound() + e->_obj;
-               if (_dd->isBetter(ep,child->getBound()))
+               if (_dd->isBetter(ep,child->getBound())) {
                   child->setBound(ep);
+                  child->_optLabels = p->_optLabels;
+                  child->_optLabels.push_back(e->_lbl);
+               }
                child->setLayer(std::max(child->getLayer(),p->getLayer()+1));               
                if (!_dd->eqSink(child)) {
                   if (newNode)
@@ -573,6 +584,8 @@ void Relaxed::compute()
          }
       }
    }
+   //_dd->computeBest(getName());
+   tighten(_dd->_trg);
 }
 
 std::vector<ANode::Ptr> Relaxed::computeCutSet()
