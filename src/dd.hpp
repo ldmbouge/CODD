@@ -315,12 +315,12 @@ private:
    }
    double initialBest() const {
       constexpr auto gr = std::is_same<Compare,std::greater<double>>::value;
-      auto v = gr ? -std::numeric_limits<double>::max() : std::numeric_limits<double>::max();
+      auto v = gr ? -std::numeric_limits<int>::max() : std::numeric_limits<int>::max();
       return v;
    }
    double initialWorst() const {
       constexpr auto gr = std::is_same<Compare,std::greater<double>>::value;
-      auto v = !gr ? -std::numeric_limits<double>::max() : std::numeric_limits<double>::max();
+      auto v = !gr ? -std::numeric_limits<int>::max() : std::numeric_limits<int>::max();
       return v;
    }
    void update(Bounds& bnds) const {
