@@ -66,7 +66,8 @@ void BAndB::search(Bounds& bnds)
                   for(auto i=0u;i < sizeof(ddr)/sizeof(WidthBounded*);i++)
                      ddr[i]->setWidth(ddr[i]->getWidth() + 1);
                }
-               pq.insertHeap(QNode {nd, nd->getBound()+nd->getBackwardBound()});
+               // use the bound in n (the ones in nd are _reset_ when duplicate occurs)
+               pq.insertHeap(QNode {nd, n->getBound()+n->getBackwardBound()});
             }
          }
       }

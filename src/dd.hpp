@@ -62,6 +62,7 @@ protected:
 public:
    typedef std::shared_ptr<AbstractDD> Ptr;
    AbstractDD(const GNSet& labels);
+   ANode::Ptr getRoot() { return _root;}
    virtual ~AbstractDD();
    virtual void reset() = 0;
    virtual ANode::Ptr init() = 0;
