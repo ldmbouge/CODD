@@ -74,11 +74,11 @@ int main()
    const auto target = [K]() {    // The sink state
       return COLOR { Legal{},0,K};
    };
-   const auto lgf = [K,&bnds](const COLOR& s) -> GNSet {
+   const auto lgf = [K,&bnds](const COLOR& s) -> Range {
       if (s.vtx >= K)
-         return GNSet(0);
+         return Range::open(0,0);
       auto ub = std::min({(int)bnds.getPrimal(),s.last+1});
-      return GNSet(1,ub);
+      return Range::close(1,ub);
    };
    const auto stf = [K,es](const COLOR& s,const int label) -> std::optional<COLOR> {
       if (s.s[s.vtx].contains(label)) {

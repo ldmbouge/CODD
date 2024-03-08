@@ -68,8 +68,8 @@ int main()
    const auto target = [sz]() {    // The sink state
       return TSP { GNSet{},1,sz };
    };
-   const auto lgf = [](const TSP& s) -> GNSet {
-      return GNSet(1,4);
+   const auto lgf = [](const TSP& s) -> Range {
+      return Range::close(1,4);
    };
    const auto stf = [sz](const TSP& s,const int label) -> std::optional<TSP> {
       if ((label==1 && s.hops < sz-1) || (s.hops == sz-1 && label!=1))

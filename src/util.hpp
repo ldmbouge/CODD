@@ -76,7 +76,40 @@ namespace std {
    }
 };
 
-
+class Range {
+   constexpr static int inc[2] = {+1,-1};
+   int _from;
+   int _to;
+public:
+   enum  Dir {Forward,Backward};
+   class iterator {
+    private:
+      friend class Range;
+      const enum Dir _d;
+      int _i;
+   protected:
+      iterator(enum Dir d,int start) : _d(d),_i(start) {}
+   public:
+      int operator *() const  { return _i; }
+      const iterator& operator++() { _i += inc[_d];return *this;} // pre-increment
+      iterator operator ++(int)    { iterator copy(*this);_i += inc[_d];return copy;} // post-increment
+      bool operator ==(const iterator& other) const { return _i == other._i; }
+      bool operator !=(const iterator& other) const { return _i != other._i; }
+   };
+   Range(int f,int t) : _from(f),_to(t) {}
+   Range(Range&& r) : _from(r._from),_to(r._to) {}
+   Range(const Range& r) : _from(r._from),_to(r._to) {}
+   auto flip() const noexcept  { return Range(_to -1,_from-1);}
+   auto begin() const noexcept { return iterator(_from <= _to ? Forward : Backward,_from); }
+   auto end() const  noexcept  { return iterator(_from <= _to ? Forward : Backward,_to); }
+   static Range open(int f,int t) noexcept  { return Range(f,t);}
+   static Range close(int f,int t) noexcept { return Range(f,t+inc[f > t]);}
+   static Range openInc(int f,int t) noexcept  { return (f <= t) ? Range(f,t) : Range(0,0);}
+   static Range closeInc(int f,int t) noexcept { return (f < t+1) ? Range(f,t+inc[f > t]) : Range(0,0);}
+   friend std::ostream& operator<<(std::ostream& os,const Range& r) {
+      return os << "[" << r._from << " -> " << r._to << ")";
+   }
+};
 
 /**
  * Bounded Set for Naturals [0..64*nbw)

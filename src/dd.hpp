@@ -76,7 +76,7 @@ public:
    virtual double better(double obj1,double obj2) const = 0;
    virtual void update(Bounds& bnds) const = 0;
    virtual void printNode(std::ostream& os,ANode::Ptr n) const = 0;
-   virtual GNSet getLabels(ANode::Ptr src) const = 0;
+   virtual Range getLabels(ANode::Ptr src) const = 0;
    double currentOpt() const { return _trg->getBound();}
    std::vector<int> incumbent();
    void compute();
@@ -93,9 +93,10 @@ class Strategy {
 protected:
    AbstractDD* _dd;
    friend class AbstractDD;
-   GNSet remainingLabels(ANode::Ptr p);
+   auto remainingLabels(ANode::Ptr p);
 public:
    Strategy() : _dd(nullptr) {}
+   AbstractDD* theDD() const noexcept { return _dd;}
    virtual const std::string getName() const = 0;
    virtual void compute() {}
    virtual std::vector<ANode::Ptr> computeCutSet() { return std::vector<ANode::Ptr> {};}
@@ -278,7 +279,7 @@ public:
 template <typename ST,
           class Compare = std::less<double>,
           typename IBL2 = ST(*)(),
-          typename LGF  = GNSet(*)(const ST&),
+          typename LGF  = Range(*)(const ST&),
           typename STF  = std::optional<ST>(*)(const ST&,int),
           typename STC  = double(*)(const ST&,int),
           typename SMF  = std::optional<ST>(*)(const ST&,const ST&),
@@ -364,7 +365,7 @@ private:
    ANode::Ptr target() {
       return _trg = makeNode(_stt());
    }
-   GNSet getLabels(ANode::Ptr src) const {
+   Range getLabels(ANode::Ptr src) const {
       auto op = static_cast<const Node<ST>*>(src.get());
       return std::move(_lgf(op->get()));
    }

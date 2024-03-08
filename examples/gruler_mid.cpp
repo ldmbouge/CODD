@@ -78,14 +78,15 @@ int main(int argc,char* argv[])
    const auto target = [n]() {    // The sink state
       return SGRuler {GRSet {},GRSet {},n,0};
    };
-   const auto lgf = [n,&bnds,&OPT,L](const SGRuler& s) -> GNSet {
+   const auto lgf = [n,&bnds,&OPT,L](const SGRuler& s) -> Range {
       auto ub = L+1;
       if (s.k <= n/2)
-        ub = std::min({(int)std::floor(((int)bnds.getPrimal())/2) - OPT[std::floor(n/2)-s.k], (int)std::floor((L+1)/2) - OPT[std::floor(n/2)-s.k]});
+        ub = std::min({(int)std::floor(((int)bnds.getPrimal())/2) - OPT[std::floor(n/2)-s.k],
+                       (int)std::floor((L+1)/2) - OPT[std::floor(n/2)-s.k]});
       else 
         ub = std::min({(int)bnds.getPrimal() - OPT[n-s.k] - 1,L+1 - OPT[n-s.k]});
       auto lb = std::max({s.e+1,(int)std::ceil(s.k * (s.k -1)/2)});
-      return GNSet(lb,ub);
+      return Range::openInc(lb,ub);
    };
    const auto stf = [n](const SGRuler& s,const int label) -> std::optional<SGRuler> {
       bool legal = !std::foldl(s.m,[label,&s](bool acc,int i) { return acc || s.d.contains(label - i);},false);
