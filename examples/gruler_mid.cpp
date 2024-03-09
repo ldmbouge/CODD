@@ -73,18 +73,18 @@ int main(int argc,char* argv[])
    Bounds bnds;
    const auto labels = setFrom(std::views::iota(1,L+1));     // using a plain set for the labels
    const auto init = []() {   // The root state      
-      return SGRuler {GRSet {0},GRSet {},1,0};
+      return SGRuler {GRSet {0},GRSet {},1,0};  // s = (s.m, s.d, s.k, s.e)
    };
    const auto target = [n]() {    // The sink state
       return SGRuler {GRSet {},GRSet {},n,0};
    };
    const auto lgf = [n,&bnds,&OPT,L](const SGRuler& s) -> Range {
       auto ub = L+1;
-      if (s.k <= n/2)
-        ub = std::min({(int)std::floor(((int)bnds.getPrimal())/2) - OPT[std::floor(n/2)-s.k],
-                       (int)std::floor((L+1)/2) - OPT[std::floor(n/2)-s.k]});
+      if (0==1) // (s.k <= n/2)
+        ub = std::min({(int)std::floor(((int)bnds.getPrimal())/2) - OPT[std::floor(n/2)-s.k+1],
+                       (int)std::floor((L+1)/2) - OPT[std::floor(n/2)-s.k+1]});
       else 
-        ub = std::min({(int)bnds.getPrimal() - OPT[n-s.k] - 1,L+1 - OPT[n-s.k]});
+        ub = std::min({(int)bnds.getPrimal() -1 - OPT[n-s.k+1],L+1 - OPT[n-s.k+1]});
       auto lb = std::max({s.e+1,(int)std::ceil(s.k * (s.k -1)/2)});
       return Range::openInc(lb,ub);
    };
