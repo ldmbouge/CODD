@@ -91,17 +91,8 @@ int main(int argc,char* argv[])
         ub = std::min({(int)std::floor(((int)bnds.getPrimal())/2) - OPT[std::floor(n/2)-s.k], 
 		       (int)std::floor((L+1)/2) - OPT[std::floor(n/2)-s.k]});
       else 
-        ub = std::min({(int)bnds.getPrimal() -1 - OPT[n-s.k],L+1 - OPT[n-s.k]});
-      auto lb = std::max({s.e+s.sm,
-		          (int)std::ceil(s.k * (s.k -1)/2),
-			  OPT[s.k+1]});
-      /*
-      std::cout << "lb = " << lb << " via";
-      if (lb == s.e+s.sm) std::cout << " s.e+s.sm with s.sm = " << s.sm;
-      if (lb == (int)std::ceil(s.k*(s.k - 1)/2)) std::cout << " s.k(s.k-1)/2 ";
-      if (lb == OPT[s.k+1]) std::cout << " OPT[s.k+1] = " << OPT[s.k+1];
-      std::cout << "   ub = " << ub << std::endl;
-      */
+         ub = std::min({(int)bnds.getPrimal() -1 - OPT[n-s.k],L+1 - OPT[n-s.k]});
+      auto lb = std::max({s.e+s.sm,(int)std::ceil(s.k * (s.k -1)/2),OPT[s.k+1]});
       return Range::openInc(lb,ub);
    };
    const auto stf = [n,L](const SGRuler& s,const int label) -> std::optional<SGRuler> {
@@ -110,12 +101,13 @@ int main(int argc,char* argv[])
          if (s.k == n-1)  // this moves goes to the sink
             return SGRuler { GRSet {},GRSet {},n,0,L+1};
          else { 
-	    GRSet d_new = (label - s.m) | s.d;
-	    int smallest_dist = s.sm;
-	    while (d_new.contains(smallest_dist)) smallest_dist += 1;
+            GRSet d_new = (label - s.m) | s.d;
+            int smallest_dist = s.sm;
+            while (d_new.contains(smallest_dist)) smallest_dist += 1;
             return SGRuler { s.m | GRSet {label}, d_new, s.k + 1, label, smallest_dist };         
-	 }
-      } else return std::nullopt;  // return the empty optional 
+         }
+      } else 
+         return std::nullopt;  // return the empty optional      
    };
    const auto scf = [](const SGRuler& s,int label) { // partial cost function 
       return label - s.e;

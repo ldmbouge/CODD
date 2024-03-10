@@ -40,7 +40,8 @@ void BAndB::search(Bounds& bnds)
       cout << "EXTRACTED:  " << bbn.node->getId() << " ::: ";
       _theDD->printNode(cout,bbn.node);
       cout << "\t(" << bbn.bound << ")" << " SZ:" << pq.size() << endl;
-#endif      
+#endif
+      //nNode++;
       if (!_theDD->isBetter(bbn.bound,bnds.getPrimal()))
          continue;
       nNode++;
