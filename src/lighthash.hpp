@@ -98,6 +98,12 @@ public:
       }
       return HTAt(at, false);      
    }
+   void rawInsertAt(const HTAt& loc,Node<ST>* val) {
+      HTNode* head = (_mgc[loc._at]==_magic) ? _tab[loc._at] : nullptr;
+      _tab[loc._at] = new (_pool) HTNode {val,head};
+      _mgc[loc._at] = _magic;
+      ++_nbp;            
+   }
    void safeInsertAt(const HTAt& loc,Node<ST>* val) {
       assert(loc._inc == false);
       HTNode* head = (_mgc[loc._at]==_magic) ? _tab[loc._at] : nullptr;

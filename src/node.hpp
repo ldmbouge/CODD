@@ -177,7 +177,7 @@ public:
          << (_exact ? "T" : "F") << ','
          << _val << ",B=" << _bound << ",BB=" << _bbound << ",LBLS:[";
       for(auto i=0u;i < _optLabels.size();i++)
-         os << _optLabels[i] << " ";
+         os << _optLabels[i];// << " ";
       os << "]";
    }
 };

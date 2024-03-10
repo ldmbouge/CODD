@@ -215,8 +215,10 @@ void AbstractDD::computeBest(const std::string m)
       }
    }
 #ifndef _NDEBUG     
-   std::cout << '\t' << m << " B@SINK:" << _trg->getBound() << "\tLBL:"
-             << _trg->_optLabels << std::endl;
+   std::cout << '\t' << m << " B@SINK:" << _trg->getBound() << "\tLBL:[";
+   for(auto l : _trg->_optLabels)
+      std::cout << l;
+   std::cout << "]" << std::endl;
 #endif   
 }
 
@@ -447,6 +449,7 @@ ANode::Ptr Relaxed::mergeOne(auto& layer,auto& skip)
       }
    }
    if (toMerge[1]) {
+      assert(mNode != nullptr);
       i = layer.erase(i);
       j = layer.erase(j);
       NDAction act = mergePair(mNode,toMerge);
@@ -460,6 +463,7 @@ ANode::Ptr Relaxed::mergeOne(auto& layer,auto& skip)
             return nullptr;
       }
    } else {
+      assert(mNode == nullptr);
       i = layer.erase(i);
       skip.push_back(n1);
    }

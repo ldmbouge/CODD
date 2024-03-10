@@ -30,7 +30,7 @@ void BAndB::search(Bounds& bnds)
    auto hOrder = [this](const QNode& a,const QNode& b) {
       return _theDD->isBetter(a.bound,b.bound);
    };
-   Heap<QNode,decltype(hOrder)> pq(&mem,32,hOrder);   
+   Heap<QNode,decltype(hOrder)> pq(&mem,64000,hOrder);   
    pq.insertHeap(QNode { _theDD->init(), _theDD->initialWorst() } );
    unsigned nNode = 0;
    while(!pq.empty()) {
@@ -62,12 +62,16 @@ void BAndB::search(Bounds& bnds)
          if (!restricted->isExact() && !relaxed->isExact()) {
             for(auto n : relaxed->computeCutSet()) {
                auto nd = _theDD->duplicate(n); // we got a duplicate of the node.
-               if (nd == bbn.node) { // the cutset is the root. Only way out: increase width.
+               if (n == relaxed->getRoot()) { // the cutset is the root. Only way out: increase width.
                   for(auto i=0u;i < sizeof(ddr)/sizeof(WidthBounded*);i++)
                      ddr[i]->setWidth(ddr[i]->getWidth() + 1);
                }
-               // use the bound in n (the ones in nd are _reset_ when duplicate occurs)
+               // use the bound in n (the ones in nd are _reset_ when duplicate occurs????)
+               assert(nd->getBound() == n->getBound());
                pq.insertHeap(QNode {nd, n->getBound()+n->getBackwardBound()});
+               // std::cout << "PQ+:";
+               // relaxed->printNode(std::cout,nd);
+               // std::cout << "KEY:" << n->getBound()+n->getBackwardBound() << "\n";
             }
          }
       }

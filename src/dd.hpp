@@ -375,7 +375,6 @@ private:
       auto vs = _stf(op->get(),label);
       if (vs.has_value()) {
          ANode::Ptr rv = makeNode(std::move(vs.value()),src->isExact());
-         //rv->setBound(initialBest());
          return rv;
       } else return nullptr;
    }
@@ -439,11 +438,21 @@ public:
       Node<ST>* at = nullptr;
       auto sp = static_cast<const Node<ST>*>(src.get());
       auto inMap = _nmap.getLoc(sp->get(),at);
-      if (inMap) {
-         return at;
+      if (0 && inMap) {
+         assert(src->getBound() == at->getBound()); // this fires. The node was already there with another bound   
+         return at; // node already in this pool. Return it "untouched". It will be added to
+         // the heap for the B&B. CAVEAT: it was already there. First time it was inserted it
+         // received 0 as a bound (went through the else part). Calls to duplicate are *ONLY*
+         // for nodes that become root of DD when doing an iteration of B&B. These guys should
+         // have no parents. Their bounds should never change. Hypothesis: We might add the node
+         // a second time, from another B&B iteration. The node would have the same state, but be
+         // different and might have a different *BOUND*. We are going to put it a second time
+         // in the B&B queue, but since it gets deduplicated, it would have the bound of the first
+         // version of it. Could the bounds be different? Need to check this property with an
+         // assertion here. Can we ever inject a node with same state and different bound?
       } else {
          auto nn = new (_mem) Node<ST>(_mem,_ndId++,*sp);
-         _nmap.safeInsertAt(inMap,nn);
+         _nmap.rawInsertAt(inMap,nn);
          _an.push_back(nn);
          return nn;
       }
