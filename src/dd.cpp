@@ -311,6 +311,9 @@ NDArray& WidthBounded::pullLayer(CQueue<ANode::Ptr>& qn)
       n = qn.deQueue();
       _nda.push_back(n);         
    }
+   _nda.sort([dd = _dd](const ANode::Ptr& a,const ANode::Ptr& b) { // sort better to worse
+      return dd->isBetter(a->getBound(),b->getBound());
+   });
    return _nda;
 }
 
@@ -325,6 +328,21 @@ std::size_t WidthBounded::estimate(CQueue<ANode::Ptr>& qn)
       nb += aNodeLoc->value()->getLayer()==layer;
    });
    return nb;
+}
+
+void WidthBounded::tighten(ANode::Ptr nd) noexcept
+{
+   double cur  = (nd->nbParents() == 0 && nd != _dd->_trg) ? nd->getBound() : _dd->initialBest();
+   for(auto pi = nd->beginPar();pi != nd->endPar();pi++) {
+      Edge::Ptr e = *pi;
+      auto ep = e->_from->getBound() + e->_obj;
+      if (_dd->isBetter(ep,cur)) {
+         cur = ep;
+         nd->_optLabels = e->_from->_optLabels;
+         nd->_optLabels.push_back(e->_lbl);
+      }
+   }  
+   nd->setBound(cur);
 }
 
 // ----------------------------------------------------------------------
@@ -351,8 +369,8 @@ void Restricted::compute()
    qn.enQueue(root);
    while (!qn.empty()) { 
       auto& lk = pullLayer(qn); // We have in lk the queue content for layer cL
-      if (lk.size() > _mxw) 
-         truncate(lk);
+      // if (lk.size() > _mxw) 
+      //    truncate(lk);
       for(auto p : lk) { // loop over layer lk. p is a "parent" node.
          auto remLabels = remainingLabels(p);
          for(auto l : remLabels) {
@@ -363,14 +381,21 @@ void Restricted::compute()
                Edge::Ptr e = new (_dd->_mem) Edge(p,child,l);
                e->_obj = theCost;
                _dd->addArc(e); // connect to new node
+               auto ep = p->getBound() + e->_obj;
+               if (_dd->isBetter(ep,child->getBound())) {
+                  child->setBound(ep);
+                  child->_optLabels = p->_optLabels;
+                  child->_optLabels.push_back(e->_lbl);
+               }
                child->setLayer(std::max(child->getLayer(),p->getLayer()+1));
                if (!_dd->eqSink(child)) {
                   if (newNode) {
                      qn.enQueue(child);
                      auto nbNode = estimate(qn);
                      //std::cout << "#NODES: " << nbNode << "\n";
-                     if (nbNode > _mxw) {
+                     if (nbNode > _mxw - 1) {
                         //std::cout << "JUMP..." << nbNode << '/' << _mxw << "\n";
+                        _dd->_exact = false;
                         goto next;
                      }
                   }
@@ -380,7 +405,8 @@ void Restricted::compute()
       }         
    next:;
    }
-   _dd->computeBest(getName());
+   //_dd->computeBest(getName());
+   tighten(_dd->_trg);
 }
 
 // ----------------------------------------------------------------------
@@ -481,20 +507,6 @@ template <typename Fun> void Relaxed::mergeLayer(auto& layer,Fun f)
    layer.splice(layer.begin(),std::move(skip)); // put the skipped guys back in
 }
 
-void Relaxed::tighten(ANode::Ptr nd) noexcept
-{
-   double cur  = (nd->nbParents() == 0 && nd != _dd->_trg) ? nd->getBound() : _dd->initialBest();
-   for(auto pi = nd->beginPar();pi != nd->endPar();pi++) {
-      Edge::Ptr e = *pi;
-      auto ep = e->_from->getBound() + e->_obj;
-      if (_dd->isBetter(ep,cur)) {
-         cur = ep;
-         nd->_optLabels = e->_from->_optLabels;
-         nd->_optLabels.push_back(e->_lbl);
-      }
-   }  
-   nd->setBound(cur);
-}
 
 class LQueue {
    std::list<ANode::Ptr> _next;

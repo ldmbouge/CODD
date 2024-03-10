@@ -53,6 +53,7 @@ protected:
    friend class Exact;
    friend class Restricted;
    friend class Relaxed;
+   friend class WidthBounded;
    Strategy* _strat;
    virtual bool eqSink(ANode::Ptr s) const = 0;
    virtual bool eq(ANode::Ptr f,ANode::Ptr s) const = 0;
@@ -244,6 +245,7 @@ public:
    WidthBounded(const unsigned mxw) : Strategy(),_mxw(mxw) {}
    void setWidth(unsigned  mxw) { _mxw = mxw;}
    unsigned getWidth() const  { return _mxw;}
+   void tighten(ANode::Ptr nd) noexcept;
 };
 
 class Restricted: public WidthBounded {
@@ -273,7 +275,6 @@ public:
    NDAction mergePair(ANode::Ptr mNode,ANode::Ptr toMerge[2]);
    ANode::Ptr mergeOne(auto& layer,auto& final);
    template <typename Fun> void mergeLayer(auto& layer,Fun f);
-   void tighten(ANode::Ptr nd) noexcept;
 };
 
 
