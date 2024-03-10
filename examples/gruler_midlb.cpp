@@ -92,9 +92,6 @@ int main(int argc,char* argv[])
       else 
         ub = std::min({(int)bnds.getPrimal() - OPT[n-s.k] - 1,L+1 - OPT[n-s.k]});
       auto lb = std::max({s.e+s.sm,(int)std::ceil(s.k * (s.k -1)/2)});  // added s.sm (replacing 1) to improve lb
-      
-      // if (lb > ub) 
-      //   std::cout << "(lb = " << lb << ") > (ub = " << ub << ")" << std::endl;
       return Range::openInc(lb,ub);  // GNSet captures when lb > ub
    };
    const auto stf = [n,L](const SGRuler& s,const int label) -> std::optional<SGRuler> {
@@ -103,12 +100,13 @@ int main(int argc,char* argv[])
          if (s.k == n-1)  // this moves goes to the sink
             return SGRuler { GRSet {},GRSet {},n,0,L+1};
          else { 
-	    GRSet d_new = (label - s.m) | s.d;
-	    int smallest_dist = s.sm;
-	    while (d_new.contains(smallest_dist)) smallest_dist += 1;
+            GRSet d_new = (label - s.m) | s.d;
+            int smallest_dist = s.sm;
+            while (d_new.contains(smallest_dist)) smallest_dist += 1;
             return SGRuler { s.m | GRSet {label}, d_new, s.k + 1, label, smallest_dist };         
-	 }
-      } else return std::nullopt;  // return the empty optional 
+         }
+      } else 
+         return std::nullopt;  // return the empty optional      
    };
    const auto scf = [](const SGRuler& s,int label) { // partial cost function 
       return label - s.e;
