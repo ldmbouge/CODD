@@ -80,6 +80,11 @@ public:
       for(auto it = begin;it != end;it++)
          _optLabels.push_back(*it);
    }
+   void copyBoundAndLabels(ANode::Ptr n) {
+      _bound = n->_bound;
+      _bbound = n->_bbound;
+      _optLabels = n->_optLabels;
+   }
    const auto getId() const noexcept { return _nid;}
    void disconnect();
    friend std::ostream& operator<<(std::ostream& os,const ANode& s);

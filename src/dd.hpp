@@ -391,10 +391,12 @@ private:
          //std::cout << "B(M1):" << fp->getBound() << "\n";
          //std::cout << "B(M2):" << sp->getBound() << "\n";
          ANode::Ptr rv = makeNode(std::move(vs.value()));
-         if (isBetter(fp->getBound(),rv->getBound()))
-            rv->setBound(fp->getBound());
-         if (isBetter(sp->getBound(),rv->getBound()))
-            rv->setBound(sp->getBound());
+         if (isBetter(fp->getBound(),rv->getBound())) {
+            rv->copyBoundAndLabels(f);
+         }
+         if (isBetter(sp->getBound(),rv->getBound())) {
+            rv->copyBoundAndLabels(s);
+         }
          // if (isBetter(fp->getBound(),sp->getBound()))
          //    rv->setBound(fp->getBound());
          // else
