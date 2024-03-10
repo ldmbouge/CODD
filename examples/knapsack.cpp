@@ -91,8 +91,8 @@ int main(int argc,char* argv[])
       return SKS {I,0};
    };
    const auto lgf = [weight](const SKS& s) {
-      auto r = Range::close(s.c >= weight[s.n],0);
-      //auto r = Range::close(0,s.c >= weight[s.n]);
+      //auto r = Range::close(s.c >= weight[s.n],0);
+      auto r = Range::close(0,s.c >= weight[s.n]);
       return r;
    };
    const auto stf = [I,weight](const SKS& s,const int label) -> std::optional<SKS> {

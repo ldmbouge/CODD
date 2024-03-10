@@ -590,8 +590,8 @@ void Relaxed::compute()
          }
       }
    }
-   _dd->computeBest(getName());
-   //tighten(_dd->_trg);
+   //_dd->computeBest(getName());
+   tighten(_dd->_trg);
 }
 
 std::vector<ANode::Ptr> Relaxed::computeCutSet()
