@@ -257,6 +257,7 @@ public:
    const std::string getName() const { return "Restricted";}
    void compute();
    bool primal() const { return true;}
+   bool checkDominance(CQueue<ANode::Ptr>& qn,ANode::Ptr n,double nObj);
 };
 
 

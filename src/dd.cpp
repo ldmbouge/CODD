@@ -359,8 +359,20 @@ void Restricted::truncate(NDArray& layer)
    layer.eraseSuffix(from);
 }
 
+bool Restricted::checkDominance(CQueue<ANode::Ptr>& qn,ANode::Ptr n,double nObj)
+{
+   bool rv = qn.foldl([theDD = _dd,nObj,n](bool acc,ANode::Ptr o) {
+      const bool objDom = theDD->isBetter(o->getBound(),nObj);
+      const bool stateDom = theDD->dominates(o,n);
+      return acc || (objDom && stateDom);
+   },false);
+   return rv;
+}
+
+
 void Restricted::compute()
 {
+   const bool hasDom = _dd->hasDominance();
    _dd->_exact = true;
    auto root = _dd->init();
    _dd->target();
@@ -369,8 +381,6 @@ void Restricted::compute()
    qn.enQueue(root);
    while (!qn.empty()) { 
       auto& lk = pullLayer(qn); // We have in lk the queue content for layer cL
-      // if (lk.size() > _mxw) 
-      //    truncate(lk);
       for(auto p : lk) { // loop over layer lk. p is a "parent" node.
          auto remLabels = remainingLabels(p);
          for(auto l : remLabels) {
@@ -378,10 +388,17 @@ void Restricted::compute()
             if (child) {
                const bool newNode = child->nbParents()==0; // is this a newly created node?
                auto theCost = _dd->cost(p,l);
+               auto ep = p->getBound() + theCost;
+               if (hasDom && newNode) {
+                  bool isDominated = checkDominance(qn,child,ep);
+                  if (isDominated) {
+                     _dd->_an.pop_back();
+                     continue;
+                  }
+               }               
                Edge::Ptr e = new (_dd->_mem) Edge(p,child,l);
                e->_obj = theCost;
                _dd->addArc(e); // connect to new node
-               auto ep = p->getBound() + e->_obj;
                if (_dd->isBetter(ep,child->getBound())) {
                   child->setBound(ep);
                   child->_optLabels = p->_optLabels;
@@ -600,8 +617,8 @@ void Relaxed::compute()
                if (hasDom && newNode) {
                   bool isDominated = qn.checkDominance(child,ep);
                   if (isDominated) {
-                     ANode::Ptr justAdded = _dd->_an.back();
-                     assert(justAdded == child);
+                     // ANode::Ptr justAdded = _dd->_an.back();
+                     // assert(justAdded == child);
                      _dd->_an.pop_back();
                      continue;
                   }
