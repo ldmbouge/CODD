@@ -120,6 +120,17 @@ public:
          _tail = n;
       }
    }
+   ANode::Ptr front() const { return _head;}
+   ANode::Ptr back() const { return _tail;}
+   void pop_back() {
+      ANode::Ptr drop = _tail;
+      _tail = _tail->_prev;
+      if (_tail)
+         _tail->_next = nullptr;
+      else
+         _head = nullptr;
+      drop->_next = drop->_prev = nullptr;
+   }
    void remove(ANode::Ptr n) noexcept {
       //assert(confirmMembership(n)==true);
       const ANode::Ptr pv = n->_prev, nx = n->_next;

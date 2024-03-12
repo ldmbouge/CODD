@@ -537,6 +537,16 @@ public:
             _rest.push_back(n);         
       }
    }
+   bool checkDominance(ANode::Ptr n,double nObj) {
+      AbstractDD* theDD = _dd.theDD();
+      for(const auto& o : _next) {
+         const bool objDom = theDD->isBetter(o->getBound(),nObj);
+         const bool stateDom = theDD->dominates(o,n);
+         if (objDom && stateDom) 
+            return true;                     
+      }
+      return false;
+   }
    bool empty() const noexcept {
       return size() == 0;
    }
@@ -563,11 +573,13 @@ public:
          i = _rest.erase(i);
       }
       return retVal;
-   }   
+   }
 };
 
 void Relaxed::compute()
 {
+   const bool hasDom = _dd->hasDominance();
+   //std::cout << "HASDOM:" << hasDom << "\n";
    _dd->_exact = true;
    auto root = _dd->init();
    _dd->target();
@@ -584,10 +596,19 @@ void Relaxed::compute()
             if (child) {
                const bool newNode = child->nbParents()==0; // is this a newly created node?
                auto theCost = _dd->cost(p,l);
+               auto ep = p->getBound() + theCost;
+               if (hasDom && newNode) {
+                  bool isDominated = qn.checkDominance(child,ep);
+                  if (isDominated) {
+                     ANode::Ptr justAdded = _dd->_an.back();
+                     assert(justAdded == child);
+                     _dd->_an.pop_back();
+                     continue;
+                  }
+               }               
                Edge::Ptr e = new (_dd->_mem) Edge(p,child,l);
                e->_obj = theCost;
                _dd->addArc(e); // connect to new node
-               auto ep = p->getBound() + e->_obj;
                if (_dd->isBetter(ep,child->getBound())) {
                   child->setBound(ep);
                   child->_optLabels = p->_optLabels;

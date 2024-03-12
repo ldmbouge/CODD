@@ -134,6 +134,10 @@ int main(int argc,char* argv[])
    const auto sEq = [I](const SKS& s) -> bool {
       return s.n == I;
    };
+   const auto sDom = [](const SKS& a,const SKS& b) -> bool {
+      bool rv =  a.c >= b.c;
+      return rv;
+   };
    
    BAndB engine(DD<SKS,std::greater<double>, // to maximize               
                 decltype(target),
@@ -142,7 +146,7 @@ int main(int argc,char* argv[])
                 decltype(scf),
                 decltype(smf),
                 decltype(sEq)                
-                >::makeDD(init,target,lgf,stf,scf,smf,sEq,labels),w);
+                >::makeDD(init,target,lgf,stf,scf,smf,sEq,labels,sDom),w);
    engine.search(bnds);
    return 0;
 }
