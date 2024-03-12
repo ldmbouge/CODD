@@ -163,6 +163,17 @@ public:
          n--;
       }
    }
+   template <class Fun> bool foldl(Fun f,bool base) {
+      int k = _exit;
+      int n = _cnt;
+      bool acc = base;
+      while(n && !acc) {
+         acc = f(acc,_data[k]->_val);
+         k = (k + 1) & _mask;
+         n--;         
+      }
+      return acc;
+   }
 };
 
 #endif

@@ -36,13 +36,23 @@ template<> struct std::hash<SKS> {
    }
 };
 
+struct Item {
+   int w; // weight
+   int p; // profit
+};
+
 struct Instance {
    int I;
    int capa;
+   std::vector<Item> items;
    std::vector<int> weight;
    std::vector<int> profit;
    Instance() {}
-   Instance(Instance&& i) : I(i.I),capa(i.capa),weight(std::move(i.weight)),profit(std::move(i.profit)) {}
+   Instance(Instance&& i)
+      : I(i.I),capa(i.capa),
+        weight(std::move(i.weight)),
+        profit(std::move(i.profit))
+   {}
 };
 
 Instance readFile(const char* fName)
@@ -54,14 +64,23 @@ Instance readFile(const char* fName)
    int count = 0;
    while (!f.eof()) {
       if (f.eof()) break;
-      int p,w;
-      f >> p >> w;
+      Item k;
+      f >> k.p >> k.w;
       if (count++ >= i.I) break;
-      i.profit.push_back(p);
-      i.weight.push_back(w);
+      i.items.push_back(k);
    }
    f.close();
-   std::cout << i.profit << "\n";
+   std::sort(i.items.begin(),i.items.end(),[](const auto& a,const auto& b) {
+      const double ar = (a.p==0) ? INT_MAX : (a.w == 0) ? 1.0/a.p  : -((double)a.p)/((double)a.w);
+      const double br = (b.p==0) ? INT_MAX : (b.w == 0) ? 1.0/a.p  : -((double)b.p)/((double)b.w);
+      return ar <= br;
+   });
+   std::cout << "Sorted by ratio... ----------------------------------------------------\n";
+   for(const auto& ik : i.items) {
+      i.weight.push_back(ik.w);
+      i.profit.push_back(ik.p);
+      std::cout << ik.w << " " << ik.p << "\n";
+   }
    return i;
 }
 
@@ -115,6 +134,9 @@ int main(int argc,char* argv[])
    const auto sEq = [I](const SKS& s) -> bool {
       return s.n == I;
    };
+   const auto sDom = [](const SKS& a,const SKS& b) -> bool {
+      return  a.c >= b.c;
+   };
    
    BAndB engine(DD<SKS,std::greater<double>, // to maximize               
                 decltype(target),
@@ -123,7 +145,7 @@ int main(int argc,char* argv[])
                 decltype(scf),
                 decltype(smf),
                 decltype(sEq)                
-                >::makeDD(init,target,lgf,stf,scf,smf,sEq,labels),w);
+                >::makeDD(init,target,lgf,stf,scf,smf,sEq,labels,sDom),w);
    engine.search(bnds);
    return 0;
 }

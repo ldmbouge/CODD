@@ -76,6 +76,8 @@ public:
    virtual double initialWorst() const = 0;
    virtual bool   isBetter(double obj1,double obj2) const = 0;
    virtual double better(double obj1,double obj2) const = 0;
+   virtual bool hasDominance() const noexcept = 0;
+   virtual bool dominates(ANode::Ptr f,ANode::Ptr s) = 0;
    virtual void update(Bounds& bnds) const = 0;
    virtual void printNode(std::ostream& os,ANode::Ptr n) const = 0;
    virtual Range getLabels(ANode::Ptr src) const = 0;
@@ -255,6 +257,7 @@ public:
    const std::string getName() const { return "Restricted";}
    void compute();
    bool primal() const { return true;}
+   bool checkDominance(CQueue<ANode::Ptr>& qn,ANode::Ptr n,double nObj);
 };
 
 
@@ -286,6 +289,7 @@ template <typename ST,
           typename STC  = double(*)(const ST&,int),
           typename SMF  = std::optional<ST>(*)(const ST&,const ST&),
           typename EQSink = bool(*)(const ST&),
+          typename SDOM = bool(*)(const ST&,const ST&),
           class Equal = std::equal_to<ST>
           >
 requires Printable<ST> && Hashable<ST>
@@ -298,6 +302,7 @@ private:
    STC _stc;
    SMF _smf;
    EQSink _eqs;
+   SDOM _sdom;
    LHashtable<ST> _nmap;
    unsigned _ndId;
    std::function<ANode::Ptr()> _initClosure;
@@ -316,6 +321,7 @@ private:
    double better(double obj1,double obj2) const {
       return Compare{}(obj1,obj2) ? obj1 : obj2;
    }
+   bool hasDominance() const noexcept { return _sdom != nullptr;}
    double initialBest() const {
       constexpr auto gr = std::is_same<Compare,std::greater<double>>::value;
       auto v = gr ? -std::numeric_limits<int>::max() : std::numeric_limits<int>::max();
@@ -407,8 +413,14 @@ private:
       }
       else return nullptr;
    }
+   bool dominates(ANode::Ptr f,ANode::Ptr s) {
+      auto fp = static_cast<const Node<ST>*>(f.get());
+      auto sp = static_cast<const Node<ST>*>(s.get());
+      return _sdom(fp->get(),sp->get());
+   }
 public:
-   DD(std::function<ST()> sti,IBL2 stt,LGF lgf,STF stf,STC stc,SMF smf,EQSink eqs,const GNSet& labels)
+   DD(std::function<ST()> sti,IBL2 stt,LGF lgf,STF stf,STC stc,SMF smf,
+      EQSink eqs,const GNSet& labels,SDOM dom=nullptr)
       : AbstractDD(labels),
         _sti(sti),
         _stt(stt),
@@ -417,8 +429,8 @@ public:
         _stc(stc),
         _smf(smf),
         _eqs(eqs),
+        _sdom(dom),
         _nmap(_mem,200000),
-        //_nmap(_mem,1024),
         _ndId(0)
    {
       _baseline = _mem->mark();
@@ -439,7 +451,7 @@ public:
       //os << std::endl;
    }
    AbstractDD::Ptr duplicate() {
-      return AbstractDD::Ptr(new DD(_sti,_stt,_lgf,_stf,_stc,_smf,_eqs,_labels));
+      return AbstractDD::Ptr(new DD(_sti,_stt,_lgf,_stf,_stc,_smf,_eqs,_labels,_sdom));
    }
    ANode::Ptr duplicate(const ANode::Ptr src) {
       Node<ST>* at = nullptr;
