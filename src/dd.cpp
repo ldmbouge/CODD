@@ -217,7 +217,7 @@ void AbstractDD::computeBest(const std::string m)
 #ifndef _NDEBUG     
    std::cout << '\t' << m << " B@SINK:" << _trg->getBound() << "\tLBL:[";
    for(auto l : _trg->_optLabels)
-      std::cout << l;
+      std::cout << l << " "; 
    std::cout << "]" << std::endl;
 #endif   
 }
@@ -576,7 +576,7 @@ void Relaxed::compute()
    qn.enQueue(root);
    while (!qn.empty()) {
       auto lk = qn.pullLayer();
-
+      //std::cout << lk.size() << " " << std::flush;
       for(auto p : lk) { // loop over layer lk. p is a "parent" node.
          auto remLabels = remainingLabels(p);
          for(auto l : remLabels) {

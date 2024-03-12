@@ -111,8 +111,8 @@ int main(int argc,char* argv[])
       return SKS {I,0};
    };
    const auto lgf = [weight](const SKS& s) {
-      //auto r = Range::close(s.c >= weight[s.n],0);
-      auto r = Range::close(0,s.c >= weight[s.n]);
+      auto r = Range::close(s.c >= weight[s.n],0);
+      //auto r = Range::close(0,s.c >= weight[s.n]);
       return r;
    };
    const auto stf = [I,weight](const SKS& s,const int label) -> std::optional<SKS> {
@@ -126,9 +126,9 @@ int main(int argc,char* argv[])
    const auto scf = [profit](const SKS& s,int label) { // partial cost function 
       return profit[s.n] * label;
    };
-   const auto smf = [](const SKS& s1,const SKS& s2) -> std::optional<SKS> {
-      if (s1.n == s2.n) 
-         return SKS { s1.n,std::max(s1.c,s2.c) };       
+   const auto smf = [capa](const SKS& s1,const SKS& s2) -> std::optional<SKS> {
+      if (abs(s1.c - s2.c) <= (2 * capa)/100) 
+         return SKS { std::max(s1.n,s2.n),std::max(s1.c,s2.c) };       
       else return std::nullopt; // return  the empty optional
    };
    const auto sEq = [I](const SKS& s) -> bool {
