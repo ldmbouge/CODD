@@ -135,8 +135,7 @@ int main(int argc,char* argv[])
       return s.n == I;
    };
    const auto sDom = [](const SKS& a,const SKS& b) -> bool {
-      bool rv =  a.c >= b.c;
-      return rv;
+      return  a.c >= b.c;
    };
    
    BAndB engine(DD<SKS,std::greater<double>, // to maximize               
