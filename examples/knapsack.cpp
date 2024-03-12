@@ -55,12 +55,13 @@ Instance readFile(const char* fName)
    while (!f.eof()) {
       if (f.eof()) break;
       int p,w;
-      if (count >= i.I) break;
       f >> p >> w;
+      if (count++ >= i.I) break;
       i.profit.push_back(p);
       i.weight.push_back(w);
    }
    f.close();
+   std::cout << i.profit << "\n";
    return i;
 }
 

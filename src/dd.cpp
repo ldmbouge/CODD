@@ -258,7 +258,7 @@ void AbstractDD::computeBestBackward(const std::string m)
       }
    }
 #ifndef _NDEBUG     
-   std::cout << '\t' << m << " B@ROOT:" << _trg->getBackwardBound() << std::endl;
+   std::cout << '\t' << m << " BB@ROOT:" << _root->getBackwardBound() << " B@SINK:" << _trg->getBound() << std::endl;
 #endif   
 }
 
