@@ -81,6 +81,7 @@ public:
    virtual void update(Bounds& bnds) const = 0;
    virtual void printNode(std::ostream& os,ANode::Ptr n) const = 0;
    virtual Range getLabels(ANode::Ptr src) const = 0;
+   virtual unsigned getLastId() const noexcept = 0;
    double currentOpt() const { return _trg->getBound();}
    std::vector<int> incumbent();
    void compute();
@@ -476,6 +477,7 @@ public:
          return nn;
       }
    }
+   unsigned getLastId() const noexcept { return _ndId;}
    void reset() {
       _ndId = 0;
       _nmap.doOnAll([](Node<ST>* np) {

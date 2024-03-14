@@ -649,7 +649,11 @@ std::vector<ANode::Ptr> Relaxed::computeCutSet()
    std::vector<ANode::Ptr> cs = {};
    auto mark = _dd->_mem->mark();
    CQueue<ANode::Ptr> qn(32);
+   auto idSZ = _dd->getLastId() + 1;
+   bool* inQueue = new (_dd->_mem) bool[idSZ];
+   memset(inQueue,0,sizeof(bool)*idSZ);
    qn.enQueue(_dd->_root);
+   inQueue[_dd->_root->getId()] = true;
    while (qn.size() > 0) {
       auto cur = qn.deQueue();
       if (cur->isExact()) {
@@ -658,7 +662,10 @@ std::vector<ANode::Ptr> Relaxed::computeCutSet()
             akExact = (*ki)->_to->isExact();
          if (akExact) {
             for(auto ki = cur->beginKids(); akExact && ki != cur->endKids();ki++) {
-               qn.enQueue((*ki)->_to);
+               if (!inQueue[(*ki)->_to->getId()]) {
+                  qn.enQueue((*ki)->_to);
+                  inQueue[(*ki)->_to->getId()] = true;
+               }
             }
          } else cs.push_back(cur);
       }
