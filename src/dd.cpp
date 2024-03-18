@@ -68,7 +68,6 @@ bool AbstractDD::apply(ANode::Ptr from,Bounds& bnds)
    return isBetterValue;
 }
 
-
 std::vector<int> AbstractDD::incumbent()
 {
    std::vector<int> inc {};
@@ -370,13 +369,13 @@ void Restricted::truncate(NDArray& layer)
    layer.eraseSuffix(from);
 }
 
-bool Restricted::checkDominance(CQueue<ANode::Ptr>& qn,ANode::Ptr n,double nObj)
+ANode::Ptr Restricted::checkDominance(CQueue<ANode::Ptr>& qn,ANode::Ptr n,double nObj)
 {
-   bool rv = qn.foldl([theDD = _dd,nObj,n](bool acc,ANode::Ptr o) {
+   auto rv = qn.foldl([theDD = _dd,nObj,n](ANode::Ptr acc,ANode::Ptr o) {
       const bool objDom = theDD->isBetterEQ(o->getBound(),nObj);
       const bool stateDom = theDD->dominates(o,n);
-      return acc || (objDom && stateDom);
-   },false);
+      return (objDom && stateDom) ? o : acc;
+   },nullptr);
    return rv;
 }
 
@@ -397,14 +396,15 @@ void Restricted::compute()
          for(auto l : remLabels) {
             auto child = _dd->transition(p,l); // we get back a new node, or an already existing one.
             if (child) {
-               const bool newNode = child->nbParents()==0; // is this a newly created node?
+               bool newNode = child->nbParents()==0; // is this a newly created node?
                auto theCost = _dd->cost(p,l);
                auto ep = p->getBound() + theCost;
                if (hasDom && newNode) {
-                  bool isDominated = checkDominance(qn,child,ep);
-                  if (isDominated) {
+                  auto dominator = checkDominance(qn,child,ep);
+                  if (dominator) {
                      _dd->_an.pop_back();
-                     continue;
+                     child = dominator;
+                     newNode = false;
                   }
                }               
                Edge::Ptr e = new (_dd->_mem) Edge(p,child,l);
@@ -563,15 +563,15 @@ public:
             _rest.push_back(n);         
       }
    }
-   bool checkDominance(ANode::Ptr n,double nObj) {
+   ANode::Ptr checkDominance(ANode::Ptr n,double nObj) {
       AbstractDD* theDD = _dd.theDD();
       for(const auto& o : _next) {
          const bool objDom = theDD->isBetterEQ(o->getBound(),nObj);
          const bool stateDom = theDD->dominates(o,n);
          if (objDom && stateDom) 
-            return true;                     
+            return o;
       }
-      return false;
+      return nullptr;
    }
    bool empty() const noexcept {
       return size() == 0;
@@ -620,16 +620,19 @@ void Relaxed::compute()
          for(auto l : remLabels) {
             auto child = _dd->transition(p,l); // we get back a new node, or an already existing one.
             if (child) {
-               const bool newNode = child->nbParents()==0; // is this a newly created node?
+               bool newNode = child->nbParents()==0; // is this a newly created node?
                auto theCost = _dd->cost(p,l);
                auto ep = p->getBound() + theCost;
                if (hasDom && newNode) {
-                  bool isDominated = qn.checkDominance(child,ep);
-                  if (isDominated) {
+                  auto dominator = qn.checkDominance(child,ep);
+                  if (dominator) {
                      // ANode::Ptr justAdded = _dd->_an.back();
                      // assert(justAdded == child);
+                     //std::cout << "relaxed -> dominated!\n"; 
                      _dd->_an.pop_back();
-                     continue;
+                     child = dominator;
+                     newNode = false;
+                     //continue;
                   }
                }               
                Edge::Ptr e = new (_dd->_mem) Edge(p,child,l);
