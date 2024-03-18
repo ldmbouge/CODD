@@ -75,6 +75,7 @@ public:
    virtual double initialBest() const = 0;
    virtual double initialWorst() const = 0;
    virtual bool   isBetter(double obj1,double obj2) const = 0;
+   virtual bool   isBetterEQ(double obj1,double obj2) const = 0;
    virtual double better(double obj1,double obj2) const = 0;
    virtual bool hasDominance() const noexcept = 0;
    virtual bool dominates(ANode::Ptr f,ANode::Ptr s) = 0;
@@ -83,6 +84,7 @@ public:
    virtual Range getLabels(ANode::Ptr src) const = 0;
    virtual unsigned getLastId() const noexcept = 0;
    double currentOpt() const { return _trg->getBound();}
+   bool apply(ANode::Ptr from,Bounds& bnds);
    std::vector<int> incumbent();
    void compute();
    std::vector<ANode::Ptr> computeCutSet();
@@ -258,7 +260,7 @@ public:
    const std::string getName() const { return "Restricted";}
    void compute();
    bool primal() const { return true;}
-   bool checkDominance(CQueue<ANode::Ptr>& qn,ANode::Ptr n,double nObj);
+   ANode::Ptr checkDominance(CQueue<ANode::Ptr>& qn,ANode::Ptr n,double nObj);
 };
 
 
@@ -319,6 +321,9 @@ private:
    bool   isBetter(double obj1,double obj2) const {
       return Compare{}(obj1,obj2);
    }
+   bool   isBetterEQ(double obj1,double obj2) const noexcept {
+      return Compare{}(obj1+1,obj2);
+   }
    double better(double obj1,double obj2) const {
       return Compare{}(obj1,obj2) ? obj1 : obj2;
    }
@@ -364,6 +369,7 @@ private:
       }
    }
    void makeInitFrom(ANode::Ptr src) {
+      reset();
       _initClosure = [theRoot = duplicate(src)]() {
          return theRoot;
       };
