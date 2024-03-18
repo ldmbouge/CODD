@@ -16,13 +16,17 @@
 class Strategy;
 class AbstractDD;
 
+typedef std::function<void(const std::vector<int>&)> SolutionCB;
+
 class Bounds {
    double _primal;
    std::vector<int> _inc;
-   std::function<void(const std::vector<int>&)> _checker;
+   std::list<SolutionCB> _checker;
 public:
    Bounds() {}
-   Bounds(std::function<void(const std::vector<int>&)> checker) : _checker(checker) {}
+   Bounds(SolutionCB checker)  {
+      _checker.push_back(checker);
+   }  
    Bounds(std::shared_ptr<AbstractDD> dd);
    void attach(std::shared_ptr<AbstractDD> dd);
    void setPrimal(double p) { _primal = p;}
@@ -31,8 +35,11 @@ public:
       _inc.clear();
       for(auto it = begin;it != end;it++)
          _inc.push_back(*it);
-      if (_checker)
-         _checker(_inc);
+      for(const auto& f : _checker)
+         f(_inc);
+   }
+   void onSolution(SolutionCB cb) {
+      _checker.push_back(cb);
    }
    friend std::ostream& operator<<(std::ostream& os,const Bounds& b) {
       return os << "<P:" << b._primal << /* "," << " D:" << b._dual << */ ", INC:" << b._inc << ">";
@@ -365,12 +372,12 @@ private:
       if (_strat->primal())  {
          bnds.setPrimal(DD::better(_trg->getBound(),bnds.getPrimal()));
          bnds.setIncumbent(_trg->beginOptLabels(),_trg->endOptLabels());
-         std::cout << "P TIGHEN: " << bnds << "\n";
+         std::cout << "P TIGHTEN: " << bnds << "\n";
       }
       else if (_strat->dual() && _exact) {
          bnds.setPrimal(DD::better(_trg->getBound(),bnds.getPrimal()));
          bnds.setIncumbent(_trg->beginOptLabels(),_trg->endOptLabels());
-         std::cout << "D TIGHEN: " << bnds << "\n";
+         std::cout << "D TIGHTEN: " << bnds << "\n";
       }
    }
    ANode::Ptr makeNode(ST&& state,bool pExact = true) {

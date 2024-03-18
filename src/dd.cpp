@@ -30,7 +30,7 @@ AbstractDD::AbstractDD(const GNSet& labels)
 
 AbstractDD::~AbstractDD()
 {
-   std::cout << "AbstractDD::~AbstractDD(" << this << ")\n";
+   //std::cout << "AbstractDD::~AbstractDD(" << this << ")\n";
    delete _mem;
 }
 
