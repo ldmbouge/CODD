@@ -37,6 +37,7 @@ public:
          return os << "<" << l._p << ":" << l._val << ">";
       }
    };
+   typedef Location LocType;
 private:
    Pool::Ptr     _pool; // where memory comes from
    Location**    _data; // location pointers
@@ -70,6 +71,18 @@ private:
       _mxs = newSize;
       _data = nd;
    }
+   void sendToRoot(int p) noexcept {
+      while(p>0) {
+         int gp = p / 2;
+         if (gp) {
+            std::swap(_data[p],_data[gp]);
+            _data[p]->_p = p;
+            _data[gp]->_p = gp;
+         }
+         p = gp;
+      }
+   }
+
    void refloat(int p) noexcept {
       while(p>0) {
          int l = p * 2,r = p * 2 + 1;
@@ -138,6 +151,10 @@ public:
    void decrease(Location* at) {
       at->_val--;
       refloat(at->_p);
+   }
+   T remove(Location* at) {      
+      sendToRoot(at->_p);
+      return extractMax();
    }
    const Location* insertHeap(const T& v) noexcept {
       auto loc = insert(v);
