@@ -96,7 +96,7 @@ int main()
 
    std::cout << "exact\n"; 
    auto myxDD = DD<MISP,
-                   std::greater<double>, // to maximize
+                   Maximize<double>, // to maximize
                    //decltype(myInit), 
                    decltype(myTarget), // MISP(*)(),
                    decltype(lgf),
@@ -111,7 +111,7 @@ int main()
    std::cout << myxDD->incumbent() << std::endl;
    
    
-   BAndB engine(DD<MISP,std::greater<double>, // to maximize
+   BAndB engine(DD<MISP,Maximize<double>, // to maximize
                 //decltype(myInit), 
                 decltype(myTarget), // MISP(*)(),
                 decltype(lgf),

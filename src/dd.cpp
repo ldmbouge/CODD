@@ -58,6 +58,17 @@ void AbstractDD::compute()
    computeBestBackward(_strat->getName());
 }
 
+bool AbstractDD::apply(ANode::Ptr from,Bounds& bnds)
+{
+   makeInitFrom(from);
+   compute();      
+   bool isBetterValue = isBetter(currentOpt(),bnds.getPrimal());
+   if (isBetterValue) 
+      update(bnds);
+   return isBetterValue;
+}
+
+
 std::vector<int> AbstractDD::incumbent()
 {
    std::vector<int> inc {};
@@ -362,7 +373,7 @@ void Restricted::truncate(NDArray& layer)
 bool Restricted::checkDominance(CQueue<ANode::Ptr>& qn,ANode::Ptr n,double nObj)
 {
    bool rv = qn.foldl([theDD = _dd,nObj,n](bool acc,ANode::Ptr o) {
-      const bool objDom = theDD->isBetter(o->getBound(),nObj);
+      const bool objDom = theDD->isBetterEQ(o->getBound(),nObj);
       const bool stateDom = theDD->dominates(o,n);
       return acc || (objDom && stateDom);
    },false);
@@ -540,9 +551,7 @@ public:
       else {
          if (_next.front()->getLayer() == n->getLayer()) {
             insertInNext(n);
-            //eager currently disabled. It seems to cause an issue with knapsack (loose optimality)
-            //and it's not -yet- clear why.            
-            if (0 && _next.size() > 2 *  _dd.getWidth()) {
+            if (0 && _next.size() > 2 *  _dd.getWidth()) { // eager is not a clear gain.
                _next.sort([dd = _dd.theDD()](const ANode::Ptr& a,const ANode::Ptr& b) {
                   return !dd->isBetter(a->getBound(),b->getBound());
                });
@@ -557,7 +566,7 @@ public:
    bool checkDominance(ANode::Ptr n,double nObj) {
       AbstractDD* theDD = _dd.theDD();
       for(const auto& o : _next) {
-         const bool objDom = theDD->isBetter(o->getBound(),nObj);
+         const bool objDom = theDD->isBetterEQ(o->getBound(),nObj);
          const bool stateDom = theDD->dominates(o,n);
          if (objDom && stateDom) 
             return true;                     

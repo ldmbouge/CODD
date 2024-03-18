@@ -138,7 +138,7 @@ int main(int argc,char* argv[])
       return  a.c >= b.c;
    };
    
-   BAndB engine(DD<SKS,std::greater<double>, // to maximize               
+   BAndB engine(DD<SKS,Maximize<double>, // to maximize               
                 decltype(target),
                 decltype(lgf),
                 decltype(stf),
