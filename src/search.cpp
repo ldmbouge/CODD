@@ -41,25 +41,13 @@ void BAndB::search(Bounds& bnds)
       _theDD->printNode(cout,bbn.node);
       cout << "\t(" << bbn.bound << ")" << " SZ:" << pq.size() << endl;
 #endif
-      //nNode++;
       if (!_theDD->isBetter(bbn.bound,bnds.getPrimal()))
          continue;
       nNode++;
-      relaxed->reset();
-      relaxed->makeInitFrom(bbn.node);
-      relaxed->compute();
-      
-      bool dualBetter = _theDD->isBetter(relaxed->currentOpt(),bnds.getPrimal());
-      if (dualBetter) {
-         relaxed->update(bnds);
-         restricted->reset();
-         restricted->makeInitFrom(bbn.node);
-         restricted->compute();
-         //std::cout << "R" << std::flush;
-
-         bool primalBetter = _theDD->isBetter(restricted->currentOpt(),bnds.getPrimal());
-         if (primalBetter)
-            restricted->update(bnds);
+      bool dualBetter = relaxed->apply(bbn.node,bnds);
+      if (dualBetter) {         
+         bool primalBetter = restricted->apply(bbn.node,bnds);
+         
          if (!restricted->isExact() && !relaxed->isExact()) {
             for(auto n : relaxed->computeCutSet()) {
                auto nd = _theDD->duplicate(n); // we got a duplicate of the node.
@@ -69,7 +57,35 @@ void BAndB::search(Bounds& bnds)
                }
                // use the bound in n (the ones in nd are _reset_ when duplicate occurs????)
                assert(nd->getBound() == n->getBound());
-               pq.insertHeap(QNode {nd, n->getBound()+n->getBackwardBound()});
+               bool newGuyDominated = false;
+               if (0 && _theDD->hasDominance()) {
+                  unsigned d = 0;
+                  auto pqSz = pq.size();
+                  auto allLocs = new Heap<QNode,decltype(hOrder)>::LocType*[pqSz];
+                  for(unsigned k = 0;k < pqSz;k++) {
+                     auto bbn = pq[k];
+                     bool isObjDom   = _theDD->isBetter(bbn->value().node->getBound(),nd->getBound());
+                     bool isStateDom = _theDD->dominates(bbn->value().node,nd);
+                     newGuyDominated = isObjDom && isStateDom;
+                     if (newGuyDominated)
+                        break;
+                     bool objDom   = _theDD->isBetter(nd->getBound(),bbn->value().node->getBound());
+                     bool stateDom = _theDD->dominates(nd,bbn->value().node);
+                     bool qnDominated = objDom && stateDom;
+                     if (qnDominated)
+                        allLocs[d++] = bbn;
+                  }
+                  if (d) {
+                     //std::cout << "new BBNode Dominated " << d << " BB nodes" << std::endl;
+                     // for(auto i =0u; i < d;i++) 
+                     //    pq.remove(allLocs[i]);                    
+                  }
+                  delete[]allLocs;
+                  // if (newGuyDominated)
+                  //    std::cout << "new guy is dominated by a queue node! Don't add " << d << "\n";
+               }
+               //if (!newGuyDominated)
+                  pq.insertHeap(QNode {nd, n->getBound()+n->getBackwardBound()});
                // std::cout << "PQ+:";
                // relaxed->printNode(std::cout,nd);
                // std::cout << "KEY:" << n->getBound()+n->getBackwardBound() << "\n";
