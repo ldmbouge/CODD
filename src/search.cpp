@@ -42,6 +42,8 @@ void BAndB::search(Bounds& bnds)
    unsigned nNode = 0,ttlNode = 0,insDom=0,pruned=0;
    while(!pq.empty()) {
       auto bbn = pq.extractMax();
+      if (_timeLimit && _timeLimit(RuntimeMonitor::elapsedSince(start)))
+         break;
 #ifndef _NDEBUG     
       cout << "BOUNDS NOW: " << bnds << endl;
       cout << "EXTRACTED:  " << bbn.node->getId() << " ::: ";
@@ -100,7 +102,9 @@ void BAndB::search(Bounds& bnds)
    auto spent = RuntimeMonitor::elapsedSince(start);
    cout << "Done(" << _mxw << "):" << bnds.getPrimal() << "\t #nodes:" <<  nNode << "/" << ttlNode
         << "\t P/D:" << pruned << "/" << insDom
-        << "\t Time:" << optTime << "/" << spent << "ms\n";
+        << "\t Time:" << optTime << "/" << spent << "ms"
+        << "\t LIM?:" << (pq.size() > 0)
+        << "\n";
 }
 
 

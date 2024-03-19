@@ -2,13 +2,16 @@
 #define __SEARCH_HPP__
 
 #include "dd.hpp"
+#include <functional>
 
 class BAndB {
    AbstractDD::Ptr _theDD;
    const unsigned  _mxw;
+   std::function<bool(double)> _timeLimit;
 public:
-   BAndB(AbstractDD::Ptr dd,const unsigned width) : _theDD(dd),_mxw(width) {}
+   BAndB(AbstractDD::Ptr dd,const unsigned width) : _theDD(dd),_mxw(width),_timeLimit(nullptr) {}
    void search(Bounds& bnds);
+   void setTimeLimit(std::function<bool(double)> lim) { _timeLimit = lim;}
 };  
 
 #endif

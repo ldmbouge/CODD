@@ -173,7 +173,7 @@ int main(int argc,char* argv[])
    
    if (UB < 0) UB = K;
    std::cout << "upper bound is " << UB << "\n";
-   Bounds bnds([&es](const std::vector<int>& inc)  {
+   Bounds bnds([&es,K](const std::vector<int>& inc)  {
       bool aOk = true;
       for(const auto& e : es) {
          if (inc[e.a] == inc[e.b]) {
@@ -183,6 +183,12 @@ int main(int argc,char* argv[])
             std::cin >> ch;
          }
       }
+      std::map<int,int> h;
+      for(int v = 0;v < K;v++) 
+         h[inc[v]] = h.contains(inc[v]) ? h[inc[v]] + 1 : 1;
+      for(const auto& e : h) 
+         std::cout << "(" << e.first << " : " << e.second << ") ";
+      std::cout << "\n";
       std::cout << "CHECKER is " << aOk << "\n";
    });
    // [LDM] : changed labels to go to UB (rather than K) (halved the runtime)a
@@ -240,6 +246,7 @@ int main(int argc,char* argv[])
                 decltype(smf),
                 decltype(eqs)
                 >::makeDD(init,target,lgf,stf,scf,smf,eqs,labels),w);
+   engine.setTimeLimit([](double elapsed) { return elapsed >= 60000;});
    engine.search(bnds);
    return 0;
 }
