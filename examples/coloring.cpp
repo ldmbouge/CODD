@@ -116,31 +116,31 @@ Instance readPyFile(const char* fName, int& ub)
       if (f.eof()) break;
       switch(c) {
          case 'N': {
-	    string w;
-	    f >> w; // read '='
+            string w;
+            f >> w; // read '='
             f >> i.nv;
          }break;
          case 'E': {
             string w;
-            f >> w; // read '='
-            f >> w; // read '{'
             char tmp, last;
-	    int u, v;
-	    while (last != '}') {
-	      f >> tmp >> u >> tmp >> v >> tmp >> last;
-	      GE edge;
-	      edge.a = u, edge.b = v;
-              std::cout << edge << "\n";
-              assert(edge.a >=0);
-              assert(edge.b >=0);
-              i.edges.insert(edge);
-	      nbe++;
-	    }
+            f >> w;    // read '='
+            f >> last; // read '{'
+            while (last != '}') {
+               int u, v;
+               f >> tmp >> u >> tmp >> v >> tmp >> last;
+               GE edge;
+               edge.a = u, edge.b = v;
+               std::cout << edge << "\n";
+               assert(edge.a >=0);
+               assert(edge.b >=0);
+               i.edges.insert(edge);
+               nbe++;
+            }
          }break;
          case 'K': {
             string w;
-	    f >> w;
-	    f >> ub;
+            f >> w;
+            f >> ub;
          }break;
       }
    }
@@ -159,6 +159,7 @@ int main(int argc,char* argv[])
    const char* fName = argv[1];
    const int w = argc==3 ? atoi(argv[2]) : 64;
    int UB = -1;
+   std::cout << "FILE:" << fName << "\n";
    //Instance instance = readFile(fName);
    Instance instance = readPyFile(fName, UB);
    std::cout << "read instance:" << instance.nv << " " << instance.ne << "\n";
@@ -169,6 +170,7 @@ int main(int argc,char* argv[])
    const std::set<GE> es = instance.edges;
    const FArray adj = instance.adj;
    const int K = ns.size();
+   
    if (UB < 0) UB = K;
    std::cout << "upper bound is " << UB << "\n";
    Bounds bnds([&es](const std::vector<int>& inc)  {
