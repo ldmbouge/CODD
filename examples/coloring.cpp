@@ -185,7 +185,8 @@ int main(int argc,char* argv[])
       }
       std::cout << "CHECKER is " << aOk << "\n";
    });
-   const auto labels = setFrom(std::views::iota(1,K+1));     // using a plain set for the labels
+   // [LDM] : changed labels to go to UB (rather than K) (halved the runtime)a
+   const auto labels = setFrom(std::views::iota(1,UB+1));     // using a plain set for the labels
    const auto init = [ns,labels]() {   // The root state
       Legal A(ns.size(), labels);      
       return COLOR { std::move(A),0,0 };
