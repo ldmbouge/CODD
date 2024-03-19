@@ -104,6 +104,52 @@ Instance readFile(const char* fName)
    return i;
 }
 
+Instance readPyFile(const char* fName, int& ub)
+{
+   Instance i;
+   using namespace std;
+   int nbe = 0;
+   ifstream f(fName);
+   while (!f.eof()) {
+      char c;
+      f >> c;
+      if (f.eof()) break;
+      switch(c) {
+         case 'N': {
+	    string w;
+	    f >> w; // read '='
+            f >> i.nv;
+         }break;
+         case 'E': {
+            string w;
+            f >> w; // read '='
+            f >> w; // read '{'
+            char tmp, last;
+	    int u, v;
+	    while (last != '}') {
+	      f >> tmp >> u >> tmp >> v >> tmp >> last;
+	      GE edge;
+	      edge.a = u, edge.b = v;
+              std::cout << edge << "\n";
+              assert(edge.a >=0);
+              assert(edge.b >=0);
+              i.edges.insert(edge);
+	      nbe++;
+	    }
+         }break;
+         case 'K': {
+            string w;
+	    f >> w;
+	    f >> ub;
+         }break;
+      }
+   }
+   i.ne = nbe;
+   f.close();
+   i.convert();
+   return i;
+}
+
 int main(int argc,char* argv[])
 {
    if (argc < 2) {
@@ -112,7 +158,9 @@ int main(int argc,char* argv[])
    }
    const char* fName = argv[1];
    const int w = argc==3 ? atoi(argv[2]) : 64;
-   Instance instance = readFile(fName);
+   int UB = -1;
+   //Instance instance = readFile(fName);
+   Instance instance = readPyFile(fName, UB);
    std::cout << "read instance:" << instance.nv << " " << instance.ne << "\n";
    std::cout << instance.edges << "\n";
    std::cout << "Width=" << w << "\n";
@@ -121,6 +169,8 @@ int main(int argc,char* argv[])
    const std::set<GE> es = instance.edges;
    const FArray adj = instance.adj;
    const int K = ns.size();
+   if (UB < 0) UB = K;
+   std::cout << "upper bound is " << UB << "\n";
    Bounds bnds([&es](const std::vector<int>& inc)  {
       bool aOk = true;
       for(const auto& e : es) {
