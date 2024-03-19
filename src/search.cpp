@@ -4,6 +4,7 @@
 #include <iostream>
 #include <iomanip>
 #include <unistd.h>
+#include "RuntimeMonitor.hpp"
 
 struct QNode {
    ANode::Ptr node;
@@ -19,8 +20,14 @@ void BAndB::search(Bounds& bnds)
 {
    Pool mem;
    using namespace std;
+   auto start = RuntimeMonitor::cputime();
    cout << "B&B searching..." << endl;
    bnds.attach(_theDD);
+   double optTime = 0.0;
+   bnds.onSolution([start,&optTime](const auto& lbls) {
+      optTime = RuntimeMonitor::elapsedSince(start);
+      std::cout << "TIME:" << optTime << "\n";
+   });
    AbstractDD::Ptr relaxed = _theDD->duplicate();
    AbstractDD::Ptr restricted = _theDD->duplicate();
    WidthBounded* ddr[2];
@@ -32,7 +39,7 @@ void BAndB::search(Bounds& bnds)
    };
    Heap<QNode,decltype(hOrder)> pq(&mem,64000,hOrder);   
    pq.insertHeap(QNode { _theDD->init(), _theDD->initialWorst() } );
-   unsigned nNode = 0;
+   unsigned nNode = 0,ttlNode = 0,insDom=0,pruned=0;
    while(!pq.empty()) {
       auto bbn = pq.extractMax();
 #ifndef _NDEBUG     
@@ -41,43 +48,59 @@ void BAndB::search(Bounds& bnds)
       _theDD->printNode(cout,bbn.node);
       cout << "\t(" << bbn.bound << ")" << " SZ:" << pq.size() << endl;
 #endif
-      //nNode++;
+      ttlNode++;
       if (!_theDD->isBetter(bbn.bound,bnds.getPrimal()))
          continue;
       nNode++;
-      relaxed->reset();
-      relaxed->makeInitFrom(bbn.node);
-      relaxed->compute();
-      
-      bool dualBetter = _theDD->isBetter(relaxed->currentOpt(),bnds.getPrimal());
-      if (dualBetter) {
-         relaxed->update(bnds);
-         restricted->reset();
-         restricted->makeInitFrom(bbn.node);
-         restricted->compute();
-         //std::cout << "R" << std::flush;
-
-         bool primalBetter = _theDD->isBetter(restricted->currentOpt(),bnds.getPrimal());
-         if (primalBetter)
-            restricted->update(bnds);
+      bool dualBetter = relaxed->apply(bbn.node,bnds);
+      if (dualBetter) {         
+         bool primalBetter = restricted->apply(bbn.node,bnds);
+         
          if (!restricted->isExact() && !relaxed->isExact()) {
             for(auto n : relaxed->computeCutSet()) {
-               auto nd = _theDD->duplicate(n); // we got a duplicate of the node.
                if (n == relaxed->getRoot()) { // the cutset is the root. Only way out: increase width.
                   for(auto i=0u;i < sizeof(ddr)/sizeof(WidthBounded*);i++)
                      ddr[i]->setWidth(ddr[i]->getWidth() + 1);
                }
                // use the bound in n (the ones in nd are _reset_ when duplicate occurs????)
-               assert(nd->getBound() == n->getBound());
-               pq.insertHeap(QNode {nd, n->getBound()+n->getBackwardBound()});
-               // std::cout << "PQ+:";
-               // relaxed->printNode(std::cout,nd);
-               // std::cout << "KEY:" << n->getBound()+n->getBackwardBound() << "\n";
+               bool newGuyDominated = false;
+               if (_theDD->hasDominance()) {
+                  unsigned d = 0;
+                  auto pqSz = pq.size();
+                  auto allLocs = new Heap<QNode,decltype(hOrder)>::LocType*[pqSz];
+                  for(unsigned k = 0;k < pqSz;k++) {
+                     auto bbn = pq[k];
+                     bool isObjDom   = _theDD->isBetterEQ(bbn->value().node->getBound(),n->getBound());
+                     newGuyDominated = isObjDom && _theDD->dominates(bbn->value().node,n);
+                     if (newGuyDominated)
+                        break;                     
+                     bool objDom   = _theDD->isBetterEQ(n->getBound(),bbn->value().node->getBound());
+                     bool qnDominated = objDom && _theDD->dominates(n,bbn->value().node);
+                     if (qnDominated)
+                        allLocs[d++] = bbn;
+                  }
+                  if (d) {
+                     //std::cout << "new BBNode Dominated " << d << " BB nodes" << std::endl;
+                     for(auto i =0u; i < d;i++) 
+                        pq.remove(allLocs[i]);
+                     pruned += d;
+                  }
+                  delete[]allLocs;
+               }
+               if (!newGuyDominated) {
+                  auto nd = _theDD->duplicate(n); // we got a duplicate of the node.
+                  assert(nd->getBound() == n->getBound());
+                  pq.insertHeap(QNode {nd, n->getBound()+n->getBackwardBound()});
+               }
+               else insDom++;
             }
          }
       }
    }
-   cout << "Done: " << bnds << "\t #nodes:" <<  nNode << "\n";
+   auto spent = RuntimeMonitor::elapsedSince(start);
+   cout << "Done(" << _mxw << "):" << bnds.getPrimal() << "\t #nodes:" <<  nNode << "/" << ttlNode
+        << "\t P/D:" << pruned << "/" << insDom
+        << "\t Time:" << optTime << "/" << spent << "ms\n";
 }
 
 

@@ -16,13 +16,17 @@
 class Strategy;
 class AbstractDD;
 
+typedef std::function<void(const std::vector<int>&)> SolutionCB;
+
 class Bounds {
    double _primal;
    std::vector<int> _inc;
-   std::function<void(const std::vector<int>&)> _checker;
+   std::list<SolutionCB> _checker;
 public:
    Bounds() {}
-   Bounds(std::function<void(const std::vector<int>&)> checker) : _checker(checker) {}
+   Bounds(SolutionCB checker)  {
+      _checker.push_back(checker);
+   }  
    Bounds(std::shared_ptr<AbstractDD> dd);
    void attach(std::shared_ptr<AbstractDD> dd);
    void setPrimal(double p) { _primal = p;}
@@ -31,8 +35,11 @@ public:
       _inc.clear();
       for(auto it = begin;it != end;it++)
          _inc.push_back(*it);
-      if (_checker)
-         _checker(_inc);
+      for(const auto& f : _checker)
+         f(_inc);
+   }
+   void onSolution(SolutionCB cb) {
+      _checker.push_back(cb);
    }
    friend std::ostream& operator<<(std::ostream& os,const Bounds& b) {
       return os << "<P:" << b._primal << /* "," << " D:" << b._dual << */ ", INC:" << b._inc << ">";
@@ -75,6 +82,7 @@ public:
    virtual double initialBest() const = 0;
    virtual double initialWorst() const = 0;
    virtual bool   isBetter(double obj1,double obj2) const = 0;
+   virtual bool   isBetterEQ(double obj1,double obj2) const = 0;
    virtual double better(double obj1,double obj2) const = 0;
    virtual bool hasDominance() const noexcept = 0;
    virtual bool dominates(ANode::Ptr f,ANode::Ptr s) = 0;
@@ -83,6 +91,7 @@ public:
    virtual Range getLabels(ANode::Ptr src) const = 0;
    virtual unsigned getLastId() const noexcept = 0;
    double currentOpt() const { return _trg->getBound();}
+   bool apply(ANode::Ptr from,Bounds& bnds);
    std::vector<int> incumbent();
    void compute();
    std::vector<ANode::Ptr> computeCutSet();
@@ -258,7 +267,7 @@ public:
    const std::string getName() const { return "Restricted";}
    void compute();
    bool primal() const { return true;}
-   bool checkDominance(CQueue<ANode::Ptr>& qn,ANode::Ptr n,double nObj);
+   ANode::Ptr checkDominance(CQueue<ANode::Ptr>& qn,ANode::Ptr n,double nObj);
 };
 
 
@@ -281,9 +290,40 @@ public:
    template <typename Fun> void mergeLayer(auto& layer,Fun f);
 };
 
+template<typename T>
+concept Comparable = requires(const T& a,const T& b)
+{
+   { (a < b) && (a > b) && (a == b) && (a <= b) && (a >= b) };
+};
+
+template <Comparable T = void>
+struct Minimize {
+   constexpr bool better( const T& lhs, const T& rhs ) const { // a =better(a,b) <=> a < b
+      return lhs < rhs;
+   }
+   constexpr bool betterEQ( const T& lhs, const T& rhs ) const { // a=betterEQ(a,b) <=> a <= b
+      return lhs <= rhs;
+   }
+   constexpr T bestValue() const noexcept { return std::numeric_limits<int>::max();}
+   constexpr T worstValue() const noexcept { return - std::numeric_limits<int>::max();}
+};
+
+
+template <Comparable T = void>
+struct Maximize {
+   constexpr bool better( const T& lhs, const T& rhs ) const { // a =better(a,b) <=> a > b
+      return lhs > rhs;
+   }
+   constexpr bool betterEQ( const T& lhs, const T& rhs ) const { // a = betterEQ(a,b) <=> a >= b
+      return lhs >= rhs;
+   }
+   constexpr T bestValue() const noexcept  { return - std::numeric_limits<int>::max();}
+   constexpr T worstValue() const noexcept { return std::numeric_limits<int>::max();}
+};
+
 
 template <typename ST,
-          class Compare = std::less<double>,
+          class Compare = Minimize<double>,
           typename IBL2 = ST(*)(),
           typename LGF  = Range(*)(const ST&),
           typename STF  = std::optional<ST>(*)(const ST&,int),
@@ -307,42 +347,37 @@ private:
    LHashtable<ST> _nmap;
    unsigned _ndId;
    std::function<ANode::Ptr()> _initClosure;
-   bool eq(ANode::Ptr f,ANode::Ptr s) const {
+   bool eq(ANode::Ptr f,ANode::Ptr s) const noexcept {
       auto fp = static_cast<const Node<ST>*>(f.get());
       auto sp = static_cast<const Node<ST>*>(s.get());
       return Equal{}(fp->get(),sp->get());
    }
-   bool eqSink(ANode::Ptr s) const {
+   bool eqSink(ANode::Ptr s) const noexcept {
       auto sp = static_cast<const Node<ST>*>(s.get());
       return _eqs(sp->get());
    }
-   bool   isBetter(double obj1,double obj2) const {
-      return Compare{}(obj1,obj2);
+   bool   isBetter(double obj1,double obj2) const noexcept {
+      return Compare{}.better(obj1,obj2);
    }
-   double better(double obj1,double obj2) const {
-      return Compare{}(obj1,obj2) ? obj1 : obj2;
+   bool   isBetterEQ(double obj1,double obj2) const noexcept {
+      return Compare{}.betterEQ(obj1,obj2);
    }
-   bool hasDominance() const noexcept { return _sdom != nullptr;}
-   double initialBest() const {
-      constexpr auto gr = std::is_same<Compare,std::greater<double>>::value;
-      auto v = gr ? -std::numeric_limits<int>::max() : std::numeric_limits<int>::max();
-      return v;
+   double better(double obj1,double obj2) const noexcept {
+      return Compare{}.better(obj1,obj2) ? obj1 : obj2;
    }
-   double initialWorst() const {
-      constexpr auto gr = std::is_same<Compare,std::greater<double>>::value;
-      auto v = !gr ? -std::numeric_limits<int>::max() : std::numeric_limits<int>::max();
-      return v;
-   }
+   bool hasDominance() const noexcept   { return _sdom != nullptr;}
+   double initialBest() const noexcept  { return Compare{}.bestValue();}
+   double initialWorst() const noexcept { return Compare{}.worstValue();}
    void update(Bounds& bnds) const {
       if (_strat->primal())  {
          bnds.setPrimal(DD::better(_trg->getBound(),bnds.getPrimal()));
          bnds.setIncumbent(_trg->beginOptLabels(),_trg->endOptLabels());
-         std::cout << "P TIGHEN: " << bnds << "\n";
+         std::cout << "P TIGHTEN: " << bnds << "\n";
       }
       else if (_strat->dual() && _exact) {
          bnds.setPrimal(DD::better(_trg->getBound(),bnds.getPrimal()));
          bnds.setIncumbent(_trg->beginOptLabels(),_trg->endOptLabels());
-         std::cout << "D TIGHEN: " << bnds << "\n";
+         std::cout << "D TIGHTEN: " << bnds << "\n";
       }
    }
    ANode::Ptr makeNode(ST&& state,bool pExact = true) {
@@ -364,6 +399,7 @@ private:
       }
    }
    void makeInitFrom(ANode::Ptr src) {
+      reset();
       _initClosure = [theRoot = duplicate(src)]() {
          return theRoot;
       };

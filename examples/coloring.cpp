@@ -178,7 +178,7 @@ int main(int argc,char* argv[])
 
    std::cout << "LABELS:" << labels << "\n";
 
-   BAndB engine(DD<COLOR,std::less<double>, // to minimize
+   BAndB engine(DD<COLOR,Minimize<double>, // to minimize
                 ///decltype(init), 
                 decltype(target),
                 decltype(lgf),

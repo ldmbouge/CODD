@@ -11,10 +11,6 @@
 #include <map>
 #include <math.h>
 
-//typedef std::set<int> GRSet;
-typedef NatSet<2> GRSet;  // 2 double-word (128 labels)
-
-
 struct SKS {
    int n;           // variable index
    int c;           // remaining capacity
@@ -44,7 +40,7 @@ struct Item {
 struct Instance {
    int I;
    int capa;
-   std::vector<Item> items;
+   Item* items;
    std::vector<int> weight;
    std::vector<int> profit;
    Instance() {}
@@ -61,22 +57,35 @@ Instance readFile(const char* fName)
    using namespace std;
    ifstream f(fName);
    f >> i.I >> i.capa;
+   i.items = new Item[i.I];
    int count = 0;
    while (!f.eof()) {
       if (f.eof()) break;
       Item k;
       f >> k.p >> k.w;
+      i.items[count] = k;
       if (count++ >= i.I) break;
-      i.items.push_back(k);
    }
    f.close();
-   std::sort(i.items.begin(),i.items.end(),[](const auto& a,const auto& b) {
-      const double ar = (a.p==0) ? INT_MAX : (a.w == 0) ? 1.0/a.p  : -((double)a.p)/((double)a.w);
-      const double br = (b.p==0) ? INT_MAX : (b.w == 0) ? 1.0/a.p  : -((double)b.p)/((double)b.w);
+   for(auto k=0;k < i.I;k++) {
+      auto ik = i.items[k];
+      std::cout << "(" << ik.w << "/" << ik.p << ")" << " ";
+      assert(ik.w != 0);
+      assert(ik.p != 0);
+   }
+   std::cout << "\n";
+   mergeSort(i.items,i.I,[](const auto& a,const auto& b) {
+      //const double ar = (a.p==0) ? INT_MAX : (a.w == 0) ? 1.0/a.p  : -((double)a.p)/((double)a.w);
+      //const double br = (b.p==0) ? INT_MAX : (b.w == 0) ? 1.0/a.p  : -((double)b.p)/((double)b.w);
+      assert(a.w != 0);
+      assert(a.p != 0);
+      const double ar = -((double)a.p)/((double)a.w);
+      const double br = -((double)b.p)/((double)b.w);
       return ar <= br;
    });
    std::cout << "Sorted by ratio... ----------------------------------------------------\n";
-   for(const auto& ik : i.items) {
+   for(auto k=0;k < i.I;k++) {
+      auto ik = i.items[k];
       i.weight.push_back(ik.w);
       i.profit.push_back(ik.p);
       std::cout << ik.w << " " << ik.p << "\n";
@@ -138,7 +147,7 @@ int main(int argc,char* argv[])
       return  a.c >= b.c;
    };
    
-   BAndB engine(DD<SKS,std::greater<double>, // to maximize               
+   BAndB engine(DD<SKS,Maximize<double>, // to maximize               
                 decltype(target),
                 decltype(lgf),
                 decltype(stf),

@@ -131,7 +131,7 @@ int main(int argc,char* argv[])
    return 0;
    */
    
-   BAndB engine(DD<SGRuler,std::less<double>, // to minimize
+   BAndB engine(DD<SGRuler,Minimize<double>, // to minimize
                 ///decltype(init), 
                 decltype(target),
                 decltype(lgf),
