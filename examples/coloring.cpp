@@ -55,14 +55,14 @@ struct Instance {
    int nv;
    int ne;
    std::set<GE> edges;
-   FArray<GNSet> adj;
+   std::vector<GNSet> adj;
    Instance() : adj(0) {}
    Instance(Instance&& i) : nv(i.nv),ne(i.ne),edges(std::move(i.edges)) {}
    GNSet vertices() {
       return setFrom(std::views::iota(0,nv+1));
    }
    void convert() {
-      adj = FArray<GNSet>(nv);
+      adj = std::vector<GNSet>(nv);
       for(const auto& e : edges) {
          adj[e.a].insert(e.b);
          adj[e.b].insert(e.a);
@@ -168,7 +168,7 @@ int main(int argc,char* argv[])
    // using STL containers for the graph
    const GNSet ns = instance.vertices();
    const std::set<GE> es = instance.edges;
-   const FArray adj = instance.adj;
+   const auto adj = instance.adj;
    const int K = ns.size();
    
    if (UB < 0) UB = K;
@@ -197,11 +197,11 @@ int main(int argc,char* argv[])
    // rather than UB+1. Or compute an actual greedy coloring at first to get an UB. For Some benchmark, that
    // would be far less than K.
    const auto labels = setFrom(std::views::iota(1,UB+1));     // using a plain set for the labels
-   const auto init = [ns,labels]() {   // The root state
-      Legal A(ns.size(), labels);      
+   const auto init = [sz=ns.size(),&labels](Pool::Ptr mem) {   // The root state
+      Legal A(mem,sz, labels);      
       return COLOR { std::move(A),0,0 };
    };
-   const auto target = [K]() {    // The sink state
+   const auto target = [K](Pool::Ptr mem) {    // The sink state
       return COLOR { Legal{},0,K};
    };
    const auto lgf = [K,&bnds](const COLOR& s) -> Range {

@@ -10,6 +10,7 @@
 #include <ranges>
 #include <bit>
 #include <assert.h>
+#include "store.hpp"
 //#if defined(__x86_64__)
 //#include <intrin.h>
 //#endif
@@ -311,11 +312,13 @@ public:
  * unionWith / interWith are O(1) (provided a constant number of words, otherwise Theta(n/64)
  */
 class GNSet {
+   Pool::Ptr _mem;
    unsigned short _mxw;
    unsigned short _nbp;
    unsigned long long *_t;
 public:
    GNSet(unsigned short nb=64) { // 64 values ... so 0 .. 63 -> 1 word (65 values -> 0..64 -> 2 words)
+      _mem = nullptr;
       _mxw = (nb >> 6) + (((nb & 63) != 0) ? 1 : 0);
       _nbp = nb;
       if (_mxw) {
@@ -323,14 +326,22 @@ public:
          for(int i=0;i<_mxw;i++) _t[i]=0;
       } else _t = nullptr;
    }
-   GNSet(const GNSet& s) {
+   GNSet(const GNSet& s) : _mem(s.pool()) {      
       _mxw = s._mxw;
       _nbp = s._nbp;
-      _t   = new unsigned long long[_mxw];
+      _t   = new (_mem) unsigned long long[_mxw];
+      for(int i=0;i<_mxw;i++)
+         _t[i] = s._t[i];
+   }
+   GNSet(Pool::Ptr mem,const GNSet& s) : _mem(mem) {      
+      _mxw = s._mxw;
+      _nbp = s._nbp;
+      _t   = new (_mem) unsigned long long[_mxw];
       for(int i=0;i<_mxw;i++)
          _t[i] = s._t[i];
    }
    GNSet(GNSet&& s) {
+      _mem = s._mem;
       _mxw = s._mxw;
       _nbp = s._nbp;
       _t = s._t;
@@ -372,14 +383,16 @@ public:
          insert(*it);
       }
    }
-   ~GNSet() {
-      if (_t) delete[] _t;
-   }
+   Pool::Ptr pool() const noexcept { return _mem;}
+   // ~GNSet() {
+   //    if (_t) delete[] _t;
+   // }
    GNSet& operator=(const GNSet& s) {
       if (s._mxw != _mxw) {
          delete[] _t;
          _mxw = s._mxw;
-         _t = new unsigned long long[_mxw];
+         _mem = s._mem;
+         _t = new (_mem) unsigned long long[_mxw];
       }
       _nbp = s._nbp;      
       for(int i=0;i<_mxw;i++)
@@ -387,7 +400,8 @@ public:
       return *this;
    }
    GNSet& operator=(GNSet&& s) {
-      if (_t) delete[] _t;      
+      if (_t) delete[] _t;
+      _mem = s._mem;
       _mxw = s._mxw;
       _nbp = s._nbp;
       _t = s._t;
@@ -532,8 +546,8 @@ public:
          hv = std::rotl(hv,2) ^ _t[i];
       return hv;
    }   
-   friend GNSet operator|(const GNSet& s1,const GNSet& s2) { return std::move(GNSet(s1).unionWith(s2));}
-   friend GNSet operator&(const GNSet& s1,const GNSet& s2) { return std::move(GNSet(s1).interWith(s2));}
+   friend GNSet operator|(const GNSet& s1,const GNSet& s2) { return std::move(GNSet(s1.pool(),s1).unionWith(s2));}
+   friend GNSet operator&(const GNSet& s1,const GNSet& s2) { return std::move(GNSet(s1.pool(),s1).interWith(s2));}
 };
 
 
@@ -642,34 +656,38 @@ GNSet setFrom(const std::ranges::iota_view<T,B>& from) {
 
 
 template <class T> class FArray {
+   Pool::Ptr     _mem;
    T*            _tab;
    std::size_t    _mx;
 public:
    FArray() : _tab(nullptr),_mx(0) {}
-   FArray(std::size_t isz) : _mx(isz) {
-      if (_mx > 0)
-         _tab = new T[_mx];
-      else _tab = nullptr;
-   }
-   FArray(std::size_t isz,const T& value) : _mx(isz) {
-      _tab = new T[_mx];
+   // FArray(std::size_t isz) : _mx(isz) {
+   //    if (_mx > 0)
+   //       _tab = new T[_mx];
+   //    else _tab = nullptr;
+   // }
+   FArray(Pool::Ptr mem,std::size_t isz,const T& value) : _mem(mem),_mx(isz) {
+      _tab = new (_mem) T[_mx];
       for(auto i=0u;i < _mx;i++)
-         _tab[i] = value;
+         _tab[i] = T(_mem,value);
    }
-   FArray(const FArray& t) : _mx(t._mx) {
-      _tab = new T[_mx];
+   FArray(const FArray& t) : _mem(t._mem),_mx(t._mx) {
+      _tab = new (_mem) T[_mx];
       for(auto i=0u;i < _mx;i++)
          _tab[i] = t._tab[i];
    }
-   FArray(FArray&& t) : _tab(t._tab),_mx(t._mx) {
+   FArray(FArray&& t) : _mem(t._mem),_tab(t._tab),_mx(t._mx) {
       t._tab = nullptr;
    }
-   ~FArray() { if (_tab) delete[] _tab;}
+   ~FArray() {
+      if (_tab) delete[] _tab;
+   }
    FArray& operator=(const FArray& t) {
       if (_mx != t._mx) {
+         _mem = t._mem;
          delete []_tab;
          _mx = t._mx;
-         _tab = new T[_mx];
+         _tab = new (_mem) T[_mx];
       }
       for(auto i=0u;i < _mx;i++)
          _tab[i] = t._tab[i];      
@@ -677,6 +695,7 @@ public:
    }
    FArray& operator=(FArray&& a) {
       if (_tab) delete[] _tab;
+      _mem = a._mem;
       _mx = a._mx;
       _tab = a._tab;
       a._tab = nullptr;

@@ -25,7 +25,7 @@ void Bounds::attach(std::shared_ptr<AbstractDD> dd)
 }
 
 AbstractDD::AbstractDD(const GNSet& labels)
-   : _mem(new Pool),_labels(labels),_exact(true)
+   : _mem(new Pool),_labels(labels.pool(),labels),_exact(true)
 {}
 
 AbstractDD::~AbstractDD()

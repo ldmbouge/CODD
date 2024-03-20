@@ -324,7 +324,7 @@ struct Maximize {
 
 template <typename ST,
           class Compare = Minimize<double>,
-          typename IBL2 = ST(*)(),
+          typename IBL2 = ST(*)(Pool::Ptr),
           typename LGF  = Range(*)(const ST&),
           typename STF  = std::optional<ST>(*)(const ST&,int),
           typename STC  = double(*)(const ST&,int),
@@ -336,7 +336,7 @@ template <typename ST,
 requires Printable<ST> && Hashable<ST>
 class DD :public AbstractDD {
 private:
-   std::function<ST()> _sti;
+   std::function<ST(Pool::Ptr)> _sti;
    IBL2 _stt;
    LGF _lgf;
    STF _stf;
@@ -408,7 +408,7 @@ private:
       return _root = _initClosure();
    }
    ANode::Ptr target() {
-      return _trg = makeNode(_stt());
+      return _trg = makeNode(_stt(_mem));
    }
    Range getLabels(ANode::Ptr src) const {
       auto op = static_cast<const Node<ST>*>(src.get());
@@ -456,7 +456,8 @@ private:
       return _sdom(fp->get(),sp->get());
    }
 public:
-   DD(std::function<ST()> sti,IBL2 stt,LGF lgf,STF stf,STC stc,SMF smf,
+   DD(std::function<ST(Pool::Ptr)> sti,IBL2 stt,LGF lgf,
+      STF stf,STC stc,SMF smf,
       EQSink eqs,const GNSet& labels,SDOM dom=nullptr)
       : AbstractDD(labels),
         _sti(sti),
@@ -472,7 +473,7 @@ public:
    {
       _baseline = _mem->mark();
       _initClosure = [this]() {
-         ANode::Ptr retVal = makeNode(_sti());
+         ANode::Ptr retVal = makeNode(_sti(_mem));
          retVal->setBound(0);
          return retVal;
       };
