@@ -56,13 +56,14 @@ struct Instance {
    int ne;
    std::set<GE> edges;
    std::vector<GNSet> adj;
-   Instance() : adj(0) {}
+   Instance() {}
    Instance(Instance&& i) : nv(i.nv),ne(i.ne),edges(std::move(i.edges)) {}
-   GNSet vertices() {
-      return setFrom(std::views::iota(0,nv+1));
+   GNSet vertices(Pool::Ptr mem) {
+      return setFrom(mem,std::views::iota(0,nv+1));
    }
-   void convert() {
-      adj = std::vector<GNSet>(nv);
+   void convert(Pool::Ptr mem) {
+      GNSet empty(mem);
+      adj = std::vector<GNSet>(nv,empty);
       for(const auto& e : edges) {
          adj[e.a].insert(e.b);
          adj[e.b].insert(e.a);
@@ -100,7 +101,6 @@ Instance readFile(const char* fName)
       }
    }
    f.close();
-   i.convert();
    return i;
 }
 
@@ -146,7 +146,6 @@ Instance readPyFile(const char* fName, int& ub)
    }
    i.ne = nbe;
    f.close();
-   i.convert();
    return i;
 }
 
@@ -162,11 +161,13 @@ int main(int argc,char* argv[])
    std::cout << "FILE:" << fName << "\n";
    //Instance instance = readFile(fName);
    Instance instance = readPyFile(fName, UB);
+   Pool::Ptr base = new Pool();
+   instance.convert(base);
    std::cout << "read instance:" << instance.nv << " " << instance.ne << "\n";
    std::cout << instance.edges << "\n";
    std::cout << "Width=" << w << "\n";
    // using STL containers for the graph
-   const GNSet ns = instance.vertices();
+   const GNSet ns = instance.vertices(base);
    const std::set<GE> es = instance.edges;
    const auto adj = instance.adj;
    const int K = ns.size();
@@ -196,7 +197,7 @@ int main(int argc,char* argv[])
    // to start with that value (it saves memory, it does not provide a witness). We can switch back to K+1
    // rather than UB+1. Or compute an actual greedy coloring at first to get an UB. For Some benchmark, that
    // would be far less than K.
-   const auto labels = setFrom(std::views::iota(1,UB+1));     // using a plain set for the labels
+   const auto labels = setFrom(base,std::views::iota(1,UB+1));     // using a plain set for the labels
    const auto init = [sz=ns.size(),&labels](Pool::Ptr mem) {   // The root state
       Legal A(mem,sz, labels);      
       return COLOR { std::move(A),0,0 };
@@ -218,7 +219,7 @@ int main(int argc,char* argv[])
          for(auto vIdx : adj[s.vtx])
             if (s.s[vIdx].contains(label))
                B[vIdx].remove(label);
-         B[s.vtx] = GNSet {label};
+         B[s.vtx] = GNSet(s.s.pool(), {label});
          return COLOR { std::move(B), std::max(label,s.last), s.vtx + 1};
       } 
       else return std::nullopt;  // return the empty optional 

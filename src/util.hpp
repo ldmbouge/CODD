@@ -317,12 +317,12 @@ class GNSet {
    unsigned short _nbp;
    unsigned long long *_t;
 public:
-   GNSet(unsigned short nb=64) { // 64 values ... so 0 .. 63 -> 1 word (65 values -> 0..64 -> 2 words)
-      _mem = nullptr;
+   GNSet() : _mem(nullptr) { _mxw = _nbp = 0;_t = nullptr;}
+   GNSet(Pool::Ptr mem,unsigned short nb=64) : _mem(mem) { // 64 values ... so 0 .. 63 -> 1 word (65 values -> 0..64 -> 2 words)
       _mxw = (nb >> 6) + (((nb & 63) != 0) ? 1 : 0);
       _nbp = nb;
       if (_mxw) {
-         _t   = new unsigned long long[_mxw];
+         _t   = new (_mem) unsigned long long[_mxw];
          for(int i=0;i<_mxw;i++) _t[i]=0;
       } else _t = nullptr;
    }
@@ -347,7 +347,7 @@ public:
       _t = s._t;
       s._t = nullptr;      
    }
-   GNSet(int lb,int ub) {
+   GNSet(Pool::Ptr mem,int lb,int ub) : _mem(mem) {
       //auto nb = ub >>  6;
       //_mxw = nb + ((ub & 0x3F) ? 1 : 0);
       if (lb > ub) {
@@ -362,7 +362,7 @@ public:
          //_mxw = (1 << (64 - __builtin_clzll(ub))) >> 6;
          assert(_mxw > 0);
          _nbp = _mxw << 6;
-         _t = new unsigned long long[_mxw];
+         _t = new (_mem) unsigned long long[_mxw];
          for(int i=0;i<_mxw;i++) _t[i]=0;
          for(auto i = lb;i < ub;i++) {
             const int ix = i >> 6;
@@ -371,12 +371,12 @@ public:
          }
       }
    }
-   GNSet(std::initializer_list<int> l) {
+   GNSet(Pool::Ptr mem,std::initializer_list<int> l) :_mem(mem) {
       _mxw = 1;
       auto nb = (l.end() - l.begin()) >> 6;
       _nbp  = nb << 6;
       while (nb >= _mxw) _mxw <<= 1;
-      _t = new unsigned long long[_mxw];
+      _t = new (_mem) unsigned long long[_mxw];
       for(auto i=0u;i < _mxw;i++)
          _t[i]=0;
       for(auto it = l.begin();it!=l.end();it++) {
@@ -389,7 +389,7 @@ public:
    // }
    GNSet& operator=(const GNSet& s) {
       if (s._mxw != _mxw) {
-         delete[] _t;
+         //delete[] _t;
          _mxw = s._mxw;
          _mem = s._mem;
          _t = new (_mem) unsigned long long[_mxw];
@@ -400,7 +400,7 @@ public:
       return *this;
    }
    GNSet& operator=(GNSet&& s) {
-      if (_t) delete[] _t;
+      //if (_t) delete[] _t;
       _mem = s._mem;
       _mxw = s._mxw;
       _nbp = s._nbp;
@@ -425,12 +425,12 @@ public:
       const auto old = _mxw;
       if (i >= _mxw) {
          while(i >= _mxw) _mxw <<= 1;
-         auto np = new unsigned long long[_mxw];
+         auto np = new (_mem) unsigned long long[_mxw];
          for(int i=0;i < old;i++)
             np[i] = _t[i];
          for(int i=old;i < _mxw;i++)
             np[i] = 0;
-         delete []_t;
+         //delete []_t;
          _t = np;
       }      
       _t[i] |= (1ull << (p & 63));
@@ -647,8 +647,8 @@ std::set<T> remove(const std::set<T>& s1,const T& v) {
 }
 
 template<class T,class B>
-GNSet setFrom(const std::ranges::iota_view<T,B>& from) {
-   GNSet res {};
+GNSet setFrom(Pool::Ptr mem,const std::ranges::iota_view<T,B>& from) {
+   GNSet res(mem);
    for(auto v : from)
       res.insert(v);
    return res;
@@ -660,7 +660,7 @@ template <class T> class FArray {
    T*            _tab;
    std::size_t    _mx;
 public:
-   FArray() : _tab(nullptr),_mx(0) {}
+   FArray() : _mem(nullptr),_tab(nullptr),_mx(0) {}
    // FArray(std::size_t isz) : _mx(isz) {
    //    if (_mx > 0)
    //       _tab = new T[_mx];
@@ -680,12 +680,11 @@ public:
       t._tab = nullptr;
    }
    ~FArray() {
-      if (_tab) delete[] _tab;
    }
+   Pool::Ptr pool() const noexcept { return _mem;}
    FArray& operator=(const FArray& t) {
       if (_mx != t._mx) {
          _mem = t._mem;
-         delete []_tab;
          _mx = t._mx;
          _tab = new (_mem) T[_mx];
       }
@@ -694,7 +693,7 @@ public:
       return *this;
    }
    FArray& operator=(FArray&& a) {
-      if (_tab) delete[] _tab;
+      //if (_tab) delete[] _tab;
       _mem = a._mem;
       _mx = a._mx;
       _tab = a._tab;
