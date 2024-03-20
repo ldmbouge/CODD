@@ -16,7 +16,7 @@ struct COLOR {
    Legal s;
    int last;
    int vtx;
-   COLOR(const COLOR& c) : s(c.s),last(c.last),vtx(c.vtx) {}
+   COLOR(Pool::Ptr mem,const COLOR& c) : s(mem,c.s),last(c.last),vtx(c.vtx) {}
    COLOR(COLOR&& c) : s(std::move(c.s)),last(c.last),vtx(c.vtx) {}
    COLOR(Legal&& s,int l,int v) : s(std::move(s)),last(l),vtx(v) {}
    friend std::ostream& operator<<(std::ostream& os,const COLOR& m) {
@@ -171,6 +171,7 @@ int main(int argc,char* argv[])
    const std::set<GE> es = instance.edges;
    const auto adj = instance.adj;
    const int K = ns.size();
+   std::cout << "BASE=" << base << std::endl;
    
    if (UB < 0) UB = K;
    std::cout << "upper bound is " << UB << "\n";

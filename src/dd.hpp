@@ -517,9 +517,9 @@ public:
    unsigned getLastId() const noexcept { return _ndId;}
    void reset() {
       _ndId = 0;
-      _nmap.doOnAll([](Node<ST>* np) {
-         np->~Node<ST>();
-      });
+      // _nmap.doOnAll([](Node<ST>* np) {
+      //    np->~Node<ST>();
+      // });
       _nmap.clear();      
       _an.clear();
       _mem->clear(_baseline);

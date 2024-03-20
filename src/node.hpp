@@ -188,7 +188,7 @@ class Node :public ANode {
 public:
    typedef handle_ptr<Node<T>> Ptr;
    Node(Pool::Ptr mem,T&& v,unsigned nid,bool exact) : ANode(mem,nid,exact),_val(std::move(v)) {}
-   Node(Pool::Ptr mem,unsigned nid,const Node<T>& o) : ANode(mem,nid,o,true),_val(o._val) {}
+   Node(Pool::Ptr mem,unsigned nid,const Node<T>& o) : ANode(mem,nid,o,true),_val(mem,o._val) {}
    const T& get() const {return _val;}
    void print(std::ostream& os) const {
       os << _nid << ','

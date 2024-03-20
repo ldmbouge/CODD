@@ -671,6 +671,11 @@ public:
       for(auto i=0u;i < _mx;i++)
          _tab[i] = T(_mem,value);
    }
+   FArray(Pool::Ptr mem,const FArray& t) : _mem(mem),_mx(t._mx) {
+      _tab = new (_mem) T[_mx];
+      for(auto i=0u;i < _mx;i++)
+         _tab[i] = T(_mem,t._tab[i]);
+   }
    FArray(const FArray& t) : _mem(t._mem),_mx(t._mx) {
       _tab = new (_mem) T[_mx];
       for(auto i=0u;i < _mx;i++)
