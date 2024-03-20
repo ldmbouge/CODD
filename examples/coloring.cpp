@@ -191,7 +191,11 @@ int main(int argc,char* argv[])
       std::cout << "\n";
       std::cout << "CHECKER is " << aOk << "\n";
    });
-   // [LDM] : changed labels to go to UB (rather than K) (halved the runtime)a
+   // [LDM] : changed labels to go to UB (rather than K) (halved the runtime)
+   // Well, UB is given in the file, but it actually tends to be the optimal ;-) So it's cheating a bit
+   // to start with that value (it saves memory, it does not provide a witness). We can switch back to K+1
+   // rather than UB+1. Or compute an actual greedy coloring at first to get an UB. For Some benchmark, that
+   // would be far less than K.
    const auto labels = setFrom(std::views::iota(1,UB+1));     // using a plain set for the labels
    const auto init = [ns,labels]() {   // The root state
       Legal A(ns.size(), labels);      

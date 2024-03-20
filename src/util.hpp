@@ -298,6 +298,7 @@ public:
          hv = hv ^ _t[i];
       return hv;
    }
+   friend struct std::hash<NatSet<nbw>>;
 };
 
 
@@ -596,12 +597,6 @@ template<unsigned short sz> struct std::hash<NatSet<sz>> {
       return v.hash();
    }
 };
-
-// instantiation of the hash template for 64 and 128 bit sized NatSet.
-typedef struct std::hash<NatSet<1>> NS1;
-typedef struct std::hash<NatSet<2>> NS2;
-typedef struct std::hash<NatSet<3>> NS3;
-typedef struct std::hash<NatSet<4>> NS4;
 
 // Hash for General Nat Set
 template <> struct std::hash<GNSet> {
