@@ -460,6 +460,15 @@ public:
          _t[i] &= ps._t[i];
       return  *this;
    }
+   void removeAbove(int p) noexcept {
+      int w = ++p >> 6;
+      assert(w >= 0 && w < _mxw);
+      const int b = p & 63;
+      _t[w] = _t[w] & ((1ull << b) - 1);
+      w++;
+      while(w < _mxw) 
+        _t[w++] = 0;
+   }
    class iterator { 
       unsigned long long*    _t;
       const unsigned short _nbw;
