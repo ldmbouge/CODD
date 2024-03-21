@@ -97,4 +97,14 @@ inline void* operator new[](std::size_t sz,Pool::Ptr store)
    return store->allocate(sz);
 }
 
+inline void operator delete(void* p,Pool::Ptr store)
+{
+   store->free(p);
+}
+
+inline void operator delete[](void* p,Pool::Ptr store)
+{
+   store->free(p);
+}
+
 #endif

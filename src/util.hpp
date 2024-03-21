@@ -384,12 +384,12 @@ public:
       }
    }
    Pool::Ptr pool() const noexcept { return _mem;}
-   // ~GNSet() {
-   //    if (_t) delete[] _t;
-   // }
+   ~GNSet() {
+      if (_t) operator delete[](_t,_mem);
+   }
    GNSet& operator=(const GNSet& s) {
       if (s._mxw != _mxw) {
-         //delete[] _t;
+         operator delete[](_t,_mem);
          _mxw = s._mxw;
          _mem = s._mem;
          _t = new (_mem) unsigned long long[_mxw];
@@ -400,7 +400,7 @@ public:
       return *this;
    }
    GNSet& operator=(GNSet&& s) {
-      //if (_t) delete[] _t;
+      if (_t) operator delete[](_t,_mem);
       _mem = s._mem;
       _mxw = s._mxw;
       _nbp = s._nbp;
@@ -430,7 +430,7 @@ public:
             np[i] = _t[i];
          for(int i=old;i < _mxw;i++)
             np[i] = 0;
-         //delete []_t;
+         if (_t) operator delete[](_t,_mem);
          _t = np;
       }      
       _t[i] |= (1ull << (p & 63));
@@ -685,10 +685,16 @@ public:
       t._tab = nullptr;
    }
    ~FArray() {
+      if (_tab) {
+         for(auto i=0u;i < _mx;i++)
+            _tab[i].~T();
+         operator delete[](_tab,_mem);
+      }
    }
    Pool::Ptr pool() const noexcept { return _mem;}
    FArray& operator=(const FArray& t) {
       if (_mx != t._mx) {
+         //if (_tab) delete[] _tab;
          _mem = t._mem;
          _mx = t._mx;
          _tab = new (_mem) T[_mx];
