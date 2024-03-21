@@ -46,6 +46,10 @@ void* Pool::allocate(std::size_t sz)
    auto s = _store[_seg];
    while(_top + sz > s->_sz) {
       assert(_top != 0);
+      if (_top == 0) {
+         std::cout << "\t\tOOPSIES....\n";
+         char ch; std::cin >> ch;
+      }
       ++_seg;
       if (_seg >= _nbSeg) {
          if (_nbSeg == _mxs) {
@@ -56,6 +60,7 @@ void* Pool::allocate(std::size_t sz)
             _mxs <<= 1;
          }
          _store[_nbSeg++] = new Segment(std::max(_segSize,sz));
+         std::cout << "\tPOOL:" << this << "\t #SEG:" << _nbSeg << "\n";
       }
       _top = 0;
       s = _store[_seg];

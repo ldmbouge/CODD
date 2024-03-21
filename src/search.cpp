@@ -33,7 +33,9 @@ void BAndB::search(Bounds& bnds)
    WidthBounded* ddr[2];
    _theDD->setStrategy(new Exact);
    relaxed->setStrategy(ddr[0] = new Relaxed(_mxw));
-   restricted->setStrategy(ddr[1] = new Restricted(_mxw));
+   restricted->setStrategy(ddr[1] = new Restricted(_mxw)); 
+   std::cout << "RELAX:";relaxed->debugPoolShow();
+   std::cout << "RESTR:";restricted->debugPoolShow();
    auto hOrder = [this](const QNode& a,const QNode& b) {
       return _theDD->isBetter(a.bound,b.bound);
    };
@@ -54,8 +56,10 @@ void BAndB::search(Bounds& bnds)
       if (!_theDD->isBetter(bbn.bound,bnds.getPrimal()))
          continue;
       nNode++;
+      cout << "D" << flush;
       bool dualBetter = relaxed->apply(bbn.node,bnds);
       if (dualBetter) {         
+         cout << "P" << flush;
          bool primalBetter = restricted->apply(bbn.node,bnds);
          
          if (!restricted->isExact() && !relaxed->isExact()) {

@@ -99,6 +99,7 @@ public:
    void setStrategy(Strategy* s);
    void display();
    bool isExact() const { return _exact;}
+   void debugPoolShow() { std::cout << "POOL IS:" << _mem << "\n";}
    virtual AbstractDD::Ptr duplicate() = 0;
    virtual void makeInitFrom(ANode::Ptr src) {}
 };
