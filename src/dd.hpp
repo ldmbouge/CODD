@@ -88,7 +88,7 @@ public:
    virtual bool dominates(ANode::Ptr f,ANode::Ptr s) = 0;
    virtual void update(Bounds& bnds) const = 0;
    virtual void printNode(std::ostream& os,ANode::Ptr n) const = 0;
-   virtual Range getLabels(ANode::Ptr src) const = 0;
+   virtual GNSet getLabels(ANode::Ptr src) const = 0;
    virtual unsigned getLastId() const noexcept = 0;
    double currentOpt() const { return _trg->getBound();}
    bool apply(ANode::Ptr from,Bounds& bnds);
@@ -410,9 +410,13 @@ private:
    ANode::Ptr target() {
       return _trg = makeNode(_stt());
    }
-   Range getLabels(ANode::Ptr src) const {
+   GNSet getLabels(ANode::Ptr src) const {
       auto op = static_cast<const Node<ST>*>(src.get());
-      return std::move(_lgf(op->get()));
+      auto valSet = _lgf(op->get());
+      GNSet retSet(128);
+      for(auto i : valSet)
+         retSet.insert(i);
+      return retSet;
    }
    ANode::Ptr transition(ANode::Ptr src,int label) {
       auto op = static_cast<const Node<ST>*>(src.get());

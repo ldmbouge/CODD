@@ -59,7 +59,7 @@ struct Instance {
    Instance() : adj(0) {}
    Instance(Instance&& i) : nv(i.nv),ne(i.ne),edges(std::move(i.edges)) {}
    GNSet vertices() {
-      return setFrom(std::views::iota(0,nv+1));
+      return setFrom(std::views::iota(0,nv));
    }
    void convert() {
       adj = FArray<GNSet>(nv);
@@ -170,18 +170,21 @@ int main(int argc,char* argv[])
    const std::set<GE> es = instance.edges;
    const FArray adj = instance.adj;
    const int K = ns.size();
-   
+   std::cout << "NS:" << ns << " |NS|=" << K << "\n";
+
    if (UB < 0) UB = K;
    std::cout << "upper bound is " << UB << "\n";
    Bounds bnds([&es,K](const std::vector<int>& inc)  {
-      bool aOk = true;
+      bool aBad = false;
+      //std::cout << "INC: " << inc << "\n";
       for(const auto& e : es) {
+         //std::cout << "EDGE:" << e << "\n";
          if (inc[e.a] == inc[e.b]) {
-            aOk = false;
-            std::cout << "Ooops... edge with same color on both vertices\n";
-            char ch;
-            std::cin >> ch;
+            std::cout << e << " COL:" << inc << "\n";
+            assert(false);
          }
+         aBad = aBad || (inc[e.a] == inc[e.b]);
+         assert(!aBad);
       }
       std::map<int,int> h;
       for(int v = 0;v < K;v++) 
@@ -189,7 +192,7 @@ int main(int argc,char* argv[])
       for(const auto& e : h) 
          std::cout << "(" << e.first << " : " << e.second << ") ";
       std::cout << "\n";
-      std::cout << "CHECKER is " << aOk << "\n";
+      std::cout << "CHECKER is " << !aBad << "\n";
    });
    // [LDM] : changed labels to go to UB (rather than K) (halved the runtime)
    // Well, UB is given in the file, but it actually tends to be the optimal ;-) So it's cheating a bit
@@ -250,7 +253,7 @@ int main(int argc,char* argv[])
                 decltype(smf),
                 decltype(eqs)
                 >::makeDD(init,target,lgf,stf,scf,smf,eqs,labels),w);
-   engine.setTimeLimit([](double elapsed) { return elapsed >= 60000;});
+   engine.setTimeLimit([](double elapsed) { return elapsed >= 120000;});
    engine.search(bnds);
    return 0;
 }

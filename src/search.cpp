@@ -56,7 +56,7 @@ void BAndB::search(Bounds& bnds)
       nNode++;
       bool dualBetter = relaxed->apply(bbn.node,bnds);
       if (dualBetter) {         
-         bool primalBetter = restricted->apply(bbn.node,bnds);
+         restricted->apply(bbn.node,bnds);
          
          if (!restricted->isExact() && !relaxed->isExact()) {
             for(auto n : relaxed->computeCutSet()) {

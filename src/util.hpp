@@ -99,6 +99,7 @@ public:
    Range(int f,int t) : _from(f),_to(t) {}
    Range(Range&& r) : _from(r._from),_to(r._to) {}
    Range(const Range& r) : _from(r._from),_to(r._to) {}
+   int size() const noexcept { return (_to >= _from) ? _to - _from + 1 : _from - _to + 1;}
    auto flip() const noexcept  { return Range(_to -1,_from-1);}
    auto begin() const noexcept { return iterator(_from <= _to ? Forward : Backward,_from); }
    auto end() const  noexcept  { return iterator(_from <= _to ? Forward : Backward,_to); }
@@ -577,9 +578,11 @@ template <class T> std::ostream& operator<<(std::ostream& os,const std::set<T>& 
 }
 
 template <class T> std::ostream& operator<<(std::ostream& os,const std::vector<T>& msg) {
-   os << '[';
-   for(const T& v : msg)
-      os << v << " ";
+   os << "(" << msg.size() << ")[";
+   int i = 0;
+   for(const T& v : msg) {
+      os << i++ << ':' << v << " ";
+   }
    return os << ']';
 }
 
@@ -692,8 +695,8 @@ public:
       return *this;
    }
    std::size_t size() const noexcept { return _mx;}
-   T& operator[](std::size_t i) noexcept { return _tab[i];}
-   const T& operator[](std::size_t i) const noexcept { return _tab[i];}
+   T& operator[](std::size_t i) noexcept { assert(i>=0 && i < _mx);return _tab[i];}
+   const T& operator[](std::size_t i) const noexcept { assert(i>=0 && i < _mx);return _tab[i];}
    class iterator { 
       T* const      _data;
       std::size_t    _num;
@@ -723,6 +726,14 @@ public:
       } else return false;
    }
    friend struct std::hash<FArray<T>>;
+   friend std::ostream& operator<<(std::ostream& os,const FArray<T>& msg) {
+   os << '(' << msg.size() << ")[";
+   for(auto i = 0u ;i < msg._mx;i++)
+      //   for(const T& v : msg)
+      os << i << ':' << msg._tab[i] << " ";
+   return os << ']';
+}
+
 };
 
 template<class T> struct std::hash<FArray<T>> {
@@ -733,13 +744,6 @@ template<class T> struct std::hash<FArray<T>> {
       return ttl;
    }   
 };
-
-template <class T> std::ostream& operator<<(std::ostream& os,const FArray<T>& msg) {
-   os << '[';
-   for(const T& v : msg)
-      os << v << " ";
-   return os << ']';
-}
 
 
 #endif
