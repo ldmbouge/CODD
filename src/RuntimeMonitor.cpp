@@ -46,7 +46,7 @@ namespace RuntimeMonitor {
    double elapsedMilliseconds(HRClock start, HRClock end)
    {
       auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-        return static_cast<double>(diff.count());
+      return static_cast<double>(diff.count());
    }
    unsigned long elapsedSinceMicro(HRClock then)
    {

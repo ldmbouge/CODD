@@ -193,6 +193,7 @@ int main(int argc,char* argv[])
       std::cout << "\n";
       std::cout << "CHECKER is " << !aBad << "\n";
    });
+   //bnds.setPrimal(UB);
    // [LDM] : changed labels to go to UB (rather than K) (halved the runtime)
    // Well, UB is given in the file, but it actually tends to be the optimal ;-) So it's cheating a bit
    // to start with that value (it saves memory, it does not provide a witness). We can switch back to K+1
@@ -235,7 +236,7 @@ int main(int argc,char* argv[])
             B[i] = (s1.s[i] == s2.s[i]) ? s1.s[i] : 0;
             if (s1.s[i] == s2.s[i]) cnt+=1;
          }
-         if (cnt >= 0.75*(s1.vtx)) 
+         if (cnt >= 0.5*(s1.vtx)) 
             return COLOR { std::move(B) , s1.last, s1.vtx};
          else return std::nullopt; // colorings are too dissimilar to merge
       }

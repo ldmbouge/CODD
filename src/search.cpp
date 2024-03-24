@@ -20,7 +20,9 @@ void BAndB::search(Bounds& bnds)
 {
    Pool mem;
    using namespace std;
+   std::streamsize ss = cout.precision();
    auto start = RuntimeMonitor::cputime();
+   auto last = start;
    cout << "B&B searching..." << endl;
    bnds.attach(_theDD);
    double optTime = 0.0;
@@ -40,10 +42,31 @@ void BAndB::search(Bounds& bnds)
    Heap<QNode,decltype(hOrder)> pq(&mem,64000,hOrder);   
    pq.insertHeap(QNode { _theDD->init(), _theDD->initialWorst() } );
    unsigned nNode = 0,ttlNode = 0,insDom=0,pruned=0;
+   bool primalBetter = false;
+   cout << "B&B Nodes          " << setw(6) << "LB\t " << setw(6) << "UB\t Gap(%)\n";
+   cout << "----------------------------------------------\n";
    while(!pq.empty()) {
       auto bbn = pq.extractMax();
-      if (_timeLimit && _timeLimit(RuntimeMonitor::elapsedSince(start)))
+      auto now = RuntimeMonitor::cputime();
+      auto fs = RuntimeMonitor::elapsedMilliseconds(start,now);
+      auto fl = RuntimeMonitor::elapsedMilliseconds(last,now);
+      if (_timeLimit && _timeLimit(fs))         
          break;
+      if (primalBetter || fl > 5000) {
+         double gap = 100 * (bnds.getPrimal() - bbn.bound) / bnds.getPrimal();      
+         cout << "B&B(" << setw(5) << nNode << ")\t ";
+         if (bbn.bound == _theDD->initialWorst())
+            cout << setw(6) << "-"  << "\t " << setw(6) << bnds.getPrimal() << "\t ";
+         else
+            cout << setw(6) << bbn.bound << "\t " << setw(6) << bnds.getPrimal() << "\t ";
+         if (gap > 100)
+            cout << setw(6) << "-";
+         else cout << setw(6) << setprecision(4) << gap << "%";
+         cout << "\t time:" << setw(6) << setprecision(4) <<  fs / 1000.0 << "s";
+         cout << "\n";
+         last = RuntimeMonitor::cputime();
+      }
+      primalBetter = false;
 #ifndef _NDEBUG     
       cout << "BOUNDS NOW: " << bnds << endl;
       cout << "EXTRACTED:  " << bbn.node->getId() << " ::: ";
@@ -55,8 +78,8 @@ void BAndB::search(Bounds& bnds)
          continue;
       nNode++;
       bool dualBetter = relaxed->apply(bbn.node,bnds);
-      if (dualBetter) {         
-         restricted->apply(bbn.node,bnds);
+      if (dualBetter) {
+         primalBetter = restricted->apply(bbn.node,bnds);
          
          if (!restricted->isExact() && !relaxed->isExact()) {
             for(auto n : relaxed->computeCutSet()) {
@@ -103,6 +126,7 @@ void BAndB::search(Bounds& bnds)
          }
       }
    }
+   cout << setprecision(ss);
    auto spent = RuntimeMonitor::elapsedSince(start);
    cout << "Done(" << _mxw << "):" << bnds.getPrimal() << "\t #nodes:" <<  nNode << "/" << ttlNode
         << "\t P/D:" << pruned << "/" << insDom

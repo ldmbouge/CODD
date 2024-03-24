@@ -32,6 +32,7 @@ public:
    void attach(std::shared_ptr<AbstractDD> dd);
    void setPrimal(double p) { _primal = p;_primalSet = true;}
    double getPrimal() const { return _primal;}
+   bool hasPrimal() const noexcept { return _primalSet;}
    void setIncumbent(auto begin,auto end) {
       _inc.clear();
       for(auto it = begin;it != end;it++)

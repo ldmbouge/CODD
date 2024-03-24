@@ -234,7 +234,7 @@ int main(int argc,char* argv[])
    const auto smf = [K](const COLOR& s1,const COLOR& s2) -> std::optional<COLOR> {
       if (s1.last == s2.last && s1.vtx == s2.vtx) {
          Legal B(s1.s);
-         for(auto i=0;i < K;i++) 
+         for(auto i=0;i < s1.vtx + 1;i++) 
             B[i] = (s1.s[i] == s2.s[i]) ? s1.s[i] : 0;
          return COLOR { std::move(B) , s1.last, s1.vtx};
       }
