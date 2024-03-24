@@ -231,21 +231,19 @@ int main(int argc,char* argv[])
    const auto scf = [](const COLOR& s,int label) { // partial cost function 
       return std::max(0,label -  s.last);
    };
-   const auto smf = [K](const COLOR& s1,const COLOR& s2) -> std::optional<COLOR> { 
-      bool merge = false;
-      if ((s1.vtx == s2.vtx) && (s1.last == s2.last)) {
+   const auto smf = [](const COLOR& s1,const COLOR& s2) -> std::optional<COLOR> { 
+      if (s1.vtx == s2.vtx && s1.last == s2.last) {
          Legal B(s1.s);
-	 int cnt = 0;  // number of shared labels
+         int cnt = 0;  // number of shared labels
          for(auto i=0;i < s1.vtx+1;i++) {
             B[i] = (s1.s[i] == s2.s[i]) ? s1.s[i] : 0;
-	    if (s1.s[i] == s2.s[i]) cnt+=1;
-	 }
-	 if (cnt >= 0.75*(s1.vtx)) {		 
+            if (s1.s[i] == s2.s[i]) cnt+=1;
+         }
+         if (cnt >= 0.75*(s1.vtx)) 
             return COLOR { std::move(B) , s1.last, s1.vtx};
-	    merge = true;
-	 }
+         else return std::nullopt; // colorings are too dissimilar to merge
       }
-      if (!merge) return std::nullopt; // return  the empty optional
+      else return std::nullopt; // can't merge those
    };
    const auto eqs = [K](const COLOR& s) -> bool {
       return s.vtx == K;
