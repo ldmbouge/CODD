@@ -210,15 +210,11 @@ int main(int argc,char* argv[])
       if (s.vtx >= K+1)
          return GNSet(); 
       GNSet valid(labels);
-      for(auto a : adj[s.vtx])  // [WvH] We could limit adj[i] to indices < i because of the fixed variale ordering, right? 
+      for(auto a : adj[s.vtx])  // [WvH] We could limit adj[i] to indices < i because of the fixed variale ordering, right? [LDM]. Yes, of course!
          if (s.s[a] != 0)
             valid.remove(s.s[a]);
       auto ub = std::min({(int)bnds.getPrimal(),s.last+1});
       valid.removeAbove(ub);
-      /*      std::cout << "K=" << K << " ADJ(" << s.vtx << ") = " << adj[s.vtx] << " LGF: " << s.s
-                << "\t " << s.last << " " 
-                << " LBLS:" << valid << "\n";
-      */
       return valid;
    };
    const auto stf = [K](const COLOR& s,const int label) -> std::optional<COLOR> {
