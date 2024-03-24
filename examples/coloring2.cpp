@@ -129,7 +129,7 @@ Instance readPyFile(const char* fName, int& ub)
                f >> tmp >> u >> tmp >> v >> tmp >> last;
                GE edge;
                edge.a = u, edge.b = v;
-               std::cout << edge << "\n";
+               //std::cout << edge << "\n";
                assert(edge.a >=0);
                assert(edge.b >=0);
                i.edges.insert(edge);
@@ -162,7 +162,7 @@ int main(int argc,char* argv[])
    //Instance instance = readFile(fName);
    Instance instance = readPyFile(fName, UB);
    std::cout << "read instance:" << instance.nv << " " << instance.ne << "\n";
-   std::cout << instance.edges << "\n";
+   //std::cout << instance.edges << "\n";
    std::cout << "Width=" << w << "\n";
    // using STL containers for the graph
    const GNSet ns = instance.vertices();

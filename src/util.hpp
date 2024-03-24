@@ -579,9 +579,10 @@ template <class T> std::ostream& operator<<(std::ostream& os,const std::set<T>& 
 
 template <class T> std::ostream& operator<<(std::ostream& os,const std::vector<T>& msg) {
    os << "(" << msg.size() << ")[";
-   int i = 0;
+   //int i = 0;
    for(const T& v : msg) {
-      os << i++ << ':' << v << " ";
+      //os << i++ << ':' << v << " ";
+      os  << v << " ";
    }
    return os << ']';
 }

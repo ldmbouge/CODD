@@ -66,6 +66,10 @@ void BAndB::search(Bounds& bnds)
                }
                // use the bound in n (the ones in nd are _reset_ when duplicate occurs????)
                bool newGuyDominated = false;
+               if (!_theDD->isBetter(n->getBound() + n->getBackwardBound(),bnds.getPrimal()))  {
+                  //std::cout << "in Cutset. Not good enough: " << n->getBound() + n->getBackwardBound() << "\n";
+                  continue;
+               }
                if (_theDD->hasDominance()) {
                   unsigned d = 0;
                   auto pqSz = pq.size();
