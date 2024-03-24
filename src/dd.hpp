@@ -20,16 +20,17 @@ typedef std::function<void(const std::vector<int>&)> SolutionCB;
 
 class Bounds {
    double _primal;
+   bool _primalSet;
    std::vector<int> _inc;
    std::list<SolutionCB> _checker;
 public:
-   Bounds() {}
+   Bounds() : _primalSet(false) {}
    Bounds(SolutionCB checker)  {
       _checker.push_back(checker);
    }  
    Bounds(std::shared_ptr<AbstractDD> dd);
    void attach(std::shared_ptr<AbstractDD> dd);
-   void setPrimal(double p) { _primal = p;}
+   void setPrimal(double p) { _primal = p;_primalSet = true;}
    double getPrimal() const { return _primal;}
    void setIncumbent(auto begin,auto end) {
       _inc.clear();

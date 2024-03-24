@@ -49,6 +49,19 @@ struct Instance {
         weight(std::move(i.weight)),
         profit(std::move(i.profit))
    {}
+   int getUB() {
+      int rC = capa;
+      int val = 0;
+      int cnt = 0;
+      while (rC >= 0) {
+         if (weight[cnt] <= rC) {
+            val += profit[cnt];
+            rC  -= weight[cnt];
+            cnt++;
+         } else break;
+      }
+      return val;
+   }
 };
 
 Instance readFile(const char* fName)
@@ -75,10 +88,6 @@ Instance readFile(const char* fName)
    }
    std::cout << "\n";
    mergeSort(i.items,i.I,[](const auto& a,const auto& b) {
-      //const double ar = (a.p==0) ? INT_MAX : (a.w == 0) ? 1.0/a.p  : -((double)a.p)/((double)a.w);
-      //const double br = (b.p==0) ? INT_MAX : (b.w == 0) ? 1.0/a.p  : -((double)b.p)/((double)b.w);
-      assert(a.w != 0);
-      assert(a.p != 0);
       const double ar = -((double)a.p)/((double)a.w);
       const double br = -((double)b.p)/((double)b.w);
       return ar <= br;
@@ -106,13 +115,15 @@ int main(int argc,char* argv[])
    const int capa = instance.capa;
    const auto& weight = instance.weight;
    const auto& profit = instance.profit; 
+   const int UB = instance.getUB();
    std::cout << "I    =" << I << "\n";
    std::cout << "capa =" << capa << "\n";
    std::cout << "W    =" << weight << "\n";
    std::cout << "P    =" << profit << "\n";
-   
+   std::cout << "UB   =" << UB << "\n";
    Bounds bnds;
    const auto labels = GNSet(0,1);     // using a plain set for the labels
+   bnds.setPrimal(UB);
    const auto init = [capa]() {   // The root state      
       return SKS {0,capa};
    };

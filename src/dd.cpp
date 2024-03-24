@@ -16,12 +16,18 @@
 
 Bounds::Bounds(std::shared_ptr<AbstractDD> dd)
 {
-   _primal = dd->initialBest();
+   if (!_primalSet) {
+      _primal = dd->initialBest();
+      _primalSet = true;
+   }
 }
 
 void Bounds::attach(std::shared_ptr<AbstractDD> dd)
 {
-   _primal = dd->initialBest();
+   if (!_primalSet) {
+      _primal = dd->initialBest();
+      _primalSet = true;
+   }
 }
 
 AbstractDD::AbstractDD(const GNSet& labels)
@@ -61,7 +67,7 @@ void AbstractDD::compute()
 bool AbstractDD::apply(ANode::Ptr from,Bounds& bnds)
 {
    makeInitFrom(from);
-   compute();      
+   compute();
    bool isBetterValue = isBetter(currentOpt(),bnds.getPrimal());
    if (isBetterValue) 
       update(bnds);
