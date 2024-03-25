@@ -231,7 +231,7 @@ int main(int argc,char* argv[])
    const auto scf = [](const COLOR& s,int label) { // partial cost function 
       return std::max(0,label -  s.last);
    };
-   const auto smf = [K](const COLOR& s1,const COLOR& s2) -> std::optional<COLOR> {
+   const auto smf = [](const COLOR& s1,const COLOR& s2) -> std::optional<COLOR> {
       if (s1.last == s2.last && s1.vtx == s2.vtx) {
          Legal B(s1.s);
          for(auto i=0;i < s1.vtx + 1;i++) 

@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <iomanip>
+#include <type_traits>
 #include "node.hpp"
 #include <vector>
 #include <list>
@@ -416,10 +417,14 @@ private:
    GNSet getLabels(ANode::Ptr src) const {
       auto op = static_cast<const Node<ST>*>(src.get());
       auto valSet = _lgf(op->get());
-      GNSet retSet(128);
-      for(auto i : valSet)
-         retSet.insert(i);
-      return retSet;
+      if constexpr (std::is_same<decltype(valSet),GNSet>::value) {
+         return valSet;
+      } else {
+         GNSet retSet(128);
+         for(auto i : valSet)
+            retSet.insert(i);
+         return retSet;
+      }
    }
    ANode::Ptr transition(ANode::Ptr src,int label) {
       auto op = static_cast<const Node<ST>*>(src.get());
