@@ -43,7 +43,7 @@ void BAndB::search(Bounds& bnds)
    pq.insertHeap(QNode { _theDD->init(), _theDD->initialWorst() } );
    unsigned nNode = 0,ttlNode = 0,insDom=0,pruned=0;
    bool primalBetter = false;
-   cout << "B&B Nodes          " << setw(6) << "LB\t " << setw(6) << "UB\t Gap(%)\n";
+   cout << "B&B Nodes          " << setw(6) << "Dual\t " << setw(6) << "Primal\t Gap(%)\n";
    cout << "----------------------------------------------\n";
    while(!pq.empty()) {
       auto bbn = pq.extractMax();
@@ -54,11 +54,11 @@ void BAndB::search(Bounds& bnds)
          break;
       if (primalBetter || fl > 5000) {
          double gap = 100 * (bnds.getPrimal() - bbn.bound) / bnds.getPrimal();      
-         cout << "B&B(" << setw(5) << nNode << ")\t ";
+         cout << "B&B(" << setw(5) << nNode << ")\t " << setprecision(6);
          if (bbn.bound == _theDD->initialWorst())
-            cout << setw(6) << "-"  << "\t " << setw(6) << bnds.getPrimal() << "\t ";
+            cout << setw(7) << "-"  << "\t " << setw(7) << bnds.getPrimal() << "\t ";
          else
-            cout << setw(6) << bbn.bound << "\t " << setw(6) << bnds.getPrimal() << "\t ";
+            cout << setw(7) << bbn.bound << "\t " << setw(7) << bnds.getPrimal() << "\t ";
          if (gap > 100)
             cout << setw(6) << "-";
          else cout << setw(6) << setprecision(4) << gap << "%";
@@ -84,8 +84,11 @@ void BAndB::search(Bounds& bnds)
          if (!restricted->isExact() && !relaxed->isExact()) {
             for(auto n : relaxed->computeCutSet()) {
                if (n == relaxed->getRoot()) { // the cutset is the root. Only way out: increase width.
-                  for(auto i=0u;i < sizeof(ddr)/sizeof(WidthBounded*);i++)
-                     ddr[i]->setWidth(ddr[i]->getWidth() + 1);
+                  for(auto i=0u;i < sizeof(ddr)/sizeof(WidthBounded*);i++) {
+                     auto w = ddr[i]->getWidth() + 1;
+                     ddr[i]->setWidth(w);
+                     std::cout << "\t-->widening... " << w << "\n";
+                  }
                }
                // use the bound in n (the ones in nd are _reset_ when duplicate occurs????)
                bool newGuyDominated = false;

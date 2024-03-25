@@ -3,6 +3,7 @@
 #define __DD_HPP__
 
 #include <algorithm>
+#include <iomanip>
 #include "node.hpp"
 #include <vector>
 #include <list>
@@ -374,12 +375,12 @@ private:
       if (_strat->primal())  {
          bnds.setPrimal(DD::better(_trg->getBound(),bnds.getPrimal()));
          bnds.setIncumbent(_trg->beginOptLabels(),_trg->endOptLabels());
-         std::cout << "P TIGHTEN: " << bnds << "\n";
+         std::cout <<  std::setprecision(6) << "P TIGHTEN: " << bnds << "\n";
       }
       else if (_strat->dual() && _exact) {
          bnds.setPrimal(DD::better(_trg->getBound(),bnds.getPrimal()));
          bnds.setIncumbent(_trg->beginOptLabels(),_trg->endOptLabels());
-         std::cout << "D TIGHTEN: " << bnds << "\n";
+         std::cout <<  std::setprecision(6) << "D TIGHTEN: " << bnds << "\n";
       }
    }
    ANode::Ptr makeNode(ST&& state,bool pExact = true) {
