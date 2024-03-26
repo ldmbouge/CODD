@@ -174,8 +174,7 @@ int main(int argc,char* argv[])
                 decltype(stf),
                 decltype(scf),
                 decltype(smf),
-                decltype(sEq),
-                decltype(local)
+                decltype(sEq)
                 >::makeDD(init,target,lgf,stf,scf,smf,sEq,labels,local,sDom),w);
    engine.search(bnds);
    return 0;

@@ -348,7 +348,7 @@ private:
    STC _stc;
    SMF _smf;
    EQSink _eqs;
-   LOCAL _local;
+   std::function<double(const ST&)> _local;
    SDOM _sdom;
    LHashtable<ST> _nmap;
    unsigned _ndId;
@@ -432,7 +432,7 @@ private:
       auto op = static_cast<const Node<ST>*>(src.get());
       auto vs = _stf(op->get(),label);     
       if (vs.has_value()) {
-         if constexpr (!std::is_same<decltype(_local), std::nullptr_t>::value) {            
+         if (_local) {
             auto cVal = _stc(op->get(),label);
             auto sCost = src->getBound() + cVal + _local(vs.value());
             if (!isBetter(sCost,bnds.getPrimal()))
@@ -477,7 +477,7 @@ private:
    }
 public:
    DD(std::function<ST()> sti,IBL2 stt,LGF lgf,STF stf,STC stc,SMF smf,
-      EQSink eqs,const GNSet& labels,LOCAL local=nullptr,SDOM dom=nullptr)
+      EQSink eqs,const GNSet& labels,std::function<double(const ST&)> local = nullptr,SDOM dom=nullptr)
       : AbstractDD(labels),
         _sti(sti),
         _stt(stt),
@@ -503,13 +503,17 @@ public:
    static AbstractDD::Ptr makeDD(Args&&... args) {
       return AbstractDD::Ptr(new DD(std::forward<Args>(args)...));
    }
+   //auto& setLocal(std::function<double(const ST&)> local) { _hasLocal = true;_local = local;return *this;}
    void printNode(std::ostream& os,ANode::Ptr n) const {
       auto sp = static_cast<const Node<ST>*>(n.get());
       sp->print(os);
       //os << std::endl;
    }
    AbstractDD::Ptr duplicate() {
-      return AbstractDD::Ptr(new DD(_sti,_stt,_lgf,_stf,_stc,_smf,_eqs,_labels,_local,_sdom));
+      auto theDD = new DD(_sti,_stt,_lgf,_stf,_stc,_smf,_eqs,_labels,_local,_sdom);
+      /* if (_hasLocal) */
+      /*    theDD->setLocal(_local); */
+      return AbstractDD::Ptr(theDD);
    }
    ANode::Ptr duplicate(const ANode::Ptr src) {
       Node<ST>* at = nullptr;
