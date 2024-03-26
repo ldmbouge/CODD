@@ -140,7 +140,7 @@ int main(int argc,char* argv[])
          return SKS { s.n+1,s.c - label * weight[s.n] };
       } else return SKS { I, 0};
    };
-   auto local = [I,&weight,&profit](const SKS& s) -> double {
+   const auto local = [I,&weight,&profit](const SKS& s) -> double {
       double nn = 0;
       int    rc = s.c;
       for(auto i=s.n; i < I;i++) 
