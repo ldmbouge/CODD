@@ -87,7 +87,7 @@ int main(int argc,char* argv[])
    };
    const auto lgf = [n,&bnds,&OPT,L](const SGRuler& s) -> Range {
       auto ub = L+1;
-      if (s.k <= n/2)
+      if (s.k < n/2)
         ub = std::min({(int)std::floor(((int)bnds.getPrimal())/2) - OPT[std::floor(n/2)-s.k], 
 		       (int)std::floor((L+1)/2) - OPT[std::floor(n/2)-s.k]});
       else 
