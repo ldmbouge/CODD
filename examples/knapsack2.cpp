@@ -135,14 +135,24 @@ int main(int argc,char* argv[])
       //auto r = Range::close(0,s.c >= weight[s.n]);
       return r;
    };
-   const auto stf = [I,weight](const SKS& s,const int label) -> std::optional<SKS> {
+   const auto stf = [I,&weight](const SKS& s,const int label) -> std::optional<SKS> {
       if (s.n < I-1) {
-         if (label)
-            return SKS { s.n+1,s.c - weight[s.n] };
-         else
-            return SKS { s.n+1,s.c};
+         return SKS { s.n+1,s.c - label * weight[s.n] };
       } else return SKS { I, 0};
    };
+   const auto local = [I,&weight,&profit](const SKS& s) -> double {
+      double nn = 0;
+      int    rc = s.c;
+      for(auto i=s.n+1; i < I;i++) 
+         if (weight[i] <= rc) {
+            rc -= weight[i];
+            nn += profit[i];
+         } else {
+            nn += std::floor(((double)rc / weight[i]) * profit[i]);
+            break;
+         }      
+      return nn;
+   };      
    const auto scf = [profit](const SKS& s,int label) { // partial cost function 
       return profit[s.n] * label;
    };

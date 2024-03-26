@@ -93,7 +93,7 @@ int main(int argc,char* argv[])
       else 
          ub = std::min({(int)bnds.getPrimal() -1 - OPT[n-s.k],L+1 - OPT[n-s.k]});
       auto lb = std::max({s.e+s.sm,(int)std::ceil(s.k * (s.k -1)/2),OPT[s.k+1]});
-      return Range::openInc(lb,ub);
+      return Range::closeInc(lb,ub);
    };
    const auto stf = [n,L](const SGRuler& s,const int label) -> std::optional<SGRuler> {
       bool legal = !std::foldl(s.m,[label,&s](bool acc,int i) { return acc || s.d.contains(label - i);},false);
