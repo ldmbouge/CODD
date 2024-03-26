@@ -99,6 +99,7 @@ public:
    Range(int f,int t) : _from(f),_to(t) {}
    Range(Range&& r) : _from(r._from),_to(r._to) {}
    Range(const Range& r) : _from(r._from),_to(r._to) {}
+   bool contains(int p) const noexcept { return _from <= p && p <= _to;}
    int size() const noexcept { return (_to >= _from) ? _to - _from + 1 : _from - _to + 1;}
    auto flip() const noexcept  { return Range(_to -1,_from-1);}
    auto begin() const noexcept { return iterator(_from <= _to ? Forward : Backward,_from); }
@@ -134,6 +135,23 @@ public:
    }
    NatSet(NatSet&& s) {
       memcpy(_t,s._t,sizeof(_t));
+   }
+   NatSet(int lb,int ub) {
+      if (lb > ub) {
+         for(auto i=0u;i < nbw;i++)
+            _t[i]=0;
+      } else {
+         ++ub;
+         assert(ub >= 0);
+         assert(lb <= ub);
+         assert((ub >> 6) < nbw);
+         for(int i=0;i<nbw;i++) _t[i]=0;
+         for(auto i = lb;i < ub;i++) {
+            const int ix = i >> 6;
+            assert(ix >= 0 && ix < nbw);
+            _t[ix] |= (1ull << (i & 63));         
+         }
+      }
    }
    NatSet(int ofs,const NatSet& s) {  // returns { ofs - v | v in S }
       int lw = nbw-1;
@@ -196,8 +214,19 @@ public:
          ttl += __builtin_popcountll(_t[i]);
       return ttl;
    }
+   bool empty() const noexcept {
+      bool az = true;
+      for(short i=0;i < nbw;++i)
+         az &= (_t[i] == 0);
+      return az;
+   }
    void insert(int p) noexcept         { _t[p >> 6] |= (1ull << (p & 63));}
    bool contains(int p) const noexcept { return (_t[p >> 6] &  (1ull << (p & 63))) != 0;}
+   NatSet& complement() noexcept {
+      for(short i=0;i < nbw;++i)
+         _t[i] = ~_t[i];
+      return *this;
+   }
    NatSet& unionWith(const NatSet& ps) noexcept {
       for(short i=0;i < nbw;++i)
          _t[i] |= ps._t[i];
