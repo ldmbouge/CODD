@@ -79,7 +79,7 @@ public:
    virtual void reset() = 0;
    virtual ANode::Ptr init() = 0;
    virtual ANode::Ptr target() = 0;
-   virtual ANode::Ptr transition(ANode::Ptr src,int label) = 0;
+   virtual ANode::Ptr transition(Bounds& bnds,ANode::Ptr src,int label) = 0;
    virtual ANode::Ptr merge(const ANode::Ptr first,const ANode::Ptr snd) = 0;
    virtual double cost(ANode::Ptr src,int label) = 0;
    virtual ANode::Ptr duplicate(const ANode::Ptr src) = 0;
@@ -97,7 +97,7 @@ public:
    double currentOpt() const { return _trg->getBound();}
    bool apply(ANode::Ptr from,Bounds& bnds);
    std::vector<int> incumbent();
-   void compute();
+   void compute(Bounds& bnds);
    std::vector<ANode::Ptr> computeCutSet();
    void print(std::ostream& os,std::string gLabel);
    void setStrategy(Strategy* s);
@@ -116,7 +116,7 @@ public:
    Strategy() : _dd(nullptr) {}
    AbstractDD* theDD() const noexcept { return _dd;}
    virtual const std::string getName() const = 0;
-   virtual void compute() {}
+   virtual void compute(Bounds&) {}
    virtual std::vector<ANode::Ptr> computeCutSet() { return std::vector<ANode::Ptr> {};}
    virtual bool primal() const { return false;}
    virtual bool dual() const { return false;}
@@ -126,7 +126,7 @@ class Exact:public Strategy {
 public:
    Exact() : Strategy() {}
    const std::string getName() const { return "Exact";}
-   void compute();
+   void compute(Bounds&);
    bool primal() const { return true;}
    bool dual() const { return true;}
 };
@@ -269,7 +269,7 @@ class Restricted: public WidthBounded {
 public:
    Restricted(const unsigned mxw) : WidthBounded(mxw) {}
    const std::string getName() const { return "Restricted";}
-   void compute();
+   void compute(Bounds& );
    bool primal() const { return true;}
    ANode::Ptr checkDominance(CQueue<ANode::Ptr>& qn,ANode::Ptr n,double nObj);
 };
@@ -286,7 +286,7 @@ class Relaxed :public WidthBounded {
 public:
    Relaxed(const unsigned mxw) : WidthBounded(mxw) {}
    const std::string getName() const { return "Relaxed";}
-   void compute();
+   void compute(Bounds&);
    std::vector<ANode::Ptr> computeCutSet();
    bool dual() const { return true;}
    NDAction mergePair(ANode::Ptr mNode,ANode::Ptr toMerge[2]);
@@ -334,6 +334,7 @@ template <typename ST,
           typename STC  = double(*)(const ST&,int),
           typename SMF  = std::optional<ST>(*)(const ST&,const ST&),
           typename EQSink = bool(*)(const ST&),
+          typename LOCAL = double(*)(const ST&),
           typename SDOM = bool(*)(const ST&,const ST&),
           class Equal = std::equal_to<ST>
           >
@@ -347,6 +348,7 @@ private:
    STC _stc;
    SMF _smf;
    EQSink _eqs;
+   LOCAL _local;
    SDOM _sdom;
    LHashtable<ST> _nmap;
    unsigned _ndId;
@@ -426,10 +428,16 @@ private:
          return retSet;
       }
    }
-   ANode::Ptr transition(ANode::Ptr src,int label) {
+   ANode::Ptr transition(Bounds& bnds,ANode::Ptr src,int label) {
       auto op = static_cast<const Node<ST>*>(src.get());
-      auto vs = _stf(op->get(),label);
+      auto vs = _stf(op->get(),label);     
       if (vs.has_value()) {
+         if constexpr (!std::is_same<decltype(_local), std::nullptr_t>::value) {            
+            auto cVal = _stc(op->get(),label);
+            auto sCost = src->getBound() + cVal + _local(vs.value());
+            if (!isBetter(sCost,bnds.getPrimal()))
+               return nullptr;
+         }
          ANode::Ptr rv = makeNode(std::move(vs.value()),src->isExact());
          return rv;
       } else return nullptr;
@@ -469,7 +477,7 @@ private:
    }
 public:
    DD(std::function<ST()> sti,IBL2 stt,LGF lgf,STF stf,STC stc,SMF smf,
-      EQSink eqs,const GNSet& labels,SDOM dom=nullptr)
+      EQSink eqs,const GNSet& labels,LOCAL local=nullptr,SDOM dom=nullptr)
       : AbstractDD(labels),
         _sti(sti),
         _stt(stt),
@@ -478,6 +486,7 @@ public:
         _stc(stc),
         _smf(smf),
         _eqs(eqs),
+        _local(local),
         _sdom(dom),
         _nmap(_mem,200000),
         _ndId(0)
@@ -500,7 +509,7 @@ public:
       //os << std::endl;
    }
    AbstractDD::Ptr duplicate() {
-      return AbstractDD::Ptr(new DD(_sti,_stt,_lgf,_stf,_stc,_smf,_eqs,_labels,_sdom));
+      return AbstractDD::Ptr(new DD(_sti,_stt,_lgf,_stf,_stc,_smf,_eqs,_labels,_local,_sdom));
    }
    ANode::Ptr duplicate(const ANode::Ptr src) {
       Node<ST>* at = nullptr;

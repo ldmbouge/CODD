@@ -57,17 +57,17 @@ void AbstractDD::setStrategy(Strategy* s)
    _strat->_dd = this;
 }
 
-void AbstractDD::compute()
+void AbstractDD::compute(Bounds& bnds)
 {
    assert(_strat);
-   _strat->compute();
+   _strat->compute(bnds);
    computeBestBackward(_strat->getName());
 }
 
 bool AbstractDD::apply(ANode::Ptr from,Bounds& bnds)
 {
    makeInitFrom(from);
-   compute();
+   compute(bnds);
    bool isBetterValue = isBetter(currentOpt(),bnds.getPrimal());
    if (isBetterValue) 
       update(bnds);
@@ -287,7 +287,7 @@ auto Strategy::remainingLabels(ANode::Ptr p)
    return _dd->getLabels(p);
 }
 
-void Exact::compute()
+void Exact::compute(Bounds& bnds)
 {
    auto root = _dd->init();
    _dd->target();
@@ -298,7 +298,7 @@ void Exact::compute()
       auto p = qn.deQueue();
       auto remLabels = remainingLabels(p);
       for(auto l : remLabels) {     
-         auto child = _dd->transition(p,l); // we get back a new node, or an already existing one.
+         auto child = _dd->transition(bnds,p,l); // we get back a new node, or an already existing one.
          if (child) {
             const bool newNode = child->nbParents()==0; // is this a newly created node?
             auto theCost = _dd->cost(p,l);
@@ -386,7 +386,7 @@ ANode::Ptr Restricted::checkDominance(CQueue<ANode::Ptr>& qn,ANode::Ptr n,double
 }
 
 
-void Restricted::compute()
+void Restricted::compute(Bounds& bnds)
 {
    const bool hasDom = _dd->hasDominance();
    _dd->_exact = true;
@@ -400,7 +400,7 @@ void Restricted::compute()
       for(auto p : lk) { // loop over layer lk. p is a "parent" node.
          auto remLabels = remainingLabels(p);
          for(auto l : remLabels) {
-            auto child = _dd->transition(p,l); // we get back a new node, or an already existing one.
+            auto child = _dd->transition(bnds,p,l); // we get back a new node, or an already existing one.
             if (child) {
                bool newNode = child->nbParents()==0; // is this a newly created node?
                auto theCost = _dd->cost(p,l);
@@ -608,7 +608,7 @@ public:
    }
 };
 
-void Relaxed::compute()
+void Relaxed::compute(Bounds& bnds)
 {
    const bool hasDom = _dd->hasDominance();
    //std::cout << "HASDOM:" << hasDom << "\n";
@@ -624,7 +624,7 @@ void Relaxed::compute()
       for(auto p : lk) { // loop over layer lk. p is a "parent" node.
          auto remLabels = remainingLabels(p);
          for(auto l : remLabels) {
-            auto child = _dd->transition(p,l); // we get back a new node, or an already existing one.
+            auto child = _dd->transition(bnds,p,l); // we get back a new node, or an already existing one.
             if (child) {
                bool newNode = child->nbParents()==0; // is this a newly created node?
                auto theCost = _dd->cost(p,l);

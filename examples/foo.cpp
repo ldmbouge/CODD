@@ -106,7 +106,7 @@ int main()
                    decltype(eqs)
                    >::makeDD(myInit,myTarget,lgf,myStf,scf,smf,eqs,labels);
    myxDD->setStrategy(new Exact);
-   myxDD->compute();
+   myxDD->compute(bnds);
    //myxDD->display();
    std::cout << myxDD->incumbent() << std::endl;
    

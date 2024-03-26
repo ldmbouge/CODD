@@ -140,10 +140,10 @@ int main(int argc,char* argv[])
          return SKS { s.n+1,s.c - label * weight[s.n] };
       } else return SKS { I, 0};
    };
-   const auto local = [I,&weight,&profit](const SKS& s) -> double {
+   auto local = [I,&weight,&profit](const SKS& s) -> double {
       double nn = 0;
       int    rc = s.c;
-      for(auto i=s.n+1; i < I;i++) 
+      for(auto i=s.n; i < I;i++) 
          if (weight[i] <= rc) {
             rc -= weight[i];
             nn += profit[i];
@@ -174,8 +174,9 @@ int main(int argc,char* argv[])
                 decltype(stf),
                 decltype(scf),
                 decltype(smf),
-                decltype(sEq)                
-                >::makeDD(init,target,lgf,stf,scf,smf,sEq,labels,sDom),w);
+                decltype(sEq),
+                decltype(local)
+                >::makeDD(init,target,lgf,stf,scf,smf,sEq,labels,local,sDom),w);
    engine.search(bnds);
    return 0;
 }
