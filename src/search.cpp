@@ -26,21 +26,22 @@ void BAndB::search(Bounds& bnds)
    cout << "B&B searching..." << endl;
    bnds.attach(_theDD);
    double optTime = 0.0;
-   bnds.onSolution([start,&optTime](const auto& lbls) {
+   bnds.onSolution([ss,start,&optTime](const auto& lbls) {
       optTime = RuntimeMonitor::elapsedSince(start);
-      std::cout << "TIME:" << optTime << "\n";
+      std::cout << "TIME:" << setprecision(ss) << optTime << "\n";
    });
    AbstractDD::Ptr relaxed = _theDD->duplicate();
    AbstractDD::Ptr restricted = _theDD->duplicate();
    WidthBounded* ddr[2];
-   _theDD->setStrategy(new Exact);
+   //_theDD->setStrategy(new Exact);
    relaxed->setStrategy(ddr[0] = new Relaxed(_mxw));
    restricted->setStrategy(ddr[1] = new Restricted(_mxw));
-   auto hOrder = [this](const QNode& a,const QNode& b) {
-      return _theDD->isBetter(a.bound,b.bound);
+   auto hOrder = [relaxed](const QNode& a,const QNode& b) {
+      return relaxed->isBetter(a.bound,b.bound);
    };
    Heap<QNode,decltype(hOrder)> pq(&mem,64000,hOrder);   
-   pq.insertHeap(QNode { _theDD->init(), _theDD->initialWorst() } );
+   pq.insertHeap(QNode { relaxed->makeInPool(_mem,relaxed->init()), relaxed->initialWorst() } );
+   //pq.insertHeap(QNode { _theDD->init(), relaxed->initialWorst() } );
    unsigned nNode = 0,ttlNode = 0,insDom=0,pruned=0;
    bool primalBetter = false;
    cout << "B&B Nodes          " << setw(6) << "Dual\t " << setw(6) << "Primal\t Gap(%)\n";
@@ -55,7 +56,7 @@ void BAndB::search(Bounds& bnds)
       if (primalBetter || fl > 5000) {
          double gap = 100 * (bnds.getPrimal() - bbn.bound) / bnds.getPrimal();      
          cout << "B&B(" << setw(5) << nNode << ")\t " << setprecision(6);
-         if (bbn.bound == _theDD->initialWorst())
+         if (bbn.bound == relaxed->initialWorst())
             cout << setw(7) << "-"  << "\t " << setw(7) << bnds.getPrimal() << "\t ";
          else
             cout << setw(7) << bbn.bound << "\t " << setw(7) << bnds.getPrimal() << "\t ";
@@ -70,12 +71,14 @@ void BAndB::search(Bounds& bnds)
 #ifndef _NDEBUG     
       cout << "BOUNDS NOW: " << bnds << endl;
       cout << "EXTRACTED:  " << bbn.node->getId() << " ::: ";
-      _theDD->printNode(cout,bbn.node);
+      relaxed->printNode(cout,bbn.node);
       cout << "\t(" << bbn.bound << ")" << " SZ:" << pq.size() << endl;
 #endif
       ttlNode++;
-      if (!_theDD->isBetter(bbn.bound,bnds.getPrimal()))
+      if (!relaxed->isBetter(bbn.bound,bnds.getPrimal())) {
+         _mem->release(bbn.node);
          continue;
+      }
       nNode++;
       bool dualBetter = relaxed->apply(bbn.node,bnds);
       if (dualBetter) {
@@ -92,22 +95,20 @@ void BAndB::search(Bounds& bnds)
                }
                // use the bound in n (the ones in nd are _reset_ when duplicate occurs????)
                bool newGuyDominated = false;
-               if (!_theDD->isBetter(n->getBound() + n->getBackwardBound(),bnds.getPrimal()))  {
-                  //std::cout << "in Cutset. Not good enough: " << n->getBound() + n->getBackwardBound() << "\n";
-                  continue;
-               }
-               if (_theDD->hasDominance()) {
+               if (!relaxed->isBetter(n->getBound() + n->getBackwardBound(),bnds.getPrimal())) 
+                  continue; // the loop over the cutset! Not the main loop               
+               if (relaxed->hasDominance()) {
                   unsigned d = 0;
                   auto pqSz = pq.size();
                   auto allLocs = new Heap<QNode,decltype(hOrder)>::LocType*[pqSz];
                   for(unsigned k = 0;k < pqSz;k++) {
                      auto bbn = pq[k];
-                     bool isObjDom   = _theDD->isBetterEQ(bbn->value().node->getBound(),n->getBound());
-                     newGuyDominated = isObjDom && _theDD->dominates(bbn->value().node,n);
+                     bool isObjDom   = relaxed->isBetterEQ(bbn->value().node->getBound(),n->getBound());
+                     newGuyDominated = isObjDom && relaxed->dominates(bbn->value().node,n);
                      if (newGuyDominated)
                         break;                     
-                     bool objDom   = _theDD->isBetterEQ(n->getBound(),bbn->value().node->getBound());
-                     bool qnDominated = objDom && _theDD->dominates(n,bbn->value().node);
+                     bool objDom   = relaxed->isBetterEQ(n->getBound(),bbn->value().node->getBound());
+                     bool qnDominated = objDom && relaxed->dominates(n,bbn->value().node);
                      if (qnDominated)
                         allLocs[d++] = bbn;
                   }
@@ -120,7 +121,8 @@ void BAndB::search(Bounds& bnds)
                   delete[]allLocs;
                }
                if (!newGuyDominated) {
-                  auto nd = _theDD->duplicate(n); // we got a duplicate of the node.
+                  //auto nd = _theDD->duplicate(n); // we got a duplicate of the node.
+                  auto nd = relaxed->makeInPool(_mem,n);
                   assert(nd->getBound() == n->getBound());
                   pq.insertHeap(QNode {nd, n->getBound()+n->getBackwardBound()});
                }
@@ -128,6 +130,7 @@ void BAndB::search(Bounds& bnds)
             }
          }
       }
+      _mem->release(bbn.node);
    }
    cout << setprecision(ss);
    auto spent = RuntimeMonitor::elapsedSince(start);
