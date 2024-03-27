@@ -83,6 +83,7 @@ public:
    virtual ANode::Ptr merge(const ANode::Ptr first,const ANode::Ptr snd) = 0;
    virtual double cost(ANode::Ptr src,int label) = 0;
    virtual ANode::Ptr duplicate(const ANode::Ptr src) = 0;
+   virtual ANode::Ptr makeInPool(LPool::Ptr pool,const ANode::Ptr src) = 0;
    virtual double initialBest() const = 0;
    virtual double initialWorst() const = 0;
    virtual bool   isBetter(double obj1,double obj2) const = 0;
@@ -535,6 +536,18 @@ public:
          auto nn = new (_mem) Node<ST>(_mem,_ndId++,*sp);
          _nmap.rawInsertAt(inMap,nn);
          _an.push_back(nn);
+         return nn;
+      }
+   }
+   ANode::Ptr makeInPool(LPool::Ptr pool,const ANode::Ptr src) {
+      auto sp = static_cast<const Node<ST>*>(src.get());
+      auto reuse = pool->claimNode();
+      if (reuse) {
+         Node<ST>* nn = static_cast<Node<ST>*>(reuse.get());
+         nn->resetWith(sp);
+         return nn;
+      } else {
+         auto nn = new (pool->get()) Node<ST>(pool->get(),pool->grabId(),*sp);
          return nn;
       }
    }
