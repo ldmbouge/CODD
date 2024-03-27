@@ -19,6 +19,7 @@
 #include <vector>
 #include "handle.hpp"
 #include "stlAllocAdapter.hpp"
+
 /**
  * Default segment size for storage management (4 Megs).
  */
