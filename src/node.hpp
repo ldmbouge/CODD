@@ -3,6 +3,7 @@
 
 #include <functional>
 #include <iterator>
+#include <stack>
 #include "vec.hpp"
 
 template<typename T>
@@ -59,6 +60,7 @@ public:
    ANode(Pool::Ptr mem,unsigned nid,bool exact);
    ANode(Pool::Ptr mem,unsigned nid,const ANode& o,bool exact);
    //~ANode();
+   void reset();
    void print(std::ostream& os) const {}
    void clearParents() { _parents.clear();}
    void clearKids() { _children.clear();}
@@ -189,7 +191,14 @@ public:
    typedef handle_ptr<Node<T>> Ptr;
    Node(Pool::Ptr mem,T&& v,unsigned nid,bool exact) : ANode(mem,nid,exact),_val(std::move(v)) {}
    Node(Pool::Ptr mem,unsigned nid,const Node<T>& o) : ANode(mem,nid,o,true),_val(o._val) {}
-   const T& get() const {return _val;}
+   const T& get() const noexcept { return _val;}
+   void resetWith(const Node<T>* val) noexcept {
+      reset();
+      _optLabels = val->_optLabels;
+      _bound = val->_bound;
+      _bbound = val->_bbound;
+      _val = val->_val;
+   }
    void print(std::ostream& os) const {
       os << _nid << ','
          << (_exact ? "T" : "F") << ','
@@ -198,6 +207,27 @@ public:
          os << i << ':' << _optLabels[i] << " ";
       os << "]";
    }
+};
+
+class LPool {
+   Pool::Ptr _mem;
+   unsigned  _id;
+   std::stack<ANode::Ptr> _free;
+public:
+   typedef LPool* Ptr; // space saving measure
+   LPool(Pool::Ptr mem) : _mem(mem),_id(0) {}
+   unsigned grabId() noexcept { return _id++;}
+   Pool::Ptr get() const noexcept {  return _mem;}
+   ANode::Ptr claimNode() {
+      if (_free.empty())
+         return nullptr;
+      else {
+         ANode::Ptr nd = _free.top();
+         _free.pop();
+         return nd;
+      }
+   }
+   void release(ANode::Ptr n);
 };
 
 

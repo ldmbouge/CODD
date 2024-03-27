@@ -40,9 +40,19 @@ ANode::ANode(Pool::Ptr mem,unsigned nid,const ANode& o,bool exact)
      _exact(exact),
      _nid(nid),
      _next(nullptr),
-     _prev(nullptr)
-    
+     _prev(nullptr)    
 {}
+
+void ANode::reset()
+{
+   _parents.clear();
+   _children.clear();
+   _optLabels.clear();
+   _bound = _bbound = 0;
+   _layer = 0;
+   _exact = true;
+   _next = _prev = nullptr;
+}
 
 /*
 ANode::~ANode()
@@ -73,3 +83,8 @@ void ANode::disconnect()
 
 
 
+void LPool::release(ANode::Ptr n)
+{
+   //std::cout << "REL(" << n->getId() << ")" << "\n";
+   _free.push(n);
+}
