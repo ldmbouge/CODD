@@ -9,7 +9,6 @@
 #include <algorithm>
 #include <map>
 
-//typedef std::vector<GNSet> Legal;
 typedef FArray<GNSet> Legal;
 
 struct COLOR {
@@ -19,6 +18,7 @@ struct COLOR {
    COLOR(const COLOR& c) : s(c.s),last(c.last),vtx(c.vtx) {}
    COLOR(COLOR&& c) : s(std::move(c.s)),last(c.last),vtx(c.vtx) {}
    COLOR(Legal&& s,int l,int v) : s(std::move(s)),last(l),vtx(v) {}
+   COLOR& operator=(const COLOR& c) { s = c.s;last = c.last; vtx = c.vtx;return *this;}
    friend std::ostream& operator<<(std::ostream& os,const COLOR& m) {
       return os << "<" << m.s << ',' << m.last << ',' << m.vtx << ">";
    }
