@@ -108,7 +108,7 @@ public:
       return *this;
    }
    Pool::Ptr getPool() { return _mem;}
-   void clear() {
+   void clear() noexcept {
       _sz = 0;
    }
    SZT size() const { return _sz;}
