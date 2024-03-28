@@ -62,7 +62,25 @@ int main(int argc,char* argv[])
 	{ 9, 44 },
 	{ 10, 55 },
 	{ 11, 72 },
-	{ 12, 85 }
+	{ 12, 85 },
+	{ 13, 106},
+	{ 14, 127},
+	{ 15, 151},
+	{ 16, 177},
+	{ 17, 199},
+	{ 18, 216},
+	{ 19, 246},
+	{ 20, 283},
+	{ 21, 333},
+	{ 22, 356},
+	{ 23, 372},
+	{ 24, 425},
+	{ 25, 480},
+	{ 26, 492},
+	{ 27, 553},
+	{ 28, 585},
+	{ 29, 586},  // opt not known, but can use lower bound (G(28) + 1)
+	{ 30, 588}   // opt not known, but can use lower bound (G(28) + 1 + 2)
    };
    
    //std::cout << "OPT[3] = "<< OPT[3] << std::endl;
@@ -78,6 +96,10 @@ int main(int argc,char* argv[])
    const auto lgf = [n,&bnds,&OPT,L](const SGRuler& s) {
       auto ub = std::min({(int)bnds.getPrimal() - OPT[n-s.k] - 1,L+1 - OPT[n-s.k]});
       auto lb = std::max({s.e+1,(int)std::ceil(s.k * (s.k -1)/2)});
+      if (s.k<n-1) 
+        lb = std::max({lb, OPT[s.k+1]});
+      else
+        lb = std::max({lb, OPT[s.k]+1});
       return Range::closeInc(lb,ub);
    };
    const auto stf = [n](const SGRuler& s,const int label) -> std::optional<SGRuler> {
