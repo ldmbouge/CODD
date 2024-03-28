@@ -96,9 +96,9 @@ int main(int argc,char* argv[])
       auto lb = std::max({s.e+s.sm,(int)std::ceil(s.k * (s.k -1)/2),OPT[s.k+1]});
       GRSet vr;
       for(int label = lb;label <= ub;label++) {
-         bool legal = !std::foldl(s.m,[label,&s](bool acc,int i) { return acc || s.d.contains(label - i);},false);
-         //GRSet leg(s.d);
-         //if (leg.interWith(label - s.m).empty())
+         //bool legal = !std::foldl(s.m,[label,&s](bool acc,int i) { return acc || s.d.contains(label - i);},false);
+         GRSet leg(s.d);
+         bool legal = (leg.interWith(label - s.m).empty());
          if (legal)
             vr.insert(label);
       }
