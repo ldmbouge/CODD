@@ -154,7 +154,12 @@ public:
       }
    }
    NatSet(int ofs,const NatSet& s) {  // returns { ofs - v | v in S }
-      int lw = nbw-1;
+      for(auto i=0u;i < nbw;i++)
+         _t[i]=0;
+      for(auto i : s)
+         insert(ofs - i);
+   }
+   /*      int lw = nbw-1;
       while(lw >= 0 && s._t[lw]==0) lw--;
       if (lw < 0) {
          for(auto i=0u;i < nbw;i++)
@@ -164,21 +169,28 @@ public:
       const auto lvinLW = 63 - __builtin_clzll(s._t[lw]);
       const auto lv = (lw * 64) + lvinLW;
       const auto dec = ofs - lv;
+      std::cout << "DEC=" << dec << "\n";
       switch(lw) {
          case 0: {
             _t[0] = std::revBitsOfLong(s._t[0]) >> (63 - lv);
             for(int i=lw+1;i < nbw;i++) _t[i] = 0; 
          }break;
          default: {
-            for(int i=0;i <= lw;i++)
-               _t[lw-i] = std::revBitsOfLong(s._t[i]);
-            for(int i=lw+1;i < nbw;i++) _t[i] = 0;  
-            const auto nbs = __builtin_ffsll(_t[0])-1;
+            for(int i=0;i <= lw;i++) 
+               _t[lw-i] = std::revBitsOfLong(s._t[i]);            
+            for(int i=lw+1;i < nbw;i++) _t[i] = 0;
+            std::cout << "T0:" << std::bitset<64>(_t[0]) << "\n";
+            const auto nbs = __builtin_ffsll(_t[0])-1; // least significant bit set to 1
+            std::cout << "NBS=" << nbs << "\n";
             unsigned long long inb = 0;
             for(int i=lw;i >= 0;i--) {
+               std::cout << "\tt" << i << "=" << std::bitset<64>(_t[i]) << " -- before --\n";
                const auto ds = _t[i] & ((1ull << nbs)-1);
-                _t[i] = (_t[i] >> nbs) | (inb << (64 - nbs));
-                inb = ds;
+               std::cout << "IN=" << std::bitset<64>(inb) << "\n";
+               std::cout << "DS=" << std::bitset<64>(ds) << "\n";
+               _t[i] = (_t[i] >> nbs) | (inb << (63 - nbs));
+               std::cout << "\tt" << i << "=" << std::bitset<64>(_t[i]) << " -- after --\n";
+               inb = ds;
             }
          }
       }
@@ -189,7 +201,7 @@ public:
          _t[i] = inb | ((dec < 64)*(_t[i] << dec));
          inb = outb;
       }
-   }  
+      }  */
    NatSet(std::initializer_list<int> l) {
       for(auto i=0u;i < nbw;i++)
          _t[i]=0;
@@ -307,6 +319,10 @@ public:
    citerator cbegin() const { return citerator(_t,0);}
    citerator cend()   const { return citerator(_t);}
    friend std::ostream& operator<<(std::ostream& os,const NatSet& ps) {
+      // for(int i=0; i < nbw;i++) {
+      //    std::bitset<64> word(ps._t[i]);
+      //    std::cout << word << " ";
+      // }         
       os << "{";
       auto cnt = 0;
       for(auto i=ps.cbegin();i!= ps.cend();i++,cnt++)
