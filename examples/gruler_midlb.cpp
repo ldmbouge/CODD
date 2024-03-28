@@ -74,18 +74,19 @@ int main(int argc,char* argv[])
 	{ 18, 216 },
 	{ 19, 246 }
    };
+   // G14 = 0 4 6 20 35 52 59 77 78 86 89 99 122 127
    
    //std::cout << "OPT[3] = "<< OPT[3] << std::endl;
 
    Bounds bnds;
    const auto labels = setFrom(std::views::iota(1,L+1));     // using a plain set for the labels
-   const auto init = []() {   // The root state      
-      return SGRuler {GRSet {0},GRSet {},1,0,1};
+   const auto init = []() {   // The root state
+      return SGRuler {GRSet {0},GRSet {},1,0,1};  // s = (s.m, s.d, s.k, s.e)
    };
    const auto target = [n,L]() {    // The sink state
       return SGRuler {GRSet {},GRSet {},n,0,L+1};  // smallest unused distance should be set explicitly to L+1
    };
-   const auto lgf = [n,&bnds,&OPT,L](const SGRuler& s) -> Range {
+   const auto lgf = [n,&bnds,&OPT,L](const SGRuler& s) {      
       auto ub = L+1;
       if (s.k < n/2)
         ub = std::min({(int)std::floor(((int)bnds.getPrimal())/2) - OPT[std::floor(n/2)-s.k], 
@@ -93,21 +94,26 @@ int main(int argc,char* argv[])
       else 
          ub = std::min({(int)bnds.getPrimal() -1 - OPT[n-s.k],L+1 - OPT[n-s.k]});
       auto lb = std::max({s.e+s.sm,(int)std::ceil(s.k * (s.k -1)/2),OPT[s.k+1]});
-      return Range::closeInc(lb,ub);
+      GRSet vr;
+      for(int label = lb;label <= ub;label++) {
+         bool legal = !std::foldl(s.m,[label,&s](bool acc,int i) { return acc || s.d.contains(label - i);},false);
+         //GRSet leg(s.d);
+         //if (leg.interWith(label - s.m).empty())
+         if (legal)
+            vr.insert(label);
+      }
+      return vr;
    };
    const auto stf = [n,L](const SGRuler& s,const int label) -> std::optional<SGRuler> {
-      bool legal = !std::foldl(s.m,[label,&s](bool acc,int i) { return acc || s.d.contains(label - i);},false);
-      if (legal) { // this must be a legal move (illegal==0)
-         if (s.k == n-1)  // this moves goes to the sink
-            return SGRuler { GRSet {},GRSet {},n,0,L+1};
-         else { 
-            GRSet d_new = (label - s.m) | s.d;
-            int smallest_dist = s.sm;
-            while (d_new.contains(smallest_dist)) smallest_dist += 1;
-            return SGRuler { s.m | GRSet {label}, d_new, s.k + 1, label, smallest_dist };         
-         }
-      } else 
-         return std::nullopt;  // return the empty optional      
+      if (s.k == n-1)  // this moves goes to the sink
+         return SGRuler { GRSet {},GRSet {},n,0,L+1};
+      else {
+         GRSet d_new = (label - s.m) | s.d;
+         int smallest_dist = s.sm;
+         while (d_new.contains(smallest_dist)) smallest_dist += 1;
+         SGRuler rv { s.m | GRSet {label}, d_new, s.k + 1, label, smallest_dist };
+         return rv;
+      }
    };
    const auto scf = [](const SGRuler& s,int label) { // partial cost function 
       return label - s.e;
@@ -124,23 +130,6 @@ int main(int argc,char* argv[])
 
    std::cout << "LABELS:" << labels << "\n";
 
-   
-   /*
-     auto myxDD = DD<SGRuler,std::less<double>, // to minimize
-                ///decltype(init), 
-                decltype(target), 
-                decltype(stf),
-                decltype(scf),
-                decltype(smf)
-                >::makeDD(init,target,stf,scf,smf,labels);
-   myxDD->setStrategy(new Exact);
-   bnds.setPrimal(1000);
-   myxDD->compute();
-
-   std::cout << myxDD->incumbent() << std::endl;
-   return 0;
-   */
-   
    BAndB engine(DD<SGRuler,Minimize<double>, // to minimize
                 ///decltype(init), 
                 decltype(target),
