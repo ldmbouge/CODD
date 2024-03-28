@@ -93,7 +93,11 @@ int main(int argc,char* argv[])
 		       (int)std::floor((L+1)/2) - OPT[std::floor(n/2)-s.k]});
       else 
          ub = std::min({(int)bnds.getPrimal() -1 - OPT[n-s.k],L+1 - OPT[n-s.k]});
-      auto lb = std::max({s.e+s.sm,(int)std::ceil(s.k * (s.k -1)/2),OPT[s.k+1]});
+      auto lb = s.e+s.sm;
+      if (s.k<n-1)
+        lb = std::max({lb,(int)std::ceil(s.k * (s.k -1)/2),OPT[s.k+1]});
+      else 
+        lb = std::max({lb,(int)std::ceil(s.k * (s.k -1)/2),OPT[s.k]+1});
       GRSet vr;
       for(int label = lb;label <= ub;label++) {
          //bool legal = !std::foldl(s.m,[label,&s](bool acc,int i) { return acc || s.d.contains(label - i);},false);
