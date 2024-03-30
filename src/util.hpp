@@ -381,10 +381,6 @@ public:
    citerator cbegin() const { return citerator(_t,0);}
    citerator cend()   const { return citerator(_t);}
    friend std::ostream& operator<<(std::ostream& os,const NatSet& ps) {
-      for(int i=0; i < nbw;i++) {
-         std::bitset<64> word(ps._t[i]);
-         std::cout << word << " ";
-      }         
       os << "{";
       auto cnt = 0;
       for(auto i=ps.cbegin();i!= ps.cend();i++,cnt++)
