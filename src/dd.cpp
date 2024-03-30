@@ -61,7 +61,7 @@ void AbstractDD::compute(Bounds& bnds)
 {
    assert(_strat);
    _strat->compute(bnds);
-   computeBestBackward(_strat->getName());
+   //computeBestBackward(_strat->getName());
 }
 
 bool AbstractDD::apply(ANode::Ptr from,Bounds& bnds)
@@ -660,6 +660,7 @@ void Relaxed::compute(Bounds& bnds)
    }
    //_dd->computeBest(getName());
    tighten(_dd->_trg);
+   _dd->computeBestBackward(getName());
 }
 
 std::vector<ANode::Ptr> Relaxed::computeCutSet()

@@ -101,6 +101,8 @@ public:
    Range(const Range& r) : _from(r._from),_to(r._to) {}
    bool contains(int p) const noexcept { return _from <= p && p <= _to;}
    int size() const noexcept { return (_to >= _from) ? _to - _from + 1 : _from - _to + 1;}
+   auto from() const noexcept  { return _from;}
+   auto to() const noexcept    { return _to;}
    auto flip() const noexcept  { return Range(_to -1,_from-1);}
    auto begin() const noexcept { return iterator(_from <= _to ? Forward : Backward,_from); }
    auto end() const  noexcept  { return iterator(_from <= _to ? Forward : Backward,_to); }
@@ -284,6 +286,14 @@ public:
          az &= (_t[i] == 0);
       return az;
    }
+   int largest() const noexcept { // returns -1 when empty
+      int lw = nbw-1;
+      while(lw >= 0 && _t[lw]==0) lw--;
+      if (lw < 0) return -1;
+      const auto lvinLW = 63 - __builtin_clzll(_t[lw]); // index of MSB bit at 1 in word lw
+      const auto lv = (lw * 64) + lvinLW; // largest value in S
+      return lv;
+   }
    void insert(int p) noexcept         { _t[p >> 6] |= (1ull << (p & 63));}
    bool contains(int p) const noexcept { return (_t[p >> 6] &  (1ull << (p & 63))) != 0;}
    NatSet& complement() noexcept {
@@ -397,6 +407,7 @@ public:
       return hv;
    }
    friend struct std::hash<NatSet<nbw>>;
+   friend class GNSet;
 };
 
 
@@ -433,6 +444,20 @@ public:
       _nbp = s._nbp;
       _t = s._t;
       s._t = nullptr;      
+   }
+   template <unsigned short nbw> GNSet(const NatSet<nbw>& s) {
+      _mxw = nbw;
+      _t   = new unsigned long long[_mxw];
+      for(int i=0;i < _mxw;i++) _t[i] = s._t[i];
+      _nbp = s.largest();
+   }
+   GNSet(const Range& s) {
+      auto ub = s.to();
+      _mxw = 1+(ub >> 6);
+      _nbp = _mxw << 6;
+      _t = new unsigned long long[_mxw];
+      for(auto i : s)
+         insert(i);
    }
    GNSet(int lb,int ub) {
       //auto nb = ub >>  6;

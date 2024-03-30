@@ -136,7 +136,7 @@ void BAndB::search(Bounds& bnds)
    auto spent = RuntimeMonitor::elapsedSince(start);
    cout << "Done(" << _mxw << "):" << bnds.getPrimal() << "\t #nodes:" <<  nNode << "/" << ttlNode
         << "\t P/D:" << pruned << "/" << insDom
-        << "\t Time:" << optTime << "/" << spent << "ms"
+        << "\t Time:" << optTime/1000 << "/" << spent/1000 << "s"
         << "\t LIM?:" << (pq.size() > 0)
         << "\n";
 }

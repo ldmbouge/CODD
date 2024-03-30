@@ -423,10 +423,11 @@ private:
       if constexpr (std::is_same<decltype(valSet),GNSet>::value) {
          return valSet;
       } else {
-         GNSet retSet(128);
-         for(auto i : valSet)
-            retSet.insert(i);
-         return retSet;
+         return GNSet(valSet);
+         // GNSet retSet(128);
+         // for(auto i : valSet)
+         //    retSet.insert(i);
+         // return retSet;
       }
    }
    ANode::Ptr transition(Bounds& bnds,ANode::Ptr src,int label) {
