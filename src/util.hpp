@@ -100,7 +100,7 @@ public:
    Range(Range&& r) : _from(r._from),_to(r._to) {}
    Range(const Range& r) : _from(r._from),_to(r._to) {}
    bool contains(int p) const noexcept { return _from <= p && p <= _to;}
-   int size() const noexcept { return (_to >= _from) ? _to - _from + 1 : _from - _to + 1;}
+   int size() const noexcept { return (_to >= _from) ? _to - _from : _from - _to;}
    auto from() const noexcept  { return _from;}
    auto to() const noexcept    { return _to;}
    auto flip() const noexcept  { return Range(_to -1,_from-1);}
@@ -441,19 +441,27 @@ public:
       _t = s._t;
       s._t = nullptr;      
    }
-   template <unsigned short nbw> GNSet(const NatSet<nbw>& s) {
+   template <unsigned short nbw> GNSet(const NatSet<nbw>& s) {     
       _mxw = nbw;
       _t   = new unsigned long long[_mxw];
       for(int i=0;i < _mxw;i++) _t[i] = s._t[i];
       _nbp = s.largest();
    }
    GNSet(const Range& s) {
-      auto ub = s.to();
-      _mxw = 1+(ub >> 6);
-      _nbp = _mxw << 6;
-      _t = new unsigned long long[_mxw];
-      for(auto i : s)
-         insert(i);
+      auto sz = s.size(), ub = s.to();
+      if (sz==0) {
+	_mxw = 0;
+	_nbp = 0;
+	_t = nullptr;
+      } else {
+	_mxw = ((ub & 0x3f)? 1 : 0) + (ub >> 6); // if remainder 1 : 0 + division
+	_nbp = _mxw << 6;
+	assert(_mxw != 0);
+	_t = new unsigned long long[_mxw];
+	for(int i=0;i<_mxw;i++) _t[i]=0;
+	for(auto i : s)
+	  insert(i);
+      }
    }
    GNSet(int lb,int ub) {
       //auto nb = ub >>  6;
@@ -653,6 +661,27 @@ public:
          while(c-- && *a++ == *b++);
          return c<0;
       } else return false;
+   }
+  friend bool operator!=(const GNSet& s1,const GNSet& s2) {
+      if (s1._mxw == s2._mxw) {
+	for(auto i=0;i < s1._mxw;i++)
+	  if (s1._t[i] != s2._t[i])
+	    return true;
+	return false;
+      } else {
+	const auto ub = std::min(s1._mxw,s2._mxw);
+	for(auto i=0;i < ub;i++)
+	  if (s1._t[i] != s2._t[i])
+	    return true;
+	bool diff = false;
+	if (s1._mxw < s2._mxw)
+	  for(auto i = s1._mxw;i < s2._mxw;i++)
+	    diff = diff || (s2._t[i]!=0);
+	else
+	  for(auto i = s2._mxw;i < s1._mxw;i++)
+	    diff = diff || (s1._t[i]!=0);
+	return diff;
+      }
    }
    std::size_t hash() const noexcept {
       std::size_t hv = 0;

@@ -112,7 +112,7 @@ class Strategy {
 protected:
    AbstractDD* _dd;
    friend class AbstractDD;
-   auto remainingLabels(ANode::Ptr p);
+   auto remainingLabels(ANode::Ptr p) const noexcept { return _dd->getLabels(p);}
 public:
    Strategy() : _dd(nullptr) {}
    AbstractDD* theDD() const noexcept { return _dd;}
@@ -423,11 +423,11 @@ private:
       if constexpr (std::is_same<decltype(valSet),GNSet>::value) {
          return valSet;
       } else {
-         return GNSet(valSet);
-         // GNSet retSet(128);
-         // for(auto i : valSet)
-         //    retSet.insert(i);
-         // return retSet;
+	return GNSet(valSet);
+	// GNSet retSet(128);
+	// for(auto i : valSet)
+	//   retSet.insert(i);	
+	// return retSet;
       }
    }
    ANode::Ptr transition(Bounds& bnds,ANode::Ptr src,int label) {

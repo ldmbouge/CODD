@@ -282,11 +282,6 @@ void AbstractDD::computeBestBackward(const std::string m)
 // ----------------------------------------------------------------------
 // Exact DD Strategy
 
-auto Strategy::remainingLabels(ANode::Ptr p)
-{
-   return _dd->getLabels(p);
-}
-
 void Exact::compute(Bounds& bnds)
 {
    auto root = _dd->init();
