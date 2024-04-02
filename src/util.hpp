@@ -101,6 +101,7 @@ public:
    Range(const Range& r) : _from(r._from),_to(r._to) {}
    bool contains(int p) const noexcept { return _from <= p && p <= _to;}
    int size() const noexcept { return (_to >= _from) ? _to - _from : _from - _to;}
+   auto largest() const noexcept { return (_to >= _from) ? _to : _from;}
    auto from() const noexcept  { return _from;}
    auto to() const noexcept    { return _to;}
    auto flip() const noexcept  { return Range(_to -1,_from-1);}
@@ -448,19 +449,19 @@ public:
       _nbp = s.largest();
    }
    GNSet(const Range& s) {
-      auto sz = s.size(), ub = s.to();
+      auto sz = s.size(), ub = s.largest();
       if (sz==0) {
-	_mxw = 0;
-	_nbp = 0;
-	_t = nullptr;
+         _mxw = 0;
+         _nbp = 0;
+         _t = nullptr;
       } else {
-	_mxw = ((ub & 0x3f)? 1 : 0) + (ub >> 6); // if remainder 1 : 0 + division
-	_nbp = _mxw << 6;
-	assert(_mxw != 0);
-	_t = new unsigned long long[_mxw];
-	for(int i=0;i<_mxw;i++) _t[i]=0;
-	for(auto i : s)
-	  insert(i);
+         _mxw = ((ub & 0x3f)? 1 : 0) + (ub >> 6); // if remainder 1 : 0 + division
+         _nbp = _mxw << 6;
+         assert(_mxw != 0);
+         _t = new unsigned long long[_mxw];
+         for(int i=0;i<_mxw;i++) _t[i]=0;
+         for(auto i : s)
+            insert(i);
       }
    }
    GNSet(int lb,int ub) {
