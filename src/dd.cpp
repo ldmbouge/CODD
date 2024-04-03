@@ -595,7 +595,7 @@ public:
       for(auto i = _rest.begin(); i != _rest.end();) {
          if ((*i)->getLayer() != layer)            
             break;
-         std::cout << "adding: " << (*i)->getId() << "\n" << std::flush;
+         //std::cout << "adding: " << (*i)->getId() << "\n" << std::flush;
          _next.push_back(*i);
          i = _rest.erase(i);
       }
