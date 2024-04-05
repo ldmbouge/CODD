@@ -555,37 +555,35 @@ public:
       if (i < _mxw) 
          _t[i] &= ~(1ull << (p & 63));      
    }
+   GNSet& complement() noexcept {
+      for(short i=0;i < _mxw;++i)
+         _t[i] = ~_t[i];
+      return *this;
+   }
    bool contains(int p) const noexcept { return (_t[p >> 6] &  (1ull << (p & 63))) != 0;}
    GNSet& unionWith(const GNSet& ps) noexcept {
-      assert(_mxw == ps._mxw);
-      switch (_mxw) {
-         case 1: _t[0] |= ps._t[0];break;
-            /*
-#if defined(__x86_64__)
-         case 2: {
-            __m128i op0 = *(__m128i*)_t;
-            __m128i op1 = *(__m128i*)ps._t;
-            *(__m128i*)_t = _mm_or_si128(op0,op1);
-         }break;
-         case 3: {
-            __m128i op0 = *(__m128i*)_t;
-            __m128i op1 = *(__m128i*)ps._t;
-            *(__m128i*)_t = _mm_or_si128(op0,op1);
-            _t[2] |= ps._t[2];
-         }break;
-#endif
-            */
-         default: {
-            for(short i=0;i < _mxw;++i)
-               _t[i] |= ps._t[i]; 
-         }
+      short i;
+      for(i=0;i < std::min(_mxw,ps._mxw);i++)
+         _t[i] |= ps._t[i];
+      if (_mxw < ps._mxw) {
+         auto nt = new unsigned long long[ps._mxw];
+         for(i=0;i < _mxw;i++)
+            nt[i] = _t[i];
+         for(i=_mxw;i < ps._mxw;i++)
+            nt[i] = ps._t[i];
+         delete[] _t;
+         _t = nt;
+         _mxw = ps._mxw;
+         _nbp = ps._nbp;        
       }
       return *this;
    }
    GNSet& interWith(const GNSet& ps) noexcept {
-      assert(_mxw == ps._mxw);
-      for(short i=0;i < _mxw;i++)
+      short i;
+      for(i=0;i < std::min(_mxw,ps._mxw);i++)
          _t[i] &= ps._t[i];
+      while(i < _mxw)
+         _t[i++] = 0;
       return  *this;
    }
    void removeAbove(int p) noexcept {

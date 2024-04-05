@@ -80,6 +80,7 @@ public:
    void setBackwardBound(double b) { _bbound = b;}
    const auto getBound() const { return _bound;}
    const auto getBackwardBound() const { return _bbound;}
+   const Vec<int,unsigned>& getIncumbent() const noexcept { return _optLabels;}
    void setIncumbent(auto begin,auto end) {
       for(auto it = begin;it != end;it++)
          _optLabels.push_back(*it);

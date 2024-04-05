@@ -81,6 +81,9 @@ void BAndB::search(Bounds& bnds)
       }
       nNode++;
       bool dualBetter = relaxed->apply(bbn.node,bnds);
+      //relaxed->display();
+      //      char ch;std::cin >> ch;
+
       if (dualBetter) {
          primalBetter = restricted->apply(bbn.node,bnds);
          
@@ -120,11 +123,15 @@ void BAndB::search(Bounds& bnds)
                   }
                   delete[]allLocs;
                }
+               //std::cout << "CUTSet+ " << newGuyDominated << ":";
+               //relaxed->printNode(std::cout,n);
+               //std::cout << "\n";
                if (!newGuyDominated) {
                   //auto nd = _theDD->duplicate(n); // we got a duplicate of the node.
                   auto nd = relaxed->makeInPool(_mem,n);
                   assert(nd->getBound() == n->getBound());
                   pq.insertHeap(QNode {nd, n->getBound()+n->getBackwardBound()});
+                  //std::cout << "PQ:" << pq << "\n";
                }
                else insDom++;
             }

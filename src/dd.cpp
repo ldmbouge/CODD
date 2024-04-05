@@ -493,12 +493,17 @@ ANode::Ptr Relaxed::mergeOne(auto& layer,auto& skip)
    auto j = i;
    for(++j;j != layer.end();++j) {
       auto n2 = *j;
-      assert(n1->getLayer() == n2->getLayer());
-      assert(n1->nbChildren()==0);
-      assert(n2->nbChildren()==0);         
+      //assert(n1->getLayer() == n2->getLayer());
+      if (n1->nbChildren() || n2->nbChildren()) continue; 
+      //assert(n1->nbChildren()==0);
+      //assert(n2->nbChildren()==0);         
       mNode = _dd->merge(n1,n2);
       if (mNode) {
-         assert(mNode->nbChildren()==0);         
+         if (mNode->nbChildren() > 0) {
+            mNode = nullptr;
+            continue;
+         }
+         //assert(mNode->nbChildren()==0);         
          toMerge[1] = n2;
          break;
       }
