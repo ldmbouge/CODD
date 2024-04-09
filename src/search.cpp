@@ -90,11 +90,11 @@ void BAndB::search(Bounds& bnds)
          if (!restricted->isExact() && !relaxed->isExact()) {
             for(auto n : relaxed->computeCutSet()) {
                if (n == relaxed->getRoot()) { // the cutset is the root. Only way out: increase width.
-                  for(auto i=0u;i < sizeof(ddr)/sizeof(WidthBounded*);i++) {
-                     auto w = ddr[i]->getWidth() + 1;
-                     ddr[i]->setWidth(w);
+                  //for(auto i=0u;i < sizeof(ddr)/sizeof(WidthBounded*);i++) {
+                     auto w = ddr[0]->getWidth() + 1;
+                     ddr[0]->setWidth(w);
                      std::cout << "\t-->widening... " << w << "\n";
-                  }
+                     //}
                }
                // use the bound in n (the ones in nd are _reset_ when duplicate occurs????)
                bool newGuyDominated = false;

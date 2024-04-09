@@ -13,21 +13,25 @@
 struct MISP {
    GNSet sel;
    int   n;
+   int   l;
    friend std::ostream& operator<<(std::ostream& os,const MISP& m) {
-      return os << "<" << m.sel << ',' << m.n << ">";
+      return os << "<" << m.sel << ',' << m.n << ',' << m.l << ">";
    }
 };
 
 template<> struct std::equal_to<MISP> {
    bool operator()(const MISP& s1,const MISP& s2) const {
-      return s1.sel == s2.sel && s1.n == s2.n;
+      return s1.sel == s2.sel
+         && s1.n == s2.n
+         && s1.l == s2.l;
    }
 };
 
 template<> struct std::hash<MISP> {
    std::size_t operator()(const MISP& v) const noexcept {
       return std::rotl(std::hash<GNSet>{}(v.sel),32) ^
-         std::hash<int>{}(v.n);
+         std::hash<int>{}(v.n) ^
+         std::hash<int>{}(v.l);
    }
 };
 
@@ -133,32 +137,27 @@ int main(int argc,char* argv[])
       for(auto i : std::views::iota(0,top))
          U.insert(i);
       std::cout << "ROOT:" << U << "\n";
-      return MISP { U ,0};
+      return MISP { U ,0,-1};
    };
    const auto myTarget = []() {    // The sink state
-      return MISP { GNSet {}, 0};
+      return MISP { GNSet {}, 0,0};
    };
    const auto lgf = [top](const MISP& s)  {
       GNSet rv = s.sel;
-      rv.insert(top);
+      rv.removeBelow(s.l+1);
+      if (rv.empty()) rv.insert(top); // no longer any options, lead out!
       return rv;
    };
    auto myStf = [top,&neighbors](const MISP& s,const int label) -> std::optional<MISP> {
-      // if (label == top)
-      //    return MISP { GNSet {}, GNSet {}, 0 }; // head to sink
-      // else
-      //      if (s.v.contains(label)) {
-      //std::cout << "PATH no state:" << path << "\n";
-      // for(auto v : path)
-      //    if (label == v) return std::nullopt;
-      if (s.n == top-1 || label == top) return MISP { GNSet{}, 0};
+      if (label == top) return MISP { GNSet{}, 0,0};
       else {
          GNSet out = filter(s.sel,[label,nl = neighbors[label]](int i) {
             return !nl.contains(i);
          });
-         const bool empty = out.size()==0;
-         return MISP { std::move(out), empty ? 0 : s.n+1};
-         //      } else return std::nullopt;  // return the empty optional
+         const bool empty = out.empty();
+         return MISP { std::move(out),
+                       empty ? 0 : s.n+1,
+                       empty ? 0 : label};
       }
    };
    const auto scf = [top,weight](const MISP& s,int label) { // cost function 
@@ -166,9 +165,11 @@ int main(int argc,char* argv[])
    };
    const auto smf = [](const MISP& s1,const MISP& s2) -> std::optional<MISP> { // merge function
       using namespace std;
-      if (s1.n == s2.n) {
-         auto u = s1.sel | s2.sel;         
-         return MISP {u, s1.n};
+      if (s1.l == s2.l) {
+         auto u = s1.sel | s2.sel;
+         return MISP {std::move(u),
+                      std::min(s1.n,s2.n),
+                      std::min(s1.l,s2.l)};
       } else return std::nullopt; // return  the empty optional
    };
    const auto eqs = [](const MISP& s) -> bool {

@@ -528,6 +528,12 @@ public:
       for(short i=0;i < _mxw;i++)
          _t[i] = 0;
    }
+   bool empty() const noexcept {
+      int ttl = 0;
+      for(short i=0;(ttl==0) && i < _mxw;++i)
+         ttl += (_t[i] != 0);
+      return ttl==0;
+   }
    int size() const noexcept {
       int ttl = 0;
       for(short i=0;i < _mxw;++i)
@@ -594,6 +600,24 @@ public:
       w++;
       while(w < _mxw) 
         _t[w++] = 0;
+   }
+   void removeBelow(int p) noexcept {
+      for(int i = 0;i < p;i++)
+         remove(i);
+      return;
+      if (p < 0) return;
+      if (false && p > _nbp) {
+         for(int i=0;i<_mxw;i++) _t[i]=0;
+      } else {
+         int w = p >> 6;
+         if (w >= _mxw) abort();
+         assert(w >= 0 && w < _mxw);
+         const int b = p & 63;
+         _t[w] = _t[w] & ~((1ull << (b)) - 1);
+         w--;
+         while (w >= 0)
+            _t[w--] = 0;
+      }
    }
    class iterator { 
       unsigned long long*    _t;
