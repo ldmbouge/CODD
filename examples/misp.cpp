@@ -21,7 +21,7 @@ struct MISP {
 
 template<> struct std::equal_to<MISP> {
    bool operator()(const MISP& s1,const MISP& s2) const {
-      return //s1.sel == s2.sel &&
+      return s1.sel == s2.sel &&
          s1.n == s2.n &&
          s1.l == s2.l;
    }
@@ -29,7 +29,7 @@ template<> struct std::equal_to<MISP> {
 
 template<> struct std::hash<MISP> {
    std::size_t operator()(const MISP& v) const noexcept {
-      return //std::rotl(std::hash<GNSet>{}(v.sel),32) ^
+      return std::rotl(std::hash<GNSet>{}(v.sel),32) ^
          std::hash<int>{}(v.n) ^
          std::hash<int>{}(v.l);
    }
@@ -154,6 +154,7 @@ int main(int argc,char* argv[])
          GNSet out = filter(s.sel,[label,nl = neighbors[label]](int i) {
             return !nl.contains(i);
          });
+         //out.removeBelow(label);
          const bool empty = out.empty();
          return MISP { std::move(out),
                        empty ? 0 : s.n+1,
