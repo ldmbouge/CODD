@@ -105,6 +105,9 @@ public:
       _sz = s._sz;
       _msz = s._msz;
       _data = std::move(s._data);
+      s._data = nullptr;
+      s._sz = 0;
+      s._msz = 0;
       return *this;
    }
    Pool::Ptr getPool() { return _mem;}

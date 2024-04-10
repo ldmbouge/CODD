@@ -194,6 +194,7 @@ typedef Heap<DNode> DegHeap;
 
 void AbstractDD::computeBest(const std::string m)
 {
+   assert(false);
    //std::cout << "ANSZ:" << _an.size() << "\n";
    DegHeap h(_mem,1000,[](const DNode& a,const DNode& b) { return a.degree < b.degree;});
    unsigned mxId = 0;
@@ -494,14 +495,14 @@ ANode::Ptr Relaxed::mergeOne(auto& layer,auto& skip)
    for(++j;j != layer.end();++j) {
       auto n2 = *j;
       //assert(n1->getLayer() == n2->getLayer());
-      if (n1->nbChildren() || n2->nbChildren()) continue; 
-      //assert(n1->nbChildren()==0);
-      //assert(n2->nbChildren()==0);         
+      //if (n1->nbChildren() || n2->nbChildren()) continue; 
+      assert(n1->nbChildren()==0);
+      assert(n2->nbChildren()==0);         
       mNode = _dd->merge(n1,n2);
       if (mNode) {
          if (mNode->nbChildren() > 0) {
-            mNode = nullptr;
-            continue;
+             mNode = nullptr;
+             continue;
          }
          //assert(mNode->nbChildren()==0);         
          toMerge[1] = n2;

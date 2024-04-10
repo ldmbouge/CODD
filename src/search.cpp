@@ -126,9 +126,15 @@ void BAndB::search(Bounds& bnds)
                //std::cout << "CUTSet+ " << newGuyDominated << ":";
                //relaxed->printNode(std::cout,n);
                //std::cout << "\n";
+               assert(n->isExact());
                if (!newGuyDominated) {
                   //auto nd = _theDD->duplicate(n); // we got a duplicate of the node.
                   auto nd = relaxed->makeInPool(_mem,n);
+
+                  // std::cout << "NODE TO Q:";
+                  // relaxed->printNode(std::cout,nd);
+                  // std::cout << "\n";
+
                   assert(nd->getBound() == n->getBound());
                   pq.insertHeap(QNode {nd, n->getBound()+n->getBackwardBound()});
                   //std::cout << "PQ:" << pq << "\n";

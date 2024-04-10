@@ -14,6 +14,10 @@ struct MISP {
    GNSet sel;
    int   n;
    int   l;
+   MISP(const GNSet& s,int nb,int last) : sel(s),n(nb),l(last) {}
+   MISP(const MISP& m) : sel(m.sel),n(m.n),l(m.l) {}
+   MISP(MISP&& m) : sel(std::move(m.sel)),n(m.n),l(m.l) {}
+   MISP& operator=(const MISP& m) { sel = m.sel;n = m.n;l = m.l;return *this;}
    friend std::ostream& operator<<(std::ostream& os,const MISP& m) {
       return os << "<" << m.sel << ',' << m.n << ',' << m.l << ">";
    }
@@ -119,7 +123,19 @@ int main(int argc,char* argv[])
    std::cout << "VERTICES:" << ns << "\n";
    std::cout << "TOP=" << top << "\n";
 
-   Bounds bnds;
+   Bounds bnds([&es](const std::vector<int>& inc)  {
+      bool ok = true;    
+      for(const auto& e : es) {
+         bool v1In = std::find(inc.begin(),inc.end(),e.a) != inc.end();
+         bool v2In = std::find(inc.begin(),inc.end(),e.b) != inc.end();
+         if (v1In && v2In) {
+            std::cout << e << " BOTH ep in inc: " << inc << "\n";
+            assert(false);
+         }
+         ok &= !(v1In && v2In);
+      }
+      std::cout << "CHECKER is " << ok << "\n";
+   });
    const auto labels = ns | GNSet { top };     // using a plain set for the labels
    std::vector<int> weight(ns.size()+1);
    weight[ns.size()] = 0;
@@ -154,7 +170,7 @@ int main(int argc,char* argv[])
          GNSet out = filter(s.sel,[label,nl = neighbors[label]](int i) {
             return !nl.contains(i);
          });
-         //out.removeBelow(label);
+         //out.removeBelow(label); // [ldm] this destroys performance. Nodes are all different, causing a need to widen all the time.
          const bool empty = out.empty();
          return MISP { std::move(out),
                        empty ? 0 : s.n+1,

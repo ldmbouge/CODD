@@ -89,6 +89,7 @@ public:
       _bound = n->_bound;
       _bbound = n->_bbound;
       _optLabels = n->_optLabels;
+      _exact = false;
    }
    const auto getId() const noexcept { return _nid;}
    void disconnect();
