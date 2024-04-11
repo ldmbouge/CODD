@@ -135,10 +135,10 @@ public:
       _sz -= 1;
       return _sz;
    }
-   const T get(SZT i) const noexcept           { return _data[i];}
-   const T operator[](SZT i) const noexcept    { return _data[i];}
+   const T get(SZT i) const noexcept           { assert(0 <= i && i < _sz);return _data[i];}
+   const T operator[](SZT i) const noexcept    { assert(0 <= i && i < _sz);return _data[i];}
    auto operator[](SZT i) noexcept             { return TVecSetter(*this,i);}
-   void at(SZT i,const T& nv)                  { _data[i] = nv;}
+   void at(SZT i,const T& nv)                  { assert(0 <= i && i < _msz);_data[i] = nv;}
    class iterator { 
       T*    _data;
       long   _num;
