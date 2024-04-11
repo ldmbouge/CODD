@@ -133,8 +133,15 @@ void AbstractDD::print(std::ostream& os,std::string gLabel)
 void AbstractDD::saveGraph(std::ostream& os,std::string gLabel)
 {
    Heap<DNode> h(_mem,1000,[](const DNode& a,const DNode& b) { return a.degree < b.degree;});
+   std::cout << "AN.size()=" << _an.size() << "\n";
+   for(auto n : _an) {
+      std::cout << "\t";
+      printNode(std::cout,n);
+      std::cout << "\n";
+   }
    for(auto n : _an) 
-      h.insert({n,n->nbParents()});   
+      h.insert({n,n->nbParents()});
+   
    h.buildHeap();
    std::string colors[2] = {"red","green"};
    os << "digraph MDD {" << std::endl;
@@ -488,21 +495,33 @@ NDAction Relaxed::mergePair(ANode::Ptr mNode,ANode::Ptr toMerge[2])
 ANode::Ptr Relaxed::mergeOne(auto& layer,auto& skip)
 {   
    auto i = layer.begin();
-   auto n1 = *i;   
+   auto n1 = *i;
+   if (n1->nbChildren() > 0) {
+      i = layer.erase(i);
+      skip.push_back(n1);
+      return nullptr;
+   }
+   assert(n1->nbChildren()==0);
    ANode::Ptr toMerge[2] = {n1,nullptr};
    ANode::Ptr mNode = nullptr;
    auto j = i;
    for(++j;j != layer.end();++j) {
       auto n2 = *j;
-      //assert(n1->getLayer() == n2->getLayer());
-      //if (n1->nbChildren() || n2->nbChildren()) continue; 
-      assert(n1->nbChildren()==0);
+      if (n2->nbChildren() || n1->getLayer() != n2->getLayer()) {
+         // std::cout << "n2 has children? "  << n2->nbChildren() << "\n";
+         // std::cout << "layers? "  << n1->getLayer() << " " << n2->getLayer() << "\n";
+         continue;
+      }
       assert(n2->nbChildren()==0);         
+      assert(n1->getLayer() == n2->getLayer());
       mNode = _dd->merge(n1,n2);
       if (mNode) {
          if (mNode->nbChildren() > 0) {
-             mNode = nullptr;
-             continue;
+            // std::cout << "merged guy has children... no dice...";
+            // _dd->printNode(std::cout,mNode);
+            // std::cout << "\n";
+            mNode = nullptr;
+            continue;
          }
          //assert(mNode->nbChildren()==0);         
          toMerge[1] = n2;
@@ -534,6 +553,12 @@ ANode::Ptr Relaxed::mergeOne(auto& layer,auto& skip)
 
 template <typename Fun> void Relaxed::mergeLayer(auto& layer,Fun f)
 {
+   // std::cout << "MERGING " << layer.size() << " TARGET width:" << _mxw << "\n";
+   // for(auto n : layer) {
+   //    std::cout << "   ";
+   //    _dd->printNode(std::cout,n);
+   //    std::cout << " LAYER:" << n->getLayer() << "\n";
+   // }
    std::list<ANode::Ptr> skip;
    while (skip.size() + layer.size() > _mxw && layer.size() > 0) {
       auto dn = mergeOne(layer,skip); // skipped nodes are not willing to  merge with anything.
@@ -661,11 +686,14 @@ void Relaxed::compute(Bounds& bnds)
    }
    //_dd->computeBest(getName());
    tighten(_dd->_trg);
+   //_dd->display();
    _dd->computeBestBackward(getName());
 }
 
 std::vector<ANode::Ptr> Relaxed::computeCutSet()
 {
+   //_dd->display();
+   //char ch;std::cin>>ch;
    std::vector<ANode::Ptr> cs = {};
    auto mark = _dd->_mem->mark();
    CQueue<ANode::Ptr> qn(32);
@@ -678,11 +706,30 @@ std::vector<ANode::Ptr> Relaxed::computeCutSet()
       auto cur = qn.deQueue();
       if (cur->isExact()) {
          bool akExact = true;
-         for(auto ki = cur->beginKids(); akExact && ki != cur->endKids();ki++) 
+         for(auto ki = cur->beginKids(); akExact && ki != cur->endKids();ki++) {
+            if ((*ki)->_to->getId() == _dd->_trg->getId()) continue;
             akExact = (*ki)->_to->isExact();
+            // if (akExact == false) {
+            //    std::cout << "SINK:";
+            //    _dd->printNode(std::cout,_dd->_trg);
+            //    std::cout << "\n";
+            //    std::cout << "LABEL:" << (*ki)->_lbl << "\n";
+            //    std::cout << "NOT all kids exact because of:";
+            //    _dd->printNode(std::cout,(*ki)->_to);
+            //    std::cout << "\n";
+            //    std::cout << "Will add:";
+            //    _dd->printNode(std::cout,cur);              
+            //    std::cout << "\n";
+            //    std::cout << ((*ki)->_to->getId()) << " "  << _dd->_trg->getId() << "\n";
+            //    std::cout << "KID is sink? " << _dd->eqSink((*ki)->_to) << "\n";
+            //    std::cout << "KID is ==sink? " << _dd->eq((*ki)->_to,_dd->_trg) << "\n";
+            // }
+         }
          if (akExact) {
             for(auto ki = cur->beginKids(); akExact && ki != cur->endKids();ki++) {
-               if (!inQueue[(*ki)->_to->getId()]) {
+               if (!inQueue[(*ki)->_to->getId()]
+                   && ((*ki)->_to->getId() != _dd->_trg->getId())
+                   ) {
                   qn.enQueue((*ki)->_to);
                   inQueue[(*ki)->_to->getId()] = true;
                }

@@ -88,12 +88,15 @@ void BAndB::search(Bounds& bnds)
          primalBetter = restricted->apply(bbn.node,bnds);
          
          if (!restricted->isExact() && !relaxed->isExact()) {
-            for(auto n : relaxed->computeCutSet()) {
+            auto cutSet = relaxed->computeCutSet();
+            for(auto n : cutSet) {
                if (n == relaxed->getRoot()) { // the cutset is the root. Only way out: increase width.
                   //for(auto i=0u;i < sizeof(ddr)/sizeof(WidthBounded*);i++) {
+                  //relaxed->display();
                      auto w = ddr[0]->getWidth() + 1;
                      ddr[0]->setWidth(w);
-                     std::cout << "\t-->widening... " << w << "\n";
+                     std::cout << "\t-->widening... " << w << " CUTSET SIZE:" << cutSet.size() <<  "\n";
+                     char ch; std::cin >> ch;
                      //}
                }
                // use the bound in n (the ones in nd are _reset_ when duplicate occurs????)

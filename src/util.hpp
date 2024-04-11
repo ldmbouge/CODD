@@ -683,11 +683,20 @@ public:
          int  c = s1._mxw;
          auto a = s1._t,b = s2._t;
          while(c-- && *a++ == *b++);
-         assert(as == (c < 0));
          return c<0;
       } else {
-         assert(as == false);
-         return false;
+         const auto ub = std::min(s1._mxw,s2._mxw);
+         for(auto i=0;i < ub;i++)
+            if (s1._t[i] != s2._t[i])
+               return false;
+         if (s1._mxw < s2._mxw) {
+            for(auto i = s1._mxw;i < s2._mxw;i++)
+               if (s2._t[i]!=0) return false;
+         } else {
+            for(auto i = s2._mxw;i < s1._mxw;i++)
+               if (s1._t[i]!=0) return false;
+         }
+         return true;
       }
    }
    friend bool operator!=(const GNSet& s1,const GNSet& s2) {

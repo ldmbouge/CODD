@@ -387,6 +387,11 @@ private:
          std::cout <<  std::setprecision(6) << "D TIGHTEN: " << bnds << "\n";
       }
    }
+   ANode::Ptr hasNode(const ST& state) {
+      Node<ST>* at = nullptr;
+      _nmap.getLoc(state,at);
+      return at;
+   }
    ANode::Ptr makeNode(ST&& state,bool pExact = true) {
       Node<ST>* at = nullptr;
       auto inMap = _nmap.getLoc(state,at);
@@ -450,9 +455,24 @@ private:
       auto sp = static_cast<const Node<ST>*>(s.get());
       auto vs = _smf(fp->get(),sp->get());
       if (vs.has_value()) {
+         ANode::Ptr inMap = hasNode(vs.value());
+         if (inMap && inMap->getLayer() < std::max(fp->getLayer(),sp->getLayer()))
+            return nullptr;
          // std::cout << "B(M1):" << fp->getBound() << "\n";
          // std::cout << "B(M2):" << sp->getBound() << "\n";
          ANode::Ptr rv = makeNode(std::move(vs.value()));
+         //if (rv->getId() == 8) {
+         // using namespace std;
+         // cout << "B(M1):" << fp->getBound() << " L:" << fp->getLayer() << "\n";
+         // cout << "B(M2):" << sp->getBound() << " L:" << sp->getLayer() << "\n";
+         // printNode(cout,f);
+         // cout << "\n";
+         // printNode(cout,s);
+         // cout << "\n";
+         // printNode(cout,rv);
+         // cout << "\n";
+         // cout << "RV layer:" << rv->getLayer() << "\n";
+         //}
          if (isBetter(fp->getBound(),rv->getBound())) {
             rv->copyBoundAndLabels(f);
          }

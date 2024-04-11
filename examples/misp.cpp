@@ -64,7 +64,7 @@ struct Instance {
    void convert() {
       adj = FArray<GNSet>(nv+1);
       for(const auto& e : edges) {
-         std::cout << "E: " << e << "\n";
+         //std::cout << "E: " << e << "\n";
          adj[e.a].insert(e.b);
          adj[e.b].insert(e.a);
       }         
@@ -93,7 +93,7 @@ Instance readFile(const char* fName)
             GE edge;
             f >> edge.a >> edge.b;
             edge.a--,edge.b--;      // make it zero-based
-            std::cout << edge << "\n";
+            //std::cout << edge << "\n";
             assert(edge.a >=0);
             assert(edge.b >=0);
             i.edges.push_back(edge);
@@ -119,9 +119,9 @@ int main(int argc,char* argv[])
    const GNSet ns = instance.vertices();
    const int top = ns.size();
    const std::vector<GE> es = instance.getEdges();
-   std::cout << "EDGES:" << es << "\n";
-   std::cout << "VERTICES:" << ns << "\n";
-   std::cout << "TOP=" << top << "\n";
+   //std::cout << "EDGES:" << es << "\n";
+   //std::cout << "VERTICES:" << ns << "\n";
+   //std::cout << "TOP=" << top << "\n";
 
    Bounds bnds([&es](const std::vector<int>& inc)  {
       bool ok = true;    
@@ -170,7 +170,7 @@ int main(int argc,char* argv[])
          GNSet out = filter(s.sel,[label,nl = neighbors[label]](int i) {
             return !nl.contains(i);
          });
-         //out.removeBelow(label); // [ldm] this destroys performance. Nodes are all different, causing a need to widen all the time.
+         out.removeBelow(label); 
          const bool empty = out.empty();
          return MISP { std::move(out),
                        empty ? 0 : s.n+1,
