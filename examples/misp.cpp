@@ -177,7 +177,7 @@ int main(int argc,char* argv[])
                        empty ? 0 : label};
       }
    };
-   const auto scf = [top,weight](const MISP& s,int label) { // cost function 
+   const auto scf = [weight](const MISP& s,int label) { // cost function 
       return weight[label];
    };
    const auto smf = [](const MISP& s1,const MISP& s2) -> std::optional<MISP> { // merge function
