@@ -96,7 +96,7 @@ void BAndB::search(Bounds& bnds)
                      auto w = ddr[0]->getWidth() + 1;
                      ddr[0]->setWidth(w);
                      std::cout << "\t-->widening... " << w << " CUTSET SIZE:" << cutSet.size() <<  "\n";
-                     char ch; std::cin >> ch;
+                     //char ch; std::cin >> ch;
                      //}
                }
                // use the bound in n (the ones in nd are _reset_ when duplicate occurs????)
