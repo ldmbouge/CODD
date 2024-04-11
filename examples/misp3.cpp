@@ -161,12 +161,8 @@ int main(int argc,char* argv[])
          else return std::nullopt;
       } else {
          GNSet out = s.sel;
-         if (label == 0) {
-            out.remove(s.l);
-         } else 
-            out = filter(out,[nl = neighbors[s.l]](int i) {
-               return !nl.contains(i);
-            });         
+         out.remove(s.l);
+         if (label) out.diffWith(neighbors[s.l]);           
          const bool empty = out.empty();
          auto n = s.l+1;
          while (!out.contains(n) && n <= top)
@@ -191,6 +187,12 @@ int main(int argc,char* argv[])
    const auto eqs = [](const MISP& s) -> bool {
       return s.sel.size() == 0;
    };
+   const auto local = [&weight](const MISP& s) -> double {
+      double ttl = 0.0;
+      for(auto v : s.sel)
+         ttl += (v >= s.l) * weight[v]; // count the remaining ones (>= s.l) that are legal in s.sel)
+      return ttl;
+   };      
 
    BAndB engine(DD<MISP,Maximize<double>, // to maximize
                 //decltype(myInit), 
@@ -199,8 +201,9 @@ int main(int argc,char* argv[])
                 decltype(myStf),
                 decltype(scf),
                 decltype(smf),
-                decltype(eqs)                   
-                >::makeDD(myInit,myTarget,lgf,myStf,scf,smf,eqs,labels),w);
+                decltype(eqs),
+                decltype(local)
+                >::makeDD(myInit,myTarget,lgf,myStf,scf,smf,eqs,labels,local),w);
    engine.search(bnds);
    return 0;
 }

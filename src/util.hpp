@@ -9,6 +9,7 @@
 #include <initializer_list>
 #include <ranges>
 #include <bit>
+#include <algorithm>
 #include <assert.h>
 //#if defined(__x86_64__)
 //#include <intrin.h>
@@ -556,6 +557,7 @@ public:
       }
       assert(i>=0 && i < _mxw);
       _t[i] |= (1ull << (p & 63));
+      _nbp = std::max(_nbp,(unsigned short)p);
    }
    void remove(int p) noexcept {
       const int i = p >> 6;
@@ -567,7 +569,9 @@ public:
          _t[i] = ~_t[i];
       return *this;
    }
-   bool contains(int p) const noexcept { return (_t[p >> 6] &  (1ull << (p & 63))) != 0;}
+   bool contains(int p) const noexcept {
+      return (_t[p >> 6] &  (1ull << (p & 63))) != 0;
+   }
    GNSet& unionWith(const GNSet& ps) noexcept {
       short i;
       for(i=0;i < std::min(_mxw,ps._mxw);i++)
@@ -593,6 +597,11 @@ public:
          _t[i++] = 0;
       return  *this;
    }
+   GNSet& diffWith(const GNSet& ps) noexcept {
+      for(short i=0;i < std::min(_mxw,ps._mxw);i++)
+         _t[i] = _t[i] & ~ps._t[i];
+      return *this;
+   }
    void removeAbove(int p) noexcept {
       int w = ++p >> 6;
       assert(w >= 0 && w < _mxw);
@@ -607,7 +616,7 @@ public:
          remove(i);
       return;
       if (p < 0) return;
-      if (false && p > _nbp) {
+      if (p > _nbp) {
          for(int i=0;i<_mxw;i++) _t[i]=0;
       } else {
          int w = p >> 6;
@@ -630,7 +639,8 @@ public:
          while (_cw == 0 && _t && ++_cwi < _nbw) 
             _cw = _t[_cwi];         
       }
-      iterator(unsigned long long* t,unsigned short nbw) : _t(t),_nbw(nbw),_cwi(nbw),_cw(0) {} // end constructor
+      iterator(unsigned long long* t,unsigned short nbw)
+         : _t(t),_nbw(nbw),_cwi(nbw),_cw(0) {} // end constructor
       iterator& operator=(const iterator i) {
          _t = i._t;
          assert(_nbw == i._nbw);
