@@ -126,13 +126,13 @@ int main(int argc,char* argv[])
    const auto labels = ns | GNSet { top };     // using a plain set for the labels
    std::vector<int> weight(ns.size()+1);
    weight[ns.size()] = 0;
-   for(auto v : ns) weight[v] = 1;   
+   for(auto v : ns) weight[v] = 1;
    std::map<int,GNSet> neighbors {};  // computing the neigbhors using STL (not pretty)
-   for(int i : ns) {
-      neighbors[i] = filter(ns,[i,&es](auto j) {
-         return j==i || member(es,[e1=GE {i,j},e2=GE {j,i}](auto e) { return e==e1 || e==e2;});
-      });
-      std::cout << i << " -> " << neighbors[i] << std::endl;
+   for(int i : ns) 
+      neighbors[i] = GNSet { i };
+   for(const auto& e : es) {
+      neighbors[e.a].insert(e.b);
+      neighbors[e.b].insert(e.a);      
    }
    const auto myInit = [top]() {   // The root state
       GNSet U = {}; // std::views::iota(1,top) | std::ranges::to<std::set>();
@@ -164,9 +164,7 @@ int main(int argc,char* argv[])
       return label * weight[s.n];
    };
    const auto smf = [](const MISP& s1,const MISP& s2) -> std::optional<MISP> { // merge function
-      //      if (s1.n == s2.n) {
-         return MISP {s1.sel | s2.sel,std::min(s1.n,s2.n)};
-         //} else return std::nullopt; // return  the empty optional
+      return MISP {s1.sel | s2.sel,std::min(s1.n,s2.n)};
    };
    const auto eqs = [](const MISP& s) -> bool {
       return s.sel.size() == 0;
