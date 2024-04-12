@@ -761,8 +761,14 @@ GNSet filter(const GNSet& inSet,Pred p) {
          outSet.insert(v);
    return outSet;
 }
-
-
+template <typename Term=int(*)(int)>
+int sum(const GNSet& inSet,const Term& t) {
+   int ttl = 0;
+   for(auto v : inSet)
+      ttl += t(v);
+   return ttl;
+}
+  
 template <class T> std::ostream& operator<<(std::ostream& os,const std::set<T>& s) {
    os << "{";
    auto cnt = 0u;

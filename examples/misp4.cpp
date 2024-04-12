@@ -13,10 +13,6 @@
 struct MISP {
    GNSet sel;
    int   n;
-   MISP(const GNSet& s,int nb) : sel(s),n(nb) {}
-   MISP(const MISP& m) : sel(m.sel),n(m.n) {}
-   MISP(MISP&& m) : sel(std::move(m.sel)),n(m.n) {}
-   MISP& operator=(const MISP& m) { sel = m.sel;n = m.n;return *this;}
    friend std::ostream& operator<<(std::ostream& os,const MISP& m) {
       return os << "<" << m.sel << ',' << m.n << ',' << ">";
    }
@@ -24,15 +20,13 @@ struct MISP {
 
 template<> struct std::equal_to<MISP> {
    bool operator()(const MISP& s1,const MISP& s2) const {
-      return s1.sel == s2.sel &&
-         s1.n == s2.n;
+      return s1.n == s2.n && s1.sel == s2.sel;         
    }
 };
 
 template<> struct std::hash<MISP> {
    std::size_t operator()(const MISP& v) const noexcept {
-      return std::rotl(std::hash<GNSet>{}(v.sel),32) ^
-         std::hash<int>{}(v.n);
+      return std::rotl(std::hash<GNSet>{}(v.sel),32) ^ std::hash<int>{}(v.n);
    }
 };
 
@@ -119,8 +113,8 @@ int main(int argc,char* argv[])
    Bounds bnds([&es](const std::vector<int>& inc)  {
       bool ok = true;    
       for(const auto& e : es) {         
-         bool v1In = e.a < inc.size() ? inc[e.a] : false;
-         bool v2In = e.b < inc.size() ? inc[e.b] : false;
+         bool v1In = (e.a < (int)inc.size()) ? inc[e.a] : false;
+         bool v2In = (e.b < (int)inc.size()) ? inc[e.b] : false;
          if (v1In && v2In) {
             std::cout << e << " BOTH ep in inc: " << inc << "\n";
             assert(false);
@@ -158,32 +152,27 @@ int main(int argc,char* argv[])
             return MISP { GNSet {}, top};
          else return std::nullopt;
       } else {
-         if (!s.sel.contains(s.n) && label) return std::nullopt;
+         if (!s.sel.contains(s.n) && label) return std::nullopt; // we cannot take n (label==1) if not legal.
          GNSet out = s.sel;
-         out.remove(s.n);
-         if (label) out.diffWith(neighbors[s.n]);        
-         const bool empty = out.empty();
-         return MISP { std::move(out),empty ? top : s.n + 1};
+         out.remove(s.n);   // remove n from state
+         if (label) out.diffWith(neighbors[s.n]); // remove neighbors of n from state (when taking n -- label==1 -- )       
+         const bool empty = out.empty();  // find out if we are done!
+         return MISP { std::move(out),empty ? top : s.n + 1}; // build state accordingly
       }
    };
    const auto scf = [weight](const MISP& s,int label) { // cost function 
       return label * weight[s.n];
    };
    const auto smf = [](const MISP& s1,const MISP& s2) -> std::optional<MISP> { // merge function
-      using namespace std;
-      if (s1.n == s2.n) {
-         auto u = s1.sel | s2.sel;
-         return MISP {std::move(u),std::min(s1.n,s2.n)};
-      } else return std::nullopt; // return  the empty optional
+      //      if (s1.n == s2.n) {
+         return MISP {s1.sel | s2.sel,std::min(s1.n,s2.n)};
+         //} else return std::nullopt; // return  the empty optional
    };
    const auto eqs = [](const MISP& s) -> bool {
       return s.sel.size() == 0;
    };
    const auto local = [&weight](const MISP& s) -> double {
-      double ttl = 0.0;
-      for(auto v : s.sel)
-         ttl += weight[v]; // count the remaining ones in s.sel)
-      return ttl;
+      return sum(s.sel,[&weight](auto v) { return weight[v];});
    };      
 
    BAndB engine(DD<MISP,Maximize<double>, // to maximize
