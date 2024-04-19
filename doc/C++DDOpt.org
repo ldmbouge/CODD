@@ -64,7 +64,7 @@ modeling facilities offered by *CODD*.
 #+end_important
 
 ** *CODD* Modeling
-Unsurprisingly, the abstractions presented above match exactly with the *CODD* API that expect:
+Unsurprisingly, the abstractions presented above match exactly with the *CODD* API that expects:
 - A structure to define a state
 - Two distinguished states $s_\top$ and $s_\bot$ used to represent a state with no decisions made ($s_\top$) and all possible decision made ($s_\bot$).
 - A label generation function which, given a state $s_i$ produces the set of potentially viable transitions

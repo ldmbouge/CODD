@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2024-04-19 Fri 17:27 -->
+<!-- 2024-04-19 Fri 17:36 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>C++DDOopt : The CODD Solver</title>
@@ -58,72 +58,72 @@ pre.src:hover:before { display: none; }
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents" role="doc-toc">
 <ul>
-<li><a href="#org8bd2009">1. Introduction</a>
+<li><a href="#org5e464f2">1. Introduction</a>
 <ul>
-<li><a href="#org89bfa4c">1.1. What is <b>CODD</b>?</a></li>
-<li><a href="#org1185eb7">1.2. Dynamic Programming as a Computational Model</a>
+<li><a href="#orgf3ef442">1.1. What is <b>CODD</b>?</a></li>
+<li><a href="#orgcc3a660">1.2. Dynamic Programming as a Computational Model</a>
 <ul>
-<li><a href="#org1edc723">1.2.1. Exact Decision Diagrams</a></li>
-<li><a href="#org55560c0">1.2.2. Restricted Decision Diagrams</a></li>
-<li><a href="#org70934be">1.2.3. Relaxed Decision Diagrams</a></li>
+<li><a href="#orga7bcb0b">1.2.1. Exact Decision Diagrams</a></li>
+<li><a href="#org624d92f">1.2.2. Restricted Decision Diagrams</a></li>
+<li><a href="#org6129360">1.2.3. Relaxed Decision Diagrams</a></li>
 </ul>
 </li>
-<li><a href="#org89a805f">1.3. <b>CODD</b> Modeling</a>
+<li><a href="#orgf1e409c">1.3. <b>CODD</b> Modeling</a>
 <ul>
-<li><a href="#org1664745">1.3.1. TSP Example High Level</a></li>
-<li><a href="#org4de1bc4">1.3.2. TSP Example in <b>CODD</b></a></li>
+<li><a href="#org8c98111">1.3.1. TSP Example High Level</a></li>
+<li><a href="#orgf87b769">1.3.2. TSP Example in <b>CODD</b></a></li>
 </ul>
 </li>
-<li><a href="#org16dfeb1">1.4. <b>CODD</b> Solving</a></li>
+<li><a href="#org93a1259">1.4. <b>CODD</b> Solving</a></li>
 </ul>
 </li>
-<li><a href="#orge933d5c">2. Installing CODD</a>
+<li><a href="#org4e2415b">2. Installing CODD</a>
 <ul>
-<li><a href="#org3ef0be5">2.1. Download</a></li>
-<li><a href="#org8faebb0">2.2. Compilation</a>
+<li><a href="#orgbca1094">2.1. Download</a></li>
+<li><a href="#orgf93fe03">2.2. Compilation</a>
 <ul>
-<li><a href="#org1ca5040">2.2.1. Dependencies</a></li>
-<li><a href="#orgddda3a6">2.2.2. C++ Standard</a></li>
-<li><a href="#org993c9e1">2.2.3. Build system</a></li>
-<li><a href="#org373767f">2.2.4. Unit tests</a></li>
-<li><a href="#orgc9f8360">2.2.5. Library</a></li>
+<li><a href="#orgda1fc34">2.2.1. Dependencies</a></li>
+<li><a href="#orgbcda1a0">2.2.2. C++ Standard</a></li>
+<li><a href="#orgb076104">2.2.3. Build system</a></li>
+<li><a href="#orgaf2fff1">2.2.4. Unit tests</a></li>
+<li><a href="#org6a02877">2.2.5. Library</a></li>
 </ul>
 </li>
-<li><a href="#org606b440">2.3. Examples</a></li>
+<li><a href="#org1ad2a89">2.3. Examples</a></li>
 </ul>
 </li>
-<li><a href="#org8e70abc">3. The Maximum Independent Set Problem (MISP)</a>
+<li><a href="#org32599eb">3. The Maximum Independent Set Problem (MISP)</a>
 <ul>
-<li><a href="#orga7ebd5a">3.1. Preamble</a></li>
-<li><a href="#org9aae497">3.2. Reading the instance</a></li>
-<li><a href="#org19e5b6b">3.3. State definition</a></li>
-<li><a href="#org06378ad">3.4. Main Model</a>
+<li><a href="#org8d3d140">3.1. Preamble</a></li>
+<li><a href="#org86bee88">3.2. Reading the instance</a></li>
+<li><a href="#org5c86b52">3.3. State definition</a></li>
+<li><a href="#org11cc234">3.4. Main Model</a>
 <ul>
-<li><a href="#org6d2c125">3.4.1. Getting started</a></li>
-<li><a href="#org2dcb888">3.4.2. The Bound Tracker</a></li>
-<li><a href="#orgec17ec3">3.4.3. Defining neighbors</a></li>
-<li><a href="#org814c69a">3.4.4. The actual CODD Model</a></li>
+<li><a href="#org7838827">3.4.1. Getting started</a></li>
+<li><a href="#org3dc9a48">3.4.2. The Bound Tracker</a></li>
+<li><a href="#org9a9526f">3.4.3. Defining neighbors</a></li>
+<li><a href="#org7c7c1e7">3.4.4. The actual CODD Model</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li><a href="#org7042c73">4. Papers</a></li>
-<li><a href="#org2de04fe">5. Related Systems</a>
+<li><a href="#org71141cb">4. Papers</a></li>
+<li><a href="#org637f11d">5. Related Systems</a>
 <ul>
-<li><a href="#org891acaf">5.1. DDO</a></li>
-<li><a href="#orgd096fbb">5.2. Domain Independent DP</a></li>
+<li><a href="#orgf79d4d4">5.1. DDO</a></li>
+<li><a href="#orgd92162a">5.2. Domain Independent DP</a></li>
 </ul>
 </li>
 </ul>
 </div>
 </div>
 
-<div id="outline-container-org8bd2009" class="outline-2">
-<h2 id="org8bd2009"><span class="section-number-2">1.</span> Introduction</h2>
+<div id="outline-container-org5e464f2" class="outline-2">
+<h2 id="org5e464f2"><span class="section-number-2">1.</span> Introduction</h2>
 <div class="outline-text-2" id="text-1">
 </div>
-<div id="outline-container-org89bfa4c" class="outline-3">
-<h3 id="org89bfa4c"><span class="section-number-3">1.1.</span> What is <b>CODD</b>?</h3>
+<div id="outline-container-orgf3ef442" class="outline-3">
+<h3 id="orgf3ef442"><span class="section-number-3">1.1.</span> What is <b>CODD</b>?</h3>
 <div class="outline-text-3" id="text-1-1">
 <p>
 <b>CODD</b> is a system for modeling and solving combinatorial optimization problems using decision diagram technology. Problems are represented as state-based dynamic programming models using the CODD language specification.  The model specification is used to automatically compile relaxed and restricted decision diagrams, as well as to guide the search process. <b>CODD</b> introduces abstractions that allow to generically implement the solver components while maintaining overall execution efficiency.  We demonstrate the functionality of <b>CODD</b> on a variety of combinatorial optimization problems and compare its performance to other state-based solvers as well as integer programming and constraint programming solvers.
@@ -145,8 +145,8 @@ where \(x=(x_1,\ldots,x_n)\) is a tuple of decision variables, \(f\) is a real-v
 </div>
 </div>
 
-<div id="outline-container-org1185eb7" class="outline-3">
-<h3 id="org1185eb7"><span class="section-number-3">1.2.</span> Dynamic Programming as a Computational Model</h3>
+<div id="outline-container-orgcc3a660" class="outline-3">
+<h3 id="orgcc3a660"><span class="section-number-3">1.2.</span> Dynamic Programming as a Computational Model</h3>
 <div class="outline-text-3" id="text-1-2">
 <p>
 Dynamic programming can be understood as a labeled transition system where sequences of decisions \((x_1,\ldots,x_n)\) lead to sequences of states \((s_1,\ldots,s_{n+1})\) with, at each step \(i\), a transition \(s_i \stackrel{x_i}{\rightarrow} s_{i+1}\) labeled by decision \(x_i\). Each such transition induces a cost \(c_i\). The DP formulation then boils down to:
@@ -168,7 +168,7 @@ Then, the Dynamic Program over the state sequence \((s_1,\ldots,s_{n+1})\) and t
 \textrm{s.t.} & s_{i+1} = \tau(s_i, x_i) & \textrm{for all } x_i \in D_i, i=1, \dots, n,\\
  & s_i \in \cal{S} & \textrm{for all } i=1, \dots, n+1.
 \end{array}
-<div class="important" id="org41a3f43">
+<div class="important" id="org8a60de3">
 <p>
 Observe that the constraints \((C_1,\ldots,C_m)\) are captured by membership in the state space. Indeed, each state \(s_i \in {\cal S}\) is expected to satisfy \(\bigwedge_{i=1}^m C_i\).
 In particular, the requirement is true for the root state \(s_0 \in {\cal S}\) and is preserved by the transition function \(\tau\) which, when starting from a state in \({\cal S}\), only consider <i>legal</i> labeled transition leading to members of \({\cal S}\).
@@ -189,8 +189,8 @@ is the global optimum to the original maximization problem \(P\). Naturally, the
 </p>
 </div>
 
-<div id="outline-container-org1edc723" class="outline-4">
-<h4 id="org1edc723"><span class="section-number-4">1.2.1.</span> Exact Decision Diagrams</h4>
+<div id="outline-container-orga7bcb0b" class="outline-4">
+<h4 id="orga7bcb0b"><span class="section-number-4">1.2.1.</span> Exact Decision Diagrams</h4>
 <div class="outline-text-4" id="text-1-2-1">
 <p>
 <b>CODD</b> provides (for generality's sake) an <i>exact</i> decision diagram that builds the state of the LTS just described and can therefore produce a globally optimal solution. While it is relatively direct, it requires the construction of an exponentially size structure and is therefore only useful as a proof of concept. Formally, the solution set of the
@@ -199,8 +199,8 @@ exact decision diagram induced by \(DD_{Exact}(P)\) is identical to the solution
 </div>
 </div>
 
-<div id="outline-container-org55560c0" class="outline-4">
-<h4 id="org55560c0"><span class="section-number-4">1.2.2.</span> Restricted Decision Diagrams</h4>
+<div id="outline-container-org624d92f" class="outline-4">
+<h4 id="org624d92f"><span class="section-number-4">1.2.2.</span> Restricted Decision Diagrams</h4>
 <div class="outline-text-4" id="text-1-2-2">
 <p>
 <b>CODD</b> provides <i>restricted</i> decision diagrams. Those differ from exact diagram by discarding (during their top-down construction) nodes whose presence would lead to overflowing a maximal imposed <i>width</i>. Since the approach throws away states, and therefore <i>paths</i> it runs the risk of loosing the optimal solution. Yet, if they yield  paths leading to \(s_\bot\), the best of them is a primal bound to the original problem.
@@ -210,8 +210,8 @@ Formally, the solution set of the restricted decision diagram is a subset of the
 </div>
 </div>
 
-<div id="outline-container-org70934be" class="outline-4">
-<h4 id="org70934be"><span class="section-number-4">1.2.3.</span> Relaxed Decision Diagrams</h4>
+<div id="outline-container-org6129360" class="outline-4">
+<h4 id="org6129360"><span class="section-number-4">1.2.3.</span> Relaxed Decision Diagrams</h4>
 <div class="outline-text-4" id="text-1-2-3">
 <p>
 <b>CODD</b> provides <i>relaxed</i> decision diagrams. Those differ from exact diagram by <i>merging</i> states whose presence would induce a diagram <i>width</i> exceeding a given bound. The state merge operator must be a legit relaxation in the following sense: it yields a state that no longer satisfies all constraints in \((C_1,\ldots,C_m)\). While this measures ensure that the size of the diagram remains under control, it <i>introduces</i> new states that are no longer satisfiable. Path leading to \(s_\bot\) going through at least one such unsatisfiable state are no longer modeling a solution of the original problem. Formally, the solution set of the relaxed diagram is now a super set of the solution set of the original problem \(P\). Namely,
@@ -222,7 +222,7 @@ Formally, the solution set of the restricted decision diagram is a subset of the
 From the above, one get derive primal bounds using the restricted diagrams and dual bounds using the relaxed one.
 </p>
 
-<div class="important" id="org5bab33b">
+<div class="important" id="org1b87018">
 <p>
 Note how all three diagrams are based on the same LTS abstractions of states, labels, transitions, merge and costs and equality to \(s_\bot\). These abstractions are the core
 modeling facilities offered by <b>CODD</b>. 
@@ -233,11 +233,11 @@ modeling facilities offered by <b>CODD</b>.
 </div>
 </div>
 
-<div id="outline-container-org89a805f" class="outline-3">
-<h3 id="org89a805f"><span class="section-number-3">1.3.</span> <b>CODD</b> Modeling</h3>
+<div id="outline-container-orgf1e409c" class="outline-3">
+<h3 id="orgf1e409c"><span class="section-number-3">1.3.</span> <b>CODD</b> Modeling</h3>
 <div class="outline-text-3" id="text-1-3">
 <p>
-Unsurprisingly, the abstractions presented above match exactly with the <b>CODD</b> API that expect:
+Unsurprisingly, the abstractions presented above match exactly with the <b>CODD</b> API that expects:
 </p>
 <ul class="org-ul">
 <li>A structure to define a state</li>
@@ -249,7 +249,7 @@ Unsurprisingly, the abstractions presented above match exactly with the <b>CODD<
 <li>An equality to \(s_\bot\) function that returns true whenever its input state <i>is</i> \(s_\bot\).</li>
 </ul>
 
-<div class="note" id="org07eae5d">
+<div class="note" id="orgc258a4a">
 <p>
 An <i>optional</i> local dual bounding function which, given a state \(s_i\) compute a coarse dual bound for completing \(s_i\). <i>this optional abstraction</i> is helpful to quickly assess whether a state has any hope of leading to an improving \(s_\bot\). If a state does not, it can be discarded from the relaxation.
 </p>
@@ -260,8 +260,8 @@ Thankfully, C++ is a rich language supporting polymorphic types, first order and
 </p>
 </div>
 
-<div id="outline-container-org1664745" class="outline-4">
-<h4 id="org1664745"><span class="section-number-4">1.3.1.</span> TSP Example High Level</h4>
+<div id="outline-container-org8c98111" class="outline-4">
+<h4 id="org8c98111"><span class="section-number-4">1.3.1.</span> TSP Example High Level</h4>
 <div class="outline-text-4" id="text-1-3-1">
 <p>
 Consider the task of solving instances of the traveling salesman problem. With the abstraction defined above, to express a TSP over a set of cities \(C=\{1..n\}\) we define:
@@ -290,8 +290,8 @@ The fourth case is the vanilla situation of extending a known tour with one more
 </div>
 </div>
 
-<div id="outline-container-org4de1bc4" class="outline-4">
-<h4 id="org4de1bc4"><span class="section-number-4">1.3.2.</span> TSP Example in <b>CODD</b></h4>
+<div id="outline-container-orgf87b769" class="outline-4">
+<h4 id="orgf87b769"><span class="section-number-4">1.3.2.</span> TSP Example in <b>CODD</b></h4>
 <div class="outline-text-4" id="text-1-3-2">
 <p>
 Modeling with <b>CODD</b> first requires the addition of a type to represent a state. Since a state is a triplet, the model uses a <code>C</code> structure.
@@ -438,8 +438,8 @@ Which deems state \(s\) equal to the sink if the last city is 1 and we have the 
 </div>
 </div>
 
-<div id="outline-container-org16dfeb1" class="outline-3">
-<h3 id="org16dfeb1"><span class="section-number-3">1.4.</span> <b>CODD</b> Solving</h3>
+<div id="outline-container-org93a1259" class="outline-3">
+<h3 id="org93a1259"><span class="section-number-3">1.4.</span> <b>CODD</b> Solving</h3>
 <div class="outline-text-3" id="text-1-4">
 <p>
 Solving the TSP then reduces to <i>instantiating</i> the generic solver with all the closures defined earlier. Namely:
@@ -461,7 +461,7 @@ Note how the <code>DD</code> template is specialized with the state type <code>T
 <code>Minimize&lt;double&gt;</code> to convey that this is a minimization, and the types of the various
 closures using the C++-23 <code>decltype</code> operator. The solver is invoked with the last line.
 </p>
-<div class="important" id="org8815456">
+<div class="important" id="org2366c15">
 <p>
 Note that <b>CODD</b> users never directly call any of those closures. Calls to the closures are
 choreographed by the solver to build the diagrams and reason with them. <b>CODD</b> users are strictly focused on defining the DP LTS in a mathematical sense and then doing the 1-1 translation to C++. 
@@ -472,20 +472,20 @@ choreographed by the solver to build the diagrams and reason with them. <b>CODD<
 </div>
 </div>
 
-<div id="outline-container-orge933d5c" class="outline-2">
-<h2 id="orge933d5c"><span class="section-number-2">2.</span> Installing CODD</h2>
+<div id="outline-container-org4e2415b" class="outline-2">
+<h2 id="org4e2415b"><span class="section-number-2">2.</span> Installing CODD</h2>
 <div class="outline-text-2" id="text-2">
 </div>
-<div id="outline-container-org3ef0be5" class="outline-3">
-<h3 id="org3ef0be5"><span class="section-number-3">2.1.</span> Download</h3>
+<div id="outline-container-orgbca1094" class="outline-3">
+<h3 id="orgbca1094"><span class="section-number-3">2.1.</span> Download</h3>
 <div class="outline-text-3" id="text-2-1">
 <p>
 The CODD solver is available on <a href="https://github.com/ldmbouge/CPPddOpt">github</a>. 
 </p>
 </div>
 </div>
-<div id="outline-container-org8faebb0" class="outline-3">
-<h3 id="org8faebb0"><span class="section-number-3">2.2.</span> Compilation</h3>
+<div id="outline-container-orgf93fe03" class="outline-3">
+<h3 id="orgf93fe03"><span class="section-number-3">2.2.</span> Compilation</h3>
 <div class="outline-text-3" id="text-2-2">
 <p>
 The CODD C++ library implements both the modeling and the solving framework. It extensively
@@ -504,15 +504,15 @@ support of underlying decision diagrams.
 </p>
 </div>
 
-<div id="outline-container-org1ca5040" class="outline-4">
-<h4 id="org1ca5040"><span class="section-number-4">2.2.1.</span> Dependencies</h4>
+<div id="outline-container-orgda1fc34" class="outline-4">
+<h4 id="orgda1fc34"><span class="section-number-4">2.2.1.</span> Dependencies</h4>
 <div class="outline-text-4" id="text-2-2-1">
 <p>
 You need <code>graphviz</code> (The <code>dot</code> binary) to create graph images. It happens
 automatically when the <code>display</code> method is called. Temporary files are created
 in <code>/tmp</code> and the macOS <code>open</code> command is used (via <code>fork/execlp</code>)  to open the generated PDF. The rest of the system is vanilla C++-23 and <code>cmake</code>.
 </p>
-<div class="hint" id="orge2176a7">
+<div class="hint" id="org6cf0b6d">
 <p>
 Keep in mind that this is optional and only needed if you wish to generate images of
 diagrams (typically to debug models).
@@ -521,16 +521,16 @@ diagrams (typically to debug models).
 </div>
 </div>
 </div>
-<div id="outline-container-orgddda3a6" class="outline-4">
-<h4 id="orgddda3a6"><span class="section-number-4">2.2.2.</span> C++ Standard</h4>
+<div id="outline-container-orgbcda1a0" class="outline-4">
+<h4 id="orgbcda1a0"><span class="section-number-4">2.2.2.</span> C++ Standard</h4>
 <div class="outline-text-4" id="text-2-2-2">
 <p>
 You need a C++-23 capable compiler. gcc and clang should both work. I work on macOS where I use the mainline clang coming with Xcode. The implementation uses templates and concepts to factor the code.
 </p>
 </div>
 </div>
-<div id="outline-container-org993c9e1" class="outline-4">
-<h4 id="org993c9e1"><span class="section-number-4">2.2.3.</span> Build system</h4>
+<div id="outline-container-orgb076104" class="outline-4">
+<h4 id="orgb076104"><span class="section-number-4">2.2.3.</span> Build system</h4>
 <div class="outline-text-4" id="text-2-2-3">
 <p>
 This is <code>cmake</code>. Simply do the following
@@ -552,16 +552,16 @@ the variable <code>CMAKE_BUILD_TYPE</code> from <code>Debug</code> to <code>Rele
 </div>
 </div>
 </div>
-<div id="outline-container-org373767f" class="outline-4">
-<h4 id="org373767f"><span class="section-number-4">2.2.4.</span> Unit tests</h4>
+<div id="outline-container-orgaf2fff1" class="outline-4">
+<h4 id="orgaf2fff1"><span class="section-number-4">2.2.4.</span> Unit tests</h4>
 <div class="outline-text-4" id="text-2-2-4">
 <p>
 In the <code>test</code> folder. Mostly for the low-level containers.
 </p>
 </div>
 </div>
-<div id="outline-container-orgc9f8360" class="outline-4">
-<h4 id="orgc9f8360"><span class="section-number-4">2.2.5.</span> Library</h4>
+<div id="outline-container-org6a02877" class="outline-4">
+<h4 id="org6a02877"><span class="section-number-4">2.2.5.</span> Library</h4>
 <div class="outline-text-4" id="text-2-2-5">
 <p>
 All of it in the <code>src</code> folder.
@@ -571,7 +571,7 @@ All of it in the <code>src</code> folder.
 </pre>
 </div>
 
-<pre class="example" id="org01b74f5">
+<pre class="example" id="org14f1a4c">
 ───────────────────────────────────────────────────────────────────────────────
 Language                 Files     Lines   Blanks  Comments     Code Complexity
 ───────────────────────────────────────────────────────────────────────────────
@@ -585,7 +585,7 @@ Estimated Cost to Develop (organic) $208,674
 Estimated Schedule Effort (organic) 7.58 months
 Estimated People Required (organic) 2.44
 ───────────────────────────────────────────────────────────────────────────────
-Processed 268667 bytes, 0.269 megabytes (SI)
+Processed 268668 bytes, 0.269 megabytes (SI)
 ───────────────────────────────────────────────────────────────────────────────
 
 </pre>
@@ -593,8 +593,8 @@ Processed 268667 bytes, 0.269 megabytes (SI)
 </div>
 </div>
 
-<div id="outline-container-org606b440" class="outline-3">
-<h3 id="org606b440"><span class="section-number-3">2.3.</span> Examples</h3>
+<div id="outline-container-org1ad2a89" class="outline-3">
+<h3 id="org1ad2a89"><span class="section-number-3">2.3.</span> Examples</h3>
 <div class="outline-text-3" id="text-2-3">
 <p>
 To be found in the <code>examples</code> folder
@@ -609,8 +609,8 @@ To be found in the <code>examples</code> folder
 </div>
 </div>
 </div>
-<div id="outline-container-org8e70abc" class="outline-2">
-<h2 id="org8e70abc"><span class="section-number-2">3.</span> The Maximum Independent Set Problem (MISP)</h2>
+<div id="outline-container-org32599eb" class="outline-2">
+<h2 id="org32599eb"><span class="section-number-2">3.</span> The Maximum Independent Set Problem (MISP)</h2>
 <div class="outline-text-2" id="text-3">
 <p>
 It is, perhaps, most effective to look at some models
@@ -618,24 +618,24 @@ to get a reasonable sense of the effort it takes to model and
 solve a problem with <b>CODD</b>. 
 </p>
 </div>
-<div id="outline-container-orga7ebd5a" class="outline-3">
-<h3 id="orga7ebd5a"><span class="section-number-3">3.1.</span> Preamble</h3>
+<div id="outline-container-org8d3d140" class="outline-3">
+<h3 id="org8d3d140"><span class="section-number-3">3.1.</span> Preamble</h3>
 <div class="outline-text-3" id="text-3-1">
 <p>
 To start using CODD, it is sufficent to include its main header as follow
 </p>
 <div class="org-src-container">
-<pre class="src src-c++" id="org6a4518f"><span style="color: #75507b;">#include</span> <span style="color: #5c3566;">"codd.hpp"</span>
+<pre class="src src-c++" id="org361ee58"><span style="color: #75507b;">#include</span> <span style="color: #5c3566;">"codd.hpp"</span>
 </pre>
 </div>
 </div>
 </div>
 
-<div id="outline-container-org9aae497" class="outline-3">
-<h3 id="org9aae497"><span class="section-number-3">3.2.</span> Reading the instance</h3>
+<div id="outline-container-org86bee88" class="outline-3">
+<h3 id="org86bee88"><span class="section-number-3">3.2.</span> Reading the instance</h3>
 <div class="outline-text-3" id="text-3-2">
 <div class="org-src-container">
-<pre class="src src-c++" id="org2fd2f42"><span style="color: #346604;">struct</span> <span style="color: #204a87;">GE</span> {
+<pre class="src src-c++" id="orgd428c9f"><span style="color: #346604;">struct</span> <span style="color: #204a87;">GE</span> {
    <span style="color: #204a87;">int</span> <span style="color: #b35000;">a</span>,<span style="color: #b35000;">b</span>;
    <span style="color: #346604;">friend</span> <span style="color: #204a87;">bool</span> <span style="color: #346604;">operator</span><span style="color: #a40000;">==</span>(<span style="color: #346604;">const</span> <span style="color: #204a87;">GE</span>&amp; <span style="color: #b35000;">e1</span>,<span style="color: #346604;">const</span> <span style="color: #204a87;">GE</span>&amp; <span style="color: #b35000;">e2</span>) {
       <span style="color: #346604;">return</span> e1.a == e2.a &amp;&amp; e1.b == e2.b;
@@ -712,11 +712,11 @@ The <code>readFile</code>  function produces an <code>Instance</code> from a nam
 </div>
 </div>
 
-<div id="outline-container-org19e5b6b" class="outline-3">
-<h3 id="org19e5b6b"><span class="section-number-3">3.3.</span> State definition</h3>
+<div id="outline-container-org5c86b52" class="outline-3">
+<h3 id="org5c86b52"><span class="section-number-3">3.3.</span> State definition</h3>
 <div class="outline-text-3" id="text-3-3">
 <div class="org-src-container">
-<pre class="src src-c++" id="org1cd90c6">
+<pre class="src src-c++" id="org2a2895c">
 <span style="color: #346604;">struct</span> <span style="color: #204a87;">MISP</span> {
    <span style="color: #204a87;">GNSet</span> <span style="color: #b35000;">sel</span>;
    <span style="color: #204a87;">int</span>   <span style="color: #b35000;">n</span>;
@@ -756,12 +756,12 @@ integer <code>n</code> representing the index of the next vertex to consider for
 </div>
 </div>
 
-<div id="outline-container-org06378ad" class="outline-3">
-<h3 id="org06378ad"><span class="section-number-3">3.4.</span> Main Model</h3>
+<div id="outline-container-org11cc234" class="outline-3">
+<h3 id="org11cc234"><span class="section-number-3">3.4.</span> Main Model</h3>
 <div class="outline-text-3" id="text-3-4">
 </div>
-<div id="outline-container-org6d2c125" class="outline-4">
-<h4 id="org6d2c125"><span class="section-number-4">3.4.1.</span> Getting started</h4>
+<div id="outline-container-org7838827" class="outline-4">
+<h4 id="org7838827"><span class="section-number-4">3.4.1.</span> Getting started</h4>
 <div class="outline-text-4" id="text-3-4-1">
 <div class="org-src-container">
 <pre class="src src-c++"><span style="color: #204a87;">int</span> <span style="color: #a40000;">main</span>(<span style="color: #204a87;">int</span> <span style="color: #b35000;">argc</span>,<span style="color: #204a87;">char</span>* <span style="color: #b35000;">argv</span>[])
@@ -795,8 +795,8 @@ vertices. Since the instances are cliques (from the DIMACS challenge), the <code
 </div>
 </div>
 
-<div id="outline-container-org2dcb888" class="outline-4">
-<h4 id="org2dcb888"><span class="section-number-4">3.4.2.</span> The Bound Tracker</h4>
+<div id="outline-container-org3dc9a48" class="outline-4">
+<h4 id="org3dc9a48"><span class="section-number-4">3.4.2.</span> The Bound Tracker</h4>
 <div class="outline-text-4" id="text-3-4-2">
 <p>
 The maximum independent set is an optimization (maximization) problem. CODD needs to track solutions as they get produces and offers the opportunity to execute an arbitrary code fragment when a new solution somes forth. This code fragment can be used, for instance, to check the correctness of the solution. 
@@ -810,7 +810,7 @@ This task is the responsibility of the <code>Bounds</code> object. Minimally, on
 </pre>
 </div>
 
-<div class="attention" id="orgb269a9a">
+<div class="attention" id="orgfaa6857">
 <p>
 In the MISP example, we illustrate how to respond to incoming solutions. In this case the <code>Bounds</code> instance uses a C++ lambda (a closure) that will be fed a solution <code>inc</code>, i.e., a vector of labels.
 </p>
@@ -842,8 +842,8 @@ The closure first <i>captures</i> the set of edges (by reference) as checking th
 </div>
 </div>
 
-<div id="outline-container-orgec17ec3" class="outline-4">
-<h4 id="orgec17ec3"><span class="section-number-4">3.4.3.</span> Defining neighbors</h4>
+<div id="outline-container-org9a9526f" class="outline-4">
+<h4 id="org9a9526f"><span class="section-number-4">3.4.3.</span> Defining neighbors</h4>
 <div class="outline-text-4" id="text-3-4-3">
 <p>
 The main model will make use of the adjacency list, so it is advisable to hold into
@@ -856,8 +856,8 @@ a variable <code>neighbors</code> the adjacency list for the graph.
 </div>
 </div>
 
-<div id="outline-container-org814c69a" class="outline-4">
-<h4 id="org814c69a"><span class="section-number-4">3.4.4.</span> The actual CODD Model</h4>
+<div id="outline-container-org7c7c1e7" class="outline-4">
+<h4 id="org7c7c1e7"><span class="section-number-4">3.4.4.</span> The actual CODD Model</h4>
 <div class="outline-text-4" id="text-3-4-4">
 <p>
 A CODD model capture a label transition system (LTS). This LTS operates on nodes holding states for the problem. In the case of the maximum independent set, the states are <code>MISP</code> instances. The LTS starts from a <i>source</i> node and forms paths that ultimately target a <i>sink</i> state. A path in the LTS moves from state to state by <i>generating labels</i> and  using a <i>transition</i> function. Each such transition can incur a <i>cost</i>.
@@ -874,7 +874,7 @@ CODD models all the italicized concepts outlined in the prior paragraphs with C+
 </div>
 
 <ol class="org-ol">
-<li><a id="orgbcd83d7"></a>The Start State Closure<br />
+<li><a id="org635a5dc"></a>The Start State Closure<br />
 <div class="outline-text-5" id="text-3-4-4-1">
 <p>
 The root, start or source state in the MISP application simly holds in the <code>sel</code> property of the state the indices of all legal vertices and holds in <code>n</code> the value 0 to report that the next decision is to be about vertex 0.  Note how the code below
@@ -893,7 +893,7 @@ uses the STL <code>std::views::iota</code> to loop over the closed range [0,top]
 </div>
 </li>
 
-<li><a id="org3d46849"></a>The Sink State Closure<br />
+<li><a id="orgfc12497"></a>The Sink State Closure<br />
 <div class="outline-text-5" id="text-3-4-4-2">
 <p>
 The sink state is chosen, by convention, to hold an empty set for the remaining legal vertices (so no more decision beyond this point) and <code>top</code> as the next vertex to consider since top is the index of the last vertex plus 1. Note how the closure capture the <code>top</code> local variable.
@@ -907,7 +907,7 @@ The sink state is chosen, by convention, to hold an empty set for the remaining 
 </div>
 </li>
 
-<li><a id="org9c4eb96"></a>The Label Generation Closure<br />
+<li><a id="org147dcf6"></a>The Label Generation Closure<br />
 <div class="outline-text-5" id="text-3-4-4-3">
 <p>
 Moving from one state to the next involves making a decision about the next vertex to be consider for inclusion. Observe that the identity of that vertex is held in the <code>n</code> property of the state we are departing. The decision, in this case, is a binary choice. Either we include <code>n</code> or we do not. So the label generation function
@@ -922,7 +922,7 @@ returns the closed range [0,1] as the valid outgoing labels. Note how the closur
 </div>
 </li>
 
-<li><a id="org74e4f97"></a>The State transition Closure<br />
+<li><a id="org0b57ed3"></a>The State transition Closure<br />
 <div class="outline-text-5" id="text-3-4-4-4">
 <p>
 the state transition closure is the heart of the model. It specifies what state to go to when leaving <code>s</code> through label <code>label</code>. Observe that <code>s</code> dictates which vertex to consider in <code>s.n</code>. Two cases arise:
@@ -954,7 +954,7 @@ The first line of the second case therefore commits to not transitioning wheneve
 </div>
 </li>
 
-<li><a id="org8044425"></a>The transition Cost Closure<br />
+<li><a id="org92934b5"></a>The transition Cost Closure<br />
 <div class="outline-text-5" id="text-3-4-4-5">
 <p>
 Each transition from a state to another incurs a cost based on the source state and the label used to transition out. CODD once again relies on a closure to report this cost. In the code fragment below, note how the closure capture a reference to the <code>weight</code> vector and uses the identity of the vertex being labeled <code>s.n</code> as well as the <code>label</code> itself  (a 0/1 value) to compute and return the actual cost.
@@ -968,7 +968,7 @@ Each transition from a state to another incurs a cost based on the source state 
 </div>
 </li>
 
-<li><a id="org70c0908"></a>The State Merge Closure<br />
+<li><a id="org7a0bd1c"></a>The State Merge Closure<br />
 <div class="outline-text-5" id="text-3-4-4-6">
 <p>
 CODD computes its dual bound with a relaxation that <i>merges</i> state. The implementation uses a closure which, given two states \(s_1\) and \(s_2\) determines
@@ -990,9 +990,9 @@ two sets.
 </div>
 </li>
 
-<li><a id="orgc88a308"></a>Local Bound Closure<br />
+<li><a id="org7b97118"></a>Local Bound Closure<br />
 <div class="outline-text-5" id="text-3-4-4-7">
-<div class="caution" id="orgfa3beed">
+<div class="caution" id="orgb3ac6fc">
 <p>
 CODD can use an <i>optional</i> closure to quickly compute dual bounds associated to
 states of the LTS. The optional <code>local</code> closure is therefore typically lightweight.
@@ -1011,7 +1011,7 @@ In the case of MISP, a simple dual bound consist of summing up the weight of all
 </div>
 </li>
 
-<li><a id="orgefca0e7"></a>Recognizing the Sink<br />
+<li><a id="orge7282d1"></a>Recognizing the Sink<br />
 <div class="outline-text-5" id="text-3-4-4-8">
 <p>
 CODD uses one last (mandatory) closure to establish equality to the sink. It does not rely on the equality operator as recognizing the sink may not require to test all its attributes for equality, but only a subset of them.
@@ -1025,14 +1025,14 @@ CODD uses one last (mandatory) closure to establish equality to the sink. It doe
 </div>
 </li>
 
-<li><a id="org246201d"></a>Wrapping up<br />
+<li><a id="org0f0cc45"></a>Wrapping up<br />
 <div class="outline-text-5" id="text-3-4-4-9">
 <p>
 Now that all the mandatory (and optional) closures are defined, it only remains to
 instantiate the generic solver with the closures given above and invoke it.
 </p>
 
-<div class="hint" id="org1beecba">
+<div class="hint" id="orgc39e55a">
 <p>
 The type <code>Maximize&lt;double&gt;</code> is used to convey that this is a maximization problem
 while the nested <code>double</code> type is the type used to track the objective function value and is currently always <code>double</code>. CODD supports <code>Minimize&lt;double&gt;</code> as well.
@@ -1063,16 +1063,16 @@ while the nested <code>double</code> type is the type used to track the objectiv
 </div>
 
 
-<div id="outline-container-org7042c73" class="outline-2">
-<h2 id="org7042c73"><span class="section-number-2">4.</span> Papers</h2>
+<div id="outline-container-org71141cb" class="outline-2">
+<h2 id="org71141cb"><span class="section-number-2">4.</span> Papers</h2>
 </div>
 
-<div id="outline-container-org2de04fe" class="outline-2">
-<h2 id="org2de04fe"><span class="section-number-2">5.</span> Related Systems</h2>
+<div id="outline-container-org637f11d" class="outline-2">
+<h2 id="org637f11d"><span class="section-number-2">5.</span> Related Systems</h2>
 <div class="outline-text-2" id="text-5">
 </div>
-<div id="outline-container-org891acaf" class="outline-3">
-<h3 id="org891acaf"><span class="section-number-3">5.1.</span> DDO</h3>
+<div id="outline-container-orgf79d4d4" class="outline-3">
+<h3 id="orgf79d4d4"><span class="section-number-3">5.1.</span> DDO</h3>
 <div class="outline-text-3" id="text-5-1">
 <p>
 <a href="https://github.com/xgillard/ddo">DDO</a> was created by Pierre Schauss and Xavier Gillard.
@@ -1081,8 +1081,8 @@ It is a generic and efficient framework for MDD-based optimization written in Ru
 </div>
 </div>
 
-<div id="outline-container-orgd096fbb" class="outline-3">
-<h3 id="orgd096fbb"><span class="section-number-3">5.2.</span> Domain Independent DP</h3>
+<div id="outline-container-orgd92162a" class="outline-3">
+<h3 id="orgd92162a"><span class="section-number-3">5.2.</span> Domain Independent DP</h3>
 <div class="outline-text-3" id="text-5-2">
 <p>
 <a href="https://arxiv.org/abs/2401.13883">DIDP</a> is the brainchild of Ryo Kuroiwa, J. Christopher Beck. It can be found <a href="https://didp.ai">here</a> and offers
@@ -1094,7 +1094,7 @@ both a modeling and a solving API for dynamic programming.
 </div>
 <div id="postamble" class="status">
 <p class="author">Author: Laurent Michel</p>
-<p class="date">Created: 2024-04-19 Fri 17:27</p>
+<p class="date">Created: 2024-04-19 Fri 17:36</p>
 <p class="validation"><a href="https://validator.w3.org/check?uri=referer">Validate</a></p>
 </div>
 </body>
