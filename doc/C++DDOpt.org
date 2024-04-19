@@ -155,15 +155,15 @@ The label generation function is also defined with a simple closure
 #+end_src
 The body of the closure uses the capture set of cities =C= and removes from it those already visited (and held in =s.s=) but retains the first city (1) to be able to close the tour.
 
-The function $\tau$ is, unsurprisingly, another closure
+The function $\tau$ is, unsurprisingly, another closure (which captures =sz= and =C= denoting, respectively, the number of cities and the set of cities.)
 #+begin_src c++
-  const auto stf = [sz](const TSP& s,const int label) -> std::optional<TSP> {
+  const auto stf = [sz,&C](const TSP& s,const int label) -> std::optional<TSP> {
      bool bad = (label == 1 && s.hops < sz-1) || (label != 1 && s.hops >= sz-1);
      if (bad)
         return std::nullopt;
      else {
         bool close = label==1 && s.hops >= sz-1;
-        if (close) return TSP { GNSet {},1,sz};
+        if (close) return TSP { C,1,sz};
         else if (!s.s.contains(label) && s.last != label) {
            return TSP { s.s | GNSet{label},label,s.hops + 1};
         } else return std::nullopt;
