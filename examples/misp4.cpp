@@ -1,14 +1,4 @@
-#include "dd.hpp"
-#include "util.hpp"
-#include <concepts>
-#include <iostream>
-#include <fstream>
-#include <set>
-#include <optional>
-#include <ranges>
-#include <algorithm>
-#include <map>
-#include "search.hpp"
+#include "codd.hpp"
 
 struct MISP {
    GNSet sel;
@@ -127,13 +117,8 @@ int main(int argc,char* argv[])
    std::vector<int> weight(ns.size()+1);
    weight[ns.size()] = 0;
    for(auto v : ns) weight[v] = 1;
-   std::map<int,GNSet> neighbors {};  // computing the neigbhors using STL (not pretty)
-   for(int i : ns) 
-      neighbors[i] = GNSet { i };
-   for(const auto& e : es) {
-      neighbors[e.a].insert(e.b);
-      neighbors[e.b].insert(e.a);      
-   }
+   auto neighbors = instance.adj;
+
    const auto myInit = [top]() {   // The root state
       GNSet U = {}; // std::views::iota(1,top) | std::ranges::to<std::set>();
       for(auto i : std::views::iota(0,top))
@@ -155,7 +140,7 @@ int main(int argc,char* argv[])
          if (!s.sel.contains(s.n) && label) return std::nullopt; // we cannot take n (label==1) if not legal.
          GNSet out = s.sel;
          out.remove(s.n);   // remove n from state
-         if (label) out.diffWith(neighbors[s.n]); // remove neighbors of n from state (when taking n -- label==1 -- )       
+         if (label) out.diffWith(neighbors[s.n]); // remove neighbors of n from state (when taking n -- label==1 -- )    
          const bool empty = out.empty();  // find out if we are done!
          return MISP { std::move(out),empty ? top : s.n + 1}; // build state accordingly
       }

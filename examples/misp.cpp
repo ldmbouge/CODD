@@ -167,7 +167,7 @@ int main(int argc,char* argv[])
    auto myStf = [top,&neighbors](const MISP& s,const int label) -> std::optional<MISP> {
       if (label == top) return MISP { GNSet{}, 0,0};
       else {
-         GNSet out = filter(s.sel,[label,nl = neighbors[label]](int i) {
+         GNSet out = filter(s.sel,[nl = neighbors[label]](int i) {
             return !nl.contains(i);
          });
          out.removeBelow(label); 

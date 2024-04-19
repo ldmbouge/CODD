@@ -68,18 +68,23 @@ int main()
    const auto target = [sz]() {    // The sink state
       return TSP { GNSet{},1,sz };
    };
-   const auto lgf = [](const TSP& s) -> Range {
-      return Range::close(1,4);
+   const auto lgf = [&labels](const TSP& s)  {
+      auto r = labels;
+      r.diffWith(s.s);
+      r.insert(1);
+      return r;
    };
    const auto stf = [sz](const TSP& s,const int label) -> std::optional<TSP> {
-      if ((label==1 && s.hops < sz-1) || (s.hops == sz-1 && label!=1))
+      bool bad = (label == 1 && s.hops < sz-1) || (label != 1 && s.hops >= sz-1);
+      if (bad)
          return std::nullopt;
-      if (s.hops < sz && !s.s.contains(label) && (s.last != label)) {
-         if (s.hops + 1 == sz)
-            return TSP { GNSet{}, label,s.hops + 1};
-         else
-            return TSP { s.s | GNSet{label},label,s.hops + 1}; // head to sink
-      } else return std::nullopt;  // return the empty optional 
+      else {
+         bool close = label==1 && s.hops >= sz-1;
+         if (close) return TSP { GNSet {},1,sz};
+         else if (!s.s.contains(label) && s.last != label) {
+            return TSP { s.s | GNSet{label},label,s.hops + 1};
+         } else return std::nullopt;
+      }      
    };
    const auto scf = [&es](const TSP& s,int label) { // partial cost function 
       return es.at(GE {s.last,label});
