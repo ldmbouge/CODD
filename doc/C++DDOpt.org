@@ -173,13 +173,13 @@ The function $\tau$ is, unsurprisingly, another closure (which captures =sz= and
 The case analysis carried out in the code mirrors exactly the formal definition. The =bad= Boolean matches the first two conditions of $\tau$ and the code return =std::nullopt= to report $\bot$. The =else= block cover the two main cases (good closing of a tour, or extension with a city). Note how a C++ expression like =s.s | GNSet{label}=
 is the direct encoding of $V \cup \{\ell\}$ as the =|= operator is used for set union.
 
-The cost of a transition is also modeled with a closure that reads:
+The cost of a transition is also modeled with a closure that captures the edge set =es= and reads:
 #+begin_src c++
   const auto scf = [&es](const TSP& s,int label) { // partial cost function 
      return es.at(GE {s.last,label});
   };
 #+end_src
-It simply looks up in a /map/ =es= the weight associated to the edge originating at vertex =s.last= and ending at vertex =label=.
+It simply looks up in the edge /map/ =es= the weight associated to the edge originating at vertex =s.last= and ending at vertex =label=.
 
 The state merge capability to support relaxed diagram is simply:
 #+begin_src c++
