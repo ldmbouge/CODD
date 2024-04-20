@@ -1,13 +1,4 @@
-#include "dd.hpp"
-#include "util.hpp"
-#include "search.hpp"
-#include <concepts>
-#include <iostream>
-#include <fstream>
-#include <set>
-#include <optional>
-#include <algorithm>
-#include <map>
+#include "codd.hpp"
 
 typedef FArray<unsigned short> Legal; // colors assigned to vertices. Either 0 or a value in 1..65K
 
@@ -160,12 +151,9 @@ int main(int argc,char* argv[])
    const int w = argc==3 ? atoi(argv[2]) : 64;
    int UB = -1;
    std::cout << "FILE:" << fName << "\n";
-   //Instance instance = readFile(fName);
    Instance instance = readPyFile(fName, UB);
    std::cout << "read instance:" << instance.nv << " " << instance.ne << "\n";
-   //std::cout << instance.edges << "\n";
    std::cout << "Width=" << w << "\n";
-   // using STL containers for the graph
    const GNSet ns = instance.vertices();
    const std::set<GE> es = instance.edges;
    const FArray adj = instance.adj;
@@ -174,11 +162,9 @@ int main(int argc,char* argv[])
    
    if (UB < 0) UB = K;
    std::cout << "upper bound is " << UB << "\n";
-   Bounds bnds([&es,K](const std::vector<int>& inc)  {
+   Bounds bnds([&es](const std::vector<int>& inc)  {
       bool aBad = false;
-      //std::cout << "INC: " << inc << "\n";
       for(const auto& e : es) {
-         //std::cout << "EDGE:" << e << "\n";
          if (inc[e.a] == inc[e.b]) {
             std::cout << e << " COL:" << inc << "\n";
             assert(false);
@@ -186,27 +172,12 @@ int main(int argc,char* argv[])
          aBad = aBad || (inc[e.a] == inc[e.b]);
          assert(!aBad);
       }
-      std::map<int,int> h;
-      for(int v = 0;v < K;v++) 
-         h[inc[v]] = h.contains(inc[v]) ? h[inc[v]] + 1 : 1;
-      for(const auto& e : h) 
-         std::cout << "(" << e.first << " : " << e.second << ") ";
-      std::cout << "\n";
       std::cout << "CHECKER is " << !aBad << "\n";
    });
    // [LDM] : changed labels to go to UB (rather than K) (halved the runtime)
-   // Well, UB is given in the file, but it actually tends to be the optimal ;-) So it's cheating a bit
-   // to start with that value (it saves memory, it does not provide a witness). We can switch back to K+1
-   // rather than UB+1. Or compute an actual greedy coloring at first to get an UB. For Some benchmark, that
-   // would be far less than K.
    const auto labels = setFrom(std::views::iota(1,UB+1));     // using a plain set for the labels
-   const auto init = [K,labels]() {   // The root state
-      Legal A(K, 0);      // Noboby is colored yet (0 to everyone)
-      return COLOR { std::move(A),0,0 };
-   };
-   const auto target = [K]() {    // The sink state
-      return COLOR { Legal{},0,K};
-   };
+   const auto init = [K]()     { return COLOR { Legal(K,0),0,0 };};
+   const auto target = [K]()   { return COLOR { Legal{},0,K};};
    const auto lgf = [K,&labels,&bnds,&adj](const COLOR& s) -> GNSet {
       if (s.vtx >= K+1)
          return GNSet(); 
@@ -216,10 +187,6 @@ int main(int argc,char* argv[])
             valid.remove(s.s[a]);
       auto ub = std::min({(int)bnds.getPrimal(),s.last+1});
       valid.removeAbove(ub);
-      /*      std::cout << "K=" << K << " ADJ(" << s.vtx << ") = " << adj[s.vtx] << " LGF: " << s.s
-                << "\t " << s.last << " " 
-                << " LBLS:" << valid << "\n";
-      */
       return valid;
    };
    const auto stf = [K](const COLOR& s,const int label) -> std::optional<COLOR> {
@@ -229,9 +196,7 @@ int main(int argc,char* argv[])
       B[s.vtx] = label;
       return COLOR { std::move(B), std::max(label,s.last), s.vtx + 1};
    };
-   const auto scf = [](const COLOR& s,int label) { // partial cost function 
-      return std::max(0,label -  s.last);
-   };
+   const auto scf = [](const COLOR& s,int label) { return std::max(0,label -  s.last);};
    const auto smf = [](const COLOR& s1,const COLOR& s2) -> std::optional<COLOR> {
       if (s1.last == s2.last && s1.vtx == s2.vtx) {
          Legal B(s1.s);
@@ -241,14 +206,9 @@ int main(int argc,char* argv[])
       }
       else return std::nullopt; // return  the empty optional
    };
-   const auto eqs = [K](const COLOR& s) -> bool {
-      return s.vtx == K;
-   };
-
-   std::cout << "LABELS:" << labels << "\n";
+   const auto eqs = [K](const COLOR& s) -> bool { return s.vtx == K;};
 
    BAndB engine(DD<COLOR,Minimize<double>, // to minimize
-                ///decltype(init), 
                 decltype(target),
                 decltype(lgf),
                 decltype(stf),
