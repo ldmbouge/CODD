@@ -559,10 +559,11 @@ public:
       _t[i] |= (1ull << (p & 63));
       _nbp = std::max(_nbp,(unsigned short)p);
    }
-   void remove(int p) noexcept {
+   GNSet& remove(int p) noexcept {
       const int i = p >> 6;
       if (0 <= i && i < _mxw) 
-         _t[i] &= ~(1ull << (p & 63));      
+         _t[i] &= ~(1ull << (p & 63));
+      return *this;
    }
    GNSet& complement() noexcept {
       for(short i=0;i < _mxw;++i)

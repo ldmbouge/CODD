@@ -50,20 +50,19 @@ int main(int argc,char* argv[]) {
    };
    Bounds bnds;
    const int sz = (int)C.size();
-   const auto init = []()               { return TSP { GNSet{},1,0 };};
+   const auto init = []()               { return TSP { GNSet{},1,0 };}; // initial "end" is 1
    const auto target = [sz,&C]()        { return TSP { C,1,sz };};
-   const auto lgf = [&C](const TSP& s)  { return (C - s.s) | GNSet {1};};
+   const auto lgf = [sz,&C](const TSP& s)  {
+      if (s.hops >= sz-1)
+         return GNSet {1};
+      else 
+         return (C - s.s).remove(1).remove(s.e);
+   };
    const auto stf = [sz,&C](const TSP& s,const int label) -> std::optional<TSP> {
-      bool bad = (label == 1 && s.hops < sz-1) || (label != 1 && s.hops >= sz-1);
-      if (bad)
-         return std::nullopt;
-      else {
-         bool close = label==1 && s.hops >= sz-1;
-         if (close) return TSP { C,1,sz};
-         else if (!s.s.contains(label) && s.e != label) {
-            return TSP { s.s | GNSet{label},label,s.hops + 1};
-         } else return std::nullopt;
-      }      
+      if (label==1)
+         return TSP { C,1,sz};
+      else 
+         return TSP { s.s | GNSet{label},label,s.hops + 1};
    };
    const auto scf = [&es](const TSP& s,int label) { // partial cost function 
       return es.at(GE {s.e,label});
