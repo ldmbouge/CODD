@@ -2,24 +2,21 @@
 
 struct TSP {
    GNSet  s;
-   int last;
-   int hops;
+   int    e;
    friend std::ostream& operator<<(std::ostream& os,const TSP& m) {
-      return os << "<" << m.s << ',' << m.last << ',' << m.hops << ">";
+      return os << "<" << m.s << ',' << m.e << ">";
    }
 };
 
 template<> struct std::equal_to<TSP> {
    constexpr bool operator()(const TSP& s1,const TSP& s2) const {
-      return s1.last == s2.last && s1.hops==s2.hops && s1.s == s2.s;
+      return s1.e == s2.e  && s1.s == s2.s;
    }
 };
 
 template<> struct std::hash<TSP> {
    std::size_t operator()(const TSP& v) const noexcept {
-      return (std::hash<GNSet>{}(v.s) << 24) |
-         (std::hash<int>{}(v.last) << 16) |
-         std::hash<int>{}(v.hops);
+      return (std::hash<GNSet>{}(v.s) << 24) | (std::hash<int>{}(v.e) << 16);
    }
 };
 
@@ -51,42 +48,32 @@ int main()
                              {GE {4,3}, 30}
    };
    Bounds bnds;
-   const auto labels = C;     // using a plain set for the labels
-   const int sz = (int)C.size();
-   const auto init = []() {   // The root state
-      return TSP { GNSet{},1,0 };
-   };
-   const auto target = [sz]() {    // The sink state
-      return TSP { GNSet{},1,sz };
-   };
-   const auto lgf = [&C](const TSP& s)  {
-      return (C - s.s) | GNSet {1};
-   };
-   const auto stf = [sz](const TSP& s,const int label) -> std::optional<TSP> {
-      bool bad = (label == 1 && s.hops < sz-1) || (label != 1 && s.hops >= sz-1);
+   const auto sz = C.size();
+   const auto init = []()               { return TSP { GNSet{},1 };};
+   const auto target = [&C]()           { return TSP { C,1 };};
+   const auto lgf = [&C](const TSP& s)  { return (C - s.s) | GNSet {1};};
+   
+   const auto stf = [sz,&C](const TSP& s,const int label) -> std::optional<TSP> {
+      bool bad = (label == 1 && s.s.size() < sz-1) || (label != 1 && s.s.size() >= sz-1);
       if (bad)
          return std::nullopt;
       else {
-         bool close = label==1 && s.hops >= sz-1;
-         if (close) return TSP { GNSet {},1,sz};
-         else if (!s.s.contains(label) && s.last != label) {
-            return TSP { s.s | GNSet{label},label,s.hops + 1};
+         bool close = label==1 && s.s.size() >= sz-1;
+         if (close) return TSP { C,1 };
+         else if (!s.s.contains(label) && s.e != label) {
+            return TSP { s.s | GNSet{label},label};
          } else return std::nullopt;
       }      
    };
-   const auto scf = [&es](const TSP& s,int label) { // partial cost function 
-      return es.at(GE {s.last,label});
-   };
+   const auto scf = [&es](const TSP& s,int label) { return es.at(GE {s.e,label});};
    const auto smf = [](const TSP& s1,const TSP& s2) -> std::optional<TSP> {
-      if (s1.last == s2.last && s1.hops == s2.hops) 
-         return TSP {s1.s & s2.s , s1.last, s1.hops};
-      else return std::nullopt; // return  the empty optional
+      if (s1.e == s2.e) 
+         return TSP {s1.s & s2.s , s1.e };
+      else return std::nullopt; 
    };
-   const auto eqs = [sz](const TSP& s) -> bool {
-      return s.last == 1 && s.hops == sz;
-   };
+   const auto eqs = [](const TSP& s) -> bool { return s.e == 1;};
 
-   BAndB engine(DD<TSP,Minimize<double>, // to minimize
+   BAndB engine(DD<TSP,Minimize<double>, 
                 decltype(target),
                 decltype(lgf),
                 decltype(stf),
