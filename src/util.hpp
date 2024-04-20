@@ -859,6 +859,7 @@ template <class T> class FArray {
    T*            _tab;
    std::size_t    _mx;
 public:
+   typedef T ValType;
    FArray() : _tab(nullptr),_mx(0) {}
    FArray(std::size_t isz) : _mx(isz) {
       if (_mx > 0)
@@ -929,13 +930,12 @@ public:
    }
    friend struct std::hash<FArray<T>>;
    friend std::ostream& operator<<(std::ostream& os,const FArray<T>& msg) {
-   os << '(' << msg.size() << ")[";
-   for(auto i = 0u ;i < msg._mx;i++)
-      //   for(const T& v : msg)
-      os << i << ':' << msg._tab[i] << " ";
-   return os << ']';
-}
-
+      os << '(' << msg.size() << ")[";
+      for(auto i = 0u ;i < msg._mx;i++)
+         //   for(const T& v : msg)
+         os << i << ':' << msg._tab[i] << " ";
+      return os << ']';
+   }
 };
 
 template<class T> struct std::hash<FArray<T>> {
@@ -947,5 +947,149 @@ template<class T> struct std::hash<FArray<T>> {
    }   
 };
 
+// --------------------------------------------------------------------------------
+
+template <class FAT,int arity> class  FMatrix;
+template <class FAT,int arity> class  FMatrixProxyCst;
+
+template <class FAT,int arity> class  FMatrixProxyCst {
+   friend class FMatrix<FAT,arity+1>;
+   friend class FMatrixProxyCst<FAT,arity+1>;
+   FAT&           _flat;
+   const int*      _sfx;
+   int             _acc;
+   FMatrixProxyCst(FAT& flat,const int* sfx,int acc) : _flat(flat),_sfx(sfx),_acc(acc) {}
+public:
+   FMatrixProxyCst<FAT,arity-1> operator[](const int idx);
+   const FMatrixProxyCst<FAT,arity-1> operator[](const int idx) const;
+};
+
+template <class FAT> class  FMatrixProxyCst<FAT,1> {
+   friend class FMatrix<FAT,2>;
+   friend class FMatrixProxyCst<FAT,2>;
+   FAT&            _flat;
+   const int*       _sfx;
+   int              _acc;
+   FMatrixProxyCst(FAT& flat,const int* sfx,int acc) : _flat(flat),_sfx(sfx),_acc(acc) {}
+public:
+   typename FAT::ValType& operator[](const int idx)  { return _flat[_acc * *_sfx + idx ];}
+   typename FAT::ValType  operator[](const int idx) const  { return _flat[_acc * *_sfx + idx];}
+};
+
+template <class FAT,int arity>
+FMatrixProxyCst<FAT,arity-1> FMatrixProxyCst<FAT,arity>::operator[](const int idx)
+{
+   return FMatrixProxyCst<FAT,arity-1>(_flat,_sfx+1,_acc * *_sfx + idx);   
+}
+template <class FAT,int arity>
+const FMatrixProxyCst<FAT,arity-1> FMatrixProxyCst<FAT,arity>::operator[](const int idx) const
+{
+   return FMatrixProxyCst<FAT,arity-1>(_flat,_sfx+1,_acc * *_sfx + idx);   
+}
+
+inline size_t prodOf(const int* t,size_t sz) {
+   auto i=0u;
+   size_t fsz = 1;
+   while(i < sz) fsz = fsz * t[i++];
+   return fsz;
+}
+
+template <class FAT,int arity> class  FMatrix {
+protected:
+   FAT _flat;
+   int _dims[arity];
+   void print(std::ostream& os,int* path,int dId,int ofs) const;
+   void prepare(const int* dims);
+public:
+   FMatrix() {}
+   FMatrix(const FMatrix<FAT,arity>& mtx);
+   FMatrix(const int* dims);
+   FMatrix<FAT,arity>& operator=(const FMatrix<FAT,arity>& mtx);
+   FMatrixProxyCst<FAT,arity-1> operator[](const int idx);
+   const FMatrixProxyCst<FAT,arity-1> operator[](const int idx) const;
+   FAT getFlat()           { return _flat;}
+   int getArity() const    { return arity;}
+   int getDim(int d) const { return _dims[d];}
+   void print(std::ostream& os) const { int* path = (int*)alloca(sizeof(int)*arity);print(os,path,0,0);}
+   friend std::ostream& operator<<(std::ostream& os,const FMatrix<FAT,arity>& m) { m.print(os);return os;}
+};
+
+
+template <class FAT,int arity> void FMatrix<FAT,arity>::prepare(const int* dims)
+{
+   _flat  = FAT(prodOf(dims,arity));
+   for(int k=0;k<arity;k++)
+      _dims[k] = dims[k];
+}
+
+template <class FAT,int arity> FMatrix<FAT,arity>::FMatrix(const FMatrix<FAT,arity>& mtx)
+{
+   _flat = mtx._flat;
+   for(int k=0;k<arity;k++)
+      _dims[k] = mtx._dims[k];   
+}
+
+template <class FAT,int arity> FMatrix<FAT,arity>::FMatrix(const int* dims)
+{   
+   _flat  = FAT(prodOf(dims,arity));
+   for(int k=0;k<arity;k++)
+      _dims[k] = dims[k];
+}
+
+template <class FAT,int arity> 
+FMatrix<FAT,arity>& FMatrix<FAT,arity>::operator=(const FMatrix<FAT,arity>& mtx)
+{
+   _flat = mtx._flat;
+   for(int k=0;k<arity;k++)
+      _dims[k] = mtx._dims[k];   
+   return *this;
+}
+
+template <class FAT,int arity>
+FMatrixProxyCst<FAT,arity-1> FMatrix<FAT,arity>::operator[](const int idx)
+{
+   return FMatrixProxyCst<FAT,arity-1>(_flat,_dims+1,idx);
+}
+
+template <class FAT,int arity>
+const FMatrixProxyCst<FAT,arity-1> FMatrix<FAT,arity>::operator[](const int idx) const
+{
+   return FMatrixProxyCst<FAT,arity-1>(_flat,_dims+1,idx);
+}
+
+template <class FAT,int arity> 
+void FMatrix<FAT,arity>::print(std::ostream& os,int* path,int dId,int ofs) const 
+{
+   if (dId < arity) {
+      int mult = dId > 0 ? _dims[dId] : 0;
+      for(int k=0;k < _dims[dId];++k) {
+         path[dId] = k;
+         print(os,path,dId+1,ofs * mult + k);
+      }
+   } else {
+      os << "m";
+      for(int k=0;k<arity;k++) 
+         os << '[' << path[k] << ']';
+      os << " = " << _flat[ofs] << std::endl;
+   }
+}
+
+// ================================================================================
+// Matrix definition
+// ================================================================================
+
+template <class T,int arity> class  Matrix :public FMatrix<FArray<T>,arity> {
+public:
+   Matrix() {}
+};
+
+template <class T> class  Matrix<T,2> :public FMatrix<FArray<T>,2> {
+public:
+   Matrix() {}
+   Matrix(int nbr,int nbc) : FMatrix<FArray<T>,2>() {
+      int rt[] = {nbr,nbc};
+      this->prepare(rt);
+   }
+};
 
 #endif

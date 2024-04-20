@@ -263,7 +263,7 @@ In the ~test~ folder. Mostly for the low-level containers.
 *** Library
 All of it in the ~src~ folder.
 #+begin_src shell :dir . :exports both
-  scc -i cpp,org,h,hpp ..
+  scc  -i cpp,org,h,hpp ..
 #+end_src
 
 #+RESULTS:
@@ -271,19 +271,26 @@ All of it in the ~src~ folder.
 ───────────────────────────────────────────────────────────────────────────────
 Language                 Files     Lines   Blanks  Comments     Code Complexity
 ───────────────────────────────────────────────────────────────────────────────
-C++                         28      4281      292       286     3703        641
-C++ Header                  15      3096      132       338     2626        431
-Org                          3       553       71         0      482         56
+C++                         29      4288      298       274     3716        670
+C++ Header                  15      3098      132       338     2628        431
+JSON                         3        70        1         0       69          0
+Org                          3       771       97         0      674        100
+Markdown                     2       167       74         0       93          0
+CMake                        1        81       14        13       54          1
+HTML                         1      1101       80         1     1020          0
+gitignore                    1         4        0         0        4          0
 ───────────────────────────────────────────────────────────────────────────────
-Total                       46      7930      495       624     6811       1128
+Total                       55      9580      696       626     8258       1202
 ───────────────────────────────────────────────────────────────────────────────
-Estimated Cost to Develop (organic) $202,519
-Estimated Schedule Effort (organic) 7.50 months
-Estimated People Required (organic) 2.40
+Estimated Cost to Develop (organic) $247,921
+Estimated Schedule Effort (organic) 8.10 months
+Estimated People Required (organic) 2.72
 ───────────────────────────────────────────────────────────────────────────────
-Processed 253674 bytes, 0.254 megabytes (SI)
+Processed 350792 bytes, 0.351 megabytes (SI)
 ───────────────────────────────────────────────────────────────────────────────
+
 #+end_example
+
 
 ** Examples
 To be found in the ~examples~ folder
