@@ -1,4 +1,5 @@
 #include "codd.hpp"
+#include <cmath>
 
 struct SKS {
    int n;           // variable index
