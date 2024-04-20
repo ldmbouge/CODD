@@ -292,6 +292,7 @@ public:
    NDAction mergePair(ANode::Ptr mNode,ANode::Ptr toMerge[2]);
    ANode::Ptr mergeOne(auto& layer,auto& final);
    template <typename Fun> void mergeLayer(auto& layer,Fun f);
+   void adjustBounds(ANode::Ptr nd);
 };
 
 template<typename T>

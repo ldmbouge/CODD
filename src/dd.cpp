@@ -517,11 +517,14 @@ ANode::Ptr Relaxed::mergeOne(auto& layer,auto& skip)
       mNode = _dd->merge(n1,n2);
       if (mNode) {
          if (mNode->nbChildren() > 0) {
-            // std::cout << "merged guy has children... no dice...";
-            // _dd->printNode(std::cout,mNode);
-            // std::cout << "\n";
-            mNode = nullptr;
-            continue;
+            std::cout << "\tmerged result has children... no dice... "
+                      << toMerge[0]->getLayer() << " "
+                      << n2->getLayer() << " "
+                      << " --> " << mNode->getLayer() << " ** ";
+            _dd->printNode(std::cout,mNode);
+            std::cout << "\n";
+            //mNode = nullptr;
+            //continue;
          }
          //assert(mNode->nbChildren()==0);         
          toMerge[1] = n2;
@@ -562,11 +565,26 @@ template <typename Fun> void Relaxed::mergeLayer(auto& layer,Fun f)
    std::list<ANode::Ptr> skip;
    while (skip.size() + layer.size() > _mxw && layer.size() > 0) {
       auto dn = mergeOne(layer,skip); // skipped nodes are not willing to  merge with anything.
-      if (dn) f(dn); // delayed node saw an increase in layer. Back in the overall queue via f
+      if (dn) f(dn); // delayed node saw a change in layer. Back in the overall queue via f
    }
    layer.splice(layer.begin(),std::move(skip)); // put the skipped guys back in
 }
 
+void Relaxed::adjustBounds(ANode::Ptr nd)
+{   
+   for(auto ki = nd->beginKids();ki != nd->endKids();ki++) {
+      Edge::Ptr e = *ki; // edge
+      auto end = e->_to;
+      auto ep  = nd->_bound + e->_obj;
+      if (_dd->isBetter(ep,end->_bound)) {
+         end->_bound = ep;
+         end->_optLabels = nd->_optLabels;
+         end->_optLabels.push_back(e->_lbl);
+         adjustBounds(end);
+      }
+   }
+} 
+   
 
 class LQueue {
    std::list<ANode::Ptr> _next;
@@ -619,7 +637,12 @@ public:
          return !dd->isBetter(a->getBound(),b->getBound());
       });
       _dd.mergeLayer(retVal,[this](ANode::Ptr dn)  {
-         _rest.push_back(dn);
+         // std::cout << "Putting nd is rest: ";
+         // _dd.theDD()->printNode(std::cout,dn);
+         // std::cout << "\n";
+         // char ch; std::cin >> ch;         
+         _dd.adjustBounds(dn);         
+         //_rest.push_back(dn);
       });
 
       auto layer = (_rest.size() > 0) ? _rest.front()->getLayer() : -1;

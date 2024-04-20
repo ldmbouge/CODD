@@ -81,8 +81,8 @@ void BAndB::search(Bounds& bnds)
       }
       nNode++;
       bool dualBetter = relaxed->apply(bbn.node,bnds);
-      //relaxed->display();
-      //      char ch;std::cin >> ch;
+      // relaxed->display();
+      // char ch;std::cin >> ch;
 
       if (dualBetter) {
          primalBetter = restricted->apply(bbn.node,bnds);
