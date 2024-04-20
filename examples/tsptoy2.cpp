@@ -60,10 +60,7 @@ int main()
       return TSP { GNSet{},1,sz };
    };
    const auto lgf = [&C](const TSP& s)  {
-      auto r = C;
-      r.diffWith(s.s);
-      r.insert(1);
-      return r;
+      return (C - s.s) | GNSet {1};
    };
    const auto stf = [sz](const TSP& s,const int label) -> std::optional<TSP> {
       bool bad = (label == 1 && s.hops < sz-1) || (label != 1 && s.hops >= sz-1);

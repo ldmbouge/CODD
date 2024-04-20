@@ -738,6 +738,7 @@ public:
    }   
    friend GNSet operator|(const GNSet& s1,const GNSet& s2) { return std::move(GNSet(s1).unionWith(s2));}
    friend GNSet operator&(const GNSet& s1,const GNSet& s2) { return std::move(GNSet(s1).interWith(s2));}
+   friend GNSet operator-(const GNSet& s1,const GNSet& s2) { return std::move(GNSet(s1).diffWith(s2));}
 };
 
 
