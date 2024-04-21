@@ -164,76 +164,73 @@ int main(int argc,char* argv[]) {
    };
    const auto eqs = [sz](const TSP& s) -> bool { return s.e == depot && s.hops == sz;};
    const auto local = [sz,&d,&C,&bnds](const TSP& s) -> double {
-	// // Compute cheapest n-s.hops edges; make sure one out of s.e and one into depot. 
-	// // This version tries to get a strong local bound and remembers heads/tails used in prior iterations.
-	// // Alternatively, we can pre-compute a sorted `dictionary' of smallest edge weights for each vertex,
-	// // and simply select the smallest one for each, masked by available nodes in (C-s.s).  That would be 
-	// // much quicker. 	
+	// Compute cheapest n-s.hops edges; make sure one out of s.e and one into depot. 
+	// This version tries to get a strong local bound and remembers heads/tails used in prior iterations.
+	// Alternatively, we can pre-compute a sorted `dictionary' of smallest edge weights for each vertex,
+	// and simply select the smallest one for each, masked by available nodes in (C-s.s).  That would be 
+	// much quicker. 	
 	
-	// //std::cout << "s.s = " << s.s << " ";
-	// int chk = 0; // check edges added
-	// double locB = 0;
-	// double tmp = (double)bnds.getPrimal();
-	// int minHead = -1;
-	// GNSet availableHead = (C-s.s);
-	// // min edge into the depot
-	// for(auto i : availableHead) {
-	// 	if (d[i][depot] < tmp) {
-	// 		minHead = i;
-	// 		tmp = d[i][depot];
-	// 	}
-	// }
-	// if (minHead >= 0) {
-	// 	locB += tmp;
-	// 	availableHead.remove(minHead);
-	// 	chk++;
-	// //	std::cout << "(" << minHead << "," << depot << ") ";
-	// }
-	// GNSet availableTail = (C-s.s);
-	// int minTail = -1;
-	// if (s.hops <= sz-2) {
-	// 	// min edge out of s.e
-	// 	tmp = (double)bnds.getPrimal();
-	// 	for(auto j : availableTail) {
-	// 		if (d[s.e][j] < tmp) {
-	// 			minTail = j;
-	// 			tmp = d[s.e][j];
-	// 		}
-	// 	}
-	// 	if (minTail >= 0) {
-	// 		locB += tmp;
-	// 		availableTail.remove(minTail);
-	// 		chk++;
-	// //		std::cout << "(" << s.e << "," << minTail << ") ";
-	// 	}
-	// }
-	// // select min edges for remaining hops
-	// for (int cnt=0; cnt<sz-2-s.hops; cnt++) {
-	// 	tmp = (double)bnds.getPrimal();
-	// 	minHead = -1;
-	// 	minTail = -1;
-	// 	for(auto i : availableHead) {
-	// 		for(auto j : availableTail) {
-	// 			if (i!=j && d[i][j] < tmp) {
-	// 				minHead = i;
-	// 				minTail = j;
-	// 				tmp = d[i][j];
-	// 			}
-	// 		}
-	// 	}
-	// 	if (minHead >= 0) {
-	// 		locB += tmp;
-	// 		availableHead.remove(minHead);
-	// 		availableTail.remove(minTail);
-	// 		chk++;
-	// //		std::cout << "(" << minHead << "," << minTail << ") ";
-	// 	}
-	// }
-    double locMST = mst(d,C,s.s,depot,s.e);
-    //std::cout << "LOC/MST : " << locB << " " << locMST << std::endl;
-    return locMST;
+	//std::cout << "s.s = " << s.s << " ";
+	int chk = 0; // check edges added
+	double locB = 0;
+	double tmp = (double)bnds.getPrimal();
+	int minHead = -1;
+	GNSet availableHead = (C-s.s);
+	// min edge into the depot
+	for(auto i : availableHead) {
+		if (d[i][depot] < tmp) {
+			minHead = i;
+			tmp = d[i][depot];
+		}
+	}
+	if (minHead >= 0) {
+		locB += tmp;
+		availableHead.remove(minHead);
+		chk++;
+	//	std::cout << "(" << minHead << "," << depot << ") ";
+	}
+	GNSet availableTail = (C-s.s);
+	int minTail = -1;
+	if (s.hops <= sz-2) {
+		// min edge out of s.e
+		tmp = (double)bnds.getPrimal();
+		for(auto j : availableTail) {
+			if (d[s.e][j] < tmp) {
+				minTail = j;
+				tmp = d[s.e][j];
+			}
+		}
+		if (minTail >= 0) {
+			locB += tmp;
+			availableTail.remove(minTail);
+			chk++;
+	//		std::cout << "(" << s.e << "," << minTail << ") ";
+		}
+	}
+	// select min edges for remaining hops
+	for (int cnt=0; cnt<sz-2-s.hops; cnt++) {
+		tmp = (double)bnds.getPrimal();
+		minHead = -1;
+		minTail = -1;
+		for(auto i : availableHead) {
+			for(auto j : availableTail) {
+				if (i!=j && d[i][j] < tmp) {
+					minHead = i;
+					minTail = j;
+					tmp = d[i][j];
+				}
+			}
+		}
+		if (minHead >= 0) {
+			locB += tmp;
+			availableHead.remove(minHead);
+			availableTail.remove(minTail);
+			chk++;
+	//		std::cout << "(" << minHead << "," << minTail << ") ";
+		}
+	}
 	//std::cout << "s.s = " << s.s << ", added " << chk << " min weight edges with locB = " << locB << std::endl;
-	//return locB;
+	return locB;
    };   
 
 
