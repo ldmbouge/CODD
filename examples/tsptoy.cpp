@@ -68,8 +68,10 @@ int main(int argc,char* argv[]) {
       return es.at(GE {s.e,label});
    };
    const auto smf = [](const TSP& s1,const TSP& s2) -> std::optional<TSP> {
-      if (s1.e == s2.e && s1.hops == s2.hops) 
-         return TSP {s1.s & s2.s , s1.e, s1.hops};
+      auto valid = s1.s & s2.s;
+      //std::cout << "MERGE: " << s1.hops  << " " << valid.size() << " " << ((float)valid.size()/s1.hops) << "\n";
+      if (s1.e == s2.e && s1.hops == s2.hops && ((float)valid.size()/s1.hops) >= .7) 
+         return TSP { std::move(valid) , s1.e, s1.hops};
       else return std::nullopt; // return  the empty optional
    };
    const auto eqs = [sz](const TSP& s) -> bool { return s.e == 1 && s.hops == sz;};

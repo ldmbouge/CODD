@@ -541,7 +541,7 @@ public:
          ttl += __builtin_popcountll(_t[i]);
       return ttl;
    }
-   void insert(int p) noexcept         {
+   GNSet& insert(int p) noexcept         {
       assert(p >=0);
       const int i = p >> 6;
       const auto old = _mxw;
@@ -558,6 +558,7 @@ public:
       assert(i>=0 && i < _mxw);
       _t[i] |= (1ull << (p & 63));
       _nbp = std::max(_nbp,(unsigned short)p);
+      return *this;
    }
    GNSet& remove(int p) noexcept {
       const int i = p >> 6;
