@@ -98,32 +98,6 @@ Instance readFile(const char* fName)
    return rv;
 }
 
-
-double mst(Matrix<double,2>& d,GNSet C,GNSet V,int src,int sink)
-{
-   GNSet t = (C - V).insert(src).insert(sink);
-   UnionFind<int> uf;
-   std::map<int,UnionFind<int>::Node::Ptr> vm;
-   for(auto v : t) vm[v] = uf.makeSet(v);
-   Pool mem;
-   Heap<GE> pq(&mem,C.size()*C.size(),[](const GE& e1,const GE& e2) { return e1.w < e2.w;});
-   for(auto a : t)
-      for(auto b : t)
-         if (a!=b) pq.insert(GE {a,b,d[a][b]});
-   pq.buildHeap();
-   int ne = 0;
-   double l = 0;
-   while (ne != t.size()-1) {
-      auto e = pq.extractMax();
-      if (uf.setFor(vm[e.a]) != uf.setFor(vm[e.b])) {
-         l += e.w;
-         ++ne;
-         uf.merge(vm[e.a],vm[e.b]);
-      }         
-   }
-   return l;
-}
-
 int main(int argc,char* argv[]) {
    if (argc < 3) {
       std::cout << "usage: tsp <file> <width>\n";
