@@ -3,24 +3,26 @@
 #include "heap.hpp"
 
 struct TSP {
-   GNSet  s;
+   GNSet  A; // locations on _all_ paths into state
+   GNSet  S; // locations on _some_ paths into state
    int e;
    int hops;
    double lb;
    friend std::ostream& operator<<(std::ostream& os,const TSP& m) {
-      return os << "<" << m.s << ',' << m.e << ',' << m.hops << ',' << m.lb << ">";
+      return os << "<" << m.A << ',' << m.S << ',' << m.e << ',' << m.hops << ',' << m.lb << ">";
    }
 };
 
 template<> struct std::equal_to<TSP> {
    constexpr bool operator()(const TSP& s1,const TSP& s2) const {
-      return s1.e == s2.e && s1.hops==s2.hops && s1.s == s2.s;
+      return s1.e == s2.e && s1.hops==s2.hops && s1.A == s2.A && s1.S == s2.S;
    }
 };
 
 template<> struct std::hash<TSP> {
    std::size_t operator()(const TSP& v) const noexcept {
-      return (std::hash<GNSet>{}(v.s) << 24) |
+      return (std::hash<GNSet>{}(v.A) << 32) |  // check if this is OK
+         (std::hash<GNSet>{}(v.S) << 24) |
          (std::hash<int>{}(v.e) << 16) |
          std::hash<int>{}(v.hops);
    }
@@ -99,7 +101,7 @@ Instance readFile(const char* fName)
 }
 
 
-double mst(Matrix<double,2>& d,GNSet C,GNSet V,int src,int sink)
+double mst(Matrix<double,2>& d,GNSet C,GNSet V,int src,int sink,int h)
 {
    GNSet t = (C - V).insert(src).insert(sink);
    UnionFind<int> uf;
@@ -111,9 +113,9 @@ double mst(Matrix<double,2>& d,GNSet C,GNSet V,int src,int sink)
       for(auto b : t)
          if (a!=b) pq.insert(GE {a,b,d[a][b]});
    pq.buildHeap();
-   int ne = 0;
+   int ne = 0,ts = C.size() - hops;
    double l = 0;
-   while (ne != t.size()-1) {
+   while (ne != ts) {
       auto e = pq.extractMax();
       if (uf.setFor(vm[e.a]) != uf.setFor(vm[e.b])) {
          l += e.w;
@@ -149,12 +151,11 @@ double Greedy(Matrix<double,2>& d,GNSet C,GNSet V,int src,int sink)
       if (i != src) {
          double tmp = INF;
          for (auto j : t) {
-            if (i!=j && d[i][j] < tmp) { 
-	       tmp = d[i][j];
-	    }
-	 }
-	 assert(tmp < INF);
-	 locB += tmp;
+            if (i!=j && d[i][j] < tmp)
+               tmp = d[i][j];            
+         }
+         assert(tmp < INF);
+         locB += tmp;
       }
    }
    return locB;
@@ -175,33 +176,40 @@ int main(int argc,char* argv[]) {
    Bounds bnds;
    const int depot = 0;
    const int sz = (int)C.size();
-   const auto init = []()               { return TSP { GNSet{depot},depot,0,0 };};
-   const auto target = [sz,&C]()        { return TSP { C,depot,sz,0 };}; // the optimal bound is unknown (put 0 here)
+   const auto init = []()               { return TSP { GNSet{depot},GNSet{depot},depot,0,0 };};
+   const auto target = [sz,&C]()        { return TSP { C,C,depot,sz,0 };}; // the optimal bound is unknown (put 0 here)
    const auto lgf = [sz,&C](const TSP& s)  {
       if (s.hops >= sz-1)
          return GNSet {depot};
-      else 
-         return (C - s.s);
+      else {
+	 if ((s.S).size()-1 == s.hops) {
+	    // std::cout << "Sucess: hops = " << s.hops << ", s.S = " << s.S << ", s.A = " << s.A << std::endl;
+	    return (C - s.S);
+	 }
+         else return (C - s.A);
+      }
    };
    const auto stf = [depot,sz,&C,&d](const TSP& s,const int label) -> std::optional<TSP> {
       if (label==depot)
-         return TSP { C,depot,sz,0}; //0 is the dummy value for the lb 
+         return TSP { C,C,depot,sz,0}; //0 is the dummy value for the lb 
       else 
-         return TSP { s.s | GNSet{label},label,s.hops + 1, s.lb + d[s.e][label]};
+         return TSP { s.A | GNSet{label}, s.S | GNSet{label},label,s.hops + 1, s.lb + d[s.e][label]};
    };
    const auto scf = [&d](const TSP& s,int label) { // partial cost function 
       return d[s.e][label];
    };
    const auto smf = [](const TSP& s1,const TSP& s2) -> std::optional<TSP> {
-      // add test: s1.s and s2.s should not be too different
-      if (s1.e == s2.e && s1.hops == s2.hops)
-         return TSP {s1.s & s2.s , s1.e, s1.hops, std::min(s1.lb,s2.lb)};
+      // add test: s1.A and s2.A should not be too different
+      // GNSet SymmDiff = (s1.A | s2.A) - (s1.A & s2.A);
+      if (s1.e == s2.e && s1.hops == s2.hops) // && SymmDiff.size() <= 5)
+         return TSP {s1.A & s2.A, s1.S | s2.S, s1.e, s1.hops, std::min(s1.lb,s2.lb)};
       else return std::nullopt; // return  the empty optional
    };
    const auto eqs = [depot,sz](const TSP& s) -> bool { return s.e == depot && s.hops == sz;};
    const auto local = [depot,&d,&C](const TSP& s) -> double {
-      //return mst(d,C,s.s,depot,s.e);
-      return Greedy(d,C,s.s,depot,s.e);
+      return mst(d,C,s.A,depot,s.e,s.hops);
+      //return Greedy(d,C,s.A,depot,s.e);
+      //return 0;
    };   
 
    BAndB engine(DD<TSP,Minimize<double>,
