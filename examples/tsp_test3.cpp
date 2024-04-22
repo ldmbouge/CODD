@@ -101,7 +101,7 @@ Instance readFile(const char* fName)
 }
 
 
-double mst(Matrix<double,2>& d,GNSet C,GNSet V,int src,int sink,int h)
+double mst(Matrix<double,2>& d,GNSet C,GNSet V,int src,int sink,int hops)
 {
    GNSet t = (C - V).insert(src).insert(sink);
    UnionFind<int> uf;
