@@ -4,6 +4,7 @@
 #include <iostream>
 #include <iomanip>
 #include <unistd.h>
+#include <stdlib.h>
 #include "RuntimeMonitor.hpp"
 
 struct QNode {
@@ -48,18 +49,19 @@ void BAndB::search(Bounds& bnds)
    cout << "----------------------------------------------\n";
    while(!pq.empty()) {
       auto bbn = pq.extractMax();
+      const auto curDual = bbn.bound;
       auto now = RuntimeMonitor::cputime();
       auto fs = RuntimeMonitor::elapsedMilliseconds(start,now);
       auto fl = RuntimeMonitor::elapsedMilliseconds(last,now);
       if (_timeLimit && _timeLimit(fs))         
          break;
       if (primalBetter || fl > 5000) {
-         double gap = 100 * (bnds.getPrimal() - bbn.bound) / bnds.getPrimal();      
+         double gap = 100 * (bnds.getPrimal() - curDual) / bnds.getPrimal();      
          cout << "B&B(" << setw(5) << nNode << ")\t " << setprecision(6);
-         if (bbn.bound == relaxed->initialWorst())
+         if (curDual == relaxed->initialWorst())
             cout << setw(7) << "-"  << "\t " << setw(7) << bnds.getPrimal() << "\t ";
          else
-            cout << setw(7) << bbn.bound << "\t " << setw(7) << bnds.getPrimal() << "\t ";
+            cout << setw(7) << curDual << "\t " << setw(7) << bnds.getPrimal() << "\t ";
          if (gap > 100)
             cout << setw(6) << "-";
          else cout << setw(6) << setprecision(4) << gap << "%";
@@ -68,14 +70,14 @@ void BAndB::search(Bounds& bnds)
          last = RuntimeMonitor::cputime();
       }
       primalBetter = false;
-#ifndef _NDEBUG     
+#ifndef _NDEBUG
       cout << "BOUNDS NOW: " << bnds << endl;
       cout << "EXTRACTED:  " << bbn.node->getId() << " ::: ";
       relaxed->printNode(cout,bbn.node);
-      cout << "\t(" << bbn.bound << ")" << " SZ:" << pq.size() << endl;
+      cout << "\t(" << curDual << ")" << " SZ:" << pq.size() << endl;
 #endif
       ttlNode++;
-      if (!relaxed->isBetter(bbn.bound,bnds.getPrimal())) {
+      if (!relaxed->isBetter(curDual,bnds.getPrimal())) {
          _mem->release(bbn.node);
          continue;
       }
@@ -139,7 +141,8 @@ void BAndB::search(Bounds& bnds)
                   // std::cout << "\n";
 
                   assert(nd->getBound() == n->getBound());
-                  pq.insertHeap(QNode {nd, n->getBound()+n->getBackwardBound()});
+                  const auto insKey = n->getBound()+n->getBackwardBound();
+                  pq.insertHeap(QNode {nd, insKey});
                   //std::cout << "PQ:" << pq << "\n";
                }
                else insDom++;

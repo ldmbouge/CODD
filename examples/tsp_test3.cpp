@@ -211,7 +211,7 @@ int main(int argc,char* argv[]) {
                 decltype(scf),
                 decltype(smf),
                 decltype(eqs),
-		decltype(local)
+                decltype(local)
                 >::makeDD(init,target,lgf,stf,scf,smf,eqs,C,local),w);
    engine.search(bnds);
    return 0;

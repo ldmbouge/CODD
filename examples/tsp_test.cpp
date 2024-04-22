@@ -108,7 +108,7 @@ int main(int argc,char* argv[]) {
    const int w = argc==3 ? atoi(argv[2]) : 64;
    Instance instance = readFile(fName);
    auto C = instance.vertices();
-   auto& d = instance.d; 
+   auto& d = instance.d;
    std::cout << "Cities:" << C << "\n";
    Bounds bnds;
    const int depot = 0;
