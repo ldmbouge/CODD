@@ -26,7 +26,7 @@ class Bounds {
    std::list<SolutionCB> _checker;
 public:
    Bounds() : _primalSet(false) {}
-   Bounds(SolutionCB checker)  {
+   Bounds(SolutionCB checker) : _primalSet(false)  {
       _checker.push_back(checker);
    }  
    Bounds(std::shared_ptr<AbstractDD> dd);
@@ -81,6 +81,7 @@ public:
    virtual ANode::Ptr transition(Bounds& bnds,ANode::Ptr src,int label) = 0;
    virtual ANode::Ptr merge(const ANode::Ptr first,const ANode::Ptr snd) = 0;
    virtual double cost(ANode::Ptr src,int label) = 0;
+   virtual double local(ANode::Ptr src) = 0;
    virtual ANode::Ptr duplicate(const ANode::Ptr src) = 0;
    virtual ANode::Ptr makeInPool(LPool::Ptr pool,const ANode::Ptr src) = 0;
    virtual double initialBest() const = 0;
@@ -88,6 +89,7 @@ public:
    virtual bool   isBetter(double obj1,double obj2) const = 0;
    virtual bool   isBetterEQ(double obj1,double obj2) const = 0;
    virtual double better(double obj1,double obj2) const = 0;
+   virtual bool hasLocal() const noexcept = 0;
    virtual bool hasDominance() const noexcept = 0;
    virtual bool dominates(ANode::Ptr f,ANode::Ptr s) = 0;
    virtual void update(Bounds& bnds) const = 0;
@@ -372,6 +374,7 @@ private:
    double better(double obj1,double obj2) const noexcept {
       return Compare{}.better(obj1,obj2) ? obj1 : obj2;
    }
+   bool hasLocal() const noexcept       { return _local != nullptr;}
    bool hasDominance() const noexcept   { return _sdom != nullptr;}
    double initialBest() const noexcept  { return Compare{}.bestValue();}
    double initialWorst() const noexcept { return Compare{}.worstValue();}
@@ -444,6 +447,13 @@ private:
          ANode::Ptr rv = makeNode(std::move(vs.value()),src->isExact());
          return rv;
       } else return nullptr;
+   }
+   double local(ANode::Ptr src) {
+      if (_local) {
+         auto op = static_cast<const Node<ST>*>(src.get());
+         return _local(op->get());
+      }
+      else return initialWorst();
    }
    double cost(ANode::Ptr src,int label) {
       auto op = static_cast<const Node<ST>*>(src.get());

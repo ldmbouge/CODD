@@ -14,11 +14,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 option(USE_CXX_EXCEPTIONS "Enable C++ exception support" ON)
 
-#set(CMAKE_CXX_COMPILER "g++-13")
-set(CMAKE_CXX_COMPILER "g++")
+#set(CMAKE_CXX_COMPILER "g++-14")
+set(CMAKE_CXX_COMPILER "c++")
 set(CMAKE_CXX_FLAGS "-Wall -Wsign-compare")
-set(CMAKE_CXX_FLAGS_DEBUG "-g")
-set(CMAKE_CXX_FLAGS_RELEASE "-O3 -D_NDEBUG -DNDEBUG")  #[[ comment  ]]
+set(CMAKE_CXX_FLAGS_DEBUG "-g -v")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -D_NDEBUG -DNDEBUG -Wno-unused-lambda-capture")  #[[ comment  ]]
 
 message("FR   : ${CMAKE_CXX_FLAGS_RELEASE}")
 message("Build: ${CMAKE_BUILD_TYPE}")

@@ -99,21 +99,21 @@ Instance readFile(const char* fName)
 }
 
 
-double mst(Matrix<double,2>& d,GNSet C,GNSet V,int src,int sink)
+double mst(Matrix<double,2>& d,GNSet C,GNSet V,int src,int sink,int hops)
 {
    GNSet t = (C - V).insert(src).insert(sink);
    UnionFind<int> uf;
    std::map<int,UnionFind<int>::Node::Ptr> vm;
    for(auto v : t) vm[v] = uf.makeSet(v);
    Pool mem;
-   Heap<GE> pq(&mem,C.size()*C.size(),[](const GE& e1,const GE& e2) { return e1.w < e2.w;});
+   Heap<GE> pq(&mem,t.size()*t.size(),[](const GE& e1,const GE& e2) { return e1.w < e2.w;});
    for(auto a : t)
       for(auto b : t)
          if (a!=b) pq.insert(GE {a,b,d[a][b]});
    pq.buildHeap();
-   int ne = 0;
+   int ne = 0,ts = C.size() - hops;
    double l = 0;
-   while (ne != t.size()-1) {
+   while (ne != ts) {
       auto e = pq.extractMax();
       if (uf.setFor(vm[e.a]) != uf.setFor(vm[e.b])) {
          l += e.w;
@@ -164,7 +164,7 @@ int main(int argc,char* argv[]) {
    };
    const auto eqs = [sz](const TSP& s) -> bool { return s.e == depot && s.hops == sz;};
    const auto local = [&d,&C](const TSP& s) -> double {
-      return mst(d,C,s.s,depot,s.e);
+      return mst(d,C,s.s,depot,s.e,s.hops);
    };   
 
    BAndB engine(DD<TSP,Minimize<double>,

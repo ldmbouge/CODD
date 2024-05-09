@@ -12,7 +12,7 @@ template <typename T,typename F> void mergeSortAux(T* v,
                                                    T* aux)
 {
    // [from, to )  
-   if (from + 1 == to) {
+   if (from + 1 >= to) {
       return;
    } else {
       auto d = from + (to - from)/2;

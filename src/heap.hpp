@@ -166,6 +166,7 @@ public:
          heapify(i);
    }
    T extractMax() noexcept {
+      assert(_at >= 1);
       Location* rv = _data[1];
       std::swap(_data[1],_data[_at-1]);
       _data[_at - 1]->_p = _at - 1;

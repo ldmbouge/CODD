@@ -16,10 +16,8 @@
 
 Bounds::Bounds(std::shared_ptr<AbstractDD> dd)
 {
-   if (!_primalSet) {
-      _primal = dd->initialBest();
-      _primalSet = true;
-   }
+   _primal = dd->initialBest();
+   _primalSet = true;
 }
 
 void Bounds::attach(std::shared_ptr<AbstractDD> dd)

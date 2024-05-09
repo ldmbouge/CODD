@@ -54,7 +54,7 @@ void BAndB::search(Bounds& bnds)
       auto fs = RuntimeMonitor::elapsedMilliseconds(start,now);
       auto fl = RuntimeMonitor::elapsedMilliseconds(last,now);
       if (_timeLimit && _timeLimit(fs))         
-         break;
+         break;      
       if (primalBetter || fl > 5000) {
          double gap = 100 * (bnds.getPrimal() - curDual) / bnds.getPrimal();      
          cout << "B&B(" << setw(5) << nNode << ")\t " << setprecision(6);
@@ -81,6 +81,11 @@ void BAndB::search(Bounds& bnds)
          _mem->release(bbn.node);
          continue;
       }
+      // if (relaxed->hasLocal() &&
+      //     !relaxed->isBetter(relaxed->local(bbn.node),bnds.getPrimal())) { // check local bound when pulling (if exist)
+      //    _mem->release(bbn.node);
+      //    continue;
+      // }
       nNode++;
       bool dualBetter = relaxed->apply(bbn.node,bnds);
       // relaxed->display();

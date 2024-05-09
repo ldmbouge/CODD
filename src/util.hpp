@@ -606,6 +606,7 @@ public:
    }
    void removeAbove(int p) noexcept {
       int w = ++p >> 6;
+      if (p > _nbp) return;
       assert(w >= 0 && w < _mxw);
       const int b = p & 63;
       _t[w] = _t[w] & ((1ull << b) - 1);

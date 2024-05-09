@@ -66,7 +66,9 @@ struct Instance {
       for(const auto& e : edges) {
          adj[e.a].insert(e.b);
          adj[e.b].insert(e.a);
-      }         
+      }
+      for(auto v=0;v < nv;v++)
+         adj[v].removeAbove(v);
    }
 };
 
@@ -229,19 +231,26 @@ int main(int argc,char* argv[])
    const auto scf = [](const COLOR& s,int label) { // partial cost function 
       return std::max(0,label -  s.last);
    };
-   const auto smf = [](const COLOR& s1,const COLOR& s2) -> std::optional<COLOR> { 
-      if (s1.vtx == s2.vtx && s1.last == s2.last) {
+   const auto smf = [](const COLOR& s1,const COLOR& s2) -> std::optional<COLOR> {
+      if (s1.last == s2.last && s1.vtx == s2.vtx) {
          Legal B(s1.s);
-         int cnt = 0;  // number of shared labels
-         for(auto i=0;i < s1.vtx+1;i++) {
+         for(auto i=0;i < s1.vtx + 1;i++) 
             B[i] = (s1.s[i] == s2.s[i]) ? s1.s[i] : 0;
-            if (s1.s[i] == s2.s[i]) cnt+=1;
-         }
-         if (cnt >= 0.5*(s1.vtx)) 
-            return COLOR { std::move(B) , s1.last, s1.vtx};
-         else return std::nullopt; // colorings are too dissimilar to merge
+         return COLOR { std::move(B) , s1.last, s1.vtx};
       }
-      else return std::nullopt; // can't merge those
+      else return std::nullopt; // return  the empty optional      
+      // if (s1.vtx == s2.vtx && s1.last == s2.last) {
+      //    Legal B(s1.s);
+      //    int cnt = 0;  // number of shared labels
+      //    for(auto i=0;i < s1.vtx+1;i++) {
+      //       B[i] = (s1.s[i] == s2.s[i]) ? s1.s[i] : 0;
+      //       if (s1.s[i] == s2.s[i]) cnt+=1;
+      //    }
+      //    if (cnt >= 0.5*(s1.vtx)) 
+      //       return COLOR { std::move(B) , s1.last, s1.vtx};
+      //    else return std::nullopt; // colorings are too dissimilar to merge
+      // }
+      // else return std::nullopt; // can't merge those
    };
    const auto eqs = [K](const COLOR& s) -> bool {
       return s.vtx == K;
@@ -258,7 +267,7 @@ int main(int argc,char* argv[])
                 decltype(smf),
                 decltype(eqs)
                 >::makeDD(init,target,lgf,stf,scf,smf,eqs,labels),w);
-   engine.setTimeLimit([](double elapsed) { return elapsed >= 600000;});
+   engine.setTimeLimit([](double elapsed) { return elapsed >= 300000;});
    engine.search(bnds);
    return 0;
 }
