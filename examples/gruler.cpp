@@ -83,8 +83,6 @@ int main(int argc,char* argv[])
 	{ 30, 588}   // opt not known, but can use lower bound (G(28) + 1 + 2)
    };
    
-   //std::cout << "OPT[3] = "<< OPT[3] << std::endl;
-
    Bounds bnds;
    const auto labels = setFrom(std::views::iota(1,L+1));     // using a plain set for the labels
    const auto init = []() {   // The root state      
@@ -125,23 +123,6 @@ int main(int argc,char* argv[])
    };
 
    std::cout << "LABELS:" << labels << "\n";
-
-   
-   /*
-     auto myxDD = DD<SGRuler,std::less<double>, // to minimize
-                ///decltype(init), 
-                decltype(target), 
-                decltype(stf),
-                decltype(scf),
-                decltype(smf)
-                >::makeDD(init,target,stf,scf,smf,labels);
-   myxDD->setStrategy(new Exact);
-   bnds.setPrimal(1000);
-   myxDD->compute();
-
-   std::cout << myxDD->incumbent() << std::endl;
-   return 0;
-   */
    
    BAndB engine(DD<SGRuler,Minimize<double>, // to minimize
                 ///decltype(init), 
