@@ -193,7 +193,7 @@ int main(int argc,char* argv[]) {
    };
    const auto scf = [&d](const TSP& s,int label) { // partial cost function 
       return d[s.e][label];
-https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.CP.2022.35   };
+   };
    const auto smf = [](const TSP& s1,const TSP& s2) -> std::optional<TSP> {
       // add test: s1.A and s2.A should not be too different
       // GNSet SymmDiff = (s1.A | s2.A) - (s1.A & s2.A);
