@@ -1,16 +1,17 @@
 
 # Table of Contents
 
-1.  [CODD](#org31a353e)
-    1.  [Dependencies](#org72210ce)
-    2.  [C++ Standard](#orgcfcfff6)
-    3.  [Build system](#org2717350)
-    4.  [Examples](#orgbedc20c)
-    5.  [Unit test](#org4a13eb4)
-    6.  [Library](#org2d062e9)
+1.  [CODD](#org2153b40)
+    1.  [Dependencies](#orgfd8c3a3)
+    2.  [C++ Standard](#orgc3f268f)
+    3.  [Build system](#orgfca022f)
+    4.  [Examples](#orgfa2ca46)
+    5.  [Unit test](#org8ec9b5d)
+    6.  [Library](#org14e7933)
+    7.  [Brief documentation](#orgf214349)
 
 
-<a id="org31a353e"></a>
+<a id="org2153b40"></a>
 
 # CODD
 
@@ -23,7 +24,7 @@ It has:
 -   restricted construction is truly bounded now (not truncation based).
 
 
-<a id="org72210ce"></a>
+<a id="orgfd8c3a3"></a>
 
 ## Dependencies
 
@@ -33,7 +34,7 @@ in `/tmp` and then macOS `open` command is used (via `fork/execlp`)  to open the
 PDF. The same functionality needs to be added on Linux (different API to pop up a viewer).
 
 
-<a id="orgcfcfff6"></a>
+<a id="orgc3f268f"></a>
 
 ## C++ Standard
 
@@ -43,7 +44,7 @@ I use the mainline clang coming with Xcode.
 The implementation uses templates and concepts to factor the code.
 
 
-<a id="org2717350"></a>
+<a id="orgfca022f"></a>
 
 ## Build system
 
@@ -60,7 +61,7 @@ the variable `CMAKE_BUILD_TYPE` from `Debug` to `Release` as shown below:
     cmake .. -DCMAKE_BUILD_TYPE=Release
 
 
-<a id="orgbedc20c"></a>
+<a id="orgfa2ca46"></a>
 
 ## Examples
 
@@ -108,16 +109,23 @@ from the `build` folder to run on the br17 instance with a width of 32. The outp
 Every 5 seconds, the branch and bound reports the number of nodes, current node value, incumbent value, duality gap and the time since the start. The last line (with the `Done`) says that the optimal was 39, that it took 13912 nodes to close the optimality proof, that no nodes where discarded because of a dominance and that the optimum was found after 3.063s and the proof took 31.995s (if there was a limit, it was <span class="underline">not</span> reached). 
 
 
-<a id="org4a13eb4"></a>
+<a id="org8ec9b5d"></a>
 
 ## Unit test
 
 In the `test` folder
 
 
-<a id="org2d062e9"></a>
+<a id="org14e7933"></a>
 
 ## Library
 
 All of it in the `src` folder
+
+
+<a id="orgf214349"></a>
+
+## Brief documentation
+
+A [small site](./doc/CODD.html) with some documentation in HTML is available too.
 
