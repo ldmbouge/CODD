@@ -10,38 +10,38 @@
 We consider discrete optimization problems of the form
 
 \begin{array}{rl}
-P : ~~ \max & f(x)\\
-\textrm{s.t.} & C_i(x), i = 1, \dots, m,\\
-& x \in D
+P : ~~ \max & f(y)\\
+\textrm{s.t.} & C_j(y), j = 1, \dots, m,\\
+& y \in D
 \end{array}
 
-where $x=(x_1,\ldots,x_n)$ is a tuple of decision variables, $f$ is a real-valued objective function over $x$ and $C_1,\ldots,C_m$ are constraints over $x$ with $D=D_1 \times \ldots \times D_n$ denoting the  cartesian product of the domains of the variables $x_i$ ($1 \leq i \leq n$).
+where $y=(y_1,\ldots,y_n)$ is a tuple of decision variables, $f$ is a real-valued objective function over $y$ and $C_1,\ldots,C_m$ are constraints over $y$ with $D=D_1 \times \ldots \times D_n$ denoting the  cartesian product of the domains of the variables $y_i$ ($1 \leq i \leq n$).
 
 ** Dynamic Programming as a Computational Model
-Dynamic programming can be understood as a labeled transition system where sequences of decisions $(x_1,\ldots,x_n)$ lead to sequences of states $(s_1,\ldots,s_{n+1})$ with, at each step $i$, a transition $s_i \stackrel{x_i}{\rightarrow} s_{i+1}$ labeled by decision $x_i$. Each such transition induces a cost $c_i$. The DP formulation then boils down to:
+Dynamic programming can be understood as a labeled transition system where sequences of state-based decisions that delivers a sequence of states $(s_1,\ldots,s_{n+1})$.
+At each step $i$, a transition $\tau(s_i,x_i) = s_i \stackrel{x_i}{\rightarrow} s_{i+1}$ is labeled by the decision $x_i$. Each such transition induces a cost $c(s_i,x_i)$. The DP formulation then boils down to:
 - the definition of the state space ${\cal S}$ with $s_i \in {\cal S}$.
 - two distinguished states $s_\top$ and $s_\bot$  in ${\cal S}$ encoding, respectively, the start state for an empty sequence of decision and the sink state for the full problem
-- the defition of the labels used on transition and drawn from ${\cal L} = \bigcup_{i=1}^n D_i$
-- The state transition function $\tau : {\cal S} \times {\cal L} \rightarrow {\cal S}$ modeling the decisions
-- The transition cost function $c : {\cal S} \times {\cal L} \rightarrow \mathbb{R}$.
+- a label generation function $\lambda : {\cal S} \rightarrow {\cal U}$ representing the values one can use to follow a transition out of a state $s \in {\cal S}$.
+- The state transition function $\tau : {\cal S} \times {\cal U} \rightarrow {\cal S}$ modeling the decisions effects 
+- The transition cost function $c : {\cal S} \times {\cal U} \rightarrow \mathbb{R}$.
   
-Then, the Dynamic Program over the state sequence $(s_1,\ldots,s_{n+1})$ and the decision sequence $(x_1,\ldots,x_{n})$ is
+The Dynamic Program over the state sequence $(s_1,\ldots,s_{n+1})$ and the decision sequence $(x_1,\ldots,x_{n})$ has the following form
 
 \begin{array}{rll}
-\max & \sum_{i=1}^n c(s_i, x_i) \\
-\textrm{s.t.} & s_{i+1} = \tau(s_i, x_i) & \textrm{for all } x_i \in D_i, i=1, \dots, n,\\
- & s_i \in \cal{S} & \textrm{for all } i=1, \dots, n+1.
+\max & v(t) & \\
+\textrm{ s.t. } & v(s_{i+1}) = \displaystyle \max_{\substack{x_i \in \lambda(s_i)\\\tau(s_i,x_i)=s_{i+1}}} v(s_i) + c(s_i,x_i) & \forall s_i \in {\cal S} \setminus \{t\} \\
+ & v(r) = K
 \end{array}
 #+begin_important
-Observe that the constraints $(C_1,\ldots,C_m)$ are captured by membership in the state space. Indeed, each state $s_i \in {\cal S}$ is expected to satisfy $\bigwedge_{i=1}^m C_i$.
-In particular, the requirement is true for the root state $s_0 \in {\cal S}$ and is preserved by the transition function $\tau$ which, when starting from a state in ${\cal S}$, only consider /legal/ labeled transition leading to members of ${\cal S}$.
+Observe how the valuation function on the root state $r$ is the constant $K$. Also note how the 
+constraints $(C_1,\ldots,C_m)$ are captured by the state transition function $\tau$ and the value generator $\lambda(s_i)$ that proposes appropriate values for decision $x_i$ out of state $s_i$.
 #+end_important
-Clearly $s_1 = s_\top$ and $s_{n+1}$ may be equal to $s_\bot$, a state satisfying all the constraints and corresponding to the full problem (all decisions were made).
+Clearly $s_\top$'s value is $K$ and $s_{n+1}=s_\bot$, a state satisfying all the constraints and corresponding to the full problem (all decisions were made).
+The valuation function $v$ defined by the Bellman equation above accumulates the cost incurred along each
+transition and modeled by the cost function $c$.
 
-The objective function simply accumulates the cost incurred along each transition and modeled by function $c$.
-
-Path whole last state is $s_\top$ are feasible for the full problem $P$ and the cost of the path is exactly the objective function. The path with the globally optimal cost
-is the global optimum to the original maximization problem $P$. Naturally, there are potentially exponentially many such path. 
+The path with the globally optimal cost is the global optimum to the original maximization problem $P$. Naturally, there are potentially exponentially many such path. 
 
 *** Exact Decision Diagrams
 *CODD* provides (for generality's sake) an /exact/ decision diagram that builds the state of the LTS just described and can therefore produce a globally optimal solution. While it is relatively direct, it requires the construction of an exponentially size structure and is therefore only useful as a proof of concept. Formally, the solution set of the
@@ -53,10 +53,10 @@ Formally, the solution set of the restricted decision diagram is a subset of the
 ${\cal Sol}(DD_{Restricted}(P)) \subseteq {\cal Sol}(P)$.
 
 *** Relaxed Decision Diagrams
-*CODD* provides /relaxed/ decision diagrams. Those differ from exact diagram by /merging/ states whose presence would induce a diagram /width/ exceeding a given bound. The state merge operator must be a legit relaxation in the following sense: it yields a state that no longer satisfies all constraints in $(C_1,\ldots,C_m)$. While this measures ensure that the size of the diagram remains under control, it /introduces/ new states that are no longer satisfiable. Path leading to $s_\bot$ going through at least one such unsatisfiable state are no longer modeling a solution of the original problem. Formally, the solution set of the relaxed diagram is now a super set of the solution set of the original problem $P$. Namely,
+*CODD* provides /relaxed/ decision diagrams. Those differ from exact diagram by /merging/ states whose presence would induce a diagram /width/ exceeding a given bound. The state merge operator must be a legit relaxation in the following sense: it yields a state that no longer satisfies all constraints in $(C_1,\ldots,C_m)$. While the width ensure that the size of the diagram remains under control, it /introduces/ new states that are no longer satisfiable. Path leading to $s_\bot$ going through at least one such unsatisfiable state are no longer modeling a solution of the original problem. Formally, the solution set of the relaxed diagram is now a super set of the solution set of the original problem $P$. Namely,
 ${\cal Sol}(DD_{Relaxed}(P)) \supseteq {\cal Sol}(P)$.
 
-From the above, one get derive primal bounds using the restricted diagrams and dual bounds using the relaxed one.
+From the above, one gets to derive primal bounds using the restricted diagrams and dual bounds using the relaxed one.
 
 #+begin_important
 Note how all three diagrams are based on the same LTS abstractions of states, labels, transitions, merge and costs and equality to $s_\bot$. These abstractions are the core
@@ -67,11 +67,11 @@ modeling facilities offered by *CODD*.
 Unsurprisingly, the abstractions presented above match exactly with the *CODD* API that expects:
 - A structure to define a state
 - Two distinguished states $s_\top$ and $s_\bot$ used to represent a state with no decisions made ($s_\top$) and all possible decision made ($s_\bot$).
-- A label generation function which, given a state $s_i$ produces the set of potentially viable transitions
-- A state transition function $\tau$ which, given a state $s_i$ and a potentially viable label $\ell$ produces either nothing ($\bot$) or a new state $s_{i+1}$ such that
+- A label generation function $\lambda$ which given a state $s_i$, produces the set of potentially viable transitions
+- A state transition function $\tau$ which, given a state $s_i$ and a potentially viable label $\ell$, produces either nothing ($\bot$) or a new state $s_{i+1}$ such that
   $s_i \stackrel{x_i=\ell}{\longrightarrow} s_{i+1} \in \tau$.
 - A cost function $c$ which, given a state $s_i$ and a viable label $\ell$ produces the cost of the transition $s_i \stackrel{x_i=\ell}{\longrightarrow} s_{i+1}$
-- An equality to $s_\bot$ function that returns true whenever its input state /is/ $s_\bot$.
+- An /optional/ equality to $s_\bot$ function that returns true whenever its input state /is/ $s_\bot$.
 
 #+begin_note
 An /optional/ local dual bounding function which, given a state $s_i$ compute a coarse dual bound for completing $s_i$. /this optional abstraction/ is helpful to quickly assess whether a state has any hope of leading to an improving $s_\bot$. If a state does not, it can be discarded from the relaxation.
@@ -79,27 +79,30 @@ An /optional/ local dual bounding function which, given a state $s_i$ compute a 
 Thankfully, C++ is a rich language supporting polymorphic types, first order and higher order functions. Those provide the basis to naturally convey the formal abstractions given above. The /state/ become a /type/ in C++ and all the other abstractions becomes first-order functions (lambdas in C++ parlance).
 
 *** TSP Example High Level
-Consider the task of solving instances of the traveling salesman problem. With the abstraction defined above, to express a TSP over a set of cities $C=\{1..n\}$ we define:
+Consider the task of solving instances of the traveling salesman problem. With the abstraction defined above, to express a TSP over a set of cities $V=\{1..n\}$ we define:
 
-- Let a state $s \in {\cal S}$ be a triplet $\langle V,l,h\rangle$ with $V \subseteq C$ the set of cities visited thus far, $l$ the name of the city last visited (or 0 at the start), and $h$ the number of hops made thus far (or 0 at the start).
-- Let $s_\top = \langle \emptyset,0,0\rangle$ since no cities have been visited, hence last city is the fake city 0 and the salesman did not do any "hops"
-- Let $s_\bot = \langle V,1,n\rangle$. Indeed, without loss of generality, we will start from city 1 and thus /return/ to city 1 (which will thus be the last visited). The trip will have carried out $n$ hops and visited all cities in $V$.
-- The label generator is a function $L : {\cal S} \rightarrow {\cal L}(\langle V,l,h\rangle) = \{1\} \cup C \setminus V$
-- The function $\tau : {\cal S} \times {\cal L} \rightarrow {\cal S}$ is
+- Let a state $s \in {\cal S}$ be a triplet $\langle S,e,h\rangle$ with $S \subseteq V$ the set of cities visited thus far, $e$ the name of the city last visited (or 0 at the start), and $h$ the number of hops made thus far (or 0 at the start).
+- Let $s_\top = \langle \{1\},1,0\rangle$ since no cities have been visited, hence last city is the
+  depot 1 and the salesman did not do any "hops". 
+- Let $s_\bot = \langle V,1,n\rangle$. Indeed, without loss of generality, we will start from the depot 1 and thus /return/ to the depot 1 (which will thus be the last visited). The trip will have carried out $n$ hops and visited all cities in $V$.
+- The label generator is a function $\lambda : {\cal S} \rightarrow {\cal U}$ defined as
+
+  \begin{array}{lccl}
+    \lambda(\langle S,e,h\rangle)  &=& V \setminus S & \Leftrightarrow h < n-1,\\ 
+     &=&\{1\} & \Leftrightarrow h=n-1
+  \end{array}
+  
+- The state transition function $\tau : {\cal S} \times {\cal L} \rightarrow {\cal S}$ is
 \begin{array}{lcll}
-\tau(\langle V,l,h \rangle,\ell) &=& \bot & \Leftrightarrow \ell=1 \wedge h < n-1 \\
-&& \bot & \Leftrightarrow \ell\neq 1 \wedge h \geq n-1 \\
-&& \langle C , \ell, h+1 \rangle & \Leftrightarrow \ell \notin V \wedge \ell \neq l \wedge \ell=1 \wedge h \geq n-1\\
-&& \langle V \cup \{\ell\},\ell,h+1 \rangle & \Leftrightarrow \ell \notin V \wedge \ell \neq l \wedge h < n\\
-&& \bot & \Leftrightarrow \mbox{otherwise}
+\tau(\langle S,e,h \rangle,\ell) &=& \langle V,\ell,n\rangle  & \Leftrightarrow \ell=1  \\
+&& \langle S \cup \{\ell\},\ell,h+1\rangle & \Leftrightarrow \mbox{otherwise} 
 \end{array}
-The condition $\ell=1 \wedge h < n-1$  identifies an attempt to return to the first city too early.
-Likewise, the condition $\ell\neq 1 \wedge h \geq n-1$ is indicative of an attempt to build extend a tour with more than $n-1$ hops without returning to the initial city.
-The third case is a valid attempt at closing a tour with $n-1$ hops by returning to the first city.
-The fourth case is the vanilla situation of extending a known tour with one more hop. 
+The condition $\ell=1$  indicates a return to the depot (1).
+The alternative extends the set of visited cities with $\ell$ and adds one hop. Naturally, the cost
+function is straightforwardly defined as $c(\langle S,e,h\rangle,\ell) = d_{e,\ell}$ while the merge operator $\oplus(\langle S_1,e_1,h_1\rangle,\langle S_2,e_2,h_2\rangle) = \langle S_1 \cup S_2,e_1,h_1\rangle$ provided that $e_1=e_2 \wedge h_1=h_2$.
 
 *** TSP Example in *CODD*
-Modeling with *CODD* first requires the addition of a type to represent a state. Since a state is a triplet, the model uses a =C= structure.
+Modeling with *CODD* first requires a type to represent a state. Since a state is a triplet, the model uses a =C= structure.
 
 #+begin_src c++
 struct TSP {
@@ -111,8 +114,8 @@ struct TSP {
    }
 };
 #+end_src
-Note the additional output operator that is used to inspect state.
-In addition to the state, *CODD* expects to provide 2 standard operations on state. Equality testing and hashing. Namely, 
+Note the additional (and optional) output operator used to inspect state.
+In addition to the state, *CODD* expects 2 standard operations on state. Equality testing and hashing. Namely, 
 #+begin_src c++
 template<> struct std::equal_to<TSP> {
    constexpr bool operator()(const TSP& s1,const TSP& s2) const {
@@ -120,8 +123,8 @@ template<> struct std::equal_to<TSP> {
    }
 };
 #+end_src
-Is a STL compliant implementation of equality testing for a type =T= which, here, is none other than =TSP=.
-Likewise, the STL compliant fragment below
+Is a STL compliant implementation of equality testing for a type =T= which, here, is none other than the =TSP= structure.
+Likewise, the STL compliant fragment
 #+begin_src c++
 template<> struct std::hash<TSP> {
    std::size_t operator()(const TSP& v) const noexcept {
@@ -131,57 +134,48 @@ template<> struct std::hash<TSP> {
    }
 };
 #+end_src
-defines a =hash= operator for our state type =TSP=.  Both state equality and state hashing are used internally by *CODD*.
-
-It is now possible to define both $s_\top$ and $s_\bot$ with:
+defines a =hash= operator for the state type =TSP=.  Both state equality and state hashing are used internally by *CODD*.
+Given $V$ a constant set holding the set of cities and $n$ its size, 
+it is now easy to define both $s_\top$ and $s_\bot$ with:
 #+begin_src c++
   const auto init = []() {   // The root state
-     return TSP { GNSet{},1,0 };
+     return TSP { GNSet{1},1,0 };
   };
-  const auto target = [&C,sz]() {    // The sink state
-     return TSP { C,1,sz };
+  const auto target = [&V,n]() {    // The sink state
+     return TSP { V,1,n };
   };
 #+end_src
 Note how the =init= and the =target= closures can be called to manufacture the desired states.
-
 The label generation function is also defined with a simple closure
 #+begin_src c++
-  const auto lgf = [&C](const TSP& s)  {
-     auto r = C;
-     r.diffWith(s.s);
-     r.insert(1);
-     return r;
+  const auto lgf = [&V,n](const TSP& s)  {
+     if (s.hops == n - 1)
+        return GNSet {1};
+     else 
+        return V - s.s;
   };
 #+end_src
-The body of the closure uses the capture set of cities =C= and removes from it those already visited (and held in =s.s=) but retains the first city (1) to be able to close the tour.
+The body of the closure uses the capture set of cities =V=
+and returns a singleton with just the depot city (1) if this is the last hop or $V \setminus s.s$ otherwise.
 
-The function $\tau$ is, unsurprisingly, another closure (which captures =sz= and =C= denoting, respectively, the number of cities and the set of cities.)
+The function $\tau$ is, unsurprisingly, another closure (which captures =n= and =V= denoting, respectively, the number of cities and the set of all cities.)
 #+begin_src c++
-  const auto stf = [sz,&C](const TSP& s,const int label) -> std::optional<TSP> {
-     bool bad = (label == 1 && s.hops < sz-1) || (label != 1 && s.hops >= sz-1);
-     if (bad)
-        return std::nullopt;
-     else {
-        bool close = label==1 && s.hops >= sz-1;
-        if (close) return TSP { C,1,sz};
-        else if (!s.s.contains(label) && s.last != label) {
-           return TSP { s.s | GNSet{label},label,s.hops + 1};
-        } else return std::nullopt;
-     }      
+  const auto stf = [&V,n](const TSP& s,const int label) -> std::optional<TSP> {
+      if (label==1)
+         return TSP { V,1,n};
+      else 
+         return TSP { s.s | GNSet{label},label,s.hops + 1};     
   };
 #+end_src
-The case analysis carried out in the code mirrors exactly the formal definition. The =bad= Boolean matches the first two conditions of $\tau$ and the code return =std::nullopt= to report $\bot$. The =else= block cover the two main cases (good closing of a tour, or extension with a city). Note how a C++ expression like =s.s | GNSet{label}=
-is the direct encoding of $V \cup \{\ell\}$ as the =|= operator is used for set union.
+The case analysis carried out in the code mirrors exactly the formal definition. If the value $label$ indicates a return  to the depot, we return the sink state. Otherwise, we add $label$ to the set of visited cities $s.s$, set the last visited city as $label$ and increase the number of hops by 1.
 
-The cost of a transition is also modeled with a closure that captures the edge set =es= and reads:
+The cost of a transition is also modeled with a closure that captures the distance matrix $d$ and reads:
 #+begin_src c++
-  const auto scf = [&es](const TSP& s,int label) { // partial cost function 
-     return es.at(GE {s.last,label});
+  const auto scf = [&d](const TSP& s,int label) { // partial cost function 
+     return d[s.e][label];
   };
 #+end_src
-It simply looks up in the edge /map/ =es= the weight associated to the edge originating at vertex =s.last= and ending at vertex =label=.
-
-The state merge capability to support relaxed diagram is simply:
+The state merge $\oplus$ is simply:
 #+begin_src c++
   const auto smf = [](const TSP& s1,const TSP& s2) -> std::optional<TSP> {
      if (s1.last == s2.last && s1.hops == s2.hops) 
@@ -192,10 +186,10 @@ The state merge capability to support relaxed diagram is simply:
 Observe how this closure takes two states $s_1$ and $s_2$ and considers them
 mergeable if they both end in the same city and have the same number of hops. The relaxation stems from the fact that the set /intersection/ between $s_1.s$ and $s_2.s$ will only retain cities that were visited in both.
 
-Finally, the equality to the sink (target) state is another closure:
+Finally, the equality to the sink (target) state is also closure:
 #+begin_src c++
-  const auto eqs = [sz](const TSP& s) -> bool {
-     return s.last == 1 && s.hops == sz;
+  const auto eqs = [n](const TSP& s) -> bool {
+     return s.last == 1 && s.hops == n;
   };  
 #+end_src
 Which deems state $s$ equal to the sink if the last city is 1 and we have the desired number of hops $sz$. 
@@ -217,7 +211,7 @@ Note how the =DD= template is specialized with the state type =TSP=, the type
 =Minimize<double>= to convey that this is a minimization, and the types of the various
 closures using the C++-23 =decltype= operator. The solver is invoked with the last line.
 #+begin_important
-Note that *CODD* users never directly call any of those closures. Calls to the closures are
+*CODD* users never directly call any of those closures. Calls to the closures are
 choreographed by the solver to build the diagrams and reason with them. *CODD* users are strictly focused on defining the DP LTS in a mathematical sense and then doing the 1-1 translation to C++. 
 #+end_important
 
@@ -615,6 +609,8 @@ while the nested =double= type is the type used to track the objective function 
 
 
 * Papers
+** CODD
+CODD: A Decision Diagram-based Solver for Combinatorial Optimization, [[https://www.ecai2024.eu/programme/preliminary-schedule][ECAI24]], 27TH EUROPEAN CONFERENCE ON ARTIFICIAL INTELLIGENCE, 19-24 OCTOBER 2024,Santiago de Compostela. L. Michel & W.J. van Hoeve.
 
 * Related Systems
 ** DDO
@@ -623,5 +619,12 @@ It is a generic and efficient framework for MDD-based optimization written in Ru
 
 ** Domain Independent DP
 [[https://arxiv.org/abs/2401.13883][DIDP]] is the brainchild of Ryo Kuroiwa, J. Christopher Beck. It can be found [[https://didp.ai][here]] and offers
-both a modeling and a solving API for dynamic programming. 
+both a modeling and a solving API for dynamic programming.
+
+** Peel & Bound
+- Peel and Bound: Solving Discrete Optimization Problems with Decision Diagrams and Separation
+  Thesis at Polytechnique Montréal, Accepted August 16th, 2024. Preprint available, (2024)
+- Peel-and-Bound: Generating Stronger Relaxed Bounds with Multivalued Decision Diagrams
+  28th International Conference on Principles and Practice of Constraint Programming (CP 2022), Volume 235, pp. 35:1-35:20, (2022) Isaac Rudich, Quentin Cappart, Louis-Martin Rousseau.
+  [[https://drops.dagstuhl.de/entities/document/10.4230/LIPIcs.CP.2022.35][Peel & Bound]]
 
