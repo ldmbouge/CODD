@@ -83,7 +83,7 @@ In the ~test~ folder
 ** Library
 All of it in the ~src~ folder
 
-* Tasks :noexports:
+* Tasks :noexport:
 ** DONE Decent set of integer implementation
 CLOSED: [2024-01-29 Mon 19:01]
 On my own heap.

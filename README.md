@@ -1,34 +1,16 @@
 
 # Table of Contents
 
-1.  [CODD](#org21a8a30)
-    1.  [Dependencies](#org41dad86)
-    2.  [C++ Standard](#org08ed221)
-    3.  [Build system](#org4b62dc2)
-    4.  [Examples](#org9bbb0bd)
-    5.  [Unit test](#org236ff64)
-    6.  [Library](#org9874101)
-2.  [Tasks](#org021c718):noexports:
-    1.  [Decent set of integer implementation](#org8b68b17)
-    2.  [Check and fix leaks (the cache should be deallocated, not \_an)](#orge8cf3d9)
-    3.  [Implement instance reader for tsp to do bigger instances](#org28e88db)
-    4.  [Implement instance reader for MISP](#org1c9091e)
-    5.  [Rename MISP (`foo`) to misptoy ;-)](#org52f9ad1)
-    6.  [Profile and pick up the low hanging fruits](#orgc45eabc)
-    7.  [Fix calls to find in order to remove from \_an](#org1c4306a)
-    8.  [Fix calls to find before updateKey in heaps](#orgc4edd23)
-    9.  [Change the makeNode / duplicate so that hash is computed only once (not twice).](#org4bf1b60)
-    10. [Experiment with permanent state cache](#org12a7c58)
-        1.  [segregate Edge allocator](#org969fe64)
-        2.  [keep the node cache (at least for relaxed) so that they get reused](#orgc0bd272)
-        3.  [clear the edge allocator since those must be rebuild](#org46443df)
-        4.  [runs the risk of runaway node cache. Maybe clear periodically? (Every 10K B&B node)](#org66ac2ba)
-    11. [Implement a label generator](#org739d1d1)
-    12. [Cleanup the edge transfer (no more allocating, just moving)](#org1d95658)
-    13. [Change relax to merge as we go](#org935f8f6)
+1.  [CODD](#org31a353e)
+    1.  [Dependencies](#org72210ce)
+    2.  [C++ Standard](#orgcfcfff6)
+    3.  [Build system](#org2717350)
+    4.  [Examples](#orgbedc20c)
+    5.  [Unit test](#org4a13eb4)
+    6.  [Library](#org2d062e9)
 
 
-<a id="org21a8a30"></a>
+<a id="org31a353e"></a>
 
 # CODD
 
@@ -41,7 +23,7 @@ It has:
 -   restricted construction is truly bounded now (not truncation based).
 
 
-<a id="org41dad86"></a>
+<a id="org72210ce"></a>
 
 ## Dependencies
 
@@ -51,7 +33,7 @@ in `/tmp` and then macOS `open` command is used (via `fork/execlp`)  to open the
 PDF. The same functionality needs to be added on Linux (different API to pop up a viewer).
 
 
-<a id="org08ed221"></a>
+<a id="orgcfcfff6"></a>
 
 ## C++ Standard
 
@@ -61,7 +43,7 @@ I use the mainline clang coming with Xcode.
 The implementation uses templates and concepts to factor the code.
 
 
-<a id="org4b62dc2"></a>
+<a id="org2717350"></a>
 
 ## Build system
 
@@ -78,7 +60,7 @@ the variable `CMAKE_BUILD_TYPE` from `Debug` to `Release` as shown below:
     cmake .. -DCMAKE_BUILD_TYPE=Release
 
 
-<a id="org9bbb0bd"></a>
+<a id="orgbedc20c"></a>
 
 ## Examples
 
@@ -126,125 +108,16 @@ from the `build` folder to run on the br17 instance with a width of 32. The outp
 Every 5 seconds, the branch and bound reports the number of nodes, current node value, incumbent value, duality gap and the time since the start. The last line (with the `Done`) says that the optimal was 39, that it took 13912 nodes to close the optimality proof, that no nodes where discarded because of a dominance and that the optimum was found after 3.063s and the proof took 31.995s (if there was a limit, it was <span class="underline">not</span> reached). 
 
 
-<a id="org236ff64"></a>
+<a id="org4a13eb4"></a>
 
 ## Unit test
 
 In the `test` folder
 
 
-<a id="org9874101"></a>
+<a id="org2d062e9"></a>
 
 ## Library
 
 All of it in the `src` folder
-
-
-<a id="org021c718"></a>
-
-# Tasks     :noexports:
-
-
-<a id="org8b68b17"></a>
-
-## DONE Decent set of integer implementation
-
-On my own heap.
-With template overload that is size dependent (up to label 64, all ops should be O(1))
-After that, it should be O(label/64). Unless we start using the 128 bit registers ;-)
-
-
-<a id="orge8cf3d9"></a>
-
-## DONE Check and fix leaks (the cache should be deallocated, not \_an)
-
-
-<a id="org28e88db"></a>
-
-## TODO Implement instance reader for tsp to do bigger instances
-
-Done for coloring.
-
-
-<a id="org1c9091e"></a>
-
-## TODO Implement instance reader for MISP
-
-
-<a id="org52f9ad1"></a>
-
-## TODO Rename MISP (`foo`) to misptoy ;-)
-
-
-<a id="orgc45eabc"></a>
-
-## DONE Profile and pick up the low hanging fruits
-
-
-<a id="org1c4306a"></a>
-
-## DONE Fix calls to find in order to remove from \_an
-
--   Those should be O(1) via locators.
--   Implement the trick to O(1) removal (affects mergeLayer / truncate)
--   I now directly link the ANode with each other. It avoids the needs for location. Removal can still be O(1).
-
-
-<a id="orgc4edd23"></a>
-
-## DONE Fix calls to find before updateKey in heaps
-
--   Heap is already location aware
--   We need to track the location (by node id, we have those)
--   Then use the location to have an O(1) operation (affects computeBest & computeBestBackward)
-
-
-<a id="org4bf1b60"></a>
-
-## DONE Change the makeNode / duplicate so that hash is computed only once (not twice).
-
--   Use opaque ADT in Hashtable to support that (HTAt is the opaque type)
-
-
-<a id="org12a7c58"></a>
-
-## Experiment with permanent state cache
-
-
-<a id="org969fe64"></a>
-
-### segregate Edge allocator
-
-
-<a id="orgc0bd272"></a>
-
-### DONE keep the node cache (at least for relaxed) so that they get reused
-
-This did not work. It creates and keeps far too many nodes. Collision lists were getting too long. It's far easier to clear and rebuild as many DDs are quite small. 
-CLOSED: <span class="timestamp-wrapper"><span class="timestamp">[2024-02-15 Thu 16:46]</span></span>
-
-
-<a id="org46443df"></a>
-
-### clear the edge allocator since those must be rebuild
-
-
-<a id="org66ac2ba"></a>
-
-### runs the risk of runaway node cache. Maybe clear periodically? (Every 10K B&B node)
-
-
-<a id="org739d1d1"></a>
-
-## DONE Implement a label generator
-
-
-<a id="org1d95658"></a>
-
-## DONE Cleanup the edge transfer (no more allocating, just moving)
-
-
-<a id="org935f8f6"></a>
-
-## TODO Change relax to merge as we go
 
