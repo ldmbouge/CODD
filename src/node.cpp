@@ -75,8 +75,3 @@ void ANode::disconnect()
    }
    _children.clear();
 }
-
-void LPool::release(ANode::Ptr n)
-{
-   _free.push(n);
-}

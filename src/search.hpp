@@ -4,6 +4,7 @@
 #include <functional>
 #include "dd.hpp"
 #include "store.hpp"
+#include "pool.hpp"
 
 class BAndB {
    LPool::Ptr _mem;
