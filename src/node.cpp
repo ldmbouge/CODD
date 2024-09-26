@@ -54,11 +54,6 @@ void ANode::reset()
    _next = _prev = nullptr;
 }
 
-/*
-ANode::~ANode()
-{}
-*/
-
 void ANode::addArc(Edge::Ptr ep)
 {
    if (ep->_from == this)
@@ -81,10 +76,7 @@ void ANode::disconnect()
    _children.clear();
 }
 
-
-
 void LPool::release(ANode::Ptr n)
 {
-   //std::cout << "REL(" << n->getId() << ")" << "\n";
    _free.push(n);
 }

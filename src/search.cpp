@@ -42,7 +42,6 @@ void BAndB::search(Bounds& bnds)
    };
    Heap<QNode,decltype(hOrder)> pq(&mem,64000,hOrder);   
    pq.insertHeap(QNode { relaxed->makeInPool(_mem,relaxed->init()), relaxed->initialWorst() } );
-   //pq.insertHeap(QNode { _theDD->init(), relaxed->initialWorst() } );
    unsigned nNode = 0,ttlNode = 0,insDom=0,pruned=0;
    bool primalBetter = false;
    cout << "B&B Nodes          " << setw(6) << "Dual\t " << setw(6) << "Primal\t Gap(%)\n";
@@ -81,15 +80,8 @@ void BAndB::search(Bounds& bnds)
          _mem->release(bbn.node);
          continue;
       }
-      // if (relaxed->hasLocal() &&
-      //     !relaxed->isBetter(relaxed->local(bbn.node),bnds.getPrimal())) { // check local bound when pulling (if exist)
-      //    _mem->release(bbn.node);
-      //    continue;
-      // }
       nNode++;
       bool dualBetter = relaxed->apply(bbn.node,bnds);
-      // relaxed->display();
-      // char ch;std::cin >> ch;
 
       if (dualBetter) {
          primalBetter = restricted->apply(bbn.node,bnds);
@@ -98,13 +90,9 @@ void BAndB::search(Bounds& bnds)
             auto cutSet = relaxed->computeCutSet();
             for(auto n : cutSet) {
                if (n == relaxed->getRoot()) { // the cutset is the root. Only way out: increase width.
-                  //for(auto i=0u;i < sizeof(ddr)/sizeof(WidthBounded*);i++) {
-                  //relaxed->display();
-                     auto w = ddr[0]->getWidth() + 1;
-                     ddr[0]->setWidth(w);
-                     std::cout << "\t-->widening... " << w << " CUTSET SIZE:" << cutSet.size() <<  "\n";
-                     //char ch; std::cin >> ch;
-                     //}
+                  auto w = ddr[0]->getWidth() + 1;
+                  ddr[0]->setWidth(w);
+                  std::cout << "\t-->widening... " << w << " CUTSET SIZE:" << cutSet.size() <<  "\n";
                }
                // use the bound in n (the ones in nd are _reset_ when duplicate occurs????)
                bool newGuyDominated = false;
@@ -133,22 +121,12 @@ void BAndB::search(Bounds& bnds)
                   }
                   delete[]allLocs;
                }
-               //std::cout << "CUTSet+ " << newGuyDominated << ":";
-               //relaxed->printNode(std::cout,n);
-               //std::cout << "\n";
                assert(n->isExact());
                if (!newGuyDominated) {
-                  //auto nd = _theDD->duplicate(n); // we got a duplicate of the node.
                   auto nd = relaxed->makeInPool(_mem,n);
-
-                  // std::cout << "NODE TO Q:";
-                  // relaxed->printNode(std::cout,nd);
-                  // std::cout << "\n";
-
                   assert(nd->getBound() == n->getBound());
                   const auto insKey = n->getBound()+n->getBackwardBound();
                   pq.insertHeap(QNode {nd, insKey});
-                  //std::cout << "PQ:" << pq << "\n";
                }
                else insDom++;
             }

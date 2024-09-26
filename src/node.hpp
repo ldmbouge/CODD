@@ -218,7 +218,7 @@ class LPool {
 public:
    typedef LPool* Ptr; // space saving measure
    LPool(Pool::Ptr mem) : _mem(mem),_id(0) {}
-   unsigned grabId() noexcept { return _id++;}
+   unsigned grabId() noexcept     { return _id++;}
    Pool::Ptr get() const noexcept {  return _mem;}
    ANode::Ptr claimNode() {
       if (_free.empty())

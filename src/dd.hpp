@@ -534,15 +534,13 @@ public:
    }
    AbstractDD::Ptr duplicate() {
       auto theDD = new DD(_sti,_stt,_lgf,_stf,_stc,_smf,_eqs,_labels,_local,_sdom);
-      /* if (_hasLocal) */
-      /*    theDD->setLocal(_local); */
       return AbstractDD::Ptr(theDD);
    }
    ANode::Ptr duplicate(const ANode::Ptr src) {
       Node<ST>* at = nullptr;
       auto sp = static_cast<const Node<ST>*>(src.get());
       auto inMap = _nmap.getLoc(sp->get(),at);
-      if (0 && inMap) {
+      if (inMap) {
          assert(src->getBound() == at->getBound()); // this fires. The node was already there with another bound   
          return at; // node already in this pool. Return it "untouched". It will be added to
          // the heap for the B&B. CAVEAT: it was already there. First time it was inserted it
