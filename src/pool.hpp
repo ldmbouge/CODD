@@ -2,6 +2,7 @@
 #define __POOL_H
 
 #include "node.hpp"
+#include "lighthash.hpp"
 
 class LPool {
    Pool::Ptr _mem;

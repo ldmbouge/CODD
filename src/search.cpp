@@ -40,8 +40,15 @@ void BAndB::search(Bounds& bnds)
    auto hOrder = [relaxed](const QNode& a,const QNode& b) {
       return relaxed->isBetter(a.bound,b.bound);
    };
-   Heap<QNode,decltype(hOrder)> pq(&mem,64000,hOrder);   
-   pq.insertHeap(QNode { relaxed->makeInPool(_mem,relaxed->init()), relaxed->initialWorst() } );
+   Heap<QNode,decltype(hOrder)> pq(&mem,64000,hOrder);
+   ANode::Ptr rootNode = relaxed->makeInPool(_mem,relaxed->init());
+   if (relaxed->hasLocal()) {
+      auto dualRootValue = relaxed->local(rootNode);
+      cout << "dual@root:" << dualRootValue << "\n";
+      pq.insertHeap(QNode { rootNode, dualRootValue } );   
+   } else {
+      pq.insertHeap(QNode { rootNode, relaxed->initialWorst() } );   
+   }
    unsigned nNode = 0,ttlNode = 0,insDom=0,pruned=0;
    bool primalBetter = false;
    cout << "B&B Nodes          " << setw(6) << "Dual\t " << setw(6) << "Primal\t Gap(%)\n";
@@ -55,8 +62,8 @@ void BAndB::search(Bounds& bnds)
       if (_timeLimit && _timeLimit(fs))         
          break;      
       if (primalBetter || fl > 5000) {
-         double gap = 100 * (bnds.getPrimal() - curDual) / bnds.getPrimal();      
-         cout << "B&B(" << setw(5) << nNode << ")\t " << setprecision(6);
+         double gap = 100 * std::abs(bnds.getPrimal() - curDual) / bnds.getPrimal();      
+         cout << std::fixed << "B&B(" << setw(5) << nNode << ")\t " << setprecision(6);
          if (curDual == relaxed->initialWorst())
             cout << setw(7) << "-"  << "\t " << setw(7) << bnds.getPrimal() << "\t ";
          else
@@ -67,15 +74,16 @@ void BAndB::search(Bounds& bnds)
          cout << "\t time:" << setw(6) << setprecision(4) <<  fs / 1000.0 << "s";
          cout << "\n";
          last = RuntimeMonitor::cputime();
-      }
+     } 
       primalBetter = false;
 #ifndef _NDEBUG
-      cout << "BOUNDS NOW: " << bnds << endl;
-      cout << "EXTRACTED:  " << bbn.node->getId() << " ::: ";
+      cout << "BOUNDS NOW: " << bnds << endl; 
+     cout << "EXTRACTED:  " << bbn.node->getId() << " ::: ";
       relaxed->printNode(cout,bbn.node);
       cout << "\t(" << curDual << ")" << " SZ:" << pq.size() << endl;
 #endif
       ttlNode++;
+      //cout << "CURDUAL:" << curDual << "\t PRIMAL:" << bnds.getPrimal() << "\n";
       if (!relaxed->isBetter(curDual,bnds.getPrimal())) {
          _mem->release(bbn.node);
          continue;
@@ -125,8 +133,16 @@ void BAndB::search(Bounds& bnds)
                if (!newGuyDominated) {
                   auto nd = relaxed->makeInPool(_mem,n);
                   assert(nd->getBound() == n->getBound());
-                  const auto insKey = n->getBound()+n->getBackwardBound();
-                  pq.insertHeap(QNode {nd, insKey});
+                  double bwd;
+                  if (relaxed->hasLocal()) {
+                     bwd = relaxed->local(nd);
+                  } else bwd = n->getBackwardBound();
+                  const auto insKey = n->getBound()+ bwd;
+                  const auto improve = relaxed->isBetter(insKey,bnds.getPrimal());
+                  // cout << "CUTSet addition:" << n->getBound() << " \tbackward bound:"
+                  //      << n->getBackwardBound() << " \t " << bwd << " \t:" << (improve ? "T":"F") << "\n";
+                  if (improve) 
+                     pq.insertHeap(QNode {nd, insKey }); //std::min(insKey,curDual)});                  
                }
                else insDom++;
             }
