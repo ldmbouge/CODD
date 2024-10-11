@@ -45,6 +45,7 @@ void BAndB::search(Bounds& bnds)
    if (relaxed->hasLocal()) {
       auto dualRootValue = relaxed->local(rootNode);
       cout << "dual@root:" << dualRootValue << "\n";
+      rootNode->setBackwardBound(dualRootValue);//bnds.getPrimal());
       pq.insertHeap(QNode { rootNode, dualRootValue } );   
    } else {
       pq.insertHeap(QNode { rootNode, relaxed->initialWorst() } );   

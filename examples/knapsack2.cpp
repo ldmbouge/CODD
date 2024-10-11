@@ -123,7 +123,9 @@ int main(int argc,char* argv[])
    const auto scf = [p](const SKS& s,int label) { return p[s.n] * label;};
    const auto smf = [capa](const SKS& s1,const SKS& s2) -> std::optional<SKS> {
       //return SKS { std::max(s1.n,s2.n),std::max(s1.c,s2.c) };       
-      if (abs(s1.c - s2.c) <= (2 * capa)/100) 
+      //if (abs(s1.c - s2.c) <= (0.003 * capa)/100)
+      if (abs(s1.c - s2.c) <= 1)
+         //      if (s1.c == s2.c)
          return SKS { std::max(s1.n,s2.n),std::max(s1.c,s2.c) };       
       else return std::nullopt; // return  the empty optional
    };

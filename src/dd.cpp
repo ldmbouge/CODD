@@ -270,6 +270,13 @@ void AbstractDD::computeBestBackward(const std::string m)
             cur = ep;
          }
       }
+      // if (hasLocal()) {
+      //    auto dualBound = local(n.node);
+      //    if (isBetter(dualBound,cur)) {
+      //       //std::cout << "\tIMPROVED from " << cur << " to " << dualBound << "\n";
+      //       cur = dualBound;
+      //    }
+      // }
       //std::cout << "\tCOMPUTED:" << cur << " for " << *n.node << "\n";
       n.node->setBackwardBound(cur);
       for(auto pi = n.node->beginPar(); pi != n.node->endPar();pi++) {
@@ -280,7 +287,7 @@ void AbstractDD::computeBestBackward(const std::string m)
       }
    }
 #ifndef _NDEBUG     
-   std::cout << '\t' << m << " BB@ROOT:" << _root->getBackwardBound() << " B@SINK:" << _trg->getBound() << std::endl;
+   std::cout << '\t' << m << " BB@ROOT:" << std::fixed << std::setw(7) << _root->getBackwardBound() << " B@SINK:" << _trg->getBound() << std::endl;
 #endif   
 }
 
@@ -556,8 +563,9 @@ template <typename Fun> void Relaxed::mergeLayer(auto& layer,Fun f)
 {
    // std::cout << "MERGING " << layer.size() << " TARGET width:" << _mxw << "\n";
    // for(auto n : layer) {
-   //    std::cout << "   ";
-   //    _dd->printNode(std::cout,n);
+   //    std::cout << "\t";
+   //    //_dd->printNode(std::cout,n);
+   //    std::cout << n->getId() << " " << n->getBound() << " " << n->getBackwardBound();
    //    std::cout << " LAYER:" << n->getLayer() << "\n";
    // }
    std::list<ANode::Ptr> skip;
@@ -566,6 +574,14 @@ template <typename Fun> void Relaxed::mergeLayer(auto& layer,Fun f)
       if (dn) f(dn); // delayed node saw a change in layer. Back in the overall queue via f
    }
    layer.splice(layer.begin(),std::move(skip)); // put the skipped guys back in
+
+   // std::cout << "AFTER MERGING " << layer.size() << " TARGET width:" << _mxw << "\n";
+   // for(auto n : layer) {
+   //    std::cout << "\t";
+   //    //_dd->printNode(std::cout,n);
+   //    std::cout << n->getId() << " " << n->getBound() << " " << n->getBackwardBound();
+   //    std::cout << " LAYER:" << n->getLayer() << "\n";
+   // }   
 }
 
 void Relaxed::adjustBounds(ANode::Ptr nd)
@@ -599,7 +615,7 @@ public:
       else {
          if (_next.front()->getLayer() == n->getLayer()) {
             insertInNext(n);
-            if (0 && _next.size() > 2 *  _dd.getWidth()) { // eager is not a clear gain.
+                if (0 && _next.size() > 2 *  _dd.getWidth()) { // eager is not a clear gain.
                _next.sort([dd = _dd.theDD()](const ANode::Ptr& a,const ANode::Ptr& b) {
                   return !dd->isBetter(a->getBound(),b->getBound());
                });

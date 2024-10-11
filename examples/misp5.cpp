@@ -1,23 +1,9 @@
-#include "dd.hpp"
-#include "util.hpp"
-#include <concepts>
-#include <iostream>
-#include <fstream>
-#include <set>
-#include <optional>
-#include <ranges>
-#include <algorithm>
-#include <map>
-#include "search.hpp"
+#include "codd.hpp"
 
 struct MISP {
    GNSet sel;
    int   n;
    int   l;
-   MISP(const GNSet& s,int nb,int last) : sel(s),n(nb),l(last) {}
-   MISP(const MISP& m) : sel(m.sel),n(m.n),l(m.l) {}
-   MISP(MISP&& m) : sel(std::move(m.sel)),n(m.n),l(m.l) {}
-   MISP& operator=(const MISP& m) { sel = m.sel;n = m.n;l = m.l;return *this;}
    friend std::ostream& operator<<(std::ostream& os,const MISP& m) {
       return os << "<" << m.sel << ',' << m.n << ',' << m.l << ">";
    }
@@ -25,17 +11,13 @@ struct MISP {
 
 template<> struct std::equal_to<MISP> {
    bool operator()(const MISP& s1,const MISP& s2) const {
-      return s1.sel == s2.sel &&
-         s1.n == s2.n &&
-         s1.l == s2.l;
+      return s1.n == s2.n && s1.sel == s2.sel && s1.l == s2.l;         
    }
 };
 
 template<> struct std::hash<MISP> {
    std::size_t operator()(const MISP& v) const noexcept {
-      return std::rotl(std::hash<GNSet>{}(v.sel),32) ^
-         std::hash<int>{}(v.n) ^
-         std::hash<int>{}(v.l);
+      return std::rotl(std::hash<GNSet>{}(v.sel),32) ^ (std::hash<int>{}(v.n) << 16) ^ std::hash<int>{}(v.l);
    }
 };
 
@@ -117,10 +99,11 @@ int main(int argc,char* argv[])
    const GNSet ns = instance.vertices();
    const int top = ns.size();
    const std::vector<GE> es = instance.getEdges();
+   std::cout << "TOP=" << top << "\n";
 
    Bounds bnds([&es](const std::vector<int>& inc)  {
       bool ok = true;    
-      for(const auto& e : es) {
+      for(const auto& e : es) {         
          bool v1In = (e.a < (int)inc.size()) ? inc[e.a] : false;
          bool v2In = (e.b < (int)inc.size()) ? inc[e.b] : false;
          if (v1In && v2In) {
@@ -133,67 +116,62 @@ int main(int argc,char* argv[])
    });
    const auto labels = ns | GNSet { top };     // using a plain set for the labels
    std::vector<int> weight(ns.size()+1);
-   weight[ns.size()] = 0;
-   for(auto v : ns) weight[v] = 1;   
-   std::map<int,GNSet> neighbors {};  // computing the neigbhors using STL (not pretty)
-   for(int i : ns) {
-      neighbors[i] = filter(ns,[i,&es](auto j) {
-         return j==i || member(es,[e1=GE {i,j},e2=GE {j,i}](auto e) { return e==e1 || e==e2;});
-      });
-      std::cout << i << " -> " << neighbors[i] << std::endl;
-   }
+   weight[top] = 0;
+   for(auto v : ns) weight[v] = 1;
+   auto neighbors = instance.adj;
+
    const auto myInit = [top]() {   // The root state
-      GNSet U = {}; // std::views::iota(1,top) | std::ranges::to<std::set>();
+      GNSet U = {}; 
       for(auto i : std::views::iota(0,top))
          U.insert(i);
-      return MISP { U ,0,-1};
+      return MISP { U , 0, -1 };
    };
    const auto myTarget = [top]() {    // The sink state
-      return MISP { GNSet {}, 0,top};
+      return MISP { GNSet {},top,0};
    };
    const auto lgf = [](const MISP& s)  {
       return Range::close(0,1);
    };
    auto myStf = [top,&neighbors](const MISP& s,const int label) -> std::optional<MISP> {
-      auto v = s.l + 1;
-      while (!s.sel.contains(v) && v <= top)
-         v++;
-      if (v == top) {
-         if (s.sel.empty()) 
-            return MISP { GNSet {}, 0 , top};
-         else return std::nullopt;
-      } else {
+      /*      int msz = 9999999;
+      int chosen = -1;
+      for(auto v : s.sel) {
          GNSet out = s.sel;
-         if (label == 0) {
-            out.remove(v);
-         } else 
-            out = filter(out,[nl = neighbors[v]](int i) {
-               return !nl.contains(i);
-            });         
-         const bool empty = out.empty();
-         return MISP { std::move(out),
-                       empty ? 0   : s.n + 1,
-                       empty ? top : v};
-      }
+         out.remove(v);
+         out.diffWith(neighbors[v]);
+         if (out.size() <= msz) {
+            msz = out.size();
+            chosen = v;
+         }
+         }*/
+      int chosen = s.n;
+      //if (chosen==-1) return MISP { GNSet {},top,0};
+      //std::cout << "AT:" << s << " chose:" << chosen << " N[chosen]:" << neighbors[chosen] << " L:" << label << "\n";
+      if (!s.sel.contains(chosen) && label) return std::nullopt; // we cannot take n (label==1) if not legal.
+      assert(label==0 || s.sel.contains(chosen));
+      GNSet out = s.sel;
+      out.remove(chosen);   // remove n from state
+      if (label) out.diffWith(neighbors[chosen]); // remove neighbors of n from state (when taking n -- label==1 -- )
+      const bool done = s.n+1 >= top;
+      if (done)
+         return MISP { GNSet {},top,0};
+      else return MISP { std::move(out),s.n + 1,chosen}; // build state accordingly
    };
-   const auto scf = [top,weight](const MISP& s,int label) { // cost function 
-      auto v = s.l + 1;
-      while (!s.sel.contains(v) && v <= top)
-         v++;
-      return label * weight[v];
+   const auto scf = [weight,top](const MISP& s,int label) { // cost function 
+      return (s.n==top) ? 0 : label * weight[s.l];
    };
    const auto smf = [](const MISP& s1,const MISP& s2) -> std::optional<MISP> { // merge function
-      using namespace std;
-      if (s1.l == s2.l) {
-         auto u = s1.sel | s2.sel;
-         return MISP {std::move(u),
-                      std::min(s1.n,s2.n),
-                      std::min(s1.l,s2.l)};
-      } else return std::nullopt; // return  the empty optional
+      if (s1.l == s2.l) 
+         return MISP {s1.sel | s2.sel,std::min(s1.n,s2.n),s1.l};
+      else return std::nullopt;
    };
-   const auto eqs = [](const MISP& s) -> bool {
+   const auto eqs = [top](const MISP& s) -> bool {
+      //return s.n == top;
       return s.sel.size() == 0;
    };
+   const auto local = [&weight](const MISP& s) -> double {
+      return sum(s.sel,[&weight](auto v) { return weight[v];});
+   };      
 
    BAndB engine(DD<MISP,Maximize<double>, // to maximize
                 //decltype(myInit), 
@@ -202,8 +180,9 @@ int main(int argc,char* argv[])
                 decltype(myStf),
                 decltype(scf),
                 decltype(smf),
-                decltype(eqs)                   
-                >::makeDD(myInit,myTarget,lgf,myStf,scf,smf,eqs,labels),w);
+                decltype(eqs),
+                decltype(local)
+                >::makeDD(myInit,myTarget,lgf,myStf,scf,smf,eqs,labels,local),w);
    engine.search(bnds);
    return 0;
 }
