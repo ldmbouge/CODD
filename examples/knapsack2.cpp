@@ -73,7 +73,7 @@ Instance readFile(const char* fName)
    mergeSort(i.items,i.I,[](const auto& a,const auto& b) {
       const double ar = -((double)a.p)/((double)a.w);
       const double br = -((double)b.p)/((double)b.w);
-      return ar <= br;
+      return (ar == br) ? a.p <= b.p : ar <= br;
    });
    for(auto k=0;k < i.I;k++) {
       auto ik = i.items[k];
@@ -96,9 +96,20 @@ int main(int argc,char* argv[])
    const int capa = instance.capa;
    const auto& w = instance.weight;
    const auto& p = instance.profit; 
-   Bounds bnds;
+   Bounds bnds([&w,&p,capa,I](const std::vector<int>& inc)  {
+      double v = 0.0;
+      int   rc = capa;
+      for(int i=0;i < I;i++) {
+         if (inc[i]) {
+            rc -= w[i];
+            v  += p[i];
+         }
+      }
+      std::cout << "CHECKER:" << v << " RC:" << rc << "\n";
+   });
    const auto labels = GNSet(0,1);     // using a plain set for the labels
    bnds.setPrimal(instance.getUB());
+   std::cout << "CAPA:" << capa << "\n";
    const auto init = [capa]()         { return SKS {0,capa};};
    const auto target = [I]()          { return SKS {I,0};};
    const auto lgf = [w](const SKS& s) { return  Range::close(0,s.c >= w[s.n]);};
@@ -114,7 +125,7 @@ int main(int argc,char* argv[])
          if (w[i] <= rc) {
             rc -= w[i];
             nn += p[i];
-         } else {
+         } else {            
             nn += std::floor(((double)rc / w[i]) * p[i]);
             break;
          }      
