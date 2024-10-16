@@ -439,13 +439,22 @@ private:
       auto op = static_cast<const Node<ST>*>(src.get());
       auto vs = _stf(op->get(),label);     
       if (vs.has_value()) {
+         ANode::Ptr rv;
          if (_local) {
             auto cVal = _stc(op->get(),label);
-            auto sCost = src->getBound() + cVal + _local(vs.value());
-            if (!isBetter(sCost,bnds.getPrimal()))
+            auto dual = _local(vs.value());
+            auto sCost = src->getBound() + cVal + dual;
+            if (!isBetter(sCost,bnds.getPrimal())) {
+               // std::cout << "WORSE label(" << label << ") than primal with:"
+               //           << sCost << " PRIMAL:"
+               //           << bnds.getPrimal() << "\n";
                return nullptr;
-         }
-         ANode::Ptr rv = makeNode(std::move(vs.value()),src->isExact());
+            }
+            rv = makeNode(std::move(vs.value()),src->isExact());
+            rv->setBackwardBound(cVal + dual);
+         } else {
+            rv = makeNode(std::move(vs.value()),src->isExact());
+         }             
          return rv;
       } else return nullptr;
    }
@@ -467,6 +476,9 @@ private:
       auto vs = _smf(fp->get(),sp->get());
       if (vs.has_value()) {
          ANode::Ptr inMap = hasNode(vs.value());
+         // std::cout << "Merge\n";
+         // std::cout << "\tF:";printNode(std::cout,f);std::cout<<"\n";
+         // std::cout << "\tS:";printNode(std::cout,s);std::cout<<"\n";         
          if (inMap && inMap->getLayer() < std::max(fp->getLayer(),sp->getLayer()))
             return nullptr;
          ANode::Ptr rv = makeNode(std::move(vs.value()));
@@ -476,6 +488,7 @@ private:
          if (isBetter(sp->getBound(),rv->getBound())) {
             rv->copyBoundAndLabels(s);
          }
+         // std::cout << "\tRES:";printNode(std::cout,rv);std::cout << "\n";
          return rv;
       }
       else return nullptr;

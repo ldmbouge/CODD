@@ -121,8 +121,8 @@ int main(int argc,char* argv[])
    Bounds bnds([&es](const std::vector<int>& inc)  {
       bool ok = true;    
       for(const auto& e : es) {
-         bool v1In = std::find(inc.begin(),inc.end(),e.a) != inc.end();
-         bool v2In = std::find(inc.begin(),inc.end(),e.b) != inc.end();
+         bool v1In = (e.a < (int)inc.size()) ? inc[e.a] : false;
+         bool v2In = (e.b < (int)inc.size()) ? inc[e.b] : false;
          if (v1In && v2In) {
             std::cout << e << " BOTH ep in inc: " << inc << "\n";
             assert(false);
