@@ -365,7 +365,7 @@ public:
             return nn;
          }
       } else {
-         std::cout << "Already added node to B&B...." << "\n";
+         //std::cout << "Already added node to B&B...." << "\n";
          return nullptr;
       }
    }

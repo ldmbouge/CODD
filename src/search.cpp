@@ -22,6 +22,7 @@ void BAndB::search(Bounds& bnds)
 {
    auto bbPool = _theDD->makeNDAllocator();
    using namespace std;
+   unsigned int nbSeen = 0;
    std::streamsize ss = cout.precision();
    auto start = RuntimeMonitor::cputime();
    auto last = start;
@@ -80,7 +81,7 @@ void BAndB::search(Bounds& bnds)
       primalBetter = false;
 #ifndef _NDEBUG
       cout << "BOUNDS NOW: " << bnds << endl; 
-     cout << "EXTRACTED:  " << bbn.node->getId() << " ::: ";
+      cout << "EXTRACTED:  " << bbn.node->getId() << " ::: ";
       relaxed->printNode(cout,bbn.node);
       cout << "\t(" << curDual << ")" << " SZ:" << pq.size() << endl;
 #endif
@@ -144,7 +145,7 @@ void BAndB::search(Bounds& bnds)
                      const auto improve = relaxed->isBetter(insKey,bnds.getPrimal());
                      if (improve) 
                         pq.insertHeap(QNode {nd, insKey }); //std::min(insKey,curDual)});
-                  }
+                  } else nbSeen++;
                }
                else insDom++;
             }
@@ -158,5 +159,6 @@ void BAndB::search(Bounds& bnds)
         << "\t P/D:" << pruned << "/" << insDom
         << "\t Time:" << optTime/1000 << "/" << spent/1000 << "s"
         << "\t LIM?:" << (pq.size() > 0)
+        << "\t Seen:" << nbSeen
         << "\n";
 }

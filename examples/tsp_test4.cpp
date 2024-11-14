@@ -122,44 +122,23 @@ double mst(Matrix<double,2>& d,GNSet C,GNSet V,int src,int sink,int hops)
    }
    return l;
 }
-/*
-double AP(Matrix<double,2>& d,GNSet C,GNSet V,int src,int sink)
-{
-   GNSet t = (C - V).insert(src).insert(sink);
-   const double INF = std::numeric_limits<double>::max();
-   int n = t.size();
-   // to do
-   return 0;
-}
-*/
 
-double Greedy(Matrix<double,2>& d,GNSet C,GNSet V,int src,int sink,int hops)
+double greedy(Matrix<double,2>& d,GNSet C,GNSet V,int src,int sink,int hops)
 {
    // compute lower bound as the sum of the cheapest arc out of each 
    // node except the src (which already has an outgoing arc per the
    // partial solution so far. 
    GNSet t = (C - V).insert(src).insert(sink);
-   const double INF = std::numeric_limits<double>::max();
-   const auto ts = C.size() - hops;
+   const auto ts = C.size() - hops; // Beware: set V is an lower bound, it could be too small, its true
+   // size is hops. So only pick the ts shortest edges at the end.
    int ne = 0;
    double edge[t.size()];
-   for (auto i : t) {
-      if (i != src) { // && i != sink) {
-         double tmp = INF;
-         for (auto j : t) {
-            auto symd = d[i][j];//std::min(d[i][j],d[j][i]);
-            if (i!=j && symd < tmp)
-               tmp = symd;            
-         }
-         assert(tmp < INF);
-         assert(ne < t.size());
-         edge[ne++] = tmp;
-      }
-   }
+   for (auto i : t) 
+      if (i != src)
+         edge[ne++] = min(t,[i](int j) {return i!=j;},[i,&d](int j) { return d[i][j];});
+   
    mergeSort(edge,ne,[](double a,double b) { return a < b;});
-   double locB = 0;
-   for(int i=0u;i < ts;i++) locB += edge[i];
-   return locB;
+   return sum(Range(0,ts),[&edge](int e) { return edge[e];});
 }
 
 int main(int argc,char* argv[]) {
@@ -174,7 +153,17 @@ int main(int argc,char* argv[]) {
    auto C = instance.vertices();
    auto& d = instance.d; 
    std::cout << "Cities:" << C << "\n";
-   Bounds bnds;
+   Bounds bnds([&d,&bnds](const std::vector<int>& inc)  {
+      int pv = 0; // start at depot
+      int td = 0;
+      int cnt = 0;
+      for(auto v : inc) {
+         td += d[pv][v];
+         pv = v;
+         cnt++;
+      }
+      std::cout << "CHECKER tour length is " << td << ',' << bnds.getPrimal() << " len:" << cnt << "\n";
+   });
    const int depot = 0;
    const int sz = (int)C.size();
    const auto init = []()               { return TSP { GNSet{depot},depot,0};};
@@ -203,7 +192,11 @@ int main(int argc,char* argv[]) {
    };
    const auto eqs = [depot,sz](const TSP& s) -> bool { return s.e == depot && s.hops == sz;};
    const auto local = [depot,&d,&C](const TSP& s) -> double {
-      return mst(d,C,s.A,depot,s.e,s.hops);
+      //const auto mstVal = mst(d,C,s.A,depot,s.e,s.hops);
+      const auto greedyVal = greedy(d,C,s.A,depot,s.e,s.hops);
+      //std::cout << "MST:" << mstVal << " \tgreedy: " << greedyVal << "\n";
+      //return std::max(mstVal,greedyVal);
+      return greedyVal;
    };   
 
    BAndB engine(DD<TSP,Minimize<double>,
