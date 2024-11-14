@@ -50,6 +50,19 @@ public:
    }
 };
 
+class AbstractNodeAllocator {
+protected:
+   LPool::Ptr _base;
+public:
+   AbstractNodeAllocator(LPool::Ptr base) : _base(base) {}
+   virtual ~AbstractNodeAllocator() {}
+   virtual ANode::Ptr cloneNode(ANode::Ptr src) = 0;
+   virtual void release(ANode::Ptr src) = 0;
+   Pool::Ptr get() const noexcept { return _base->get();}
+   typedef std::shared_ptr<AbstractNodeAllocator> Ptr;   
+};
+
+
 class AbstractDD {
 protected:
    Pool::Ptr _mem;
@@ -84,7 +97,6 @@ public:
    virtual double cost(ANode::Ptr src,int label) = 0;
    virtual double local(ANode::Ptr src) = 0;
    virtual ANode::Ptr duplicate(const ANode::Ptr src) = 0;
-   virtual ANode::Ptr makeInPool(LPool::Ptr pool,const ANode::Ptr src) = 0;
    virtual double initialBest() const = 0;
    virtual double initialWorst() const = 0;
    virtual bool   isBetter(double obj1,double obj2) const = 0;
@@ -97,6 +109,7 @@ public:
    virtual void printNode(std::ostream& os,ANode::Ptr n) const = 0;
    virtual GNSet getLabels(ANode::Ptr src) const = 0;
    virtual unsigned getLastId() const noexcept = 0;
+   virtual AbstractNodeAllocator::Ptr makeNDAllocator() const noexcept = 0;
    double currentOpt() const { return _trg->getBound();}
    bool apply(ANode::Ptr from,Bounds& bnds);
    std::vector<int> incumbent();
@@ -330,6 +343,38 @@ struct Maximize {
 };
 
 
+template <typename ST> requires Printable<ST> && Hashable<ST>
+class DDNodeAllocator :public AbstractNodeAllocator {
+   LHashtable<ST> _nmap;
+public:
+   DDNodeAllocator(LPool::Ptr pool) : AbstractNodeAllocator(pool),_nmap(pool->get(),200000) {}
+   ANode::Ptr cloneNode(ANode::Ptr src) override {
+      auto sp = static_cast<const Node<ST>*>(src.get());
+      Node<ST>* at = nullptr;
+      auto inMap = _nmap.getLoc(sp->get(),at);
+      if (!inMap) {
+         auto reuse = _base->claimNode();
+         if (reuse) {
+            Node<ST>* nn = static_cast<Node<ST>*>(reuse.get());
+            nn->resetWith(sp);
+            _nmap.safeInsertAt(inMap,nn);
+            return nn;
+         } else {
+            Node<ST>* nn = new (_base->get()) Node<ST>(_base->get(),_base->grabId(),*sp);
+            _nmap.safeInsertAt(inMap,nn);
+            return nn;
+         }
+      } else {
+         std::cout << "Already added node to B&B...." << "\n";
+         return nullptr;
+      }
+   }
+   void release(ANode::Ptr src) override {
+      //_base->release(src);
+   }
+};
+
+
 template <typename ST,
           class Compare = Minimize<double>,
           typename IBL2 = ST(*)(),
@@ -526,11 +571,12 @@ public:
    static AbstractDD::Ptr makeDD(Args&&... args) {
       return AbstractDD::Ptr(new DD(std::forward<Args>(args)...));
    }
-   //auto& setLocal(std::function<double(const ST&)> local) { _hasLocal = true;_local = local;return *this;}
+   AbstractNodeAllocator::Ptr makeNDAllocator() const noexcept {
+      return std::shared_ptr<DDNodeAllocator<ST>>(new DDNodeAllocator<ST>(new LPool(new Pool)));
+   }
    void printNode(std::ostream& os,ANode::Ptr n) const {
       auto sp = static_cast<const Node<ST>*>(n.get());
       sp->print(os);
-      //os << std::endl;
    }
    AbstractDD::Ptr duplicate() {
       auto theDD = new DD(_sti,_stt,_lgf,_stf,_stc,_smf,_eqs,_labels,_local,_sdom);
@@ -556,18 +602,6 @@ public:
          auto nn = new (_mem) Node<ST>(_mem,_ndId++,*sp);
          _nmap.rawInsertAt(inMap,nn);
          _an.push_back(nn);
-         return nn;
-      }
-   }
-   ANode::Ptr makeInPool(LPool::Ptr pool,const ANode::Ptr src) {
-      auto sp = static_cast<const Node<ST>*>(src.get());
-      auto reuse = pool->claimNode();
-      if (reuse) {
-         Node<ST>* nn = static_cast<Node<ST>*>(reuse.get());
-         nn->resetWith(sp);
-         return nn;
-      } else {
-         auto nn = new (pool->get()) Node<ST>(pool->get(),pool->grabId(),*sp);
          return nn;
       }
    }
