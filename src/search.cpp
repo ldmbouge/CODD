@@ -93,7 +93,10 @@ void BAndB::search(Bounds& bnds)
       }
       nNode++;
       bool dualBetter = relaxed->apply(bbn.node,bnds);
-
+#ifndef _NDEBUG
+      cout << "relaxed ran..." << "\n";
+      relaxed->printNode(cout,bbn.node);      
+#endif
       if (dualBetter) {
          primalBetter = restricted->apply(bbn.node,bnds);
          
