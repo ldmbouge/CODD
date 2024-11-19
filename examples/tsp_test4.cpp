@@ -69,6 +69,8 @@ enum WeightType convertWT(std::string s) {
 enum WeightFormat convertWF(std::string s) {
    if (s == "LOWER_DIAG_ROW")
       return LowerDiagRow;
+   else if (s == "FULL_MATRIX")
+      return FullMatrix;
    else return FNA;
 }
 
