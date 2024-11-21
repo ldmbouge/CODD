@@ -496,7 +496,8 @@ private:
                return nullptr;
             }
             rv = makeNode(std::move(vs.value()),src->isExact());
-            rv->setBackwardBound(cVal + dual);
+            if (!isBetter(cVal+dual,rv->getBound()))
+                rv->setBackwardBound(cVal + dual);
          } else {
             rv = makeNode(std::move(vs.value()),src->isExact());
          }             

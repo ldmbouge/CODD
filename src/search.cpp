@@ -57,6 +57,15 @@ void BAndB::search(Bounds& bnds)
    cout << "B&B Nodes          " << setw(6) << "Dual\t " << setw(6) << "Primal\t Gap(%)\n";
    cout << "----------------------------------------------\n";
    while(!pq.empty()) {
+
+      // cout << "----------------------------------------------------------------------" << "\n";
+      // cout << "B&B HEAP\n";
+      // pq.printHeap(cout,[relaxed](std::ostream& os,const QNode& n) -> std::ostream& {
+      //    relaxed->printNode(os,n.node);
+      //    return os;
+      // }) << "\n";
+      // cout << "----------------------------------------------------------------------" << "\n";
+      
       auto bbn = pq.extractMax();
       const auto curDual = bbn.bound;
       auto now = RuntimeMonitor::cputime();
@@ -102,7 +111,10 @@ void BAndB::search(Bounds& bnds)
          
          if (!restricted->isExact() && !relaxed->isExact()) {
             auto cutSet = relaxed->computeCutSet();
+            //int k = 0;
             for(auto n : cutSet) {
+               //std::cout << "CUTSET(" << k++ << ") ";
+               //relaxed->printNode(std::cout,n);
                if (n == relaxed->getRoot()) { // the cutset is the root. Only way out: increase width.
                   auto w = ddr[0]->getWidth() + 1;
                   ddr[0]->setWidth(w);
@@ -110,8 +122,12 @@ void BAndB::search(Bounds& bnds)
                }
                // use the bound in n (the ones in nd are _reset_ when duplicate occurs????)
                bool newGuyDominated = false;
-               if (!relaxed->isBetter(n->getBound() + n->getBackwardBound(),bnds.getPrimal())) 
-                  continue; // the loop over the cutset! Not the main loop               
+               if (!relaxed->isBetter(n->getBound() + n->getBackwardBound(),bnds.getPrimal()))  {
+                  // std::cout << "\tDISCARD PRIMAL=" << bnds.getPrimal();
+                  // relaxed->printNode(std::cout,n);
+                  // std::cout << "\n";
+                  continue; // the loop over the cutset! Not the main loop
+               }
                if (relaxed->hasDominance()) {
                   unsigned d = 0;
                   auto pqSz = pq.size();
@@ -138,6 +154,7 @@ void BAndB::search(Bounds& bnds)
                assert(n->isExact());
                if (!newGuyDominated) {
                   auto nd = bbPool->cloneNode(n);
+                  //std::cout << "CLONED and got:"  << nd << "\n";
                   if (nd) { // the node creation could return *NOTHING* if it was already created
                      assert(nd->getBound() == n->getBound());
                      double bwd;
