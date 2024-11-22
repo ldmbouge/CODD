@@ -199,7 +199,7 @@ typedef Heap<DNode> DegHeap;
 
 void AbstractDD::computeBest(const std::string m)
 {
-   assert(false);
+   //assert(false); // LDMFIX
    //std::cout << "ANSZ:" << _an.size() << "\n";
    DegHeap h(_mem,1000,[](const DNode& a,const DNode& b) { return a.degree < b.degree;});
    unsigned mxId = 0;
@@ -260,7 +260,9 @@ void AbstractDD::computeBestBackward(const std::string m)
    h.buildHeap();
    while (h.size() > 0) {
       auto n = h.extractMax();
-      //std::cout << "\tCOMPUTE START: " << *n.node << "\n";
+      // std::cout << "\tCOMPUTE START: ";
+      // printNode(std::cout,n.node);
+      // std::cout << "\n";
       double cur = (n.node->nbChildren() == 0) ? n.node->getBackwardBound() : initialBest();
       for(auto ci = n.node->beginKids();ci != n.node->endKids();ci++) {
          Edge::Ptr e = *ci;
@@ -277,7 +279,11 @@ void AbstractDD::computeBestBackward(const std::string m)
       //       cur = dualBound;
       //    }
       // }
-      //std::cout << "\tCOMPUTED:" << cur << " for " << *n.node << "\n";
+
+      // std::cout << "\tCOMPUTED:" << cur << " for ";
+      // printNode(std::cout,n.node);
+      // std::cout << "\n";
+      
       n.node->setBackwardBound(cur);
       for(auto pi = n.node->beginPar(); pi != n.node->endPar();pi++) {
          Edge::Ptr k = *pi;
@@ -723,8 +729,8 @@ void Relaxed::compute(Bounds& bnds)
    }
    //_dd->computeBest(getName());
    tighten(_dd->_trg);
-   //_dd->display();
    _dd->computeBestBackward(getName());
+   //_dd->display();
 }
 
 std::vector<ANode::Ptr> Relaxed::computeCutSet()

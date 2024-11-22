@@ -22,7 +22,7 @@ public:
          return nd;
       }
    }
-   void release(ANode::Ptr n);
+   void release(ANode::Ptr n) { _free.push(n);}
 };
 
 #endif

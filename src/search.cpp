@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include "RuntimeMonitor.hpp"
+#include "pool.hpp"
 
 struct QNode {
    ANode::Ptr node;
@@ -19,8 +20,9 @@ struct QNode {
 
 void BAndB::search(Bounds& bnds)
 {
-   Pool mem;
+   auto bbPool = _theDD->makeNDAllocator();
    using namespace std;
+   unsigned int nbSeen = 0;
    std::streamsize ss = cout.precision();
    auto start = RuntimeMonitor::cputime();
    auto last = start;
@@ -40,8 +42,8 @@ void BAndB::search(Bounds& bnds)
    auto hOrder = [relaxed](const QNode& a,const QNode& b) {
       return relaxed->isBetter(a.bound,b.bound);
    };
-   Heap<QNode,decltype(hOrder)> pq(&mem,64000,hOrder);
-   ANode::Ptr rootNode = relaxed->makeInPool(_mem,relaxed->init());
+   Heap<QNode,decltype(hOrder)> pq(bbPool->get(),64000,hOrder);
+   ANode::Ptr rootNode = bbPool->cloneNode(relaxed->init());
    if (relaxed->hasLocal()) {
       auto dualRootValue = relaxed->local(rootNode);
       cout << "dual@root:" << dualRootValue << "\n";
@@ -55,6 +57,15 @@ void BAndB::search(Bounds& bnds)
    cout << "B&B Nodes          " << setw(6) << "Dual\t " << setw(6) << "Primal\t Gap(%)\n";
    cout << "----------------------------------------------\n";
    while(!pq.empty()) {
+
+      // cout << "----------------------------------------------------------------------" << "\n";
+      // cout << "B&B HEAP\n";
+      // pq.printHeap(cout,[relaxed](std::ostream& os,const QNode& n) -> std::ostream& {
+      //    relaxed->printNode(os,n.node);
+      //    return os;
+      // }) << "\n";
+      // cout << "----------------------------------------------------------------------" << "\n";
+      
       auto bbn = pq.extractMax();
       const auto curDual = bbn.bound;
       auto now = RuntimeMonitor::cputime();
@@ -79,25 +90,31 @@ void BAndB::search(Bounds& bnds)
       primalBetter = false;
 #ifndef _NDEBUG
       cout << "BOUNDS NOW: " << bnds << endl; 
-     cout << "EXTRACTED:  " << bbn.node->getId() << " ::: ";
+      cout << "EXTRACTED:  " << bbn.node->getId() << " ::: ";
       relaxed->printNode(cout,bbn.node);
       cout << "\t(" << curDual << ")" << " SZ:" << pq.size() << endl;
 #endif
       ttlNode++;
       //cout << "CURDUAL:" << curDual << "\t PRIMAL:" << bnds.getPrimal() << "\n";
       if (!relaxed->isBetter(curDual,bnds.getPrimal())) {
-         _mem->release(bbn.node);
+         bbPool->release(bbn.node);
          continue;
       }
       nNode++;
       bool dualBetter = relaxed->apply(bbn.node,bnds);
-
+#ifndef _NDEBUG
+      cout << "relaxed ran..." << "\n";
+      relaxed->printNode(cout,bbn.node);      
+#endif
       if (dualBetter) {
          primalBetter = restricted->apply(bbn.node,bnds);
          
          if (!restricted->isExact() && !relaxed->isExact()) {
             auto cutSet = relaxed->computeCutSet();
+            //int k = 0;
             for(auto n : cutSet) {
+               //std::cout << "CUTSET(" << k++ << ") ";
+               //relaxed->printNode(std::cout,n);
                if (n == relaxed->getRoot()) { // the cutset is the root. Only way out: increase width.
                   auto w = ddr[0]->getWidth() + 1;
                   ddr[0]->setWidth(w);
@@ -105,8 +122,12 @@ void BAndB::search(Bounds& bnds)
                }
                // use the bound in n (the ones in nd are _reset_ when duplicate occurs????)
                bool newGuyDominated = false;
-               if (!relaxed->isBetter(n->getBound() + n->getBackwardBound(),bnds.getPrimal())) 
-                  continue; // the loop over the cutset! Not the main loop               
+               if (!relaxed->isBetter(n->getBound() + n->getBackwardBound(),bnds.getPrimal()))  {
+                  // std::cout << "\tDISCARD PRIMAL=" << bnds.getPrimal();
+                  // relaxed->printNode(std::cout,n);
+                  // std::cout << "\n";
+                  continue; // the loop over the cutset! Not the main loop
+               }
                if (relaxed->hasDominance()) {
                   unsigned d = 0;
                   auto pqSz = pq.size();
@@ -132,24 +153,25 @@ void BAndB::search(Bounds& bnds)
                }
                assert(n->isExact());
                if (!newGuyDominated) {
-                  auto nd = relaxed->makeInPool(_mem,n);
-                  assert(nd->getBound() == n->getBound());
-                  double bwd;
-                  if (relaxed->hasLocal()) {
-                     bwd = relaxed->local(nd);
-                  } else bwd = n->getBackwardBound();
-                  const auto insKey = n->getBound()+ bwd;
-                  const auto improve = relaxed->isBetter(insKey,bnds.getPrimal());
-                  // cout << "CUTSet addition:" << n->getBound() << " \tbackward bound:"
-                  //      << n->getBackwardBound() << " \t " << bwd << " \t:" << (improve ? "T":"F") << "\n";
-                  if (improve) 
-                     pq.insertHeap(QNode {nd, insKey }); //std::min(insKey,curDual)});                  
+                  auto nd = bbPool->cloneNode(n);
+                  //std::cout << "CLONED and got:"  << nd << "\n";
+                  if (nd) { // the node creation could return *NOTHING* if it was already created
+                     assert(nd->getBound() == n->getBound());
+                     double bwd;
+                     if (relaxed->hasLocal()) 
+                        bwd = relaxed->local(nd);
+                     else bwd = n->getBackwardBound();
+                     const auto insKey = n->getBound()+ bwd;
+                     const auto improve = relaxed->isBetter(insKey,bnds.getPrimal());
+                     if (improve) 
+                        pq.insertHeap(QNode {nd, insKey }); //std::min(insKey,curDual)});
+                  } else nbSeen++;
                }
                else insDom++;
             }
          }
       }
-      _mem->release(bbn.node);
+      bbPool->release(bbn.node);
    }
    cout << setprecision(ss);
    auto spent = RuntimeMonitor::elapsedSince(start);
@@ -157,51 +179,6 @@ void BAndB::search(Bounds& bnds)
         << "\t P/D:" << pruned << "/" << insDom
         << "\t Time:" << optTime/1000 << "/" << spent/1000 << "s"
         << "\t LIM?:" << (pq.size() > 0)
+        << "\t Seen:" << nbSeen
         << "\n";
 }
-
-
-/*
-void BAndB::search()
-{
-   Pool mem;
-   using namespace std;
-   cout << "B&B searching..." << endl;
-   AbstractDD::Ptr relaxed = _theDD->duplicate();
-   AbstractDD::Ptr restricted = _theDD->duplicate();
-   _theDD->setStrategy(new Exact);
-   relaxed->setStrategy(new Relaxed(_mxw));
-   restricted->setStrategy(new Restricted(_mxw));
-   Heap<QNode,QNode> pq(&mem,32);
-   pq.insertHeap(QNode { _theDD->init(), _theDD->initialWorst() } );
-   Bounds bnds(_theDD);
-   while(!pq.empty()) {
-      auto bbn = pq.extractMax();
-#ifndef _NDEBUG      
-      cout << "BOUNDS NOW: " << bnds << endl;
-      cout << "EXTRACTED:  " << *bbn.node << "\t(" << bbn.bound << ")" << endl;
-#endif      
-      restricted->reset();
-      restricted->makeInitFrom(bbn.node);
-      restricted->compute();
-      bool primalBetter = _theDD->isBetter(restricted->currentOpt(),bnds.getPrimal());
-      if (primalBetter)
-         restricted->update(bnds);
-      if (!restricted->isExact()) {
-         relaxed->reset();
-         relaxed->makeInitFrom(bbn.node);
-         relaxed->compute();
-         bool improving = _theDD->isBetter(relaxed->currentOpt(),bnds.getPrimal());
-         if (improving) {
-            relaxed->update(bnds);
-            if (!relaxed->isExact())
-               for(auto n : relaxed->computeCutSet()) {
-                  auto nd = _theDD->duplicate(n); // we got a duplicate of the node.
-                  pq.insertHeap(QNode {nd, relaxed->currentOpt()});
-               }
-         }         
-      }
-   }
-   cout << "Done: " << bnds << "\n";
-}
-*/  

@@ -772,7 +772,18 @@ int sum(const GNSet& inSet,const Term& t) {
       ttl += t(v);
    return ttl;
 }
-  
+
+template <typename Filter=bool(*)(int),typename Term=int(*)(int)>
+int min(const GNSet& inSet,const Filter& f,const Term& t) {
+   int ttl = std::numeric_limits<int>::max();
+   for(auto v : inSet)
+      if (f(v)) {
+         const auto tv = t(v);
+         ttl = (ttl  < tv) ? ttl : tv;
+      }
+   return ttl;
+}
+
 template <class T> std::ostream& operator<<(std::ostream& os,const std::set<T>& s) {
    os << "{";
    auto cnt = 0u;
@@ -783,11 +794,8 @@ template <class T> std::ostream& operator<<(std::ostream& os,const std::set<T>& 
 
 template <class T> std::ostream& operator<<(std::ostream& os,const std::vector<T>& msg) {
    os << "(" << msg.size() << ")[";
-   //int i = 0;
-   for(const T& v : msg) {
-      //os << i++ << ':' << v << " ";
-      os  << v << " ";
-   }
+   for(const T& v : msg) 
+      os  << v << " ";   
    return os << ']';
 }
 

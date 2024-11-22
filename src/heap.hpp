@@ -180,6 +180,15 @@ public:
          os << "   " << i << ":" << h._data[i]->_val << "\n";      
       return os;
    }
+   template <typename Printer>
+   std::ostream& printHeap(std::ostream& os,const Printer& p) {
+      for(int i=1;i < _at;i++) { 
+         os << "   " << i << ":";
+         p(os,_data[i]->_val);
+         os << "\n";
+      }
+      return os;
+   }
 };
 
 #endif
