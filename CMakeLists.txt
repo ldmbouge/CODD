@@ -8,7 +8,7 @@ if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
 endif()
 # ------------------------------------------------------------------------
-#set(CMAKE_VERBOSE_MAKEFILE True)
+set(CMAKE_VERBOSE_MAKEFILE False)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
