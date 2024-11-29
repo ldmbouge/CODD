@@ -58,13 +58,13 @@ void BAndB::search(Bounds& bnds)
    cout << "----------------------------------------------\n";
    while(!pq.empty()) {
 
-      // cout << "----------------------------------------------------------------------" << "\n";
-      // cout << "B&B HEAP\n";
-      // pq.printHeap(cout,[relaxed](std::ostream& os,const QNode& n) -> std::ostream& {
-      //    relaxed->printNode(os,n.node);
-      //    return os;
-      // }) << "\n";
-      // cout << "----------------------------------------------------------------------" << "\n";
+       // cout << "----------------------------------------------------------------------" << "\n";
+       // cout << "B&B HEAP\n";
+       // pq.printHeap(cout,[relaxed](std::ostream& os,const QNode& n) -> std::ostream& {
+       //    relaxed->printNode(os,n.node);
+       //    return os;
+       // }) << "\n";
+       // cout << "----------------------------------------------------------------------" << "\n";
       
       auto bbn = pq.extractMax();
       const auto curDual = bbn.bound;

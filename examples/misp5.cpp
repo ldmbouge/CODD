@@ -100,8 +100,13 @@ int main(int argc,char* argv[])
    const int top = ns.size();
    const std::vector<GE> es = instance.getEdges();
    std::cout << "TOP=" << top << "\n";
+   const auto labels = ns | GNSet { top };     // using a plain set for the labels
+   std::vector<int> weight(ns.size()+1);
+   weight[top] = 0;
+   for(auto v : ns) weight[v] = 1;
+   auto neighbors = instance.adj;
 
-   Bounds bnds([&es](const std::vector<int>& inc)  {
+   Bounds bnds([&es,&weight,top](const std::vector<int>& inc)  {
       bool ok = true;    
       for(const auto& e : es) {         
          bool v1In = (e.a < (int)inc.size()) ? inc[e.a] : false;
@@ -112,13 +117,11 @@ int main(int argc,char* argv[])
          }
          ok &= !(v1In && v2In);
       }
-      std::cout << "CHECKER is " << ok << "\n";
+      int ttl= 0;
+      for(int i=0;i < top;i++)
+         ttl += inc[i] * weight[i];      
+      std::cout << "\nCHECKER is " << ok << " SUM:" << ttl << "\n";      
    });
-   const auto labels = ns | GNSet { top };     // using a plain set for the labels
-   std::vector<int> weight(ns.size()+1);
-   weight[top] = 0;
-   for(auto v : ns) weight[v] = 1;
-   auto neighbors = instance.adj;
 
    const auto myInit = [top]() {   // The root state
       GNSet U = {}; 
@@ -152,13 +155,12 @@ int main(int argc,char* argv[])
       GNSet out = s.sel;
       out.remove(chosen);   // remove n from state
       if (label) out.diffWith(neighbors[chosen]); // remove neighbors of n from state (when taking n -- label==1 -- )
-      const bool done = s.n+1 >= top;
-      if (done)
-         return MISP { GNSet {},top,0};
-      else return MISP { std::move(out),s.n + 1,chosen}; // build state accordingly
+      const bool done = out.empty();//s.n+1 >= top;
+      return MISP { std::move(out),done ? top : s.n + 1,done ? 0 : chosen}; // build state accordingly
    };
-   const auto scf = [weight,top](const MISP& s,int label) { // cost function 
-      return (s.n==top) ? 0 : label * weight[s.l];
+   const auto scf = [weight,top](const MISP& s,int label) { // cost function
+      assert(s.n >=0 && s.n <= top);
+      return label * weight[s.n];
    };
    const auto smf = [](const MISP& s1,const MISP& s2) -> std::optional<MISP> { // merge function
       if (s1.l == s2.l) 
@@ -166,7 +168,6 @@ int main(int argc,char* argv[])
       else return std::nullopt;
    };
    const auto eqs = [top](const MISP& s) -> bool {
-      //return s.n == top;
       return s.sel.size() == 0;
    };
    const auto local = [&weight](const MISP& s) -> double {

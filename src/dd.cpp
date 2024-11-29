@@ -211,6 +211,7 @@ void AbstractDD::computeBest(const std::string m)
       nl[n->getId()] = h.insert({n,n->nbParents()});
       if (n != _root)
          n->setBound(initialBest());
+      else n->setBound(0);
    }
    h.buildHeap();
    while (h.size() > 0) {
@@ -256,14 +257,17 @@ void AbstractDD::computeBestBackward(const std::string m)
       nl[n->getId()] = h.insert({n,n->nbChildren()});
       if (n != _trg)
          n->setBackwardBound(initialBest());
+      else n->setBackwardBound(0);
    }
    h.buildHeap();
    while (h.size() > 0) {
       auto n = h.extractMax();
+      double cur = (n.node->nbChildren() == 0) ? n.node->getBackwardBound() : initialBest();
+
       // std::cout << "\tCOMPUTE START: ";
       // printNode(std::cout,n.node);
-      // std::cout << "\n";
-      double cur = (n.node->nbChildren() == 0) ? n.node->getBackwardBound() : initialBest();
+      // std::cout << " cur = " << cur << "\n";
+      
       for(auto ci = n.node->beginKids();ci != n.node->endKids();ci++) {
          Edge::Ptr e = *ci;
          auto ep = e->_to->_bbound + e->_obj;
