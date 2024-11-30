@@ -572,7 +572,10 @@ public:
       return *this;
    }
    bool contains(int p) const noexcept {
-      return (_t[p >> 6] &  (1ull << (p & 63))) != 0;
+      const int at = p >> 6;
+      if (at >= _mxw) return false;
+      assert(at >= 0 && at < _mxw);
+      return (_t[at] &  (1ull << (p & 63))) != 0;
    }
    GNSet& unionWith(const GNSet& ps) noexcept {
       short i;
