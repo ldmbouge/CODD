@@ -211,7 +211,7 @@ void AbstractDD::computeBest(const std::string m)
       nl[n->getId()] = h.insert({n,n->nbParents()});
       if (n != _root)
          n->setBound(initialBest());
-      else n->setBound(0);
+      // [LDM] There is no else. The root MUST retain the bound it had at the start (from B&B node)
    }
    h.buildHeap();
    while (h.size() > 0) {
@@ -731,7 +731,10 @@ void Relaxed::compute(Bounds& bnds)
          }
       }
    }
-   //_dd->computeBest(getName());
+   // auto incr = _dd->currentOpt();
+   // _dd->computeBest(getName());
+   // auto full = _dd->currentOpt();
+   // std::cout << "TWO BOUNDS:" << incr << " " << full<< "\n";
    tighten(_dd->_trg);
    _dd->computeBestBackward(getName());
    //_dd->display();

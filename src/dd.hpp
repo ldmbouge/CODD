@@ -365,7 +365,7 @@ public:
             return nn;
          }
       } else {
-         //std::cout << "Already added node to B&B...." << "\n";
+         //std::cout << "Already added node to B&B...." << "\n";         
          return nullptr;
       }
    }
@@ -490,7 +490,7 @@ private:
             auto dual = _local(vs.value());
             auto sCost = src->getBound() + cVal + dual;
             if (!isBetter(sCost,bnds.getPrimal())) {
-               // std::cout << "WORSE label(" << label << ") than primal with:"
+               // std::cout << "\nWORSE label(" << label << ") than primal with:"
                //           << sCost << " PRIMAL:"
                //           << bnds.getPrimal() << "\n";
                return nullptr;
