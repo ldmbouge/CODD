@@ -78,6 +78,7 @@ public:
    auto endOptLabels() { return _optLabels.end();}
    void setBound(double b) { _bound = b;}
    void setBackwardBound(double b) { _bbound = b;}
+   const auto depth() const { return _optLabels.size();}
    const auto getBound() const { return _bound;}
    const auto getBackwardBound() const { return _bbound;}
    const Vec<int,unsigned>& getIncumbent() const noexcept { return _optLabels;}

@@ -768,10 +768,38 @@ GNSet filter(const GNSet& inSet,Pred p) {
          outSet.insert(v);
    return outSet;
 }
+
+template <typename R,typename T,typename Term=R(*)(const T&)>
+R sum(const std::vector<T>& inContainer,const Term& t) {
+   R ttl {}; // = 0;
+   for(auto v : inContainer)
+      ttl += t(v);
+   return ttl;
+}
+
+template <typename R,
+          typename Container,
+          typename Term=R(*)(const typename Container::key_type&,const typename Container::value_type&)>
+R sum(const Container& inContainer,const Term& t) {
+   R ttl {}; // = 0;
+   for(const auto& [k,v] : inContainer)
+      ttl += t(k,v);
+   return ttl;
+}
+
+
 template <typename Term=int(*)(int)>
 int sum(const GNSet& inSet,const Term& t) {
    int ttl = 0;
    for(auto v : inSet)
+      ttl += t(v);
+   return ttl;
+}
+
+template <typename T,typename Term=int(*)(const T&)>
+int sum(const std::set<T>& inSet,const Term& t) {
+   int ttl = 0;
+   for(const auto& v : inSet)
       ttl += t(v);
    return ttl;
 }
@@ -783,6 +811,17 @@ int min(const GNSet& inSet,const Filter& f,const Term& t) {
       if (f(v)) {
          const auto tv = t(v);
          ttl = (ttl  < tv) ? ttl : tv;
+      }
+   return ttl;
+}
+
+template <typename Filter=bool(*)(int),typename Term=int(*)(int)>
+int max(const GNSet& inSet,const Filter& f,const Term& t) {
+   int ttl = std::numeric_limits<int>::min();
+   for(auto v : inSet)
+      if (f(v)) {
+         const auto tv = t(v);
+         ttl = (ttl  > tv) ? ttl : tv;
       }
    return ttl;
 }
