@@ -118,7 +118,7 @@ int main(int argc,char* argv[])
          return SKS { s.n+1,s.c - label * w[s.n] };
       } else return SKS { I, 0};
    };
-   const auto local = [I,&w,&p](const SKS& s) -> double {
+   const auto local = [I,&w,&p](const SKS& s,LocalContext) -> double {
       double nn = 0;
       int    rc = s.c;
       for(auto i=s.n; i < I;i++) 

@@ -62,6 +62,7 @@ public:
    typedef std::shared_ptr<AbstractNodeAllocator> Ptr;   
 };
 
+enum LocalContext { BBCtx, DDCtx };
 
 class AbstractDD {
 protected:
@@ -95,7 +96,7 @@ public:
    virtual ANode::Ptr transition(Bounds& bnds,ANode::Ptr src,int label) = 0;
    virtual ANode::Ptr merge(const ANode::Ptr first,const ANode::Ptr snd) = 0;
    virtual double cost(ANode::Ptr src,int label) = 0;
-   virtual double local(ANode::Ptr src) = 0;
+   virtual double local(ANode::Ptr src,enum LocalContext lc) = 0;
    virtual ANode::Ptr duplicate(const ANode::Ptr src) = 0;
    virtual double initialBest() const = 0;
    virtual double initialWorst() const = 0;
@@ -383,7 +384,7 @@ template <typename ST,
           typename STC  = double(*)(const ST&,int),
           typename SMF  = std::optional<ST>(*)(const ST&,const ST&),
           typename EQSink = bool(*)(const ST&),
-          typename LOCAL = double(*)(const ST&),
+          typename LOCAL = double(*)(const ST&,LocalContext),
           typename SDOM = bool(*)(const ST&,const ST&),
           class Equal = std::equal_to<ST>
           >
@@ -397,7 +398,7 @@ private:
    STC _stc;
    SMF _smf;
    EQSink _eqs;
-   std::function<double(const ST&)> _local;
+   std::function<double(const ST&,LocalContext)> _local;
    SDOM _sdom;
    LHashtable<ST> _nmap;
    unsigned _ndId;
@@ -487,12 +488,9 @@ private:
          ANode::Ptr rv;
          if (_local) {
             auto cVal = _stc(op->get(),label);
-            auto dual = _local(vs.value());
+            auto dual = _local(vs.value(),DDCtx);
             auto sCost = src->getBound() + cVal + dual;
             if (!isBetter(sCost,bnds.getPrimal())) {
-               // std::cout << "\nWORSE label(" << label << ") than primal with:"
-               //           << sCost << " PRIMAL:"
-               //           << bnds.getPrimal() << "\n";
                return nullptr;
             }
             rv = makeNode(std::move(vs.value()),src->isExact());
@@ -504,10 +502,10 @@ private:
          return rv;
       } else return nullptr;
    }
-   double local(ANode::Ptr src) {
+   double local(ANode::Ptr src,LocalContext lc) {
       if (_local) {
          auto op = static_cast<const Node<ST>*>(src.get());
-         return _local(op->get());
+         return _local(op->get(),lc);
       }
       else return initialWorst();
    }
@@ -546,7 +544,9 @@ private:
    }
 public:
    DD(std::function<ST()> sti,IBL2 stt,LGF lgf,STF stf,STC stc,SMF smf,
-      EQSink eqs,const GNSet& labels,std::function<double(const ST&)> local = nullptr,SDOM dom=nullptr)
+      EQSink eqs,const GNSet& labels,
+      std::function<double(const ST&,LocalContext)> local = nullptr,
+      SDOM dom=nullptr)
       : AbstractDD(labels),
         _sti(sti),
         _stt(stt),

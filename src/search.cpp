@@ -45,7 +45,7 @@ void BAndB::search(Bounds& bnds)
    Heap<QNode,decltype(hOrder)> pq(bbPool->get(),64000,hOrder);
    ANode::Ptr rootNode = bbPool->cloneNode(relaxed->init());
    if (relaxed->hasLocal()) {
-      auto dualRootValue = relaxed->local(rootNode);
+      auto dualRootValue = relaxed->local(rootNode,LocalContext::BBCtx);
       cout << "dual@root:" << dualRootValue << "\n";
       rootNode->setBackwardBound(dualRootValue);//bnds.getPrimal());
       pq.insertHeap(QNode { rootNode, dualRootValue } );   
@@ -88,7 +88,7 @@ void BAndB::search(Bounds& bnds)
          cout << "\n";
          last = RuntimeMonitor::cputime();
      }
-      //auto compDual = bbn.node->getBound() + relaxed->local(bbn.node);
+      //auto compDual = bbn.node->getBound() + relaxed->local(bbn.node,LocalContext::BBCtx);
       //cout << "DUAL KEY:" << curDual << " dualCOMP:" << compDual << "\n";
       primalBetter = false;
 #ifndef _NDEBUG
@@ -168,7 +168,7 @@ void BAndB::search(Bounds& bnds)
                      assert(nd->getBound() == n->getBound());
                      double bwd;
                      if (relaxed->hasLocal()) 
-                        bwd = relaxed->local(nd);
+                        bwd = relaxed->local(nd,LocalContext::BBCtx);
                      else bwd = n->getBackwardBound();
                      const auto insKey = n->getBound()+ bwd;
                      const auto improve = relaxed->isBetter(insKey,bnds.getPrimal());

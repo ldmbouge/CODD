@@ -163,7 +163,7 @@ int main(int argc,char* argv[]) {
       else return std::nullopt; // return  the empty optional
    };
    const auto eqs = [sz](const TSP& s) -> bool { return s.e == depot && s.hops == sz;};
-   const auto local = [&d,&C](const TSP& s) -> double {
+   const auto local = [&d,&C](const TSP& s,LocalContext) -> double {
       return mst(d,C,s.s,depot,s.e,s.hops);
    };   
 

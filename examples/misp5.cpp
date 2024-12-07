@@ -170,7 +170,7 @@ int main(int argc,char* argv[])
    const auto eqs = [top](const MISP& s) -> bool {
       return s.sel.size() == 0;
    };
-   const auto local = [&weight](const MISP& s) -> double {
+   const auto local = [&weight](const MISP& s,LocalContext) -> double {
       return sum(s.sel,[&weight](auto v) { return weight[v];});
    };      
 

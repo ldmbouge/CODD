@@ -144,7 +144,7 @@ int main(int argc,char* argv[]) {
       else return std::nullopt; // return  the empty optional
    };
    const auto eqs = [sz](const TSPTW& s) -> bool { return s.e == depot && s.hops == sz;};
-   const auto local = [&d,&C](const TSPTW& s) -> double {
+   const auto local = [&d,&C](const TSPTW& s,LocalContext) -> double {
       const auto greedyVal = greedy(d,C,s.A,depot,s.e,s.hops);
       return greedyVal;
    };   

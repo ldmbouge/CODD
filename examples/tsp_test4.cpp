@@ -243,7 +243,7 @@ int main(int argc,char* argv[]) {
       else return std::nullopt; // return  the empty optional
    };
    const auto eqs = [depot,sz](const TSP& s) -> bool { return s.e == depot && s.hops == sz;};
-   const auto local = [depot,&d,&C](const TSP& s) -> double {
+   const auto local = [depot,&d,&C](const TSP& s,LocalContext) -> double {
       const auto mstVal = mst(d,C,s.A,depot,s.e,s.hops);
       const auto greedyVal = greedy(d,C,s.A,depot,s.e,s.hops);
       //std::cout << "MST:" << mstVal << " \tgreedy: " << greedyVal << "\n";

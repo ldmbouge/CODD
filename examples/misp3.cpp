@@ -187,7 +187,7 @@ int main(int argc,char* argv[])
    const auto eqs = [](const MISP& s) -> bool {
       return s.sel.size() == 0;
    };
-   const auto local = [&weight](const MISP& s) -> double {
+   const auto local = [&weight](const MISP& s,LocalContext) -> double {
       double ttl = 0.0;
       for(auto v : s.sel)
          ttl += (v >= s.l) * weight[v]; // count the remaining ones (>= s.l) that are legal in s.sel)
