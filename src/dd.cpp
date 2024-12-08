@@ -276,13 +276,13 @@ void AbstractDD::computeBestBackward(const std::string m)
             cur = ep;
          }
       }
-      // if (hasLocal()) {
-      //    auto dualBound = local(n.node);
-      //    if (isBetter(dualBound,cur)) {
-      //       //std::cout << "\tIMPROVED from " << cur << " to " << dualBound << "\n";
-      //       cur = dualBound;
-      //    }
-      // }
+      if (hasLocal()) {
+         auto dualBound = local(n.node,DDCtx);
+         if (isBetter(dualBound,cur)) {
+            //std::cout << "\tIMPROVED from " << cur << " to " << dualBound << "\n";
+            cur = dualBound;
+         }
+      }
 
       // std::cout << "\tCOMPUTED:" << cur << " for ";
       // printNode(std::cout,n.node);

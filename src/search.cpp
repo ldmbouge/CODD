@@ -47,7 +47,7 @@ void BAndB::search(Bounds& bnds)
    if (relaxed->hasLocal()) {
       auto dualRootValue = relaxed->local(rootNode,LocalContext::BBCtx);
       cout << "dual@root:" << dualRootValue << "\n";
-      rootNode->setBackwardBound(dualRootValue);//bnds.getPrimal());
+      rootNode->setBackwardBound(dualRootValue);
       pq.insertHeap(QNode { rootNode, dualRootValue } );   
    } else {
       pq.insertHeap(QNode { rootNode, relaxed->initialWorst() } );   
@@ -167,10 +167,18 @@ void BAndB::search(Bounds& bnds)
                   if (nd) { // the node creation could return *NOTHING* if it was already created
                      assert(nd->getBound() == n->getBound());
                      double bwd;
-                     if (relaxed->hasLocal()) 
-                        bwd = relaxed->local(nd,LocalContext::BBCtx);
-                     else bwd = n->getBackwardBound();
-                     const auto insKey = n->getBound()+ bwd;
+                     if (relaxed->hasLocal()) {
+                        auto newBnd = relaxed->local(nd,LocalContext::BBCtx);
+                        // if (newBnd > n->getBackwardBound())                           
+                        //std::cout<<"New:"<< newBnd << " backward:" << n->getBackwardBound() << "\n";
+                        //if (newBnd <= n->getBackwardBound())
+                        if (!relaxed->isBetter(newBnd,n->getBackwardBound()))
+                           bwd = newBnd;
+                        else bwd = n->getBackwardBound();
+                        //bwd = n->getBackwardBound();
+                     } else bwd = n->getBackwardBound();
+                     
+                     const auto insKey = n->getBound() + bwd;
                      const auto improve = relaxed->isBetter(insKey,bnds.getPrimal());
 
                      // std::cout<< "CLONE VALUE:" << insKey << " bwd:" << bwd << " PRIMAL:" << bnds.getPrimal()
