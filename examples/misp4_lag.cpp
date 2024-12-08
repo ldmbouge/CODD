@@ -542,8 +542,8 @@ int main(int argc,char* argv[])
          switch(lc) {
             case BBCtx:
                // Use maxIter = 50 for quick reoptimization
-               // return lagrangianDual(instance.adj, LagWeight, cliquePartition, 50, 1.0, lambdas, true, s.sel);
-               return LagBound(cliquePartition.nc, cliquePartition.CliqueOfVertex, s.sel, weight, lambdas);
+               return lagrangianDual(instance.adj, LagWeight, cliquePartition, 50, 1.0, lambdas, true, s.sel);
+               // return LagBound(cliquePartition.nc, cliquePartition.CliqueOfVertex, s.sel, weight, lambdas);
             case DDCtx:
                return LagBound(cliquePartition.nc, cliquePartition.CliqueOfVertex, s.sel, weight, lambdas);
          }
