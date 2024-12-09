@@ -243,7 +243,7 @@ template<> struct std::hash<std::pair<int,int>> {
 using PairMap = std::unordered_map<std::pair<int, int>, double>; // use the default hash
 
 // Update Lagrangian multipliers
-bool updateMultipliers(PairMap& lambdas, const vector<int>& x, double alpha, const std::set<std::pair<int, int>>& edgeSet) {
+bool updateMultipliers(PairMap& lambdas, const vector<int>& x, double alpha, const std::unordered_set<std::pair<int, int>> &edgeSet) {
    bool foundViolation = false;
    for (const auto& [i,j]  : edgeSet) {
       if (lambdas.count({i,j}) > 0)
@@ -282,6 +282,7 @@ double lagrangianDual(const FArray<GNSet>& adj, const std::vector<double>& weigh
    // std::cout << "Computing Lagrangian Dual with reOpt = " << reOpt << " and S = " << S << std::endl;
 
    std::set<std::pair<int, int>> edgeSet;  // the set of edges between Cliques
+
    // Define the appropriate lambdas: these will be dynamically updated and only defined for edges with non-zero lambda.
    // Here, we initialize them for all edges with i < j to eliminate symmetry.
    for (int c = 0; c < (int)ClqPart.Cliques.size(); c++) {
@@ -291,6 +292,9 @@ double lagrangianDual(const FArray<GNSet>& adj, const std::vector<double>& weigh
                if (S.contains(j) && (ClqPart.CliqueOfVertex[j] != c) && (i<j)) {
                   // lambdas[{i,j}] = 0.0;
                   edgeSet.insert({i,j});
+               }
+               else if (lambdas.count({i,j}) > 0) {
+                  lambdas.erase({i,j});
                }
             }
          }
@@ -313,26 +317,30 @@ double lagrangianDual(const FArray<GNSet>& adj, const std::vector<double>& weigh
 
    double alpha = alpha0;
    int k = 0;
-   int unchanged_iters = 0; // for identifying stalling (objective doesn't change)
+   int unchanged_iters = 0; // to identify stalling (objective doesn't change)
    clock_t lagStart = clock();
    clock_t outStart = clock();
    for (k = 0; k < maxIter; ++k) {
       // Update the weights
       LagWeights = weight;
       // update only those lambdas that are in the active edgeSet (needed when reoptimizing)
-      // for (const auto& [edge, lambda] : lambdas){
-      for (const auto& edge : edgeSet){
-         LagWeights[edge.first] -= lambdas[edge];
-         LagWeights[edge.second] -= lambdas[edge];
+      for (const auto& [edge, value] : lambdas){
+        LagWeights[edge.first] -= value;
+        LagWeights[edge.second] -= value;
       }
+      // for (const auto& edge : edgeSet){
+      //    LagWeights[edge.first] -= lambdas[edge];
+      //    LagWeights[edge.second] -= lambdas[edge];
+      // }
 
       vector<int> x(weight.size(), 0);
       double primalSolution = solveCliqueSubproblem(ClqPart.Cliques, LagWeights, x, S);
       double lsum = 0.0;
       // sum only those lambdas that are in the active edgeSet (needed when reoptimizing)
-      // for (const auto& [edge, value] : lambdas)
-      for (const auto& edge : edgeSet)
-         lsum += lambdas[edge];
+      for (const auto& [edge, value] : lambdas)
+         lsum += value;
+      // for (const auto& edge : edgeSet)
+      //    lsum += lambdas[edge];
 
       primalSolution += lsum;
       // initialize for Polyak step size
@@ -350,7 +358,16 @@ double lagrangianDual(const FArray<GNSet>& adj, const std::vector<double>& weigh
 
       // Polyak-style stepsize update: works well on larger graphs
       // gradient = (x[edge.first] + x[edge.second] - 1), so gradient^2 = 1 if xi = xj and 0 otherwise
-      int gradient = sum(edgeSet,[&x](const auto& edge) { return x[edge.first]==x[edge.second];});
+      // int gradient = sum(edgeSet,[&x](const auto& edge) { return x[edge.first]==x[edge.second];});
+      // std::set<std::pair<int, int>> edgeUpdateSet; // set of edges (i,j) for which the gradient is non-zero
+      std::unordered_set<std::pair<int, int>> edgeUpdateSet; // set of edges (i,j) for which the gradient is non-zero
+      int gradient = 0;
+      for (const auto& edge : edgeSet){
+         if (x[edge.first]==x[edge.second]) {
+            edgeUpdateSet.insert(edge);
+            gradient++;
+         }
+      }
       if (gradient == 0) //cout << "gradient = 0: break" << "\n";
          break;
 
@@ -366,7 +383,7 @@ double lagrangianDual(const FArray<GNSet>& adj, const std::vector<double>& weigh
 
       // primalSol = true if a primal solution is found gradient = 0)
       // Note: updateMultipliers will remove lambdas that are set to zero.
-      bool primalSol = updateMultipliers(lambdas, x, alpha, edgeSet);
+      bool primalSol = updateMultipliers(lambdas, x, alpha, edgeUpdateSet);
 
       clock_t lagEnd = clock();
       double elapsed = double(lagEnd - lagStart) / CLOCKS_PER_SEC;
@@ -538,12 +555,15 @@ int main(int argc,char* argv[])
       case 1: local = [&weight,&cliquePartition](const MISP& s,LocalContext) -> double {
          return CliqueBound(cliquePartition.nc, cliquePartition.CliqueOfVertex, s.sel, weight);
       };break;
-      case 2: local = [&weight,&cliquePartition,&lambdas,&instance,&LagWeight](const MISP& s,LocalContext lc) -> double {
+      case 2: local = [&weight,&cliquePartition,&lambdas,&instance,&LagWeight,&bnds](const MISP& s,LocalContext lc) -> double {
          switch(lc) {
-            case BBCtx:
+            case BBCtx: {
                // Use maxIter = 50 for quick reoptimization
-               return lagrangianDual(instance.adj, LagWeight, cliquePartition, 50, 1.0, lambdas, true, s.sel);
-               // return LagBound(cliquePartition.nc, cliquePartition.CliqueOfVertex, s.sel, weight, lambdas);
+               // bnds.getDual();
+               // bnds.getPrimal();
+               // return lagrangianDual(instance.adj, LagWeight, cliquePartition, 500, 1.0, lambdas, true, s.sel);
+               return LagBound(cliquePartition.nc, cliquePartition.CliqueOfVertex, s.sel, weight, lambdas);
+            }
             case DDCtx:
                return LagBound(cliquePartition.nc, cliquePartition.CliqueOfVertex, s.sel, weight, lambdas);
          }
