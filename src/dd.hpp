@@ -62,7 +62,7 @@ public:
    typedef std::shared_ptr<AbstractNodeAllocator> Ptr;   
 };
 
-enum LocalContext { BBCtx, DDCtx };
+enum LocalContext { BBCtx, DDCtx, DDInit };
 
 class AbstractDD {
 protected:
