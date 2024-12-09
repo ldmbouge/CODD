@@ -68,7 +68,8 @@ void BAndB::search(Bounds& bnds)
        // cout << "----------------------------------------------------------------------" << "\n";
       
       auto bbn = pq.extractMax();
-      const auto curDual = bbn.bound;
+      auto curDual = bbn.bound;
+      bnds.setDual(bbn.node->getBound(),curDual);
       auto now = RuntimeMonitor::cputime();
       auto fs = RuntimeMonitor::elapsedMilliseconds(start,now);
       auto fl = RuntimeMonitor::elapsedMilliseconds(last,now);
@@ -88,8 +89,12 @@ void BAndB::search(Bounds& bnds)
          cout << "\n";
          last = RuntimeMonitor::cputime();
      }
-      //auto compDual = bbn.node->getBound() + relaxed->local(bbn.node,LocalContext::BBCtx);
+      auto compDual = bbn.node->getBound() + relaxed->local(bbn.node,LocalContext::DDInit);
       //cout << "DUAL KEY:" << curDual << " dualCOMP:" << compDual << "\n";
+      if (!relaxed->isBetterEQ(compDual,curDual)) {
+         //cout<< " dual comp improve!\n";
+         curDual = compDual;
+      }
       primalBetter = false;
 #ifndef _NDEBUG
       cout << "BOUNDS NOW: " << bnds << endl; 

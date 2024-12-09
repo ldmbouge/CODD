@@ -21,20 +21,24 @@ class AbstractDD;
 typedef std::function<void(const std::vector<int>&)> SolutionCB;
 
 class Bounds {
-   double _primal;
-   bool _primalSet;
+   double _primal,_g,_dual;
+   bool _primalSet,_dualSet;
    std::vector<int> _inc;
    std::list<SolutionCB> _checker;
 public:
-   Bounds() : _primalSet(false) {}
-   Bounds(SolutionCB checker) : _primalSet(false)  {
+   Bounds() : _primalSet(false),_dualSet(false) {}
+   Bounds(SolutionCB checker) : _primalSet(false),_dualSet(false)  {
       _checker.push_back(checker);
    }  
    Bounds(std::shared_ptr<AbstractDD> dd);
    void attach(std::shared_ptr<AbstractDD> dd);
-   void setPrimal(double p) { _primal = p;_primalSet = true;}
-   double getPrimal() const { return _primal;}
-   bool hasPrimal() const noexcept { return _primalSet;}
+   void setPrimal(double p)         { _primal = p;_primalSet = true;}
+   void setDual(double g,double h)  { _g = g;_dual = h;_dualSet = true;}
+   double getPrimal() const         { return _primal;}
+   bool hasPrimal() const noexcept  { return _primalSet;}
+   double getDual() const           { return _dual;}
+   double getG() const              { return _g;}
+   bool hasDual() const noexcept    { return _dualSet;}
    void setIncumbent(auto begin,auto end) {
       _inc.clear();
       for(auto it = begin;it != end;it++)
@@ -46,7 +50,7 @@ public:
       _checker.push_back(cb);
    }
    friend std::ostream& operator<<(std::ostream& os,const Bounds& b) {
-      return os << "<P:" << b._primal << /* "," << " D:" << b._dual << */ ", INC:" << b._inc << ">";
+      return os << "<P:" << b._primal << "," << " D:" << b._dual << ", INC:" << b._inc << ">";
    }
 };
 
@@ -62,7 +66,7 @@ public:
    typedef std::shared_ptr<AbstractNodeAllocator> Ptr;   
 };
 
-enum LocalContext { BBCtx, DDCtx };
+enum LocalContext { BBCtx, DDCtx, DDInit };
 
 class AbstractDD {
 protected:
