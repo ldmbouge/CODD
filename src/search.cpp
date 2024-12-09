@@ -192,7 +192,7 @@ void BAndB::search(Bounds& bnds)
             }
          }
       } //else 
-         //std::cout << "DB:F " <<  "Primal:" << bnds.getPrimal() << " Dual:" << relaxed->currentOpt()  << "\n";      
+      //std::cout << "DB:F " <<  "Primal:" << bnds.getPrimal() << " Dual:" << relaxed->currentOpt()  << "\n";      
       bbPool->release(bbn.node);
    }
    cout << setprecision(ss);
