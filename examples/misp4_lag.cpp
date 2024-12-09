@@ -538,13 +538,18 @@ int main(int argc,char* argv[])
       case 1: local = [&weight,&cliquePartition](const MISP& s,LocalContext) -> double {
          return CliqueBound(cliquePartition.nc, cliquePartition.CliqueOfVertex, s.sel, weight);
       };break;
-      case 2: local = [&weight,&cliquePartition,&lambdas,&instance,&LagWeight](const MISP& s,LocalContext lc) -> double {
+      case 2: local = [&weight,&cliquePartition,&lambdas,&instance,&LagWeight,&bnds](const MISP& s,LocalContext lc) -> double {
          switch(lc) {
             case BBCtx:
                // Use maxIter = 50 for quick reoptimization
                return lagrangianDual(instance.adj, LagWeight, cliquePartition, 50, 1.0, lambdas, true, s.sel);
                // return LagBound(cliquePartition.nc, cliquePartition.CliqueOfVertex, s.sel, weight, lambdas);
-            case DDInit:
+            case DDInit: {
+               //cout << "DDInit: dual:" << bnds.getDual() << "\n";
+               double nd = LagBound(cliquePartition.nc, cliquePartition.CliqueOfVertex, s.sel, weight, lambdas);
+               //cout << "\t--> bnd: " << bnds.getG() << " new dual heur:" << nd << " dual:" << bnds.getG() + nd << "\n";
+               return nd;
+            }
             case DDCtx:
                return LagBound(cliquePartition.nc, cliquePartition.CliqueOfVertex, s.sel, weight, lambdas);
          }

@@ -69,6 +69,7 @@ void BAndB::search(Bounds& bnds)
       
       auto bbn = pq.extractMax();
       auto curDual = bbn.bound;
+      bnds.setDual(bbn.node->getBound(),curDual);
       auto now = RuntimeMonitor::cputime();
       auto fs = RuntimeMonitor::elapsedMilliseconds(start,now);
       auto fl = RuntimeMonitor::elapsedMilliseconds(last,now);
