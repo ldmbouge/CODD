@@ -433,10 +433,19 @@ double CliqueBound(int nbCliques, const vector<int>& cliqueOfVertex, GNSet S, st
    return sum<double>(clqWeight,[](auto cw) { return cw;});
 }
 
-double LagBound(int nbCliques, const vector<int>& cliqueOfVertex,const GNSet& S,
-                const std::vector<double> &weight,
-                const PairMap &lambdas) {
+double LagBound(int nbCliques, const vector<int>& cliqueOfVertex, const GNSet& S, const std::vector<double> &weight, const PairMap &lambdas) {
+
    std::vector<double> LagWeight = weight;
+   /*
+   double sumLambdas = 0.0;
+   for (const auto& [edge, value] : lambdas) {
+      if (S.contains(edge.first) && S.contains(edge.second)) {
+         LagWeight[edge.first] -= value;
+         LagWeight[edge.second] -= value;
+         sumLambdas += value;
+      }
+   }
+    */
    const double sumLambdas = sum<double>(lambdas,[&S,&LagWeight](const auto& edge,auto lambda){
       const auto& [i,j] = edge;
       if (S.contains(i) && S.contains(j)) {
@@ -445,6 +454,7 @@ double LagBound(int nbCliques, const vector<int>& cliqueOfVertex,const GNSet& S,
          return lambda;
       } else return 0.0;
    });
+
    std::vector<double> clqWeight(nbCliques, 0.0);
    for (auto v : S)
       clqWeight[cliqueOfVertex[v]] = std::max(LagWeight[v],clqWeight[cliqueOfVertex[v]]);
