@@ -92,18 +92,23 @@ Instance readFile(const char* fName)
 }
 
 // Function to find the vertex with the highest degree among unvisited vertices
-int findHighestDegreeVertex(const FArray<GNSet>& adj, const vector<bool>& visited) {
-    int maxDegree = -1, vertex = -1;
-    for (int i = 0; i < (int)adj.size()-1; ++i) { // adj.size - 1 : omit last (top) element
-        if (!visited[i]) { // Only consider unvisited vertices
-           int degree = sum(adj[i],[&visited](auto neighbor) { return !visited[neighbor];});
-            if (degree > maxDegree) {
-                maxDegree = degree;
-                vertex = i;
-            }
-        }
-    }
-    return vertex;
+int findHighestDegreeVertex(const FArray<GNSet>& adj, const vector<bool>& visited, const GNSet &S) {
+   int maxDegree = -1, vertex = -1;
+
+   for (auto i : S) {
+//   GNSet remAdj = adj[i]&S;
+   //   for (int i = 0; i < (int)adj.size()-1; ++i) { // adj.size - 1 : omit last (top) element
+   //for (auto i : remAdj ) {
+      if (!visited[i]) { // Only consider unvisited vertices
+         GNSet remAdj = adj[i]&S;
+         int degree = sum(remAdj,[&visited](auto neighbor) { return !visited[neighbor];});
+         if (degree > maxDegree) {
+            maxDegree = degree;
+            vertex = i;
+         }
+      }
+   }
+   return vertex;
 }
 
 // Function to check if an extended  set of vertices clique UNION {vertex} remains a clique
@@ -115,38 +120,40 @@ bool isClique(const FArray<GNSet>& adj, const vector<int>& clique, int vertex) {
 }
 
 // Function to find a maximal clique starting from the highest-degree vertex
-vector<int> findMaximalClique(const FArray<GNSet>& adj, vector<bool>& visited) {
-    vector<int> clique;
-    const int n = adj.size()-1; // omit last entry (top)
-
-    // Start with the vertex of the highest degree
-    int start = findHighestDegreeVertex(adj, visited);
-    if (start == -1) return clique; // No more vertices to process
-
-    clique.push_back(start);
-    visited[start] = true;
-
-    // Grow the clique by adding the highest-degree neighbor that maintains the clique property
-    while (true) {
-        int bestCandidate = -1, maxDegree = -1;
-        for (int i = 0; i < n; i++) {
-           if (!visited[i] && isClique(adj, clique, i)) {
-              if (!adj[start].contains(i)) {
-                 cout << "ERROR" << endl;
-                 exit(1);
-              }
-              int degree = sum(adj[i],[&visited](auto neighbor) { return !visited[neighbor];});
-              if (degree > maxDegree) {
-                 maxDegree = degree;
-                 bestCandidate = i;
-              }
-           }
-        }
-        if (bestCandidate == -1) break; // No more vertices can be added
-        clique.push_back(bestCandidate);
-        visited[bestCandidate] = true;
-    }
-    return clique;
+vector<int> findMaximalClique(const FArray<GNSet>& adj, vector<bool>& visited, const GNSet &S) {
+   vector<int> clique;
+   //   const int n = adj.size()-1; // omit last entry (top)
+   
+   // Start with the vertex of the highest degree
+   int start = findHighestDegreeVertex(adj, visited, S);
+   if (start == -1) return clique; // No more vertices to process
+   
+   clique.push_back(start);
+   visited[start] = true;
+   
+   // Grow the clique by adding the highest-degree neighbor that maintains the clique property
+   while (true) {
+      int bestCandidate = -1, maxDegree = -1;
+      // for (int i = 0; i < n; i++) {
+      for (auto i : S ){
+         if (!visited[i] && isClique(adj, clique, i)) {
+            if (!adj[start].contains(i)) {
+               cout << "ERROR in findMaximalClique" << endl;
+               exit(1);
+            }
+            GNSet remAdj = adj[i]&S;
+            int degree = sum(remAdj,[&visited](auto neighbor) { return !visited[neighbor];});
+            if (degree > maxDegree) {
+               maxDegree = degree;
+               bestCandidate = i;
+            }
+         }
+      }
+      if (bestCandidate == -1) break; // No more vertices can be added
+      clique.push_back(bestCandidate);
+      visited[bestCandidate] = true;
+   }
+   return clique;
 }
 
 // Function to compute a maximal clique partition
@@ -169,14 +176,14 @@ struct  clqPartition {
    }
 };
 
-clqPartition maximalCliquePartition(const FArray<GNSet>& adj) {
+clqPartition maximalCliquePartition(const FArray<GNSet>& adj, const GNSet &S) {
    const int n = adj.size()-1;  // omit the last entry (representing 'top')
    vector<bool> visited(n, false);
    vector<vector<int>> cliquePartition;
 
    while (true) {
       // Find a maximal clique
-      vector<int> clique = findMaximalClique(adj, visited);
+      vector<int> clique = findMaximalClique(adj, visited, S);
       if (clique.empty()) break; // No more cliques to find
       cliquePartition.push_back(clique); // Add the clique to the partition
    }
@@ -245,6 +252,7 @@ using PairMap = std::unordered_map<std::pair<int, int>, double>; // use the defa
 // Update Lagrangian multipliers
 bool updateMultipliers(PairMap& lambdas, const vector<int>& x, double alpha, const std::unordered_set<std::pair<int, int>> &edgeSet) {
    bool foundViolation = false;
+   // cout << "entering updateMultipliers with edgeSet.size() = " << edgeSet.size() << endl;
    for (const auto& [i,j]  : edgeSet) {
       if (lambdas.count({i,j}) > 0)
          lambdas[{i, j}] = std::max(0.0, lambdas[{i, j}] + alpha*(x[i] + x[j] - 1));
@@ -302,7 +310,8 @@ double lagrangianDual(const FArray<GNSet>& adj, const std::vector<double>& weigh
    }
 
    if (edgeSet.size() == 0) {
-      std::cout << "Cliques are disconnected.  Can report dual immediately." << std::endl;
+      // std::cout << "Cliques are disconnected.  Can report dual immediately: the number of cliques." << std::endl;
+      return 1.0*(int)ClqPart.Cliques.size();
    }
 
    // // Using small nonzero initial values for Lambda can be helpful.
@@ -347,6 +356,7 @@ double lagrangianDual(const FArray<GNSet>& adj, const std::vector<double>& weigh
       if (k==0)
          dualBound = std::min(dualBound, primalSolution);
 
+       //cout << "iteration k = " << k << ": bound = " << dualBound << ", alpha = " << alpha << endl;
       // printLagrangianInfo(lambdas, LagWeights, x, k, alpha, primalSolution);
 
       // Update stepsize alpha and multipliers lambda
@@ -381,7 +391,7 @@ double lagrangianDual(const FArray<GNSet>& adj, const std::vector<double>& weigh
       else alpha = IterDiff/gradient;
       */
 
-      // primalSol = true if a primal solution is found gradient = 0)
+      // primalSol = true if a primal solution is found with gradient = 0)
       // Note: updateMultipliers will remove lambdas that are set to zero.
       bool primalSol = updateMultipliers(lambdas, x, alpha, edgeUpdateSet);
 
@@ -397,7 +407,7 @@ double lagrangianDual(const FArray<GNSet>& adj, const std::vector<double>& weigh
          // double val = 0.0;
          // for (int i=0; i<(int)x.size(); i++)
          //    val += weight[i]*x[i];
-         // cout << "Lagrangian found primal solution with value " << val << "\n";
+         // cout << "Lagrangian found primal solution with value \n";
          dualBound = min(dualBound, primalSolution);
          // std::cout << "Updated Lagrangian bound = " << dualBound << "\n";
          break;
@@ -453,12 +463,13 @@ int main(int argc,char* argv[])
       std::cout << "where optional <LB> = 0 (sum of weights) \n";
       std::cout << "                    = 1 (clique partition) \n";
       std::cout << "                    = 2 (Lagrangian; default) \n";
+      std::cout << "                    = 3 (Lagrangian recomputed) \n";
       exit(1);
    }
    std::cout << "ARGC:" << argc << "\n";
    const char* fName = argv[1];
    const int w = argc>=3 ? atoi(argv[2]) : 64;
-   int LBopt = std::clamp(argc>=4 ? atoi(argv[3]) : 2,0,2);
+   int LBopt = std::clamp(argc>=4 ? atoi(argv[3]) : 2,0,3);
 
    std::cout << "w = " << w << ", LBopt = " << LBopt << std::endl;
 
@@ -489,7 +500,7 @@ int main(int argc,char* argv[])
    auto neighbors = instance.adj;
 
    cout << "Computing clique partition" << "\n";
-   auto cliquePartition = maximalCliquePartition(instance.adj);
+   auto cliquePartition = maximalCliquePartition(instance.adj, ns);
    // std::cout << cliquePartition;
    // std::string fOutName = std::string(fName) + ".clique_partition";
    // exportCliquePartition(cliquePartition.Cliques,fOutName);
@@ -502,7 +513,7 @@ int main(int argc,char* argv[])
    PairMap lambdas; // Lagrangian multipliers
 
    double dualBound = 1.0*cliquePartition.Cliques.size();
-   if (LBopt == 2) {
+   if (LBopt >= 2) {
       double lagBound = lagrangianDual(instance.adj, LagWeight, cliquePartition, maxIter, alpha0, lambdas, false, ns);
       cout << "Lagrangian dual bound = " << lagBound << "\n";
       if (lagBound >= dualBound) {
@@ -548,6 +559,8 @@ int main(int argc,char* argv[])
       return s.sel.size() == 0;
    };
    std::function<double(const MISP&,LocalContext)> local;
+   clqPartition DDcliquePartition = cliquePartition;  // clique partition to be used inside DD
+   PairMap DDlambdas = lambdas;                       // multipliers to be used inside the DD
    switch(LBopt) {
       case 0: local = [&weight](const MISP& s,LocalContext) -> double {
          return sum(s.sel,[&weight](auto v) { return weight[v];});
@@ -555,25 +568,33 @@ int main(int argc,char* argv[])
       case 1: local = [&weight,&cliquePartition](const MISP& s,LocalContext) -> double {
          return CliqueBound(cliquePartition.nc, cliquePartition.CliqueOfVertex, s.sel, weight);
       };break;
-      case 2: local = [&weight,&cliquePartition,&lambdas,&instance,&LagWeight,&bnds](const MISP& s,LocalContext lc) -> double {
+      case 2: local = [&weight,&cliquePartition,&lambdas,&instance](const MISP& s,LocalContext) -> double {
+         return LagBound(cliquePartition.nc, cliquePartition.CliqueOfVertex, s.sel, weight, lambdas);
+      };break;
+      case 3: local = [&weight,&cliquePartition,&lambdas,&instance,&LagWeight,&bnds,&DDlambdas,&DDcliquePartition](const MISP& s,LocalContext lc) -> double {
          switch(lc) {
             case BBCtx: {
-               // Use maxIter = 50 for quick reoptimization
-               // bnds.getDual();
-               // bnds.getPrimal();
-               // return lagrangianDual(instance.adj, LagWeight, cliquePartition, 500, 1.0, lambdas, true, s.sel);
-               return LagBound(cliquePartition.nc, cliquePartition.CliqueOfVertex, s.sel, weight, lambdas);
-               // return lagrangianDual(instance.adj, LagWeight, cliquePartition, 50, 1.0, lambdas, true, s.sel);
-               // return LagBound(cliquePartition.nc, cliquePartition.CliqueOfVertex, s.sel, weight, lambdas);
+               return LagBound(cliquePartition.nc, cliquePartition.CliqueOfVertex, s.sel, weight, DDlambdas);
             }
             case DDInit: {
-               //cout << "DDInit: dual:" << bnds.getDual() << "\n";
-               double nd = LagBound(cliquePartition.nc, cliquePartition.CliqueOfVertex, s.sel, weight, lambdas);
-               //cout << "\t--> bnd: " << bnds.getG() << " new dual heur:" << nd << " dual:" << bnds.getG() + nd << "\n";
+               // Use maxIter = 50 for quick reoptimization
+               // cout << "DDInit: dual:" << bnds.getDual() << "\n";
+               auto DDcliquePartition = maximalCliquePartition(instance.adj, s.sel);
+               DDlambdas = lambdas; // start from original lambdas each time - only used when flag reOpt = true
+               double nd = lagrangianDual(instance.adj, LagWeight, DDcliquePartition, 50, 1.0, DDlambdas, false, s.sel);
+               // cout << "\t--> (current dual = " << bnds.getDual() << ".) \t bnd: " << bnds.getG() << " new dual heur:" << nd << " dual:" << bnds.getG() + nd << "\n";
+               if (bnds.getG() + nd >= bnds.getDual()) {
+                  // no improvement--revert to original setting
+                  DDcliquePartition = cliquePartition;
+                  DDlambdas = lambdas;
+                  return bnds.getDual();
+               }
+               // else cout << "\t ==FOUND A BETTER DUAL BOUND==" << endl;
+               // if (nd <= bnds.getPrimal()) cout << "\t Updated bound can prune this node" << endl;
                return nd;
             }
             case DDCtx:
-               return LagBound(cliquePartition.nc, cliquePartition.CliqueOfVertex, s.sel, weight, lambdas);
+               return LagBound(DDcliquePartition.nc, DDcliquePartition.CliqueOfVertex, s.sel, weight, DDlambdas);
          }
       };break;
       default:
