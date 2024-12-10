@@ -247,7 +247,15 @@ template<> struct std::hash<std::pair<int,int>> {
    }
 };
 
-using PairMap = std::unordered_map<std::pair<int, int>, double>; // use the default hash
+// Define a custom hash function
+struct PairHash {
+    size_t operator()(const std::pair<int, int>& pair) const {
+        auto hash1 = std::hash<int>{}(pair.first);
+        auto hash2 = std::hash<int>{}(pair.second);
+        return hash1 ^ (hash2 << 1); // Combine the hashes
+    }
+};
+using PairMap = std::unordered_map<std::pair<int, int>, double, PairHash>;// using PairMap = std::unordered_map<std::pair<int, int>, double>; // use the default hash
 
 // Update Lagrangian multipliers
 bool updateMultipliers(PairMap& lambdas, const vector<int>& x, double alpha, const std::unordered_set<std::pair<int, int>> &edgeSet) {
@@ -337,10 +345,6 @@ double lagrangianDual(const FArray<GNSet>& adj, const std::vector<double>& weigh
         LagWeights[edge.first] -= value;
         LagWeights[edge.second] -= value;
       }
-      // for (const auto& edge : edgeSet){
-      //    LagWeights[edge.first] -= lambdas[edge];
-      //    LagWeights[edge.second] -= lambdas[edge];
-      // }
 
       vector<int> x(weight.size(), 0);
       double primalSolution = solveCliqueSubproblem(ClqPart.Cliques, LagWeights, x, S);
@@ -348,15 +352,13 @@ double lagrangianDual(const FArray<GNSet>& adj, const std::vector<double>& weigh
       // sum only those lambdas that are in the active edgeSet (needed when reoptimizing)
       for (const auto& [edge, value] : lambdas)
          lsum += value;
-      // for (const auto& edge : edgeSet)
-      //    lsum += lambdas[edge];
 
       primalSolution += lsum;
       // initialize for Polyak step size
       if (k==0)
          dualBound = std::min(dualBound, primalSolution);
 
-       //cout << "iteration k = " << k << ": bound = " << dualBound << ", alpha = " << alpha << endl;
+      // cout << "iteration k = " << k << ": bound = " << dualBound << ", alpha = " << alpha << endl;
       // printLagrangianInfo(lambdas, LagWeights, x, k, alpha, primalSolution);
 
       // Update stepsize alpha and multipliers lambda
@@ -399,7 +401,7 @@ double lagrangianDual(const FArray<GNSet>& adj, const std::vector<double>& weigh
       double elapsed = double(lagEnd - lagStart) / CLOCKS_PER_SEC;
       double outElapsed = double(lagEnd - outStart) / CLOCKS_PER_SEC;
       if (outElapsed > 1.5) {
-         std::cout << "Lagrangian bound = " << dualBound << "\t time: " << elapsed << "s" << "\n";
+         std::cout << "Lagrangian bound = " << dualBound << "\t alpha = " << alpha << "\t time: " << elapsed << "s" << "\n";
          outStart = clock();
       }
       // Check if gradient = 0 (and break). The primal solution is not expected to be good though.
@@ -417,7 +419,7 @@ double lagrangianDual(const FArray<GNSet>& adj, const std::vector<double>& weigh
          dualBound = primalSolution;
          unchanged_iters = 0;
       }
-      else if (++unchanged_iters > 0.1*maxIter)
+      else if (++unchanged_iters > 0.05*maxIter)
          break;
    }
 
@@ -433,28 +435,55 @@ double CliqueBound(int nbCliques, const vector<int>& cliqueOfVertex, GNSet S, st
    return sum<double>(clqWeight,[](auto cw) { return cw;});
 }
 
+//__attribute__((noinline)) double sumOfLambdas(const auto& lambdas, const GNSet& S, std::vector<double>& LagWeight) {
+//   return sum<double>(lambdas,[&S,&LagWeight](const auto& edge,auto lambda){
+//      const auto& [i,j] = edge;
+//      if (S.contains(i) && S.contains(j)) {
+//         LagWeight[i] -= lambda;
+//         LagWeight[j] -= lambda;
+//         return lambda;
+//      } else return 0.0;
+//   });
+//}
+
+
 double LagBound(int nbCliques, const vector<int>& cliqueOfVertex, const GNSet& S, const std::vector<double> &weight, const PairMap &lambdas) {
 
+   if (S.size()<=1) {
+      return weight[*S.begin()];
+   }
+   
    std::vector<double> LagWeight = weight;
-   /*
+
    double sumLambdas = 0.0;
-   for (const auto& [edge, value] : lambdas) {
-      if (S.contains(edge.first) && S.contains(edge.second)) {
-         LagWeight[edge.first] -= value;
-         LagWeight[edge.second] -= value;
-         sumLambdas += value;
+   int n = S.size();
+   //if (n*(n-1)*0.5 < lambdas.size())
+   //   std::cout << "Iterate over i<j in S: n(n-1)/2 = " << n*(n-1)*0.5 << ".  Iterate over |lambdas| = " << lambdas.size() << std::endl;
+   if (n*(n-1)*0.5 < lambdas.size()) {
+      for (auto i = S.begin(); i != std::prev(S.end()); ++i) {
+         for (auto j = std::next(i); j != S.end(); ++j) {
+            std::pair<int, int> edge = (*i < *j) ? std::make_pair(*i, *j) : std::make_pair(*j, *i);
+            auto it = lambdas.find(edge);
+            if (it != lambdas.end()) {  // Check if the edge exists
+               double value = it->second;  // Access the value directly
+               LagWeight[*i] -= value;
+               LagWeight[*j] -= value;
+               sumLambdas += value;
+            }
+         }
       }
    }
-    */
-   const double sumLambdas = sum<double>(lambdas,[&S,&LagWeight](const auto& edge,auto lambda){
-      const auto& [i,j] = edge;
-      if (S.contains(i) && S.contains(j)) {
-         LagWeight[i] -= lambda;
-         LagWeight[j] -= lambda;
-         return lambda;
-      } else return 0.0;
-   });
-
+   else {
+      sumLambdas = sum<double>(lambdas,[&S,&LagWeight](const auto& edge,auto lambda){
+         const auto& [i,j] = edge;
+         if (S.contains(i) && S.contains(j)) {
+            LagWeight[i] -= lambda;
+            LagWeight[j] -= lambda;
+            return lambda;
+         } else return 0.0;
+      });
+   }
+   
    std::vector<double> clqWeight(nbCliques, 0.0);
    for (auto v : S)
       clqWeight[cliqueOfVertex[v]] = std::max(LagWeight[v],clqWeight[cliqueOfVertex[v]]);
@@ -518,7 +547,7 @@ int main(int argc,char* argv[])
    // Initialize Lagrangian relaxation
    std::vector<double> LagWeight = weight;
    // for (auto i : ns) LagWeight[i] = 1.0*weight[i];
-   int maxIter = std::min(50*ns.size(),100000);
+   int maxIter = std::min(50*ns.size(),10000);
    double alpha0 = 1.0; // this constant is more robust than a weight-based initialization
    PairMap lambdas; // Lagrangian multipliers
 
@@ -571,6 +600,7 @@ int main(int argc,char* argv[])
    std::function<double(const MISP&,LocalContext)> local;
    clqPartition DDcliquePartition = cliquePartition;  // clique partition to be used inside DD
    PairMap DDlambdas = lambdas;                       // multipliers to be used inside the DD
+   bool DDreOpt = false;                              // flag to ensure that the DDcliquePartition and DDlambdas can be used
    switch(LBopt) {
       case 0: local = [&weight](const MISP& s,LocalContext) -> double {
          return sum(s.sel,[&weight](auto v) { return weight[v];});
@@ -581,7 +611,7 @@ int main(int argc,char* argv[])
       case 2: local = [&weight,&cliquePartition,&lambdas,&instance](const MISP& s,LocalContext) -> double {
          return LagBound(cliquePartition.nc, cliquePartition.CliqueOfVertex, s.sel, weight, lambdas);
       };break;
-      case 3: local = [&weight,&cliquePartition,&lambdas,&instance,&LagWeight,&bnds,&DDlambdas,&DDcliquePartition](const MISP& s,LocalContext lc) -> double {
+      case 3: local = [&weight,&cliquePartition,&lambdas,&instance,&LagWeight,&bnds,&DDlambdas,&DDcliquePartition,&DDreOpt](const MISP& s,LocalContext lc) -> double {
          switch(lc) {
             case BBCtx: {
                return LagBound(cliquePartition.nc, cliquePartition.CliqueOfVertex, s.sel, weight, lambdas);
@@ -589,22 +619,27 @@ int main(int argc,char* argv[])
             case DDInit: {
                // Use maxIter = 50 for quick reoptimization
                // cout << "DDInit: dual:" << bnds.getDual() << "\n";
-               auto DDcliquePartition = maximalCliquePartition(instance.adj, s.sel);
+               DDcliquePartition = maximalCliquePartition(instance.adj, s.sel);
                DDlambdas = lambdas; // start from original lambdas each time - only used when flag reOpt = true
-               double nd = lagrangianDual(instance.adj, LagWeight, DDcliquePartition, 50, 1.0, DDlambdas, false, s.sel);
+               double nd = lagrangianDual(instance.adj, LagWeight, DDcliquePartition, 25, 1.0, DDlambdas, false, s.sel);
                // cout << "\t--> (current dual = " << bnds.getDual() << ".) \t bnd: " << bnds.getG() << " new dual heur:" << nd << " dual:" << bnds.getG() + nd << "\n";
                if (bnds.getG() + nd >= bnds.getDual()) {
                   // no improvement--revert to original setting
                   DDcliquePartition = cliquePartition;
                   DDlambdas = lambdas;
+                  DDreOpt = false;
                   return bnds.getDual();
                }
+               DDreOpt = true;
                // else cout << "\t ==FOUND A BETTER DUAL BOUND==" << endl;
                // if (nd <= bnds.getPrimal()) cout << "\t Updated bound can prune this node" << endl;
                return nd;
             }
-            case DDCtx:
-               return LagBound(DDcliquePartition.nc, DDcliquePartition.CliqueOfVertex, s.sel, weight, DDlambdas);
+            case DDCtx: {
+               if (DDreOpt) return LagBound(DDcliquePartition.nc, DDcliquePartition.CliqueOfVertex, s.sel, weight, DDlambdas);
+               else return LagBound(cliquePartition.nc, cliquePartition.CliqueOfVertex, s.sel, weight, lambdas);
+               //return LagBound(cliquePartition.nc, cliquePartition.CliqueOfVertex, s.sel, weight, lambdas);
+            }
          }
       };break;
       default:
