@@ -584,7 +584,7 @@ int main(int argc,char* argv[])
       case 3: local = [&weight,&cliquePartition,&lambdas,&instance,&LagWeight,&bnds,&DDlambdas,&DDcliquePartition](const MISP& s,LocalContext lc) -> double {
          switch(lc) {
             case BBCtx: {
-               return LagBound(cliquePartition.nc, cliquePartition.CliqueOfVertex, s.sel, weight, DDlambdas);
+               return LagBound(cliquePartition.nc, cliquePartition.CliqueOfVertex, s.sel, weight, lambdas);
             }
             case DDInit: {
                // Use maxIter = 50 for quick reoptimization
