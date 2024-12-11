@@ -428,7 +428,7 @@ double lagrangianDual(const FArray<GNSet>& adj, const std::vector<double>& weigh
 }
 
 
-double CliqueBound(int nbCliques, const vector<int>& cliqueOfVertex, GNSet S, std::vector<double> &weight) {
+double CliqueBound(int nbCliques, const std::vector<int>& cliqueOfVertex, const GNSet& S, std::vector<double>& weight) {
    std::vector<double> clqWeight(nbCliques, 0.0);
    for (auto v : S)
       clqWeight[ cliqueOfVertex[v] ] = std::max(clqWeight[ cliqueOfVertex[v] ],weight[v]);
@@ -617,7 +617,6 @@ int main(int argc,char* argv[])
                return LagBound(cliquePartition.nc, cliquePartition.CliqueOfVertex, s.sel, weight, lambdas);
             }
             case DDInit: {
-               // Use maxIter = 50 for quick reoptimization
                // cout << "DDInit: dual:" << bnds.getDual() << "\n";
                DDcliquePartition = maximalCliquePartition(instance.adj, s.sel);
                DDlambdas = lambdas; // start from original lambdas each time - only used when flag reOpt = true
