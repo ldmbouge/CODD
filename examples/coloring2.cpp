@@ -178,7 +178,7 @@ int main(int argc,char* argv[])
    const auto labels = setFrom(std::views::iota(1,UB+1));     // using a plain set for the labels
    const auto init = [K]()     { return COLOR { Legal(K,0),0,0 };};
    const auto target = [K]()   { return COLOR { Legal{},0,K};};
-   const auto lgf = [K,&labels,&bnds,&adj](const COLOR& s) -> GNSet {
+   const auto lgf = [K,&labels,&bnds,&adj](const COLOR& s,DDContext) -> GNSet {
       if (s.vtx >= K+1)
          return GNSet(); 
       GNSet valid(labels);

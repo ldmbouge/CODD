@@ -67,6 +67,7 @@ public:
 };
 
 enum LocalContext { BBCtx, DDCtx, DDInit };
+enum DDContext { DDRelaxed,DDRestricted,DDExact};
 
 class AbstractDD {
 protected:
@@ -112,7 +113,7 @@ public:
    virtual bool dominates(ANode::Ptr f,ANode::Ptr s) = 0;
    virtual void update(Bounds& bnds) const = 0;
    virtual void printNode(std::ostream& os,ANode::Ptr n) const = 0;
-   virtual GNSet getLabels(ANode::Ptr src) const = 0;
+   virtual GNSet getLabels(ANode::Ptr src,DDContext) const = 0;
    virtual unsigned getLastId() const noexcept = 0;
    virtual AbstractNodeAllocator::Ptr makeNDAllocator() const noexcept = 0;
    double currentOpt() const { return _trg->getBound();}
@@ -132,7 +133,7 @@ class Strategy {
 protected:
    AbstractDD* _dd;
    friend class AbstractDD;
-   auto remainingLabels(ANode::Ptr p) const noexcept { return _dd->getLabels(p);}
+   auto remainingLabels(ANode::Ptr p,DDContext c) const noexcept { return _dd->getLabels(p,c);}
 public:
    Strategy() : _dd(nullptr) {}
    AbstractDD* theDD() const noexcept { return _dd;}
@@ -383,7 +384,7 @@ public:
 template <typename ST,
           class Compare = Minimize<double>,
           typename IBL2 = ST(*)(),
-          typename LGF  = Range(*)(const ST&),
+          typename LGF  = Range(*)(const ST&,DDContext),
           typename STF  = std::optional<ST>(*)(const ST&,int),
           typename STC  = double(*)(const ST&,int),
           typename SMF  = std::optional<ST>(*)(const ST&,const ST&),
@@ -476,9 +477,9 @@ private:
    ANode::Ptr target() {
       return _trg = makeNode(_stt());
    }
-   GNSet getLabels(ANode::Ptr src) const {
+   GNSet getLabels(ANode::Ptr src,DDContext c) const {
       auto op = static_cast<const Node<ST>*>(src.get());
-      auto valSet = _lgf(op->get());
+      auto valSet = _lgf(op->get(),c);
       if constexpr (std::is_same<decltype(valSet),GNSet>::value) {
          return valSet;
       } else {

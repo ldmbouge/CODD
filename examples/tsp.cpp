@@ -110,7 +110,7 @@ int main(int argc,char* argv[]) {
    const int sz = (int)C.size();
    const auto init = []()               { return TSP { GNSet{},1,0 };};
    const auto target = [sz,&C]()        { return TSP { C,1,sz };};
-   const auto lgf = [sz,&C](const TSP& s)  {
+   const auto lgf = [sz,&C](const TSP& s,DDContext)  {
       if (s.hops >= sz-1)
          return GNSet {1};
       else 

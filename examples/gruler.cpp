@@ -91,7 +91,7 @@ int main(int argc,char* argv[])
    const auto target = [n]() {    // The sink state
       return SGRuler {GRSet {},GRSet {},n,0};
    };
-   const auto lgf = [n,&bnds,&OPT,L](const SGRuler& s) {
+   const auto lgf = [n,&bnds,&OPT,L](const SGRuler& s,DDContext) {
       auto ub = std::min({(int)bnds.getPrimal() - OPT[n-s.k] - 1,L+1 - OPT[n-s.k]});
       auto lb = std::max({s.e+1,(int)std::ceil(s.k * (s.k -1)/2)});
       if (s.k<n-1) 

@@ -210,7 +210,7 @@ int main(int argc,char* argv[])
    const auto target = [K]() {    // The sink state
       return COLOR { Legal{},0,K};
    };
-   const auto lgf = [K,&labels,&bnds,&adj](const COLOR& s) -> GNSet {
+   const auto lgf = [K,&labels,&bnds,&adj](const COLOR& s,DDContext) -> GNSet {
       if (s.vtx >= K+1)
          return GNSet(); 
       GNSet valid(labels);

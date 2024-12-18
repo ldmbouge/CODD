@@ -207,7 +207,7 @@ int main(int argc,char* argv[])
    const auto target = [K]() {    // The sink state
       return COLOR { Legal{},0,K};
    };
-   const auto lgf = [K,&bnds](const COLOR& s) -> Range {
+   const auto lgf = [K,&bnds](const COLOR& s,DDContext) -> Range {
       if (s.vtx >= K)
          return Range::open(0,0);
       auto ub = std::min({(int)bnds.getPrimal(),s.last+1});

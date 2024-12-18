@@ -65,7 +65,7 @@ int main()
    const auto myTarget = []() {    // The sink state
       return MISP { GNSet {} };
    };
-   const auto lgf = [top](const MISP& s) -> Range {
+   const auto lgf = [top](const MISP& s,DDContext) -> Range {
       return Range::close(1,top);
    };
    auto myStf = [top,&neighbors](const MISP& s,const int label) -> std::optional<MISP> {

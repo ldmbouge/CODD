@@ -158,7 +158,7 @@ int main(int argc,char* argv[])
    const auto myTarget = []() {    // The sink state
       return MISP { GNSet {}, 0,0};
    };
-   const auto lgf = [top](const MISP& s)  {
+   const auto lgf = [top](const MISP& s,DDContext)  {
       GNSet rv = s.sel;
       rv.removeBelow(s.l+1);
       if (rv.empty()) rv.insert(top); // no longer any options, lead out!

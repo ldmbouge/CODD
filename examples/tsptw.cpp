@@ -123,7 +123,7 @@ int main(int argc,char* argv[]) {
    const int sz = (int)C.size();
    const auto init = []()               { return TSPTW { GNSet{depot},depot,0};};
    const auto target = [sz,&C]()        { return TSPTW { C,depot,sz };}; // the optimal bound is unknown (put 0 here)
-   const auto lgf = [sz,&C](const TSPTW& s)  {
+   const auto lgf = [sz,&C](const TSPTW& s,DDContext)  {
       if (s.hops >= sz-1)
          return GNSet {depot};
       else 

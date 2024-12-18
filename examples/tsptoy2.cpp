@@ -49,7 +49,7 @@ int main(int argc,char* argv[]) {
    const auto sz = C.size();
    const auto init = []()               { return TSP { GNSet{},1 };};
    const auto target = [&C]()           { return TSP { C,1 };};
-   const auto lgf = [&C](const TSP& s)  { return (C - s.s) | GNSet {1};};
+   const auto lgf = [&C](const TSP& s,DDContext)  { return (C - s.s) | GNSet {1};};
    
    const auto stf = [sz,&C](const TSP& s,const int label) -> std::optional<TSP> {
       bool bad = (label == 1 && s.s.size() < sz-1) || (label != 1 && s.s.size() >= sz-1);

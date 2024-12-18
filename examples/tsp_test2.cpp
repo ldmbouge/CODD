@@ -141,7 +141,7 @@ int main(int argc,char* argv[]) {
    const int sz = (int)C.size();
    const auto init = []()               { return TSP { GNSet{depot},depot,0,0 };};
    const auto target = [sz,&C]()        { return TSP { C,depot,sz,0 };}; // the optimal bound is unknown (put 0 here)
-   const auto lgf = [sz,&C](const TSP& s)  {
+   const auto lgf = [sz,&C](const TSP& s,DDContext)  {
       if (s.hops >= sz-1)
          return GNSet {depot};
       else 
