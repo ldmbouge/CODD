@@ -133,7 +133,6 @@ class Strategy {
 protected:
    AbstractDD* _dd;
    friend class AbstractDD;
-   auto remainingLabels(ANode::Ptr p,DDContext c) const noexcept { return _dd->getLabels(p,c);}
 public:
    Strategy() : _dd(nullptr) {}
    AbstractDD* theDD() const noexcept { return _dd;}
