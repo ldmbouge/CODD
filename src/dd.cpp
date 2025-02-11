@@ -62,11 +62,11 @@ void AbstractDD::compute(Bounds& bnds)
    //computeBestBackward(_strat->getName());
 }
 
-bool AbstractDD::apply(ANode::Ptr from,Bounds& bnds)
+bool AbstractDD::apply(ANode::Ptr from,Bounds& bnds, bool dual)
 {
    makeInitFrom(from);
    compute(bnds);
-   bool isBetterValue = isBetter(currentOpt(),bnds.getPrimal());
+   bool isBetterValue = isBetter(currentOpt(),dual ? bnds.getDual() : bnds.getPrimal());
    if (isBetterValue) 
       update(bnds);
    return isBetterValue;
@@ -83,6 +83,11 @@ std::vector<int> AbstractDD::incumbent()
 std::vector<ANode::Ptr> AbstractDD::computeCutSet()
 {
    return _strat->computeCutSet();
+}
+
+std::vector<ANode::Ptr> AbstractDD::theDiscardedSet()
+{
+   return _strat->theDiscardedSet();
 }
 
 struct DNode {
@@ -413,13 +418,42 @@ void Restricted::compute(Bounds& bnds)
    CQueue<ANode::Ptr> qn(32);
    root->setLayer(0);
    qn.enQueue(root);
-   while (!qn.empty()) { 
+
+   bool discarding = false;
+   _discardedSet.clear();
+
+   while (!qn.empty()) {
+      discarding = false;
+      //std::cout << "qn popped" << std::endl;
       auto& lk = pullLayer(qn); // We have in lk the queue content for layer cL
       for(auto p : lk) { // loop over layer lk. p is a "parent" node.
+         
+         if(discarding) { // pickup discarded parents
+            //std::cout << "discarding parent..." << std::endl;
+            _discardedSet.push_back(p);
+            continue; // do not expand discarded parent
+         }
+
+         // std::cout << "parent: ";
+         // _dd->printNode(std::cout, p);
+         // std::cout << std::endl;
+         
          auto remLabels = _dd->getLabels(p,DDRestricted);
          for(auto l : remLabels) {
+            //std::cout << "label: " << l << std::endl;
             auto child = _dd->transition(bnds,p,l); // we get back a new node, or an already existing one.
             if (child) {
+
+               if(discarding) { // if node has additional labels, add it to discarded
+                  //std::cout << "discarding child..." << std::endl;
+                  _discardedSet.push_back(p);
+                  goto nextParent; // do not process discarded child
+               }
+
+               // std::cout << "child: ";
+               // _dd->printNode(std::cout, child);
+               // std::cout << std::endl;
+
                bool newNode = child->nbParents()==0; // is this a newly created node?
                auto theCost = _dd->cost(p,l);
                auto ep = p->getBound() + theCost;
@@ -448,17 +482,21 @@ void Restricted::compute(Bounds& bnds)
                      if (nbNode > _mxw - 1) {
                         //std::cout << "JUMP..." << nbNode << '/' << _mxw << "\n";
                         _dd->_exact = false;
-                        goto next;
+                        discarding = true;
+                        //goto nextParent;
+                        //goto next;
                      }
                   }
                }
             }            
          }
+         nextParent:;
       }         
-   next:;
+   //next:;
    }
    //_dd->computeBest(getName());
    tighten(_dd->_trg);
+   //_dd->display();
 }
 
 // ----------------------------------------------------------------------

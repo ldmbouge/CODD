@@ -8,16 +8,6 @@
 #include "RuntimeMonitor.hpp"
 #include "pool.hpp"
 
-struct QNode {
-   ANode::Ptr node;
-   double    bound;
-   friend std::ostream& operator<<(std::ostream& os,const QNode& q) {
-      return os << "QNode[(" << q.node->getId() << ','
-                << q.node->getBound() << ','
-                << q.node->getBackwardBound() << ")," << q.bound << "]";
-   }
-};
-
 void BAndB::search(Bounds& bnds)
 {
    auto bbPool = _theDD->makeNDAllocator();
@@ -68,6 +58,7 @@ void BAndB::search(Bounds& bnds)
        // cout << "----------------------------------------------------------------------" << "\n";
       
       auto bbn = pq.extractMax();
+      //std::cout << "bbn node dequeued: " << bbn << std::endl;
       auto curDual = bbn.bound;
       bnds.setDual(bbn.node->getBound(),curDual);
       auto now = RuntimeMonitor::cputime();

@@ -33,6 +33,7 @@ public:
    Bounds(std::shared_ptr<AbstractDD> dd);
    void attach(std::shared_ptr<AbstractDD> dd);
    void setPrimal(double p)         { _primal = p;_primalSet = true;}
+   void setPrimalG(double g, double p) { _g = g;_primal = p;_primalSet = true;}
    void setDual(double g,double h)  { _g = g;_dual = h;_dualSet = true;}
    double getPrimal() const         { return _primal;}
    bool hasPrimal() const noexcept  { return _primalSet;}
@@ -117,10 +118,11 @@ public:
    virtual unsigned getLastId() const noexcept = 0;
    virtual AbstractNodeAllocator::Ptr makeNDAllocator() const noexcept = 0;
    double currentOpt() const { return _trg->getBound();}
-   bool apply(ANode::Ptr from,Bounds& bnds);
+   bool apply(ANode::Ptr from,Bounds& bnds,bool dual=false);
    std::vector<int> incumbent();
    void compute(Bounds& bnds);
    std::vector<ANode::Ptr> computeCutSet();
+   std::vector<ANode::Ptr> theDiscardedSet();
    void print(std::ostream& os,std::string gLabel);
    void setStrategy(Strategy* s);
    void display();
@@ -139,6 +141,7 @@ public:
    virtual const std::string getName() const = 0;
    virtual void compute(Bounds&) {}
    virtual std::vector<ANode::Ptr> computeCutSet() { return std::vector<ANode::Ptr> {};}
+   virtual std::vector<ANode::Ptr> theDiscardedSet() { return std::vector<ANode::Ptr> {}; }
    virtual bool primal() const { return false;}
    virtual bool dual() const { return false;}
 };
@@ -287,12 +290,15 @@ public:
 
 class Restricted: public WidthBounded {
    void truncate(NDArray& layer);
+protected:
+   std::vector<ANode::Ptr> _discardedSet;
 public:
-   Restricted(const unsigned mxw) : WidthBounded(mxw) {}
+   Restricted(const unsigned mxw) : WidthBounded(mxw), _discardedSet(std::vector<ANode::Ptr> {}) { }
    const std::string getName() const { return "Restricted";}
    void compute(Bounds& );
    bool primal() const { return true;}
    ANode::Ptr checkDominance(CQueue<ANode::Ptr>& qn,ANode::Ptr n,double nObj);
+   std::vector<ANode::Ptr> theDiscardedSet() { return _discardedSet; }
 };
 
 
@@ -357,7 +363,7 @@ public:
       auto sp = static_cast<const Node<ST>*>(src.get());
       Node<ST>* at = nullptr;
       auto inMap = _nmap.getLoc(sp->get(),at);
-      if (!inMap) {
+      if (true) { //!inMap) {
          auto reuse = _base->claimNode();
          if (reuse) {
             Node<ST>* nn = static_cast<Node<ST>*>(reuse.get());
@@ -370,7 +376,7 @@ public:
             return nn;
          }
       } else {
-         //std::cout << "Already added node to B&B...." << "\n";         
+         std::cout << "Already added node to B&B...." << "\n";         
          return nullptr;
       }
    }
@@ -431,11 +437,12 @@ private:
    double initialWorst() const noexcept { return Compare{}.worstValue();}
    void update(Bounds& bnds) const {
       if (_strat->primal())  {
+         std::cout << "setting  primal to better(bound=" << _trg->getBound() << ", primal=" << bnds.getPrimal() << ") = " << DD::better(_trg->getBound(),bnds.getPrimal()) << std::endl;
          bnds.setPrimal(DD::better(_trg->getBound(),bnds.getPrimal()));
          bnds.setIncumbent(_trg->beginOptLabels(),_trg->endOptLabels());
          std::cout <<  std::setprecision(6) << "P TIGHTEN: " << bnds << "\n";
       }
-      else if (_strat->dual() && _exact) {
+      else if (_strat->dual() && _exact) { //TODO: is it correct that dual only updates primal bound?
          bnds.setPrimal(DD::better(_trg->getBound(),bnds.getPrimal()));
          bnds.setIncumbent(_trg->beginOptLabels(),_trg->endOptLabels());
          std::cout <<  std::setprecision(6) << "D TIGHTEN: " << bnds << "\n";

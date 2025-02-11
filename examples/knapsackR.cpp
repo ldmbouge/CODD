@@ -10,7 +10,7 @@
 #include <algorithm>
 #include <map>
 #include <math.h>
-#include <searchRestrictedFirst.hpp>
+#include <searchRestrictedOnly.hpp>
 
 //typedef std::set<int> GRSet;
 typedef NatSet<2> GRSet;  // 2 double-word (128 labels)
@@ -121,7 +121,7 @@ int main(int argc,char* argv[])
       return s.n == I;
    };
    
-   BAndB engine(DD<SKS,Maximize<double>, // to maximize               
+   BAndBRestrictedOnly engine(DD<SKS,Maximize<double>, // to maximize               
                 decltype(target),
                 decltype(lgf),
                 decltype(stf),
@@ -135,3 +135,6 @@ int main(int argc,char* argv[])
 
 //RF    : <f10_l-d_kp_20_879, 16> -> 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 1 1
 //Normal: <f10_l-d_kp_20_879, 16> -> 1 1 1 1 1 1 1 1 1 0 1 1 1 1 0 1 0 1 1 1 
+
+//RF    : <knapPI_3_100_1000_1, 64> -> opt=2390, 7s
+//Normal: <knapPI_3_100_1000_1, 64> -> opt=2396, 4s
