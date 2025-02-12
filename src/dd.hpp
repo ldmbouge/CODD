@@ -354,7 +354,7 @@ struct Maximize {
 };
 
 
-template <typename ST> requires Printable<ST> && Hashable<ST>
+template <typename ST, class Compare> requires Printable<ST> && Hashable<ST>
 class DDNodeAllocator :public AbstractNodeAllocator {
    LHashtable<ST> _nmap;
 public:
@@ -363,7 +363,8 @@ public:
       auto sp = static_cast<const Node<ST>*>(src.get());
       Node<ST>* at = nullptr;
       auto inMap = _nmap.getLoc(sp->get(),at);
-      if (true) { //!inMap) {
+      bool betterBound = at != nullptr && Compare{}.better(sp->getBound(),at->getBound());
+      if (!inMap || betterBound) {
          auto reuse = _base->claimNode();
          if (reuse) {
             Node<ST>* nn = static_cast<Node<ST>*>(reuse.get());
@@ -376,7 +377,9 @@ public:
             return nn;
          }
       } else {
-         std::cout << "Already added node to B&B...." << "\n";         
+         std::cout << "Already added node to B&B...." << "\n";     
+         // std::cout << "added node: " << at->getBound() << ": " << at->get() << std::endl;
+         // std::cout << "clone node: " << sp->getBound() << ": " << sp->get() << std::endl;
          return nullptr;
       }
    }
@@ -584,7 +587,8 @@ public:
       return AbstractDD::Ptr(new DD(std::forward<Args>(args)...));
    }
    AbstractNodeAllocator::Ptr makeNDAllocator() const noexcept {
-      return std::shared_ptr<DDNodeAllocator<ST>>(new DDNodeAllocator<ST>(new LPool(new Pool)));
+      std::cout << "5 > 8 = " << Compare{}.better(5,8) << std::endl;
+      return std::shared_ptr<DDNodeAllocator<ST, Compare>>(new DDNodeAllocator<ST, Compare>(new LPool(new Pool)));
    }
    void printNode(std::ostream& os,ANode::Ptr n) const {
       auto sp = static_cast<const Node<ST>*>(n.get());

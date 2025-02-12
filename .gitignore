@@ -2,3 +2,4 @@ build/**
 release/**
 **/.DS_Store
 **/*~
+.vscode/**
