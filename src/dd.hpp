@@ -33,7 +33,6 @@ public:
    Bounds(std::shared_ptr<AbstractDD> dd);
    void attach(std::shared_ptr<AbstractDD> dd);
    void setPrimal(double p)         { _primal = p;_primalSet = true;}
-   void setPrimalG(double g, double p) { _g = g;_primal = p;_primalSet = true;}
    void setDual(double g,double h)  { _g = g;_dual = h;_dualSet = true;}
    double getPrimal() const         { return _primal;}
    bool hasPrimal() const noexcept  { return _primalSet;}
@@ -377,7 +376,7 @@ public:
             return nn;
          }
       } else {
-         std::cout << "Already added node to B&B...." << "\n";     
+         // std::cout << "Already added node to B&B...." << "\n";     
          // std::cout << "added node: " << at->getBound() << ": " << at->get() << std::endl;
          // std::cout << "clone node: " << sp->getBound() << ": " << sp->get() << std::endl;
          return nullptr;
@@ -440,10 +439,10 @@ private:
    double initialWorst() const noexcept { return Compare{}.worstValue();}
    void update(Bounds& bnds) const {
       if (_strat->primal())  {
-         std::cout << "setting  primal to better(bound=" << _trg->getBound() << ", primal=" << bnds.getPrimal() << ") = " << DD::better(_trg->getBound(),bnds.getPrimal()) << std::endl;
+         //std::cout << "setting primal to better(bound=" << _trg->getBound() << ", primal=" << bnds.getPrimal() << ") = " << DD::better(_trg->getBound(),bnds.getPrimal()) << std::endl;
          bnds.setPrimal(DD::better(_trg->getBound(),bnds.getPrimal()));
          bnds.setIncumbent(_trg->beginOptLabels(),_trg->endOptLabels());
-         std::cout <<  std::setprecision(6) << "P TIGHTEN: " << bnds << "\n";
+         //std::cout <<  std::setprecision(6) << "P TIGHTEN: " << bnds << "\n";
       }
       else if (_strat->dual() && _exact) { //TODO: is it correct that dual only updates primal bound?
          bnds.setPrimal(DD::better(_trg->getBound(),bnds.getPrimal()));
@@ -587,7 +586,6 @@ public:
       return AbstractDD::Ptr(new DD(std::forward<Args>(args)...));
    }
    AbstractNodeAllocator::Ptr makeNDAllocator() const noexcept {
-      std::cout << "5 > 8 = " << Compare{}.better(5,8) << std::endl;
       return std::shared_ptr<DDNodeAllocator<ST, Compare>>(new DDNodeAllocator<ST, Compare>(new LPool(new Pool)));
    }
    void printNode(std::ostream& os,ANode::Ptr n) const {

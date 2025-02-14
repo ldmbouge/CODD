@@ -494,6 +494,7 @@ void Restricted::compute(Bounds& bnds)
       }         
    //next:;
    }
+   _dd->computeBestBackward(getName());
    //_dd->computeBest(getName());
    tighten(_dd->_trg);
    //_dd->display();

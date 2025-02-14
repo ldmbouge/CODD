@@ -24,10 +24,9 @@ void BAndBRestrictedOnly::search(Bounds& bnds)
    double optTime = 0.0;
    bnds.onSolution([ss,start,&optTime](const auto& lbls) {
       optTime = RuntimeMonitor::elapsedSince(start);
-      std::cout << "TIME:" << setprecision(ss) << optTime << "\n";
+      //std::cout << "TIME:" << setprecision(ss) << optTime << "\n";
    });
    AbstractDD::Ptr restricted = _theDD->duplicate();
-
    restricted->setStrategy(new Restricted(_mxw));
 
    auto hOrder = [restricted](const QNode& a,const QNode& b) {
@@ -42,11 +41,13 @@ void BAndBRestrictedOnly::search(Bounds& bnds)
       rootNode->setBackwardBound(primalRootValue);
       pq.insertHeap(QNode { rootNode, primalRootValue } );   
    } else {
-      pq.insertHeap(QNode { rootNode, restricted->initialWorst() } );   
+      pq.insertHeap(QNode { rootNode, restricted->initialWorst() } );
    }
 
-
+   unsigned nNode = 0,ttlNode = 0,insDom=0,pruned=0;
    // Main Loop
+   cout << "B&B Nodes          " << setw(6) << "Dual\t " << setw(6) << "Primal\t Gap(%)\n";
+   cout << "----------------------------------------------\n";
    while(!pq.empty()) {
       auto bbn = pq.extractMax();
 
@@ -54,41 +55,59 @@ void BAndBRestrictedOnly::search(Bounds& bnds)
       // restricted->printNode(std::cout, bbn.node);
       // std::cout << std::endl;
 
-      auto curPrimal = bbn.bound;
-      //bnds.setPrimalG(bbn.node->getBound(),curPrimal); 
-      //TODO: ask if makes sense to update global here
+      
+      auto curDual = bbn.bound;
+      bnds.setDual(bbn.node->getBound(),curDual);
+      auto now = RuntimeMonitor::cputime();
+      auto fs = RuntimeMonitor::elapsedMilliseconds(start,now);
+      auto fl = RuntimeMonitor::elapsedMilliseconds(last,now);
 
-      auto compPrimal = bbn.node->getBound() + restricted->local(bbn.node, LocalContext::DDInit);
-      if (!restricted->isBetterEQ(compPrimal,curPrimal)) {
-         //cout<< " primal comp improve!\n";
-         compPrimal = compPrimal;
+      if (fl > 5000) {
+         double gap = 100 * std::abs(bnds.getPrimal() - curDual) / bnds.getPrimal();      
+         cout << std::fixed << "B&B(" << setw(5) << nNode << ")\t " << setprecision(6);
+         if (curDual == restricted->initialWorst())
+            cout << setw(7) << "-"  << "\t " << setw(7) << bnds.getPrimal() << "\t ";
+         else
+            cout << setw(7) << curDual << "\t " << setw(7) << bnds.getPrimal() << "\t ";
+         if (gap > 100)
+            cout << setw(6) << "-";
+         else cout << setw(6) << setprecision(4) << gap << "%";
+         cout << "\t time:" << setw(6) << setprecision(4) <<  fs / 1000.0 << "s";
+         cout << "\n";
+         last = RuntimeMonitor::cputime();
       }
-
-      // cout << "CURPRIMAL:" << curPrimal << "\t DUAL:" << bnds.getDual()
-      //      << " isBetter:" << restricted->isBetter(curPrimal,bnds.getDual()) << "\n";
-      // if (!restricted->isBetter(curPrimal,bnds.getDual())) {
+      // auto compDual = bbn.node->getBound() + restricted->local(bbn.node, LocalContext::DDInit);
+      // //cout << "DUAL KEY:" << curDual << " dualCOMP:" << compDual << "\n";
+      // if (!restricted->isBetterEQ(compDual,curDual)) {
+      //    //cout<< " dual comp improve!\n";
+      //    curDual = compDual;
+      // }
+      ttlNode++;
+      // cout << "CURDUAL:" << curDual << "\t PRIMAL:" << bnds.getPrimal()
+      //        << " isBetter:" << restricted->isBetter(curDual,bnds.getPrimal()) << "\n";
+      // if (!restricted->isBetter(curDual,bnds.getPrimal())) {
       //    bbPool->release(bbn.node);
       //    continue;
       // }
-
+      nNode++;
       restricted->apply(bbn.node,bnds,true);
       //cout << "primalBetter? " << primalBetter << endl;
       //if (!restricted->isExact()) {
             
          auto discardSet = restricted->theDiscardedSet();
-         cout << "discarded set: " << discardSet << endl;
+         //cout << "discarded set: " << discardSet << endl;
          for(auto n : discardSet) {
                
-            std::cout << "discarded: ";
-            restricted->printNode(std::cout, n);
-            std::cout << std::endl;
+            // std::cout << "discarded: ";
+            // restricted->printNode(std::cout, n);
+            // std::cout << std::endl;
 
             // if (!restricted->isBetter(n->getBound() + n->getBackwardBound(),bnds.getDual())) {
             //    continue; // the loop over the discard set! Not the main loop
             // }
 
             auto nd = bbPool->cloneNode(n);
-            if(nd) {
+            if (nd) {
                assert(nd->getBound() == n->getBound());
                double bwd;
 
@@ -100,30 +119,35 @@ void BAndBRestrictedOnly::search(Bounds& bnds)
                // } else bwd = n->getBackwardBound();
                bwd = n->getBackwardBound();
                   
-               const auto insKey = n->getBound() + bwd;
-               const auto improve = true; //restricted->isBetter(insKey,bnds.getDual());
+               const auto insKey = n->getBound()+bwd;
+               const auto improve = restricted->isBetter(insKey,bnds.getPrimal());
+               cout << "insKey:" << insKey << "=" << n->getBound() << "+" << bwd << " > primal:" << bnds.getPrimal() << " = " << improve << endl;
                if(improve) {
                   //cout << "insert: " << nd << endl;
                   pq.insertHeap(QNode {nd, insKey });
-                  cout << "insert: " << endl << "\t";
-                  restricted->printNode(std::cout, nd);
-                  cout << endl;
+                  // cout << "insert: " << endl << "\t";
+                  // restricted->printNode(std::cout, nd);
+                  // cout << endl;
                }
-            } else {
-               cout << "clone failed: " << endl << "\t";
-               restricted->printNode(std::cout, n);
-               cout << endl;
-               //exit(-42);
-            }
+            } // else {
+            //    cout << "clone failed: " << endl << "\t";
+            //    restricted->printNode(std::cout, n);
+            //    cout << endl;
+            //    //exit(-42);
+            // }
          }
 
       //}
       bbPool->release(bbn.node);
    }
 
-   cout << "Done(" << _mxw << "):" << bnds.getPrimal() << endl
-        << "Sol: " << bnds << endl
+   cout << setprecision(ss);
+   auto spent = RuntimeMonitor::elapsedSince(start);
+   cout << "Done(" << _mxw << "):" << bnds.getPrimal() << "\t #nodes:" <<  nNode << "/" << ttlNode
+        << "\t P/D:" << pruned << "/" << insDom
+        << "\t Time:" << optTime/1000 << "/" << spent/1000 << "s"
         << "\t LIM?:" << (pq.size() > 0)
+        << "\t Seen:" << nbSeen
         << "\n";
 }
 

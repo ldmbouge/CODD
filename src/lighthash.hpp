@@ -90,7 +90,7 @@ public:
       assert(at < _mxs);
       HTNode* cur =  (_mgc[at]==_magic) ? _tab[at] : nullptr;
       while (cur != nullptr) {
-         std::cout << "Equal{}(" << cur->_data->get() << ", "<< key << ")" << std::endl; 
+         //std::cout << "Equal{}(" << cur->_data->get() << ", "<< key << ")" << std::endl; 
          if (Equal{}(cur->_data->get(),key)) {
             val = cur->_data;
             return HTAt(at, true);

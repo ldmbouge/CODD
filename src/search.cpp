@@ -79,7 +79,7 @@ void BAndB::search(Bounds& bnds)
          cout << "\t time:" << setw(6) << setprecision(4) <<  fs / 1000.0 << "s";
          cout << "\n";
          last = RuntimeMonitor::cputime();
-     }
+      }
       auto compDual = bbn.node->getBound() + relaxed->local(bbn.node,LocalContext::DDInit);
       //cout << "DUAL KEY:" << curDual << " dualCOMP:" << compDual << "\n";
       if (!relaxed->isBetterEQ(compDual,curDual)) {
@@ -94,8 +94,8 @@ void BAndB::search(Bounds& bnds)
       cout << "\t(" << curDual << ")" << " SZ:" << pq.size() << endl;
 #endif
       ttlNode++;
-      // cout << "CURDUAL:" << curDual << "\t PRIMAL:" << bnds.getPrimal()
-      //      << " isBetter:" << relaxed->isBetter(curDual,bnds.getPrimal()) << "\n";
+        cout << "CURDUAL:" << curDual << "\t PRIMAL:" << bnds.getPrimal()
+             << " isBetter:" << relaxed->isBetter(curDual,bnds.getPrimal()) << "\n";
       if (!relaxed->isBetter(curDual,bnds.getPrimal())) {
          bbPool->release(bbn.node);
          continue;
