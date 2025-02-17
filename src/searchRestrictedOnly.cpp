@@ -58,24 +58,7 @@ void BAndBRestrictedOnly::search(Bounds& bnds)
       
       auto curDual = bbn.bound;
       bnds.setDual(bbn.node->getBound(),curDual);
-      auto now = RuntimeMonitor::cputime();
-      auto fs = RuntimeMonitor::elapsedMilliseconds(start,now);
-      auto fl = RuntimeMonitor::elapsedMilliseconds(last,now);
 
-      if (fl > 5000) {
-         double gap = 100 * std::abs(bnds.getPrimal() - curDual) / bnds.getPrimal();      
-         cout << std::fixed << "B&B(" << setw(5) << nNode << ")\t " << setprecision(6);
-         if (curDual == restricted->initialWorst())
-            cout << setw(7) << "-"  << "\t " << setw(7) << bnds.getPrimal() << "\t ";
-         else
-            cout << setw(7) << curDual << "\t " << setw(7) << bnds.getPrimal() << "\t ";
-         if (gap > 100)
-            cout << setw(6) << "-";
-         else cout << setw(6) << setprecision(4) << gap << "%";
-         cout << "\t time:" << setw(6) << setprecision(4) <<  fs / 1000.0 << "s";
-         cout << "\n";
-         last = RuntimeMonitor::cputime();
-      }
       // auto compDual = bbn.node->getBound() + restricted->local(bbn.node, LocalContext::DDInit);
       // //cout << "DUAL KEY:" << curDual << " dualCOMP:" << compDual << "\n";
       // if (!restricted->isBetterEQ(compDual,curDual)) {
@@ -109,31 +92,11 @@ void BAndBRestrictedOnly::search(Bounds& bnds)
             auto nd = bbPool->cloneNode(n);
             if (nd) {
                assert(nd->getBound() == n->getBound());
-               double bwd;
-
-               // if (restricted->hasLocal()) {
-               //    auto newBnd = restricted->local(nd,LocalContext::BBCtx);
-               //    if (!restricted->isBetter(newBnd,n->getBackwardBound()))
-               //       bwd = newBnd;
-               //    else bwd = n->getBackwardBound();
-               // } else bwd = n->getBackwardBound();
-               bwd = n->getBackwardBound();
-                  
-               const auto insKey = n->getBound()+bwd;
-               const auto improve = restricted->isBetter(insKey,bnds.getPrimal());
-               cout << "insKey:" << insKey << "=" << n->getBound() << "+" << bwd << " > primal:" << bnds.getPrimal() << " = " << improve << endl;
-               if(improve) {
-                  //cout << "insert: " << nd << endl;
-                  pq.insertHeap(QNode {nd, insKey });
-                  // cout << "insert: " << endl << "\t";
-                  // restricted->printNode(std::cout, nd);
-                  // cout << endl;
-               }
+               pq.insertHeap(QNode {nd, nd->getBound() });
             } // else {
             //    cout << "clone failed: " << endl << "\t";
             //    restricted->printNode(std::cout, n);
             //    cout << endl;
-            //    //exit(-42);
             // }
          }
 
