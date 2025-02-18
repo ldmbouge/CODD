@@ -107,7 +107,8 @@ int main(int argc,char* argv[])
       else  
         lb = std::max({lb,(int)std::ceil(s.k * (s.k -1)/2),OPT[s.k]+1});
       
-      return Range::closeInc(lb,ub);
+      assert(lb < ub+1); //TODO: check if this happens, why was closeInc -> `static Range closeInc(int f,int t) noexcept { return (f < t+1) ? Range(f,t+inc[f > t]) : Range(0,0);}` used
+      return Range::close(lb,ub);
    };
    const auto stf = [n](const SGRuler& s,const int label) -> std::optional<SGRuler> {
       bool legal = !std::foldl(s.m,[label,&s](bool acc,int i) { return acc || s.d.contains(label - i);},false);

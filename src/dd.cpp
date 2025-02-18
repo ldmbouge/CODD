@@ -320,7 +320,8 @@ void Exact::compute(Bounds& bnds)
    while (!qn.empty()) {
       auto p = qn.deQueue();
       auto remLabels = _dd->getLabels(p,DDExact);
-      for(auto l : remLabels) {     
+      while(remLabels->more()) {  
+         auto l = remLabels->getAndNext();  
          auto child = _dd->transition(bnds,p,l); // we get back a new node, or an already existing one.
          if (child) {
             const bool newNode = child->nbParents()==0; // is this a newly created node?
@@ -439,7 +440,8 @@ void Restricted::compute(Bounds& bnds)
          // std::cout << std::endl;
          
          auto remLabels = _dd->getLabels(p,DDRestricted);
-         for(auto l : remLabels) {
+         while(remLabels->more()) {  
+            auto l = remLabels->getAndNext();  
             //std::cout << "label: " << l << std::endl;
             auto child = _dd->transition(bnds,p,l); // we get back a new node, or an already existing one.
             if (child) {
@@ -735,7 +737,8 @@ void Relaxed::compute(Bounds& bnds)
       //std::cout << lk.size() << " " << std::flush;
       for(auto p : lk) { // loop over layer lk. p is a "parent" node.
          auto remLabels = _dd->getLabels(p,DDRelaxed);
-         for(auto l : remLabels) {
+         while(remLabels->more()) {  
+            auto l = remLabels->getAndNext();  
             auto child = _dd->transition(bnds,p,l); // we get back a new node, or an already existing one.
             if (child) {
                bool newNode = child->nbParents()==0; // is this a newly created node?

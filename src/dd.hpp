@@ -113,7 +113,7 @@ public:
    virtual bool dominates(ANode::Ptr f,ANode::Ptr s) = 0;
    virtual void update(Bounds& bnds) const = 0;
    virtual void printNode(std::ostream& os,ANode::Ptr n) const = 0;
-   virtual GNSet getLabels(ANode::Ptr src,DDContext) const = 0;
+   virtual DDGen::Ptr getLabels(ANode::Ptr src,DDContext) const = 0;
    virtual unsigned getLastId() const noexcept = 0;
    virtual AbstractNodeAllocator::Ptr makeNDAllocator() const noexcept = 0;
    double currentOpt() const { return _trg->getBound();}
@@ -485,14 +485,15 @@ private:
    ANode::Ptr target() {
       return _trg = makeNode(_stt());
    }
-   GNSet getLabels(ANode::Ptr src,DDContext c) const {
+   DDGen::Ptr getLabels(ANode::Ptr src,DDContext c) const {
       auto op = static_cast<const Node<ST>*>(src.get());
-      auto valSet = _lgf(op->get(),c);
-      if constexpr (std::is_same<decltype(valSet),GNSet>::value) {
-         return valSet;
-      } else {
-         return GNSet(valSet);
-      }
+      return makeDDGen(_lgf(op->get(),c));
+      //auto valSet = _lgf(op->get(),c);
+      // if constexpr (std::is_same<decltype(valSet),GNSet>::value) {
+      //    return valSet;
+      // } else {
+      //    return GNSet(valSet);
+      // }
    }
    ANode::Ptr transition(Bounds& bnds,ANode::Ptr src,int label) {
       auto op = static_cast<const Node<ST>*>(src.get());
