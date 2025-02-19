@@ -1331,7 +1331,7 @@ public:
                        _it(_oc.begin()),
                        _end(_oc.end()) {}
    ~DDGenOC() {
-     std::cout << "DDGenOC::~DDGenOC " << this << "\n";
+     //std::cout << "DDGenOC::~DDGenOC " << this << "\n";
    }
    int getAndNext() noexcept {
      return *_it++;
@@ -1347,7 +1347,7 @@ class DDGenRange :public DDGen {
 public:
    DDGenRange(const Range& r) : _it(r.from()),_end(r.to()) {}
    ~DDGenRange() {
-     std::cout << "DDGenRange::~DDGenRange " << this << "\n";
+     //std::cout << "DDGenRange::~DDGenRange " << this << "\n";
    }
    int getAndNext() noexcept {
      return _it++;
@@ -1369,7 +1369,7 @@ public:
                        _it(_gns.begin()),
                        _end(_gns.end()) {}
    ~DDGenGNset() {
-     std::cout << "DDGenGNset::~DDGenGNset " << this << "\n";
+     //std::cout << "DDGenGNset::~DDGenGNset " << this << "\n";
    }
    int getAndNext() noexcept {
      return *_it++;
@@ -1379,22 +1379,12 @@ public:
    }
 };
 
-template <class C> auto makeDDGen(Ordered<C>&& oc) {
-   return std::make_unique<DDGenOC<C>>(std::move(oc));
+//template <class C> DDGen::Ptr makeDDGen(Ordered<C>&& oc);
+template <class C> DDGen::Ptr makeDDGen(const Ordered<C>& oc) {
+   return std::make_unique<DDGenOC<C>>(oc);
 }
-// template <class C> auto makeDDGen(const Ordered<C>& oc) {
-//    return std::make_unique<DDGenOC<C>>(oc);
-// }
-
-auto makeDDGen(GNSet&& gns) {
-   return std::make_unique<DDGenGNset>(std::move(gns));
-}
-// auto makeDDGen(const GNSet& gns) {
-//    return std::make_unique<DDGenGNset>(gns);
-// }
-
-auto makeDDGen(const Range& r) {
-   return std::make_unique<DDGenRange>(r);
-}
+//DDGen::Ptr makeDDGen(GNSet&& gns);
+DDGen::Ptr makeDDGen(const GNSet& gns);
+DDGen::Ptr makeDDGen(const Range& r);
 
 #endif

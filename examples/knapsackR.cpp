@@ -94,6 +94,7 @@ int main(int argc,char* argv[])
    };
    const auto lgf = [weight](const SKS& s,DDContext) {
       //auto r = Range::close(s.c >= weight[s.n],0);
+      //auto r = Range::close(0, s.c >= weight[s.n]);
       auto r = decreasing(Range::close(0,s.c >= weight[s.n]));
       return r;
    };

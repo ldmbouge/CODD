@@ -92,6 +92,7 @@ void BAndBRestrictedOnly::search(Bounds& bnds)
             auto nd = bbPool->cloneNode(n);
             if (nd) {
                assert(nd->getBound() == n->getBound());
+               cout << "new bnd: " << nd->getBound() << endl;
                pq.insertHeap(QNode {nd, nd->getBound() });
             } // else {
             //    cout << "clone failed: " << endl << "\t";
@@ -111,6 +112,7 @@ void BAndBRestrictedOnly::search(Bounds& bnds)
         << "\t Time:" << optTime/1000 << "/" << spent/1000 << "s"
         << "\t LIM?:" << (pq.size() > 0)
         << "\t Seen:" << nbSeen
+        << "\nSol: " << bnds
         << "\n";
 }
 
