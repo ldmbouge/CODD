@@ -73,7 +73,7 @@ void BAndBRestrictedOnly::search(Bounds& bnds)
       //    continue;
       // }
       nNode++;
-      restricted->apply(bbn.node,bnds,true);
+      restricted->apply(bbn.node,bnds);
       //cout << "primalBetter? " << primalBetter << endl;
       //if (!restricted->isExact()) {
             
@@ -92,8 +92,11 @@ void BAndBRestrictedOnly::search(Bounds& bnds)
             auto nd = bbPool->cloneNode(n);
             if (nd) {
                assert(nd->getBound() == n->getBound());
-               cout << "new bnd: " << nd->getBound() << endl;
-               pq.insertHeap(QNode {nd, nd->getBound() });
+               //cout << "new bnd: " << nd->getBound() << endl;
+               // cout << "adding to q: ";
+               // restricted->printNode(std::cout, nd);
+               // cout << endl;
+               pq.insertHeap(QNode {nd, nd->getBound()+nd->getBackwardBound() });
             } // else {
             //    cout << "clone failed: " << endl << "\t";
             //    restricted->printNode(std::cout, n);

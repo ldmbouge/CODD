@@ -94,8 +94,8 @@ void BAndB::search(Bounds& bnds)
       cout << "\t(" << curDual << ")" << " SZ:" << pq.size() << endl;
 #endif
       ttlNode++;
-        cout << "CURDUAL:" << curDual << "\t PRIMAL:" << bnds.getPrimal()
-             << " isBetter:" << relaxed->isBetter(curDual,bnds.getPrimal()) << "\n";
+      //   cout << "CURDUAL:" << curDual << "\t PRIMAL:" << bnds.getPrimal()
+      //        << " isBetter:" << relaxed->isBetter(curDual,bnds.getPrimal()) << "\n";
       if (!relaxed->isBetter(curDual,bnds.getPrimal())) {
          bbPool->release(bbn.node);
          continue;
@@ -198,5 +198,6 @@ void BAndB::search(Bounds& bnds)
         << "\t Time:" << optTime/1000 << "/" << spent/1000 << "s"
         << "\t LIM?:" << (pq.size() > 0)
         << "\t Seen:" << nbSeen
-        << "\n";
+        << "\n"
+        << "sol: " << bnds << endl;
 }

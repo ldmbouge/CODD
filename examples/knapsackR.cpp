@@ -93,6 +93,10 @@ int main(int argc,char* argv[])
       return SKS {I,0};
    };
    const auto lgf = [weight](const SKS& s,DDContext) {
+      // if(s.c >= weight[s.n])
+      //    return GNSet{0, 1};
+      // else
+      //    return GNSet{0};
       //auto r = Range::close(s.c >= weight[s.n],0);
       //auto r = Range::close(0, s.c >= weight[s.n]);
       auto r = decreasing(Range::close(0,s.c >= weight[s.n]));

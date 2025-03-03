@@ -62,11 +62,11 @@ void AbstractDD::compute(Bounds& bnds)
    //computeBestBackward(_strat->getName());
 }
 
-bool AbstractDD::apply(ANode::Ptr from,Bounds& bnds, bool dual)
+bool AbstractDD::apply(ANode::Ptr from,Bounds& bnds)
 {
    makeInitFrom(from);
    compute(bnds);
-   bool isBetterValue = isBetter(currentOpt(),dual ? bnds.getDual() : bnds.getPrimal());
+   bool isBetterValue = isBetter(currentOpt(), bnds.getPrimal());
    if (isBetterValue) 
       update(bnds);
    return isBetterValue;
@@ -147,6 +147,8 @@ void AbstractDD::saveGraph(std::ostream& os,std::string gLabel)
    
    h.buildHeap();
    std::string colors[2] = {"red","green"};
+   std::string edgeColors[2] = {"black","blue"};
+   std::string arrowHeads[2] = {"normal","tee"};
    os << "digraph MDD {" << std::endl;
    os << "label=\"" << gLabel << "\";\n"; 
    os << " node [style=filled gradientangle=270];\n"; 
@@ -169,7 +171,14 @@ void AbstractDD::saveGraph(std::ostream& os,std::string gLabel)
          os << "\" ->" << "\"";
          printNode(os,to);
          os << "\"";
-         os << " [ label=\"" << k->_obj << "(" << k->_lbl << ")" << "\" ];\n";
+
+         auto ds = this->theDiscardedSet();
+         bool isDiscarded = std::find(ds.begin(),ds.end(),to)!=ds.end();
+
+         os << " [ label=\"" << k->_obj << "(" << k->_lbl << ")\"" 
+            << ", color=\"" << edgeColors[isDiscarded] << "\""
+            << ", arrowhead=\"" << arrowHeads[isDiscarded] << "\""
+            << " ];\n";
       }
    }
    os << "}" << std::endl;
@@ -440,18 +449,11 @@ void Restricted::compute(Bounds& bnds)
          // std::cout << std::endl;
          
          auto remLabels = _dd->getLabels(p,DDRestricted);
-         while(remLabels->more()) {  
-            auto l = remLabels->getAndNext();  
+         while(remLabels->more()) {
+            auto l = remLabels->getAndNext();
             //std::cout << "label: " << l << std::endl;
             auto child = _dd->transition(bnds,p,l); // we get back a new node, or an already existing one.
             if (child) {
-
-               if(discarding) { // if node has additional labels, add it to discarded
-                  //std::cout << "discarding child..." << std::endl;
-                  _discardedSet.push_back(p);
-                  goto nextParent; // do not process discarded child
-               }
-
                // std::cout << "child: ";
                // _dd->printNode(std::cout, child);
                // std::cout << std::endl;
@@ -470,12 +472,23 @@ void Restricted::compute(Bounds& bnds)
                Edge::Ptr e = new (_dd->_mem) Edge(p,child,l);
                e->_obj = theCost;
                _dd->addArc(e); // connect to new node
+               //std::cout << "isBetter(parent+cost=" << ep << ", child=" << child->getBound() << ") = " << _dd->isBetter(ep,child->getBound()) << std::endl;
                if (_dd->isBetter(ep,child->getBound())) {
                   child->setBound(ep);
                   child->_optLabels = p->_optLabels;
                   child->_optLabels.push_back(e->_lbl);
                }
                child->setLayer(std::max(child->getLayer(),p->getLayer()+1));
+
+               if(discarding) { // if node has additional labels, add it to discarded
+                  // std::cout << "discarding child...  ";
+                  // _dd->printNode(std::cout, child);
+                  // std::cout << std::endl;
+                  _discardedSet.push_back(child);
+                  //goto nextParent; // do not process discarded child
+                  goto nextLabel;
+               }
+
                if (!_dd->eqSink(child)) {
                   if (newNode) {
                      qn.enQueue(child);
@@ -490,9 +503,10 @@ void Restricted::compute(Bounds& bnds)
                      }
                   }
                }
-            }            
+            }  
+            nextLabel:;          
          }
-         nextParent:;
+         //nextParent:;
       }         
    //next:;
    }

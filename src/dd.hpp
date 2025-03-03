@@ -117,7 +117,7 @@ public:
    virtual unsigned getLastId() const noexcept = 0;
    virtual AbstractNodeAllocator::Ptr makeNDAllocator() const noexcept = 0;
    double currentOpt() const { return _trg->getBound();}
-   bool apply(ANode::Ptr from,Bounds& bnds,bool dual=false);
+   bool apply(ANode::Ptr from,Bounds& bnds);
    std::vector<int> incumbent();
    void compute(Bounds& bnds);
    std::vector<ANode::Ptr> computeCutSet();
@@ -447,7 +447,7 @@ private:
       else if (_strat->dual() && _exact) { //TODO: is it correct that dual only updates primal bound?
          bnds.setPrimal(DD::better(_trg->getBound(),bnds.getPrimal()));
          bnds.setIncumbent(_trg->beginOptLabels(),_trg->endOptLabels());
-         std::cout <<  std::setprecision(6) << "D TIGHTEN: " << bnds << "\n";
+         //std::cout <<  std::setprecision(6) << "D TIGHTEN: " << bnds << "\n";
       }
    }
    ANode::Ptr hasNode(const ST& state) {

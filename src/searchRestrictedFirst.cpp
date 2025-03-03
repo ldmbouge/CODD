@@ -76,7 +76,7 @@ void BAndBRestrictedFirst::search(Bounds& bnds)
       //    continue;
       // }
 
-      bool primalBetter = restricted->apply(bbn.node,bnds,true);
+      bool primalBetter = restricted->apply(bbn.node,bnds);
       //cout << "primalBetter? " << primalBetter << endl;
       if(primalBetter) {
          dualBetter = relaxed->apply(bbn.node, bnds);
