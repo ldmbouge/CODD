@@ -201,4 +201,6 @@ void BAndB::search(Bounds& bnds)
         << "\t Seen:" << nbSeen
         << "\n"
         << "sol: " << bnds << endl;
+
+   cout << ddr[0]->getWidth() << " " << nNode << "/" << ttlNode << " " << spent/1000 << endl;
 }

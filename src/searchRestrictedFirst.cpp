@@ -85,17 +85,17 @@ void BAndBRestrictedFirst::search(Bounds& bnds)
       //cout << "discarded set: " << discardSet << endl;
       for(auto n : discardSet) {
             
-         std::cout << "discarded: ";
-         restricted->printNode(std::cout, n);
-         std::cout << std::endl;
+         // std::cout << "discarded: ";
+         // restricted->printNode(std::cout, n);
+         // std::cout << std::endl;
 
          if(relaxed->hasLocal()) {
             //std::cout << "has local" << std::endl;
             double localDual = relaxed->local(n, LocalContext::BBCtx);
-            std::cout << "isBetter(primal=" << bnds.getPrimal() << ", bnd=" << n->getBound() << "+local=" << localDual << "="<< n->getBound()+localDual <<") = " << relaxed->isBetterEQ(bnds.getPrimal(), n->getBound() + localDual) << std::endl;
+            // std::cout << "isBetter(primal=" << bnds.getPrimal() << ", bnd=" << n->getBound() << "+local=" << localDual << "="<< n->getBound()+localDual <<") = " << relaxed->isBetterEQ(bnds.getPrimal(), n->getBound() + localDual) << std::endl;
             if(relaxed->isBetterEQ(bnds.getPrimal(), n->getBound() + localDual)) {
                continue;
-               std::cout << "local skip" << std::endl;
+               // std::cout << "local skip" << std::endl;
             }
          }
 
@@ -107,14 +107,15 @@ void BAndBRestrictedFirst::search(Bounds& bnds)
             //    std::cout << "\t-->widening... " << w << "\n";
             // }
             auto nd = bbPool->cloneNode(n);
-            std::cout << "cloned and got: " << nd << std::endl;
+            // std::cout << "cloned and got: " << nd << std::endl;
             if (nd) {
                assert(nd->getBound() == n->getBound());
                pq.insertHeap(QNode {nd, nd->getBound()+nd->getBackwardBound() });
             }
-         } else {
-            std::cout << "relaxed skip" << std::endl;
          }
+         // else {
+         //    std::cout << "relaxed skip" << std::endl;
+         // }
          bbPool->release(bbn.node);
       }
    }
@@ -128,6 +129,7 @@ void BAndBRestrictedFirst::search(Bounds& bnds)
         << "\t Seen:" << nbSeen
         << "\nSol: " << bnds
         << "\n";
+   cout << ddr[0]->getWidth() << " " << nNode << " " << spent/1000 << endl;
 }
 
 // breaksRF 4     -> [1 1 0 1 1 1 0 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 0 1 1 1 1 1], 1323
