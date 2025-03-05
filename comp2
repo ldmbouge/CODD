@@ -1,0 +1,8 @@
+f10_l-d_kp_20_879 -> 1025: [1 1 1 1 1 1 1 1 1 0 1 1 1 1 0 1 0 1 1 1 ]
+---------------------------------------------------------------------
+Relaxed First (1 to 0)      Restricted First (1 to 0)
+with local                  with local
+Width   Nodes   Time(s)     Nodes   Time(s)
+2       1       0.001       3       0.001
+4                           
+

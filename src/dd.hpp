@@ -442,12 +442,12 @@ private:
          //std::cout << "setting primal to better(bound=" << _trg->getBound() << ", primal=" << bnds.getPrimal() << ") = " << DD::better(_trg->getBound(),bnds.getPrimal()) << std::endl;
          bnds.setPrimal(DD::better(_trg->getBound(),bnds.getPrimal()));
          bnds.setIncumbent(_trg->beginOptLabels(),_trg->endOptLabels());
-         //std::cout <<  std::setprecision(6) << "P TIGHTEN: " << bnds << "\n";
+         std::cout <<  std::setprecision(6) << "P TIGHTEN: " << bnds << "\n";
       }
       else if (_strat->dual() && _exact) { //TODO: is it correct that dual only updates primal bound?
          bnds.setPrimal(DD::better(_trg->getBound(),bnds.getPrimal()));
          bnds.setIncumbent(_trg->beginOptLabels(),_trg->endOptLabels());
-         //std::cout <<  std::setprecision(6) << "D TIGHTEN: " << bnds << "\n";
+         std::cout <<  std::setprecision(6) << "D TIGHTEN: " << bnds << "\n";
       }
    }
    ANode::Ptr hasNode(const ST& state) {

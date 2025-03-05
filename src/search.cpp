@@ -108,7 +108,7 @@ void BAndB::search(Bounds& bnds)
       relaxed->printNode(cout,bbn.node);      
 #endif
       //cout << "dualBetter? " << dualBetter << "\n";
-      if (dualBetter) {
+      if (dualBetter) { //if global opt is better than current primal
          primalBetter = restricted->apply(bbn.node,bnds);
          
          if (!restricted->isExact() && !relaxed->isExact()) {
@@ -116,6 +116,7 @@ void BAndB::search(Bounds& bnds)
             //int k = 0;
             for(auto n : cutSet) {
                //std::cout << "CUTSET(" << k++ << ") ";
+               //std::cout << "CUTSET ";               
                //relaxed->printNode(std::cout,n);
                
                if (n == relaxed->getRoot()) { // the cutset is the root. Only way out: increase width.

@@ -73,9 +73,9 @@ void BAndBRestrictedOnly::search(Bounds& bnds)
       //    continue;
       // }
       nNode++;
-      restricted->apply(bbn.node,bnds);
+      bool primalBetter = restricted->apply(bbn.node,bnds);
       //cout << "primalBetter? " << primalBetter << endl;
-      //if (!restricted->isExact()) {
+      //if (primalBetter) {
             
          auto discardSet = restricted->theDiscardedSet();
          //cout << "discarded set: " << discardSet << endl;

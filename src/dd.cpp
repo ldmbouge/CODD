@@ -66,7 +66,9 @@ bool AbstractDD::apply(ANode::Ptr from,Bounds& bnds)
 {
    makeInitFrom(from);
    compute(bnds);
-   bool isBetterValue = isBetter(currentOpt(), bnds.getPrimal());
+   bool isBetterValue = isBetter(currentOpt(), bnds.getPrimal()); //currentOpt isBetter than bnds.getPrimal
+   
+   //std::cout << "isBetter: " << isBetterValue << "   currOpt: " << currentOpt() << "   bnds.primal: " << bnds.getPrimal() << std::endl; 
    if (isBetterValue) 
       update(bnds);
    return isBetterValue;
@@ -468,7 +470,7 @@ void Restricted::compute(Bounds& bnds)
                      child = dominator;
                      newNode = false;
                   }
-               }               
+               }         
                Edge::Ptr e = new (_dd->_mem) Edge(p,child,l);
                e->_obj = theCost;
                _dd->addArc(e); // connect to new node
