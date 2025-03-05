@@ -1,8 +1,21 @@
-f10_l-d_kp_20_879 -> 1025: [1 1 1 1 1 1 1 1 1 0 1 1 1 1 0 1 0 1 1 1 ]
----------------------------------------------------------------------
-Relaxed First (1 to 0)      Restricted First (1 to 0)
-with local                  with local
-Width   Nodes   Time(s)     Nodes   Time(s)
-2       1       0.001       3       0.001
-4                           
+knapPI_1_1000_1000_1
 
+Paper results:
+relaxed first, local, dom
+Width   #B&B Nodes  Dom         Time Proof (s)
+----------------------------------------------
+2       42          6/1         0.278
+4       9           0/0         0.083
+8       21          0/0         0.062
+16      18          1/1         0.048
+32      30          10/7        0.051
+64      53          24/17       0.088
+128     201         87/162      0.162
+256     701         293/481     0.344
+512     1           0/0         0.609
+
+My results: 
+relaxed first, local, dom
+Width   #B&B Nodes  Dom         Time Proof (s)
+----------------------------------------------
+2
