@@ -124,7 +124,7 @@ int main(int argc,char* argv[])
    std::cout << "CAPA:" << capa << "\n";
    const auto init = [capa]()         { return SKS {0,capa};};
    const auto target = [I]()          { return SKS {I,0};};
-   const auto lgf = [w](const SKS& s,DDContext) { return  increasing(Range::close(0,s.c >= w[s.n]));};
+   const auto lgf = [w](const SKS& s,DDContext) { return  decreasing(Range::close(0,s.c >= w[s.n]));};
    const auto stf = [I,&w](const SKS& s,const int label) -> std::optional<SKS> {
       if (s.n < I-1) {
          return SKS { s.n+1,s.c - label * w[s.n] };
