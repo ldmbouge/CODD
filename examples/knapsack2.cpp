@@ -149,7 +149,7 @@ int main(int argc,char* argv[])
    const auto sDom = [](const SKS& a,const SKS& b) -> bool { 
       return  a.c >= b.c;
    };
-      
+   // test commit 
    BAndB engine(DD<SKS,Maximize<double>,
                decltype(target),
                decltype(lgf),
