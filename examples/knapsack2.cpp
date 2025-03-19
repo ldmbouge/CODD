@@ -147,7 +147,7 @@ int main(int argc,char* argv[])
    const auto sEq = [I](const SKS& s) -> bool              { return s.n == I;};
 
    const auto sDom = [](const SKS& a,const SKS& b) -> bool { 
-      return  a.c >= b.c;
+      return  a.n <= b.n && a.c >= b.c;
    };
    BAndB engine(DD<SKS,Maximize<double>,
                decltype(target),

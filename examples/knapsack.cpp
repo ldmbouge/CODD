@@ -156,7 +156,7 @@ int main(int argc,char* argv[])
    const auto sEq = [I](const SKS& s) -> bool              { return s.n == I;};
 
    const auto sDom = strat[3]=='D' ? [](const SKS& a,const SKS& b) -> bool { 
-      return  a.n == b.n && a.c >= b.c;
+      return  a.n <= b.n && a.c >= b.c;
    } : nullptr;
       
    if(strat[0]=='X'){

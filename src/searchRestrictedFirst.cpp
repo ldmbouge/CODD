@@ -154,7 +154,8 @@ void BAndBRestrictedFirst::search(Bounds& bnds)
 
       auto discardSet = restricted->theDiscardedSet();
 
-      cout << "discarded set: " << discardSet.size() << endl;
+
+      /*      cout << "discarded set: " << discardSet.size() << endl;
       struct {
          bool operator()(ANode::Ptr a,ANode::Ptr b) const {
             return a->getBound() < b->getBound();
@@ -174,20 +175,22 @@ void BAndBRestrictedFirst::search(Bounds& bnds)
          insDom += discardSet.size() - survivedDom.size() - tmpPruned;
          pruned += tmpPruned;
       }
-
+      */
+      std::vector<ANode::Ptr> survivedLocal;
       if(relaxed->hasLocal()) {
-         filterLocal(bnds, relaxed, survivedDom, &survivedLocal);
+         filterLocal(bnds, relaxed, discardSet, &survivedLocal);
       }      
-
+      /*
       std::cout << "discardSet   :" << discardSet.size() << "\n";
       std::cout << "survivedDom  :" << survivedDom.size() << "\n";
       std::cout << "survivedLocal:" << survivedLocal.size() << "\n";
-      static int nbRELAX = 0;
+      */
+      int nbRELAX = 0;
       for(auto n: survivedLocal) {
          nbRELAX++;
-         bool dualBetter = relaxed->apply(n, bnds);
-         std::cout << "reaching relaxed DD. Got: " << dualBetter << " B@SINK:" << relaxed->currentOpt() << "\n";         
-         if(dualBetter) {
+         //bool dualBetter = relaxed->apply(n, bnds);
+         //std::cout << "reaching relaxed DD. Got: " << dualBetter << " B@SINK:" << relaxed->currentOpt() << "\n";         
+         if(true) { // || dualBetter) {
             //if(!newGuyDominated) {
             auto nd = bbPool->cloneNode(n);
             // std::cout << "cloned and got: " << nd << std::endl;
@@ -199,7 +202,7 @@ void BAndBRestrictedFirst::search(Bounds& bnds)
          }
          bbPool->release(bbn.node);
       }
-      std::cout << "nbRELAX:" << nbRELAX << "\n";
+      //std::cout << "nbRELAX:" << nbRELAX << "\t PQ = " << pq.size() << "\n";
    }
 
 
