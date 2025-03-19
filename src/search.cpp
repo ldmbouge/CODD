@@ -164,11 +164,10 @@ void BAndB::search(Bounds& bnds)
                   delete[]allLocs;
                }
                assert(n->isExact());
+               //std::cout << "new guy: " << newGuyDominated << "\n";
                if (!newGuyDominated) {
-                  auto nd = bbPool->cloneNode(n);
-                  
-                  //std::cout << "CLONED and got:"  << nd << "\n";
-                  
+                  auto nd = bbPool->cloneNode(n);                  
+                  //std::cout << "CLONED and got:"  << nd << "\n";                 
                   if (nd) { // the node creation could return *NOTHING* if it was already created
                      assert(nd->getBound() == n->getBound());
                      double bwd;
@@ -181,14 +180,11 @@ void BAndB::search(Bounds& bnds)
                            bwd = newBnd;
                         else bwd = n->getBackwardBound();
                         //bwd = n->getBackwardBound();
-                     } else bwd = n->getBackwardBound();
-                     
+                     } else bwd = n->getBackwardBound();                     
                      const auto insKey = n->getBound() + bwd;
                      const auto improve = relaxed->isBetter(insKey,bnds.getPrimal());
-
-                     // std::cout<< "CLONE VALUE:" << insKey << " bwd:" << bwd << " PRIMAL:" << bnds.getPrimal()
-                     //          << " IMPROVED:" << (improve ? "T" : "F") << "\n";
-
+                     //std::cout<< "CLONE VALUE:" << insKey << " bwd:" << bwd << " PRIMAL:" << bnds.getPrimal()
+                     //<< " IMPROVED:" << (improve ? "T" : "F") << "\n";
                      if (improve) 
                         pq.insertHeap(QNode {nd, insKey }); //std::min(insKey,curDual)});
                   } else nbSeen++;
