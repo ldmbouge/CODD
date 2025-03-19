@@ -12,7 +12,7 @@
 void BAndBRestrictedFirst::search(Bounds& bnds)
 {
    // Setup
-
+   static int nbRELAX = 0;
    auto bbPool = _theDD->makeNDAllocator();
    using namespace std;
    unsigned int nbSeen = 0;
@@ -85,7 +85,30 @@ void BAndBRestrictedFirst::search(Bounds& bnds)
       restricted->apply(bbn.node,bnds);
             
       auto discardSet = restricted->theDiscardedSet();
-      //cout << "discarded set: " << discardSet << endl;
+      cout << "discarded set: " << discardSet.size() << endl;
+
+      struct {
+         bool operator()(ANode::Ptr a,ANode::Ptr b) const {
+            return a->getBound() < b->getBound();
+         }
+      } custom;
+      std::sort(discardSet.begin(),discardSet.end(),custom);
+      const int last = discardSet.size()-1;
+      cout << "FIRST:" << discardSet[0]->getTotalBound()   << "\n";
+      cout << "LAST :" << discardSet[last]->getTotalBound() << "\n";
+      std::vector<ANode::Ptr> rem;
+      for(auto n : discardSet) {
+         double localDual = relaxed->local(n,LocalContext::BBCtx);
+         if(!relaxed->isBetterEQ(bnds.getPrimal(), n->getBound() + localDual)) {
+            rem.push_back(n);
+            //std::cout << "\n";
+            //relaxed->printNode(std::cout,n);
+            //std::cout << "\n";            
+         }
+      }
+      discardSet = rem;
+      cout << "TRIMMED TO:" << rem.size() << "\n";
+      
       int numDiscarded = 0;
       for(auto it = discardSet.rbegin(); it != discardSet.rend(); it++) {
          // std::cout << "discarded("<< (numDiscarded++) << "/" << discardSet.size() << "): ";
@@ -99,9 +122,9 @@ void BAndBRestrictedFirst::search(Bounds& bnds)
          if(relaxed->hasLocal()) {
             //std::cout << "has local" << std::endl;
             double localDual = relaxed->local(n, LocalContext::BBCtx);
-            // std::cout << "isBetter(primal=" << bnds.getPrimal() << ", bnd=" << n->getBound() << "+local=" << localDual << "="<< n->getBound()+localDual <<") = " << relaxed->isBetterEQ(bnds.getPrimal(), n->getBound() + localDual) << std::endl;
+            std::cout << "isBetter(primal=" << bnds.getPrimal() << ", bnd=" << n->getBound() << "+local=" << localDual << "="<< n->getBound()+localDual <<") = " << relaxed->isBetterEQ(bnds.getPrimal(), n->getBound() + localDual) << std::endl;
             if(relaxed->isBetterEQ(bnds.getPrimal(), n->getBound() + localDual)) {
-               //std::cout << "local skip" << std::endl;
+               std::cout << "\t!!!local skip" << std::endl;
                continue;
             }
          }
@@ -140,27 +163,27 @@ void BAndBRestrictedFirst::search(Bounds& bnds)
             prune: 
             newGuyDominated = newGuyDominatedDD || newGuyDominatedDS;
             if (dBB) {
-               //std::cout << "new BBNode Dominated " << d << " BB nodes" << std::endl;
+               std::cout << "new BBNode Dominated " << dBB << " BB nodes" << std::endl;
                for(auto i =0u; i < dBB;i++) 
                   pq.remove(allLocsBB[i]);
                pruned += dBB;
             }
             delete[]allLocsBB;
             if (dDS) {
-               //std::cout << "new BBNode Dominated " << dDS << " BB nodes" << std::endl;
+               std::cout << "new BBNode Dominated " << dDS << " BB nodes" << std::endl;
                for(auto i: allLocsDS) 
                   discardSet.erase((i+1).base());
                pruned += dDS;
             }
          }
 
+         //std::cout << "ABOUT TO CALL Relax:" << std::endl;
+         //relaxed->printNode(std::cout,n);
+         //std::cout << "\n";
+         nbRELAX++;
          bool dualBetter = relaxed->apply(n, bnds);
+         //std::cout << "reaching relaxed DD. Got: " << dualBetter << " B@SINK:" << relaxed->currentOpt() << "\n";         
          if(dualBetter) {
-            // if (n == relaxed->getRoot()) { // the cutset is the root. Only way out: increase width.
-            //    auto w = ddr[1]->getWidth() + 1;
-            //    ddr[1]->setWidth(w);
-            //    std::cout << "\t-->widening... " << w << "\n";
-            // }
             if(!newGuyDominated) {
                auto nd = bbPool->cloneNode(n);
                // std::cout << "cloned and got: " << nd << std::endl;
@@ -192,6 +215,8 @@ void BAndBRestrictedFirst::search(Bounds& bnds)
         << "\t LIM?:" << (pq.size() > 0)
         << "\t Seen:" << nbSeen
         << "\n";
+
+   cout << "NBRELAX:" << nbRELAX << "\n";
         //<< "\nSol: " << bnds
         //<< "\n";
    // cout << ddr[0]->getWidth() << " " << nNode << " " << spent/1000 << " " << bnds.getPrimal() << endl;

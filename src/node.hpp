@@ -81,6 +81,7 @@ public:
    const auto depth() const { return _optLabels.size();}
    const auto getBound() const { return _bound;}
    const auto getBackwardBound() const { return _bbound;}
+   const auto getTotalBound() { return _bound + _bbound;}
    const Vec<int,unsigned>& getIncumbent() const noexcept { return _optLabels;}
    void setIncumbent(auto begin,auto end) {
       for(auto it = begin;it != end;it++)
