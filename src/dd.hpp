@@ -353,8 +353,12 @@ class DDNodeAllocator :public AbstractNodeAllocator {
    LHashtable<ST> _nmap;
 public:
    DDNodeAllocator(LPool::Ptr pool) : AbstractNodeAllocator(pool),_nmap(pool->get(),200000) {}
-   ANode::Ptr cloneNode(ANode::Ptr src) override {
+   ANode::Ptr cloneNode(ANode::Ptr src) override {      
       auto sp = static_cast<const Node<ST>*>(src.get());
+      Node<ST>* nn = new (_base->get()) Node<ST>(_base->get(),_base->grabId(),*sp);
+      return nn;
+      /*
+      //temporarily out. Something not correct here. [ldm]
       Node<ST>* at = nullptr;
       auto inMap = _nmap.getLoc(sp->get(),at);
       if (!inMap) {
@@ -372,7 +376,8 @@ public:
       } else {
          //std::cout << "Already added node to B&B...." << "\n";         
          return nullptr;
-      }
+         }
+      */
    }
    void release(ANode::Ptr src) override {
       //_base->release(src);
