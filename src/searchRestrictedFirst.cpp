@@ -36,15 +36,16 @@ int filterDom(Bounds& bnds, AbstractDD::Ptr dd, std::vector<ANode::Ptr> nodes, H
          bool isObjDom = dd->isBetterEQ(other->getBound(),n->getBound());
          newGuyDominated = isObjDom && dd->dominates(other,n);
          if (newGuyDominated) {
-            goto nextN;             
-         }        
+            break;          
+         }
          // bool objDom   = dd->isBetterEQ(n->getBound(),(*j)->getBound());
          // bool qnDominated = objDom && dd->dominates(n,*j);
          // if (!qnDominated)
          //    survived->push_back(n);
       }
-      survived->push_back(n);
-      nextN:
+      if(!newGuyDominated) {
+         survived->push_back(n);
+      }
    }
 
    int pruned = 0;
@@ -109,10 +110,10 @@ void BAndBRestrictedFirst::search(Bounds& bnds)
    ANode::Ptr rootNode = bbPool->cloneNode(restricted->init());
 
    if (restricted->hasLocal()) {
-      auto primalRootValue = restricted->local(rootNode,LocalContext::BBCtx);
-      cout << "primal@root:" << primalRootValue << "\n";
-      rootNode->setBackwardBound(primalRootValue);
-      pq.insertHeap(QNode { rootNode, primalRootValue } );   
+      auto dualRootValue = restricted->local(rootNode,LocalContext::BBCtx);
+      cout << "dual@root:" << dualRootValue << "\n";
+      rootNode->setBackwardBound(dualRootValue);
+      pq.insertHeap(QNode { rootNode, dualRootValue } );   
    } else {
       pq.insertHeap(QNode { rootNode, restricted->initialWorst() } );
    }
