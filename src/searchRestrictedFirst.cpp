@@ -9,6 +9,74 @@
 #include "RuntimeMonitor.hpp"
 #include "pool.hpp"
 
+void filterLocal(Bounds& bnds, AbstractDD::Ptr dd, std::vector<ANode::Ptr> nodes, std::vector<ANode::Ptr>* survived)
+{
+   for(auto n: nodes) {
+      double localDual = dd->local(n, LocalContext::BBCtx);
+      if(!dd->isBetterEQ(bnds.getPrimal(), n->getBound() + localDual)) {
+         survived->push_back(n);
+      }
+   }
+}
+
+template<typename Ord>
+int filterDom(Bounds& bnds, AbstractDD::Ptr dd, std::vector<ANode::Ptr> nodes, Heap<QNode,Ord>* pq, std::vector<ANode::Ptr>* survived)
+{
+   bool newGuyDominated   = false;
+   auto end = nodes.rend();
+   auto begin = nodes.rbegin();
+   for (auto i = begin; i != end; i++) {
+      auto n = *i;
+      auto sz = nodes.size();
+
+      //for (auto j = i+1; j != end; j++) {
+      for (auto j = begin; j != end; j++) {
+         auto other = *j;
+         if(i == j) continue;
+         bool isObjDom = dd->isBetterEQ(other->getBound(),n->getBound());
+         newGuyDominated = isObjDom && dd->dominates(other,n);
+         if (newGuyDominated) {
+            break;          
+         }
+         // bool objDom   = dd->isBetterEQ(n->getBound(),(*j)->getBound());
+         // bool qnDominated = objDom && dd->dominates(n,*j);
+         // if (!qnDominated)
+         //    survived->push_back(n);
+      }
+      if(!newGuyDominated) {
+         survived->push_back(n);
+      }
+   }
+
+   int pruned = 0;
+   for(auto n: nodes) {
+      unsigned d = 0;
+      auto pqSz = pq->size();
+      auto allLocs = new Heap<QNode,Ord>::LocType*[pqSz];
+      for(unsigned k = 0;k < pqSz;k++) {
+         auto other = (*pq)[k];
+         bool isObjDom   = dd->isBetterEQ(other->value().node->getBound(),n->getBound());
+         newGuyDominated = isObjDom && dd->dominates(other->value().node,n);
+         if (newGuyDominated) {
+            goto prune;             
+         }        
+         bool objDom   = dd->isBetterEQ(n->getBound(),other->value().node->getBound());
+         bool qnDominated = objDom && dd->dominates(n,other->value().node);
+         if (qnDominated)
+            allLocs[d++] = other;
+      }
+
+      prune:
+      if (d) {
+         for(auto i =0u; i < d;i++) 
+            pq->remove(allLocs[i]);
+         pruned += d;
+      }
+      delete[]allLocs;
+   }
+   return pruned;
+}
+
 void BAndBRestrictedFirst::search(Bounds& bnds)
 {
    // Setup
@@ -42,10 +110,10 @@ void BAndBRestrictedFirst::search(Bounds& bnds)
    ANode::Ptr rootNode = bbPool->cloneNode(restricted->init());
 
    if (restricted->hasLocal()) {
-      auto primalRootValue = restricted->local(rootNode,LocalContext::BBCtx);
-      cout << "primal@root:" << primalRootValue << "\n";
-      rootNode->setBackwardBound(primalRootValue);
-      pq.insertHeap(QNode { rootNode, primalRootValue } );   
+      auto dualRootValue = restricted->local(rootNode,LocalContext::BBCtx);
+      cout << "dual@root:" << dualRootValue << "\n";
+      rootNode->setBackwardBound(dualRootValue);
+      pq.insertHeap(QNode { rootNode, dualRootValue } );   
    } else {
       pq.insertHeap(QNode { rootNode, restricted->initialWorst() } );
    }
@@ -83,10 +151,10 @@ void BAndBRestrictedFirst::search(Bounds& bnds)
       // }
       nNode++;
       restricted->apply(bbn.node,bnds);
-            
-      auto discardSet = restricted->theDiscardedSet();
-      cout << "discarded set: " << discardSet.size() << endl;
 
+      auto discardSet = restricted->theDiscardedSet();
+
+      cout << "discarded set: " << discardSet.size() << endl;
       struct {
          bool operator()(ANode::Ptr a,ANode::Ptr b) const {
             return a->getBound() < b->getBound();
@@ -96,116 +164,44 @@ void BAndBRestrictedFirst::search(Bounds& bnds)
       const int last = discardSet.size()-1;
       cout << "FIRST:" << discardSet[0]->getTotalBound()   << "\n";
       cout << "LAST :" << discardSet[last]->getTotalBound() << "\n";
-      std::vector<ANode::Ptr> rem;
-      for(auto n : discardSet) {
-         double localDual = relaxed->local(n,LocalContext::BBCtx);
-         if(!relaxed->isBetterEQ(bnds.getPrimal(), n->getBound() + localDual)) {
-            rem.push_back(n);
-            //std::cout << "\n";
-            //relaxed->printNode(std::cout,n);
-            //std::cout << "\n";            
-         }
-      }
-      discardSet = rem;
-      cout << "TRIMMED TO:" << rem.size() << "\n";
       
-      int numDiscarded = 0;
-      for(auto it = discardSet.rbegin(); it != discardSet.rend(); it++) {
-         // std::cout << "discarded("<< (numDiscarded++) << "/" << discardSet.size() << "): ";
-         // restricted->printNode(std::cout, *it);
-         // std::cout << std::endl;
-         auto n = *it;
+      std::vector<ANode::Ptr> survivedLocal;
+      std::vector<ANode::Ptr> survivedDom;
+      
+      bool newGuyDominated = false;
+      if (relaxed->hasDominance()) {
+         int tmpPruned = filterDom<decltype(hOrder)>(bnds, relaxed, discardSet, &pq, &survivedDom);
+         insDom += discardSet.size() - survivedDom.size() - tmpPruned;
+         pruned += tmpPruned;
+      }
 
-         bool newGuyDominatedDD = false;
-         bool newGuyDominatedDS = false;
-         bool newGuyDominated   = false;
-         if(relaxed->hasLocal()) {
-            //std::cout << "has local" << std::endl;
-            double localDual = relaxed->local(n, LocalContext::BBCtx);
-            std::cout << "isBetter(primal=" << bnds.getPrimal() << ", bnd=" << n->getBound() << "+local=" << localDual << "="<< n->getBound()+localDual <<") = " << relaxed->isBetterEQ(bnds.getPrimal(), n->getBound() + localDual) << std::endl;
-            if(relaxed->isBetterEQ(bnds.getPrimal(), n->getBound() + localDual)) {
-               std::cout << "\t!!!local skip" << std::endl;
-               continue;
-            }
-         }
-         if (relaxed->hasDominance()) {
-            unsigned dBB = 0;
-            unsigned dDS = 0;
-            auto pqSz = pq.size();
-            auto dsSz = discardSet.size();
-            auto allLocsBB = new Heap<QNode,decltype(hOrder)>::LocType*[pqSz];
-            auto allLocsDS = std::vector<std::vector<ANode::Ptr>::reverse_iterator>(dsSz);
-            for(unsigned k = 0;k < pqSz;k++) {
-               auto bbn = pq[k];
-               bool isObjDom   = relaxed->isBetterEQ(bbn->value().node->getBound(),n->getBound());
-               //std::cout << "isObjDom: " << isObjDom << "   dom: " << relaxed->dominates(bbn->value().node,n) << std::endl;
-               newGuyDominatedDD = isObjDom && relaxed->dominates(bbn->value().node,n);
-               if (newGuyDominatedDD) {
-                  goto prune;             
-               }        
-               bool objDom   = relaxed->isBetterEQ(n->getBound(),bbn->value().node->getBound());
-               bool qnDominated = objDom && relaxed->dominates(n,bbn->value().node);
-               if (qnDominated)
-                  allLocsBB[dBB++] = bbn;
-            }
-            for(auto k = it+1; k != discardSet.rend(); k--) {
-               auto dsn = *k;
-               bool isObjDom   = relaxed->isBetterEQ(dsn->getBound(),n->getBound());
-               newGuyDominatedDS = isObjDom && relaxed->dominates(dsn,n);
-               if (newGuyDominatedDS) {
-                  goto prune;             
-               }        
-               bool objDom   = relaxed->isBetterEQ(n->getBound(),dsn->getBound());
-               bool qnDominated = objDom && relaxed->dominates(n,dsn);
-               if (qnDominated)
-                  allLocsDS[dDS++] = k;
-            }
-            prune: 
-            newGuyDominated = newGuyDominatedDD || newGuyDominatedDS;
-            if (dBB) {
-               std::cout << "new BBNode Dominated " << dBB << " BB nodes" << std::endl;
-               for(auto i =0u; i < dBB;i++) 
-                  pq.remove(allLocsBB[i]);
-               pruned += dBB;
-            }
-            delete[]allLocsBB;
-            if (dDS) {
-               std::cout << "new BBNode Dominated " << dDS << " BB nodes" << std::endl;
-               for(auto i: allLocsDS) 
-                  discardSet.erase((i+1).base());
-               pruned += dDS;
-            }
-         }
+      if(relaxed->hasLocal()) {
+         filterLocal(bnds, relaxed, survivedDom, &survivedLocal);
+      }      
 
-         //std::cout << "ABOUT TO CALL Relax:" << std::endl;
-         //relaxed->printNode(std::cout,n);
-         //std::cout << "\n";
+      std::cout << "discardSet   :" << discardSet.size() << "\n";
+      std::cout << "survivedDom  :" << survivedDom.size() << "\n";
+      std::cout << "survivedLocal:" << survivedLocal.size() << "\n";
+      static int nbRELAX = 0;
+      for(auto n: survivedLocal) {
          nbRELAX++;
          bool dualBetter = relaxed->apply(n, bnds);
-         //std::cout << "reaching relaxed DD. Got: " << dualBetter << " B@SINK:" << relaxed->currentOpt() << "\n";         
+         std::cout << "reaching relaxed DD. Got: " << dualBetter << " B@SINK:" << relaxed->currentOpt() << "\n";         
          if(dualBetter) {
-            if(!newGuyDominated) {
-               auto nd = bbPool->cloneNode(n);
-               // std::cout << "cloned and got: " << nd << std::endl;
-               if (nd) {
-                  assert(nd->getBound() == n->getBound());
-                  pq.insertHeap(QNode {nd, nd->getBound()+nd->getBackwardBound() });
-               } else {
-                  //std::cout << "4" << std::endl;
-               }
-            } else {
-               //std::cout << "3" << std::endl;
-               insDom++;
+            //if(!newGuyDominated) {
+            auto nd = bbPool->cloneNode(n);
+            // std::cout << "cloned and got: " << nd << std::endl;
+            if (nd) {
+               assert(nd->getBound() == n->getBound());
+               pq.insertHeap(QNode {nd, nd->getBound()+nd->getBackwardBound() });
             }
-         } else {
-            //std::cout << "2" << std::endl;
+            //} else insDom++;
          }
-         // else {
-         //    std::cout << "relaxed skip" << std::endl;
-         // }
          bbPool->release(bbn.node);
       }
+      std::cout << "nbRELAX:" << nbRELAX << "\n";
    }
+
 
    cout << setprecision(ss);
    auto spent = RuntimeMonitor::elapsedSince(start);
