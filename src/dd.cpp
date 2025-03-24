@@ -294,7 +294,7 @@ void AbstractDD::computeBestBackward(const std::string m)
       }
       if (hasLocal()) {
          auto dualBound = local(n.node,DDCtx);
-         if (isBetter(dualBound,cur)) {
+         if (isBetter(cur,dualBound)) {
             //std::cout << "\tIMPROVED from " << cur << " to " << dualBound << "\n";
             cur = dualBound;
          }
