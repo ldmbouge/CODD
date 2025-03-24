@@ -179,7 +179,9 @@ void BAndBRestrictedFirst::search(Bounds& bnds)
       std::vector<ANode::Ptr> survivedLocal;
       if(relaxed->hasLocal()) {
          filterLocal(bnds, relaxed, discardSet, &survivedLocal);
-      }      
+      } else {
+         survivedLocal = discardSet;
+      }
       /*
       std::cout << "discardSet   :" << discardSet.size() << "\n";
       std::cout << "survivedDom  :" << survivedDom.size() << "\n";
@@ -189,11 +191,12 @@ void BAndBRestrictedFirst::search(Bounds& bnds)
       for(auto n: survivedLocal) {
          nbRELAX++;
          //bool dualBetter = relaxed->apply(n, bnds);
-         //std::cout << "reaching relaxed DD. Got: " << dualBetter << " B@SINK:" << relaxed->currentOpt() << "\n";         
+         // std::cout << "reaching relaxed DD. Got: " << dualBetter << " B@SINK:" << relaxed->currentOpt() << "\n";         
+         //std::cout << "reaching relaxed DD. Got: \n";         
          if(true) { // || dualBetter) {
             //if(!newGuyDominated) {
             auto nd = bbPool->cloneNode(n);
-            // std::cout << "cloned and got: " << nd << std::endl;
+            //std::cout << "cloned and got: " << nd << std::endl;
             if (nd) {
                assert(nd->getBound() == n->getBound());
                pq.insertHeap(QNode {nd, nd->getBound()+nd->getBackwardBound() });
@@ -215,7 +218,7 @@ void BAndBRestrictedFirst::search(Bounds& bnds)
         << "\t Seen:" << nbSeen
         << "\n";
 
-   cout << "NBRELAX:" << nbRELAX << "\n";
+   //cout << "NBRELAX:" << nbRELAX << "\n";
         //<< "\nSol: " << bnds
         //<< "\n";
    // cout << ddr[0]->getWidth() << " " << nNode << " " << spent/1000 << " " << bnds.getPrimal() << endl;
