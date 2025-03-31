@@ -1,0 +1,17 @@
+johnson8-2-4 w:128 24.03.25-15:20:19
+Done(128):4	 #nodes:1/1	 P/D:0/0	 Time:0.001/0.001s	 LIM?:0	 Seen:0
+johnson8-4-4 w:128 24.03.25-15:20:19
+Done(128):14	 #nodes:3909/3909	 P/D:0/0	 Time:0.004/0.405s	 LIM?:0	 Seen:0
+johnson16-2-4 w:128 24.03.25-15:20:19
+Done(128):8	 #nodes:33422/33422	 P/D:0/0	 Time:0.006/7.037s	 LIM?:0	 Seen:0
+keller4 w:128 24.03.25-15:20:26
+Done(128):11	 #nodes:88860/88860	 P/D:0/0	 Time:0.007/19.916s	 LIM?:0	 Seen:0
+hamming6-2 w:128 24.03.25-15:20:46
+Done(128):32	 #nodes:18294/18294	 P/D:0/0	 Time:0.003/1.443s	 LIM?:0	 Seen:0
+hamming6-4 w:128 24.03.25-15:20:48
+Done(128):4	 #nodes:37/37	 P/D:0/0	 Time:0.001/0.004s	 LIM?:0	 Seen:0
+hamming8-2 w:128 24.03.25-15:20:48
+Done(0):0	 #nodes:0/0	 P/D:0/0	 Time:0/0s	 LIM?:0	 Seen:0
+hamming8-4 w:128 24.03.25-15:29:53
+Done(128):16	 #nodes:703640/703640	 P/D:0/0	 Time:0.028/214.34s	 LIM?:0	 Seen:0
+hamming10-2 w:128 24.03.25-15:33:28

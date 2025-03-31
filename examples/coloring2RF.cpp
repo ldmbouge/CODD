@@ -1,4 +1,5 @@
 #include "codd.hpp"
+#include "searchRestrictedFirst.hpp"
 
 typedef FArray<unsigned short> Legal; // colors assigned to vertices. Either 0 or a value in 1..65K
 
@@ -210,7 +211,7 @@ int main(int argc,char* argv[])
    };
    const auto eqs = [K](const COLOR& s) -> bool { return s.vtx == K;};
 
-   BAndB engine(DD<COLOR,Minimize<double>, // to minimize
+   BAndBRestrictedFirst engine(DD<COLOR,Minimize<double>, // to minimize
                 decltype(target),
                 decltype(lgf),
                 decltype(stf),
@@ -218,7 +219,7 @@ int main(int argc,char* argv[])
                 decltype(smf),
                 decltype(eqs)
                 >::makeDD(init,target,lgf,stf,scf,smf,eqs,labels),w);
-   engine.setTimeLimit([](double elapsed) { return elapsed >= 120000;});
+   //engine.setTimeLimit([](double elapsed) { return elapsed >= 120000;});
    engine.search(bnds);
    return 0;
 }
