@@ -20,7 +20,8 @@ struct TSPTW {
 
 template<> struct std::equal_to<TSPTW> {
    constexpr bool operator()(const TSPTW& s1,const TSPTW& s2) const {
-      return s1.e == s2.e && s1.t==s2.t && s1.hops==s2.hops && s1.U == s2.U;
+      //return s1.e == s2.e && s1.t==s2.t && s1.hops==s2.hops && s1.U == s2.U;
+      return s1.e == s2.e && s1.hops==s2.hops;
    }
 };
 
@@ -125,23 +126,26 @@ int main(int argc,char* argv[]) {
    const int sz = (int)C.size();
 
    const auto init = [&C,&tw]()      { return TSPTW { C - depot, depot, 0,  0 }; };
-   const auto target = [sz,&C,&tw]() { return TSPTW { C,         depot, 0, sz }; };
+   const auto target = [sz,&C,&tw]() { return TSPTW { GNSet{},   depot, 0, sz }; };
    const auto lgf = [sz,&C,&d,&tw](const TSPTW& s,DDContext)  {
       if (s.hops >= sz-1) {
          return GNSet {depot};
       } else {
          GNSet valid; 
          for(auto u: s.U) {
-            if(s.t + d[s.e][u] <= tw[u].b) valid.insert(u);
+            if(u != depot && s.e != u && s.t + d[s.e][u] <= tw[u].b) valid.insert(u);
          }
          return valid;
       }     
    };
    const auto stf = [sz,&C,&d,&tw](const TSPTW& s,const int label) -> std::optional<TSPTW> {
-      if (label==depot)
-         return TSPTW { GNSet{},depot,s.t,sz}; //0 is the dummy value for the lb 
-      else 
-         return TSPTW { s.U - label, label, std::max(s.t+d[s.e][label], tw[label].a), s.hops+1};
+      // if (label==depot)
+      //    return TSPTW { GNSet{},depot,std::max(s.t+d[s.e][label], tw[label].a),sz}; //0 is the dummy value for the lb 
+      // else {
+      //std::cout << s.U << " \ " << label << " = " << s.U - GNSet{label} << std::endl;
+      //std::cout << "max(" << s.t << "+" << d[s.e][label] << "=" << s.t+d[s.e][label] << ", " << tw[label].a << ") = " << std::max(s.t+d[s.e][label], tw[label].a) << std::endl;
+      return TSPTW { s.U - GNSet{label}, label, std::max(s.t+d[s.e][label], tw[label].a), s.hops+1};
+      //}
    };
    const auto scf = [&d](const TSPTW& s,int label) { // partial cost function 
       return d[s.e][label];
@@ -154,12 +158,18 @@ int main(int argc,char* argv[]) {
          return std::nullopt; // return  the empty optional
       }
    };
-   const auto eqs = [sz](const TSPTW& s) -> bool { return s.e == depot && s.hops == sz; };
+   const auto eqs = [sz](const TSPTW& s) -> bool { 
+      //std::cout << s.e << " == " << depot << " && " << s.hops << " == " << sz << std::endl;
+      return s.e == depot && s.hops == sz; 
+   };
    // const auto local = [&d,&C](const TSPTW& s,LocalContext) -> double {
    //    const auto greedyVal = greedy(d,C,s.A,depot,s.e,s.hops);
    //    return greedyVal;
-   // };   
-
+   // };
+   // auto tsp = TSPTW{ C,0,0,0 };
+   // std::cout << tsp << std::endl;
+   // std::cout << lgf(tsp, DDContext::DDRelaxed) << std::endl;
+   // return 0;   
    BAndB engine(DD<TSPTW,Minimize<double>,
                 decltype(target),
                 decltype(lgf),
@@ -170,7 +180,6 @@ int main(int argc,char* argv[]) {
                 decltype(local)*/
                 >::makeDD(init,target,lgf,stf,scf,smf,eqs,C/*,local*/),w);
    engine.search(bnds);
-   std::cout << "INSTANCE READING ONLY. About to write model ;-)" << "\n";
    return 0;
 }
 
