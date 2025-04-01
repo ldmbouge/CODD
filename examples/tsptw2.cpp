@@ -20,8 +20,8 @@ struct TSPTW {
 
 template<> struct std::equal_to<TSPTW> {
    constexpr bool operator()(const TSPTW& s1,const TSPTW& s2) const {
-      //return s1.e == s2.e && s1.t==s2.t && s1.hops==s2.hops && s1.U == s2.U;
-      return s1.e == s2.e && s1.hops==s2.hops;
+      return s1.e == s2.e && s1.t==s2.t && s1.hops==s2.hops && s1.U == s2.U;
+      //return s1.e == s2.e && s1.hops==s2.hops;
    }
 };
 
@@ -139,12 +139,13 @@ int main(int argc,char* argv[]) {
       }     
    };
    const auto stf = [sz,&C,&d,&tw](const TSPTW& s,const int label) -> std::optional<TSPTW> {
-      // if (label==depot)
-      //    return TSPTW { GNSet{},depot,std::max(s.t+d[s.e][label], tw[label].a),sz}; //0 is the dummy value for the lb 
+      if (label==depot)
+         return TSPTW { GNSet{},depot,0,sz}; 
       // else {
       //std::cout << s.U << " \ " << label << " = " << s.U - GNSet{label} << std::endl;
       //std::cout << "max(" << s.t << "+" << d[s.e][label] << "=" << s.t+d[s.e][label] << ", " << tw[label].a << ") = " << std::max(s.t+d[s.e][label], tw[label].a) << std::endl;
-      return TSPTW { s.U - GNSet{label}, label, std::max(s.t+d[s.e][label], tw[label].a), s.hops+1};
+      else
+         return TSPTW { s.U - GNSet{label}, label, std::max(s.t+d[s.e][label], tw[label].a), s.hops+1};
       //}
    };
    const auto scf = [&d](const TSPTW& s,int label) { // partial cost function 
