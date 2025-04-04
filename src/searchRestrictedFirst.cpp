@@ -190,10 +190,10 @@ void BAndBRestrictedFirst::search(Bounds& bnds)
       int nbRELAX = 0;
       for(auto n: survivedLocal) {
          nbRELAX++;
-         //bool dualBetter = relaxed->apply(n, bnds);
+         bool dualBetter = relaxed->apply(n, bnds);
          // std::cout << "reaching relaxed DD. Got: " << dualBetter << " B@SINK:" << relaxed->currentOpt() << "\n";         
          //std::cout << "reaching relaxed DD. Got: \n";         
-         if(true) { // || dualBetter) {
+         if(dualBetter) {
             //if(!newGuyDominated) {
             auto nd = bbPool->cloneNode(n);
             //std::cout << "cloned and got: " << nd << std::endl;

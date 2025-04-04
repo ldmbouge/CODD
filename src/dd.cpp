@@ -515,7 +515,7 @@ void Restricted::compute(Bounds& bnds)
    _dd->computeBestBackward(getName());
    //_dd->computeBest(getName());
    tighten(_dd->_trg);
-   _dd->display();
+   //_dd->display();
 }
 
 // ----------------------------------------------------------------------
@@ -753,14 +753,14 @@ void Relaxed::compute(Bounds& bnds)
       // std::cout << lk.size() << " " << std::flush;
       for(auto p : lk) { // loop over layer lk. p is a "parent" node.
          auto remLabels = _dd->getLabels(p,DDRelaxed);
-         std::cout << "new layer: " << std::endl;
+         //std::cout << "new layer: " << std::endl;
          while(remLabels->more()) {  
             auto l = remLabels->getAndNext();  
-            std::cout << "l: " << l << std::endl;
+            //std::cout << "l: " << l << std::endl;
             auto child = _dd->transition(bnds,p,l); // we get back a new node, or an already existing one.
             if (child) {
                bool newNode = child->nbParents()==0; // is this a newly created node?
-               std::cout << "new node: " << newNode << std::endl;
+               //std::cout << "new node: " << newNode << std::endl;
                auto theCost = _dd->cost(p,l);
                auto ep = p->getBound() + theCost;
                if (hasDom && newNode) {
@@ -798,7 +798,7 @@ void Relaxed::compute(Bounds& bnds)
    // std::cout << "TWO BOUNDS:" << incr << " " << full<< "\n";
    tighten(_dd->_trg);
    _dd->computeBestBackward(getName());
-   _dd->display();
+   //_dd->display();
 }
 
 std::vector<ANode::Ptr> Relaxed::computeCutSet()
