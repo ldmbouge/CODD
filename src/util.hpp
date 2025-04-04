@@ -1060,42 +1060,60 @@ template<class T> struct std::hash<FArray<T>> {
 // --------------------------------------------------------------------------------
 
 template <class FAT,int arity> class  FMatrix;
+template <class FAT,int arity> class  FMatrixProxy;
 template <class FAT,int arity> class  FMatrixProxyCst;
+
+template <class FAT,int arity> class  FMatrixProxy {
+   friend class FMatrix<FAT,arity+1>;
+   friend class FMatrixProxy<FAT,arity+1>;
+   FAT&           _flat;
+   const int*      _sfx;
+   int             _acc;
+   FMatrixProxy(FAT& flat,const int* sfx,int acc) : _flat(flat),_sfx(sfx),_acc(acc) {}
+public:
+   FMatrixProxy<FAT,arity-1> operator[](const int idx) {
+      return FMatrixProxy<FAT,arity-1>(_flat,_sfx+1,_acc * *_sfx + idx);   
+   }
+};
+
+template <class FAT> class  FMatrixProxy<FAT,1> {
+   friend class FMatrix<FAT,2>;
+   friend class FMatrixProxy<FAT,2>;
+   FAT&            _flat;
+   const int*       _sfx;
+   int              _acc;
+   FMatrixProxy(FAT& flat,const int* sfx,int acc) : _flat(flat),_sfx(sfx),_acc(acc) {}
+public:
+   typename FAT::ValType& operator[](const int idx)  { return _flat[_acc * *_sfx + idx ];}
+};
+
+// -------------------------------------------
 
 template <class FAT,int arity> class  FMatrixProxyCst {
    friend class FMatrix<FAT,arity+1>;
    friend class FMatrixProxyCst<FAT,arity+1>;
-   FAT&           _flat;
+   const FAT&      _flat;
    const int*      _sfx;
    int             _acc;
-   FMatrixProxyCst(FAT& flat,const int* sfx,int acc) : _flat(flat),_sfx(sfx),_acc(acc) {}
+   FMatrixProxyCst(const FAT& flat,const int* sfx,int acc) : _flat(flat),_sfx(sfx),_acc(acc) {}
 public:
-   FMatrixProxyCst<FAT,arity-1> operator[](const int idx);
-   const FMatrixProxyCst<FAT,arity-1> operator[](const int idx) const;
+   FMatrixProxyCst<FAT,arity-1> operator[](const int idx) {
+      return FMatrixProxyCst<FAT,arity-1>(_flat,_sfx+1,_acc * *_sfx + idx);   
+   }
 };
 
 template <class FAT> class  FMatrixProxyCst<FAT,1> {
    friend class FMatrix<FAT,2>;
    friend class FMatrixProxyCst<FAT,2>;
-   FAT&            _flat;
+   const FAT&      _flat;
    const int*       _sfx;
    int              _acc;
-   FMatrixProxyCst(FAT& flat,const int* sfx,int acc) : _flat(flat),_sfx(sfx),_acc(acc) {}
+   FMatrixProxyCst(const FAT& flat,const int* sfx,int acc) : _flat(flat),_sfx(sfx),_acc(acc) {}
 public:
-   typename FAT::ValType& operator[](const int idx)  { return _flat[_acc * *_sfx + idx ];}
-   typename FAT::ValType  operator[](const int idx) const  { return _flat[_acc * *_sfx + idx];}
+   const typename FAT::ValType& operator[](const int idx)  { return _flat[_acc * *_sfx + idx ];}
 };
 
-template <class FAT,int arity>
-FMatrixProxyCst<FAT,arity-1> FMatrixProxyCst<FAT,arity>::operator[](const int idx)
-{
-   return FMatrixProxyCst<FAT,arity-1>(_flat,_sfx+1,_acc * *_sfx + idx);   
-}
-template <class FAT,int arity>
-const FMatrixProxyCst<FAT,arity-1> FMatrixProxyCst<FAT,arity>::operator[](const int idx) const
-{
-   return FMatrixProxyCst<FAT,arity-1>(_flat,_sfx+1,_acc * *_sfx + idx);   
-}
+//-----------------------------------------------------------------------------------------------------
 
 inline size_t prodOf(const int* t,size_t sz) {
    auto i=0u;
@@ -1115,8 +1133,8 @@ public:
    FMatrix(const FMatrix<FAT,arity>& mtx);
    FMatrix(const int* dims);
    FMatrix<FAT,arity>& operator=(const FMatrix<FAT,arity>& mtx);
-   FMatrixProxyCst<FAT,arity-1> operator[](const int idx);
-   const FMatrixProxyCst<FAT,arity-1> operator[](const int idx) const;
+   FMatrixProxy<FAT,arity-1> operator[](const int idx);
+   FMatrixProxyCst<FAT,arity-1> operator[](const int idx) const;
    FAT getFlat()           { return _flat;}
    int getArity() const    { return arity;}
    int getDim(int d) const { return _dims[d];}
@@ -1156,13 +1174,13 @@ FMatrix<FAT,arity>& FMatrix<FAT,arity>::operator=(const FMatrix<FAT,arity>& mtx)
 }
 
 template <class FAT,int arity>
-FMatrixProxyCst<FAT,arity-1> FMatrix<FAT,arity>::operator[](const int idx)
+FMatrixProxy<FAT,arity-1> FMatrix<FAT,arity>::operator[](const int idx)
 {
-   return FMatrixProxyCst<FAT,arity-1>(_flat,_dims+1,idx);
+   return FMatrixProxy<FAT,arity-1>(_flat,_dims+1,idx);
 }
 
 template <class FAT,int arity>
-const FMatrixProxyCst<FAT,arity-1> FMatrix<FAT,arity>::operator[](const int idx) const
+FMatrixProxyCst<FAT,arity-1> FMatrix<FAT,arity>::operator[](const int idx) const
 {
    return FMatrixProxyCst<FAT,arity-1>(_flat,_dims+1,idx);
 }
