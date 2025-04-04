@@ -368,11 +368,11 @@ public:
          if (reuse) {
             Node<ST>* nn = static_cast<Node<ST>*>(reuse.get());
             nn->resetWith(sp);
-            _nmap.safeInsertAt(inMap,nn);
+            if(!inMap) _nmap.safeInsertAt(inMap,nn); //TODO: check if correct
             return nn;
          } else {
             Node<ST>* nn = new (_base->get()) Node<ST>(_base->get(),_base->grabId(),*sp);
-            _nmap.safeInsertAt(inMap,nn);
+            if(!inMap) _nmap.safeInsertAt(inMap,nn); //TODO: check if correct
             return nn;
          }
       } else {
@@ -444,7 +444,7 @@ private:
          bnds.setIncumbent(_trg->beginOptLabels(),_trg->endOptLabels());
          std::cout <<  std::setprecision(6) << "P TIGHTEN: " << bnds << "\n";
       }
-      else if (_strat->dual() && _exact) { //TODO: is it correct that dual only updates primal bound?
+      else if (_strat->dual() && _exact) {
          bnds.setPrimal(DD::better(_trg->getBound(),bnds.getPrimal()));
          bnds.setIncumbent(_trg->beginOptLabels(),_trg->endOptLabels());
          std::cout <<  std::setprecision(6) << "D TIGHTEN: " << bnds << "\n";
