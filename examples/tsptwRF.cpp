@@ -180,13 +180,9 @@ int main(int argc,char* argv[]) {
          curr = next;
          U.remove(curr);
       }
-      // std::cout << "local: " << total << std::endl;
       return total;
    };
-   // auto tsp = TSPTW{ C,0,0,0 };
-   // std::cout << tsp << std::endl;
-   // std::cout << lgf(tsp, DDContext::DDRelaxed) << std::endl;
-   // return 0;   
+
    BAndBRestrictedFirst engine(DD<TSPTW,Minimize<double>,
                 decltype(target),
                 decltype(lgf),

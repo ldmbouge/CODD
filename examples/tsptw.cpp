@@ -169,32 +169,19 @@ int main(int argc,char* argv[]) {
       //std::cout << s.e << " == " << depot << " && " << s.hops << " == " << sz << std::endl;
       return s.e == depot && s.hops == sz && s.U.empty(); 
    };
-
    const auto local = [&d,&C](const TSPTW& s,LocalContext) -> double {
       int curr = s.e;
       int total = 0;
       GNSet U = s.U - GNSet{depot,curr};
       while (!U.empty()) {
-         int next = -1;
-         int minD = std::numeric_limits<int>::max();
-         for (auto other: U) {
-            int dst = d[curr][other];
-            if (dst < minD) {
-               next = other;
-               minD = dst;
-            }
-         }
+         auto[next, minD] = argmin(U, [](int){return true;}, [&d, &curr](int other){ return d[curr][other]; });
          total += minD;
          curr = next;
          U.remove(curr);
       }
-      // std::cout << "local: " << total << std::endl;
       return total;
    };
-   // auto tsp = TSPTW{ C,0,0,0 };
-   // std::cout << tsp << std::endl;
-   // std::cout << lgf(tsp, DDContext::DDRelaxed) << std::endl;
-   // return 0;   
+
    BAndB engine(DD<TSPTW,Minimize<double>,
                 decltype(target),
                 decltype(lgf),
