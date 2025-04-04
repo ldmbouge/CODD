@@ -1,5 +1,6 @@
 #include "codd.hpp"
 #include "heap.hpp"
+#include "searchRestrictedFirst.hpp"
 
 int d2i(double d) { return (int)(d * 10000); }
 
@@ -90,12 +91,12 @@ Instance readFile(const char* fName)
 }
 
 
-double greedy(Matrix<int,2>& d,GNSet C,GNSet U,int src,int sink,int hops)
+double greedy(Matrix<int,2>& d,GNSet C,GNSet V,int src,int sink,int hops)
 {
    // compute lower bound as the sum of the cheapest arc out of each 
    // node except the src (which already has an outgoing arc per the
    // partial solution so far. 
-   GNSet t = U.insert(src).insert(sink);
+   GNSet t = (C - V).insert(src).insert(sink);
    const auto ts = C.size() - hops; // Beware: set V is an lower bound, it could be too small, its true
    // size is hops. So only pick the ts shortest edges at the end.
    int ne = 0;
@@ -169,21 +170,12 @@ int main(int argc,char* argv[]) {
       //std::cout << s.e << " == " << depot << " && " << s.hops << " == " << sz << std::endl;
       return s.e == depot && s.hops == sz && s.U.empty(); 
    };
-
    const auto local = [&d,&C](const TSPTW& s,LocalContext) -> double {
       int curr = s.e;
       int total = 0;
       GNSet U = s.U - GNSet{depot,curr};
       while (!U.empty()) {
-         int next = -1;
-         int minD = std::numeric_limits<int>::max();
-         for (auto other: U) {
-            int dst = d[curr][other];
-            if (dst < minD) {
-               next = other;
-               minD = dst;
-            }
-         }
+         auto[next, minD] = argmin(U, [](int){return true;}, [&d, &curr](int other){ return d[curr][other]; });
          total += minD;
          curr = next;
          U.remove(curr);
@@ -195,7 +187,7 @@ int main(int argc,char* argv[]) {
    // std::cout << tsp << std::endl;
    // std::cout << lgf(tsp, DDContext::DDRelaxed) << std::endl;
    // return 0;   
-   BAndB engine(DD<TSPTW,Minimize<double>,
+   BAndBRestrictedFirst engine(DD<TSPTW,Minimize<double>,
                 decltype(target),
                 decltype(lgf),
                 decltype(stf),
