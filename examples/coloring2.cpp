@@ -70,6 +70,7 @@ Instance readFile(const char* fName)
       char c;
       f >> c;
       if (f.eof()) break;
+      std::cout << c << std::endl;
       switch(c) {
          case 'c': {
             std::string line;
@@ -151,7 +152,8 @@ int main(int argc,char* argv[])
    const int w = argc==3 ? atoi(argv[2]) : 64;
    int UB = -1;
    std::cout << "FILE:" << fName << "\n";
-   Instance instance = readPyFile(fName, UB);
+   //Instance instance = readPyFile(fName, UB);
+   Instance instance = readFile(fName);
    std::cout << "read instance:" << instance.nv << " " << instance.ne << "\n";
    std::cout << "Width=" << w << "\n";
    const GNSet ns = instance.vertices();
