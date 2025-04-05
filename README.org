@@ -137,3 +137,6 @@ You need
 g++-13 -std=c++20 -fmodules-ts -xc++-system-header iostream
 #+end_src
 Haven't found a way to automate in cmake yet. Though there should be
+
+* Private repo on CSI Gateway
+....
