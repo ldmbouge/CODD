@@ -314,7 +314,7 @@ void Exact::compute(Bounds& bnds)
    qn.enQueue(root);
    while (!qn.empty()) {
       auto p = qn.deQueue();
-      auto remLabels = remainingLabels(p);
+      auto remLabels = _dd->getLabels(p,DDExact);
       for(auto l : remLabels) {     
          auto child = _dd->transition(bnds,p,l); // we get back a new node, or an already existing one.
          if (child) {
@@ -416,7 +416,7 @@ void Restricted::compute(Bounds& bnds)
    while (!qn.empty()) { 
       auto& lk = pullLayer(qn); // We have in lk the queue content for layer cL
       for(auto p : lk) { // loop over layer lk. p is a "parent" node.
-         auto remLabels = remainingLabels(p);
+         auto remLabels = _dd->getLabels(p,DDRestricted);
          for(auto l : remLabels) {
             auto child = _dd->transition(bnds,p,l); // we get back a new node, or an already existing one.
             if (child) {
@@ -695,7 +695,7 @@ void Relaxed::compute(Bounds& bnds)
       auto lk = qn.pullLayer();
       //std::cout << lk.size() << " " << std::flush;
       for(auto p : lk) { // loop over layer lk. p is a "parent" node.
-         auto remLabels = remainingLabels(p);
+         auto remLabels = _dd->getLabels(p,DDRelaxed);
          for(auto l : remLabels) {
             auto child = _dd->transition(bnds,p,l); // we get back a new node, or an already existing one.
             if (child) {

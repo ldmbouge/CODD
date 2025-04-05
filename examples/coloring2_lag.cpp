@@ -365,7 +365,7 @@ int main(int argc,char* argv[])
    const auto labels = setFrom(std::views::iota(1,UB+1));     // using a plain set for the labels
    const auto init = [K]()     { return COLOR { Legal(K,0),0,0 };};
    const auto target = [K]()   { return COLOR { Legal{},0,K};};
-   const auto lgf = [K,&labels,&bnds,&adj](const COLOR& s) -> GNSet {
+   const auto lgf = [K,&labels,&bnds,&adj](const COLOR& s,DDContext) -> GNSet {
       if (s.vtx >= K+1)
          return GNSet(); 
       GNSet valid(labels);
@@ -402,12 +402,17 @@ int main(int argc,char* argv[])
       }; break;
       case 1: local = [&instance,&K,&bnds](const COLOR& s,LocalContext) -> double {
          GNSet S(s.vtx,K-1); // uncolored vertices: from current vertex s.vtx until the last vertex K-1.
+         if (S.size()==0 && s.vtx <= K-1) abort();
          if (S.size()==0) {
+            //std::cout << "state:" << s << "\n";
+            //std::cout << "REM:" << S << " s.vtx " << s.vtx << " K-1:" << K-1 << "\n";
             // std::cout << "ERROR: no more vertices left in localBound" << std::endl;
             return 0.0;
          } else if (S.size() <= bnds.getDual()) {  // no chance to find a larger dual bound
-            return bnds.getDual();
+            //std::cout << "S=" << S << " sz:" << S.size() << " BNDS.dual:" << bnds.getDual() << " G:" << bnds.getG() << "\n"; 
+            return bnds.getDual() - bnds.getG();
          }
+         return 0;
          double cb = CliqueBound(instance.adj, S);
          //double lb = std::max(cb, bnds.getDual());
          //double ub = bnds.getPrimal();
@@ -415,7 +420,7 @@ int main(int argc,char* argv[])
          //   std::cout << "\t--> (current dual = " << bnds.getDual() << ".)   new dual heur: " << cb << " dual: " << lb << " primal: " << ub << " -- better bound\n";
          //}
          // return std::max(cb, bnds.getDual());
-         return bnds.getDual();
+         return bnds.getDual() - bnds.getG();
       };break;
       default:
          throw std::invalid_argument("Invalid LBopt value! Must be 0, 1, or 2.");

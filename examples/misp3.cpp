@@ -151,7 +151,7 @@ int main(int argc,char* argv[])
    const auto myTarget = [top]() {    // The sink state
       return MISP { GNSet {}, 0,top};
    };
-   const auto lgf = [](const MISP& s)  {
+   const auto lgf = [](const MISP& s,DDContext)  {
       return Range::close(0,1);
    };
    auto myStf = [top,&neighbors](const MISP& s,const int label) -> std::optional<MISP> {

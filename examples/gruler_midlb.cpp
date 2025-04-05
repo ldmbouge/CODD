@@ -86,7 +86,7 @@ int main(int argc,char* argv[])
    const auto target = [n,L]() {    // The sink state
       return SGRuler {GRSet {},GRSet {},n,0,L+1};  // smallest unused distance should be set explicitly to L+1
    };
-   const auto lgf = [n,&bnds,&OPT,L](const SGRuler& s) {      
+   const auto lgf = [n,&bnds,&OPT,L](const SGRuler& s,DDContext) {      
       auto ub = L+1;
       if (s.k < n/2)
         ub = std::min({(int)std::floor(((int)bnds.getPrimal())/2) - OPT[std::floor(n/2)-s.k], 
