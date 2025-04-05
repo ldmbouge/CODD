@@ -125,7 +125,7 @@ public:
    Range(Range&& r) : _from(r._from),_to(r._to) {}
    Range(const Range& r) : _from(r._from),_to(r._to) {}
    bool contains(int p) const noexcept { return _from <= p && p <= _to;}
-   int size() const noexcept { return (_to >= _from) ? _to - _from : _from - _to;}
+   int size() const noexcept { return (_to >= _from) ? _to - _from : 0;} // _from - _to;}
    auto largest() const noexcept { return (_to >= _from) ? _to : _from;}
    auto from() const noexcept  { return _from;}
    auto to() const noexcept   { return _to;}
@@ -1376,15 +1376,15 @@ class DDGenRange :public DDGen {
    int _it;
    const int _end;
 public:
-   DDGenRange(const Range& r) : _it(r.from()),_end(r.to()) {}
+   DDGenRange(const Range& r) : _it(r.from()),_end(r.from()+r.size()-1) {}
    ~DDGenRange() {
-     //std::cout << "DDGenRange::~DDGenRange " << this << "\n";
+      //std::cout << "DDGenRange::~DDGenRange " << this << "\n";
    }
    int getAndNext() noexcept {
      return _it++;
    }
    bool more() const noexcept {
-     return _it != _end;
+     return _it <= _end;
    }
 };
 
