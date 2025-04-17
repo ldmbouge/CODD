@@ -5,5 +5,4 @@ release/**
 .vscode/**
 *.csv
 *.dat
-*.ipynb
 comp

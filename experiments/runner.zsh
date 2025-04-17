@@ -42,7 +42,6 @@
 # done
 
 # for fname in ../data/tsptw/**/*.*; do
-
 #     dir=$(dirname "$fname")
 #     if [[ "$skip_dir" == "$dir" ]]; then
 #         continue
@@ -60,17 +59,35 @@
 #     done
 # done
 
-for fname in ../data/tsptw/AFG/rbg010a.tw ../data/tsptw/AFG/rbg016a.tw ../data/tsptw/AFG/rbg016b.tw ../data/tsptw/Langevin/N20ft301.dat ../data/tsptw/Langevin/N20ft302.dat ../data/tsptw/Langevin/N20ft303.dat ../data/tsptw/Langevin/N20ft304.dat ../data/tsptw/Langevin/N20ft305.dat ../data/tsptw/Langevin/N20ft306.dat ../data/tsptw/Langevin/N20ft307.dat ../data/tsptw/Langevin/N20ft308.dat ../data/tsptw/Langevin/N20ft309.dat ../data/tsptw/Langevin/N20ft310.dat ../data/tsptw/Langevin/N20ft401.dat ../data/tsptw/Langevin/N20ft402.dat ../data/tsptw/Langevin/N20ft403.dat ../data/tsptw/Langevin/N20ft404.dat ../data/tsptw/Langevin/N20ft405.dat ../data/tsptw/Langevin/N20ft406.dat ../data/tsptw/Langevin/N20ft407.dat ../data/tsptw/Langevin/N20ft408.dat ../data/tsptw/Langevin/N20ft409.dat ../data/tsptw/Langevin/N20ft410.dat ../data/tsptw/SolomonPotvinBengio/rc_201.1.txt ../data/tsptw/toy/toy1.tw ../data/tsptw/toy/toy2.tw; do
-    for w in 256 1024; do
-        echo $fname w:$w $(date +%d.%m.%y-%H:%M:%S)
-        output=$(gtimeout 100 sh -c "./tsptwRF \"$fname\" \"$w\" | tail -1")
-        if (($?)); then
-            echo "T.O."
-            skip_dir="$dir"
-        else
-            echo "$output"
-        fi
-    done
+#TO=100s
+#for fname in ../data/tsptw/AFG/rbg010a.tw ../data/tsptw/AFG/rbg016a.tw ../data/tsptw/AFG/rbg016b.tw ../data/tsptw/Langevin/N20ft301.dat ../data/tsptw/Langevin/N20ft302.dat ../data/tsptw/Langevin/N20ft303.dat ../data/tsptw/Langevin/N20ft304.dat ../data/tsptw/Langevin/N20ft305.dat ../data/tsptw/Langevin/N20ft306.dat ../data/tsptw/Langevin/N20ft307.dat ../data/tsptw/Langevin/N20ft308.dat ../data/tsptw/Langevin/N20ft309.dat ../data/tsptw/Langevin/N20ft310.dat ../data/tsptw/Langevin/N20ft401.dat ../data/tsptw/Langevin/N20ft402.dat ../data/tsptw/Langevin/N20ft403.dat ../data/tsptw/Langevin/N20ft404.dat ../data/tsptw/Langevin/N20ft405.dat ../data/tsptw/Langevin/N20ft406.dat ../data/tsptw/Langevin/N20ft407.dat ../data/tsptw/Langevin/N20ft408.dat ../data/tsptw/Langevin/N20ft409.dat ../data/tsptw/Langevin/N20ft410.dat ../data/tsptw/SolomonPotvinBengio/rc_201.1.txt ../data/tsptw/toy/toy1.tw ../data/tsptw/toy/toy2.tw; do
+#TO=1000s
+# for fname in ../data/tsptw/AFG/rbg010a.tw ../data/tsptw/AFG/rbg016a.tw ../data/tsptw/AFG/rbg016b.tw ../data/tsptw/AFG/rbg017.2.tw ../data/tsptw/AFG/rbg017.tw ../data/tsptw/AFG/rbg017a.tw ../data/tsptw/AFG/rbg019a.tw ../data/tsptw/AFG/rbg019b.tw ../data/tsptw/AFG/rbg019c.tw ../data/tsptw/AFG/rbg019d.tw ../data/tsptw/AFG/rbg020a.tw ../data/tsptw/Dumas/n100w20.001.txt ../data/tsptw/GendreauDumasExtended/n100w100.001.txt ../data/tsptw/Langevin/N20ft301.dat ../data/tsptw/Langevin/N20ft302.dat ../data/tsptw/Langevin/N20ft303.dat ../data/tsptw/Langevin/N20ft304.dat ../data/tsptw/Langevin/N20ft305.dat ../data/tsptw/Langevin/N20ft306.dat ../data/tsptw/Langevin/N20ft307.dat ../data/tsptw/Langevin/N20ft308.dat ../data/tsptw/Langevin/N20ft309.dat ../data/tsptw/Langevin/N20ft310.dat ../data/tsptw/Langevin/N20ft401.dat ../data/tsptw/Langevin/N20ft402.dat ../data/tsptw/Langevin/N20ft403.dat ../data/tsptw/Langevin/N20ft404.dat ../data/tsptw/Langevin/N20ft405.dat ../data/tsptw/Langevin/N20ft406.dat ../data/tsptw/Langevin/N20ft407.dat ../data/tsptw/Langevin/N20ft408.dat ../data/tsptw/Langevin/N20ft409.dat ../data/tsptw/Langevin/N20ft410.dat ../data/tsptw/Langevin/N40ft201.dat ../data/tsptw/OhlmannThomas/n150w120.001.txt ../data/tsptw/SolomonPesant/rc201.0 ../data/tsptw/SolomonPesant/rc201.1 ../data/tsptw/SolomonPesant/rc201.2 ../data/tsptw/SolomonPesant/rc201.3 ../data/tsptw/SolomonPesant/rc202.0 ../data/tsptw/SolomonPotvinBengio/rc_201.1.txt ../data/tsptw/SolomonPotvinBengio/rc_201.2.txt ../data/tsptw/SolomonPotvinBengio/rc_201.3.txt ../data/tsptw/SolomonPotvinBengio/rc_201.4.txt ../data/tsptw/SolomonPotvinBengio/rc_202.1.txt ../data/tsptw/toy/toy1.tw ../data/tsptw/toy/toy2.tw; do
+#     for w in 256 1024; do
+#         echo $fname w:$w $(date +%d.%m.%y-%H:%M:%S)
+#         output=$(gtimeout 1000 sh -c "./tsptwRF \"$fname\" \"$w\" | tail -1")
+#         if (($?)); then
+#             echo "T.O."
+#             skip_dir="$dir"
+#         else
+#             echo "$output"
+#         fi
+#     done
+# done
+
+#TO=100s
+# for fname in AFG/rbg010a.tw AFG/rbg016a.tw AFG/rbg016b.tw Langevin/N20ft301.dat Langevin/N20ft302.dat Langevin/N20ft303.dat Langevin/N20ft304.dat Langevin/N20ft305.dat Langevin/N20ft306.dat Langevin/N20ft307.dat Langevin/N20ft308.dat Langevin/N20ft309.dat Langevin/N20ft310.dat Langevin/N20ft401.dat Langevin/N20ft402.dat Langevin/N20ft403.dat Langevin/N20ft404.dat Langevin/N20ft405.dat Langevin/N20ft406.dat Langevin/N20ft407.dat Langevin/N20ft408.dat Langevin/N20ft409.dat Langevin/N20ft410.dat SolomonPotvinBengio/rc_201.1.txt toy/toy1.tw toy/toy2.tw; do
+#TO=1000s
+for fname in AFG/rbg010a.tw AFG/rbg016a.tw AFG/rbg016b.tw AFG/rbg017.2.tw AFG/rbg017.tw AFG/rbg017a.tw AFG/rbg019a.tw AFG/rbg019b.tw AFG/rbg019c.tw AFG/rbg019d.tw AFG/rbg020a.tw Dumas/n100w20.001.txt GendreauDumasExtended/n100w100.001.txt Langevin/N20ft301.dat Langevin/N20ft302.dat Langevin/N20ft303.dat Langevin/N20ft304.dat Langevin/N20ft305.dat Langevin/N20ft306.dat Langevin/N20ft307.dat Langevin/N20ft308.dat Langevin/N20ft309.dat Langevin/N20ft310.dat Langevin/N20ft401.dat Langevin/N20ft402.dat Langevin/N20ft403.dat Langevin/N20ft404.dat Langevin/N20ft405.dat Langevin/N20ft406.dat Langevin/N20ft407.dat Langevin/N20ft408.dat Langevin/N20ft409.dat Langevin/N20ft410.dat Langevin/N40ft201.dat OhlmannThomas/n150w120.001.txt SolomonPesant/rc201.0 SolomonPesant/rc201.1 SolomonPesant/rc201.2 SolomonPesant/rc201.3 SolomonPesant/rc202.0 SolomonPotvinBengio/rc_201.1.txt SolomonPotvinBengio/rc_201.2.txt SolomonPotvinBengio/rc_201.3.txt SolomonPotvinBengio/rc_201.4.txt SolomonPotvinBengio/rc_202.1.txt toy/toy1.tw toy/toy2.tw; do
+    echo $fname $(date +%d.%m.%y-%H:%M:%S)
+    output=$(gtimeout 1000 sh -c "python3.12 ../../didp-rs/didppy/examples/tsptw.py \"$fname\" | tail -1")
+    if (($?)); then
+        echo "T.O."
+        skip_dir="$dir"
+    else
+        echo "$output"
+    fi
 done
+
 # ./knapsack ../data/knapsack/knapPI_3_5000_1000_1 32 XFLD > XFLD_3_5000_1000
 # ./knapsack ../data/knapsack/knapPI_3_5000_1000_1 32 RFLD > RFLD_3_5000_1000

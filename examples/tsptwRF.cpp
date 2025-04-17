@@ -170,16 +170,29 @@ int main(int argc,char* argv[]) {
       //std::cout << s.e << " == " << depot << " && " << s.hops << " == " << sz << std::endl;
       return s.e == depot && s.hops == sz && s.U.empty(); 
    };
-   const auto local = [&d,&C](const TSPTW& s,LocalContext) -> double {
-      int curr = s.e;
-      int total = 0;
-      GNSet U = s.U - GNSet{depot,curr};
-      while (!U.empty()) {
-         auto[next, minD] = argmin(U, [](int){return true;}, [&d, &curr](int other){ return d[curr][other]; });
-         total += minD;
-         curr = next;
-         U.remove(curr);
+   struct LocalKey {
+      GNSet U;
+      int e;
+
+      std::size_t operator()(const LocalKey& lk) const { // I don't love having the key type be the hash type as well...
+         return (std::hash<GNSet>{}(lk.U) << 16) |  // check if this is OK
+                (std::hash<int>{}(lk.e));
       }
+      bool operator==(const LocalKey& other) const { 
+         return (U==other.U && e==other.e);
+      }
+   };
+   std::unordered_map<LocalKey, int, LocalKey> localCache; 
+   const auto local = [&d,&C,&localCache](const TSPTW& s,LocalContext) -> double {
+      LocalKey curr = {s.U - GNSet{depot}, s.e};
+      int total = 0;
+      while (!curr.U.empty()) {
+         auto[next, minD] = argmin(curr.U, [](int){return true;}, [&d, &e=curr.e](int other){ return d[e][other]; });
+         total += minD;
+         curr.e = next;
+         curr.U.remove(next);
+      }
+      total += d[curr.e][depot];
       return total;
    };
 
