@@ -131,12 +131,14 @@ int main(int argc,char* argv[]) {
    const auto target = [sz,&C,&tw]() { return TSPTW { GNSet{},   depot, 0, sz }; };
    const auto lgf = [sz,&C,&d,&tw](const TSPTW& s,DDContext)  {
       if (s.hops >= sz-1) {
-         return GNSet {depot};
+         return s.t + d[s.e][depot] <= tw[depot].b ? GNSet {depot} : GNSet{};
       } else {
          GNSet valid; 
          for(auto u: s.U) {
-            if(u != depot && s.e != u && s.t + d[s.e][u] <= tw[u].b) valid.insert(u);
+            bool tmp = (u != depot) && (s.e != u) && (s.t + d[s.e][u] <= tw[u].b);
+            if( tmp ) valid.insert(u);
          }
+         //std::cout << "valid: " << valid << std::endl<< std::endl;
          return valid;
       }     
    };
@@ -187,7 +189,7 @@ int main(int argc,char* argv[]) {
       LocalKey curr = {s.U - GNSet{depot}, s.e};
       int total = 0;
       while (!curr.U.empty()) {
-         auto[next, minD] = argmin(curr.U, [](int){return true;}, [&d, &e=curr.e](int other){ return d[e][other]; });
+         auto[next, minD] = argmin(curr.U, [&d, &e=curr.e](int other){ return d[e][other]; });
          total += minD;
          curr.e = next;
          curr.U.remove(next);
@@ -199,9 +201,11 @@ int main(int argc,char* argv[]) {
    // int cost = 0;
    // //std::vector<int> labels = { 1, 5, 3, 2, 4, 8, 6, 7, 9, 10, 0  };
    // //std::vector<int> labels = { 1,2,3,4,5,6,7,8,9,10,0  };
-   // std::vector<int> labels = { 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,0 };
+   // //std::vector<int> labels = { 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,0 };
+   // std::vector<int> labels = { 1, 2, 3, 4, 16, 6, 7, 8, 9, 10, 11, 5, 13, 14, 15, 12, 17, 0 };
    // auto curr = init();
    // for(int label: labels){
+   //    lgf(curr, DDContext::DDRestricted);
    //    cost += scf(curr, label);
    //    auto next = stf(curr, label);
    //    if(next != std::nullopt)

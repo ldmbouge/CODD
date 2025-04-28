@@ -91,12 +91,12 @@ Instance readFile(const char* fName)
 }
 
 
-double greedy(Matrix<int,2>& d,GNSet C,GNSet V,int src,int sink,int hops)
+double greedy(Matrix<int,2>& d,GNSet C,GNSet U,int src,int sink,int hops)
 {
    // compute lower bound as the sum of the cheapest arc out of each 
    // node except the src (which already has an outgoing arc per the
    // partial solution so far. 
-   GNSet t = (C - V).insert(src).insert(sink);
+   GNSet t = U.insert(src).insert(sink);
    const auto ts = C.size() - hops; // Beware: set V is an lower bound, it could be too small, its true
    // size is hops. So only pick the ts shortest edges at the end.
    int ne = 0;
@@ -130,41 +130,64 @@ int main(int argc,char* argv[]) {
 
    const auto init = [&C,&tw]()      { return TSPTW { C - depot, depot, 0,  0 }; };
    const auto target = [sz,&C,&tw]() { return TSPTW { GNSet{},   depot, 0, sz }; };
+   // const auto lgf = [sz,&C,&d,&tw](const TSPTW& s,DDContext)  {
+   //    if (s.hops >= sz-1) {
+   //       return GNSet {depot};
+   //    } else {
+   //       GNSet valid; 
+   //       for(auto u: s.U) {
+   //          if( u == depot || u == s.e || s.t + d[s.e][u] > tw[u].b ) continue;
+   //          float tu = std::max(s.t + d[s.e][u], tw[u].a);
+   //          bool onTime = true;
+   //          for (auto v: s.U) {
+   //             if(v == depot || v == s.e || v == u) continue;
+   //             if( tu + d[u][v] > tw[v].b )
+   //                onTime = false;
+   //                break;
+   //          }
+   //          if( onTime ) valid.insert(u);
+   //       }
+   //       //std::cout << "valid: " << valid << std::endl<< std::endl;
+   //       return valid;
+   //    }     
+   // };
    const auto lgf = [sz,&C,&d,&tw](const TSPTW& s,DDContext)  {
       if (s.hops >= sz-1) {
          return s.t + d[s.e][depot] <= tw[depot].b ? GNSet {depot} : GNSet{};
       } else {
          GNSet valid; 
          for(auto u: s.U) {
-            bool isValid = true;
-            for (auto other: s.U) {
-               if(other == u) continue;
-               if( (other == depot) || (s.e == other) || (s.t + d[s.e][other] > tw[other].b) ) 
-                  isValid = false;
-                  break;
-            }
-            if( isValid ) valid.insert(u);
+            bool tmp = (u != depot) && (s.e != u) && (s.t + d[s.e][u] <= tw[u].b);
+            if( tmp ) valid.insert(u);
          }
          //std::cout << "valid: " << valid << std::endl<< std::endl;
          return valid;
       }     
    };
    const auto stf = [sz,&C,&d,&tw](const TSPTW& s,const int label) -> std::optional<TSPTW> {
-      if (label==depot)
+      if (label==depot) {
          return TSPTW { GNSet{},depot,0,sz}; 
-      // else {
-      //std::cout << s.U << " \ " << label << " = " << s.U - GNSet{label} << std::endl;
-      //std::cout << "max(" << s.t << "+" << d[s.e][label] << "=" << s.t+d[s.e][label] << ", " << tw[label].a << ") = " << std::max(s.t+d[s.e][label], tw[label].a) << std::endl;
-      else
-         return TSPTW { s.U - GNSet{label}, label, std::max(s.t+d[s.e][label], tw[label].a), s.hops+1};
+      } else {
+         int nextT = std::max(s.t+d[s.e][label], tw[label].a);
+         GNSet nextU = s.U - GNSet{label};
+         bool onTime = true;
+         for(auto u: nextU - GNSet{0}) {
+            if(nextT + d[label][u] > tw[u].b) {
+               onTime = false;
+               return std::nullopt;
+            }
+         }
+         return TSPTW { nextU, label, nextT, s.hops+1};
+      }
       //}
    };
    const auto scf = [&d,&tw](const TSPTW& s,int label) { // partial cost function 
-      int delta = d[s.e][label];
-      if(s.t+delta < tw[label].a) {
-         return tw[label].a - s.t;
-      } else
-         return delta;
+      return d[s.e][label];
+      // int delta = d[s.e][label];
+      // if(s.t+delta < tw[label].a) {
+      //    return tw[label].a - s.t;
+      // } else
+      //    return delta;
    };
    const auto smf = [](const TSPTW& s1,const TSPTW& s2) -> std::optional<TSPTW> {
       if (s1.e == s2.e && s1.hops == s2.hops)  {
@@ -178,6 +201,7 @@ int main(int argc,char* argv[]) {
       //std::cout << s.e << " == " << depot << " && " << s.hops << " == " << sz << std::endl;
       return s.e == depot && s.hops == sz && s.U.empty(); 
    };
+   
    struct LocalKey {
       GNSet U;
       int e;
@@ -195,16 +219,25 @@ int main(int argc,char* argv[]) {
       LocalKey curr = {s.U - GNSet{depot}, s.e};
       int total = 0;
       while (!curr.U.empty()) {
+         std::cout << curr.e << " " << curr.U << " " << total << " --> ";
          auto[next, minD] = argmin(curr.U, [&d, &e=curr.e](int other){ return d[e][other]; });
          total += minD;
          curr.e = next;
          curr.U.remove(next);
+         std::cout << curr.e << " " << total << std::endl;
       }
+      std::cout << curr.e << " " << curr.U << " " << total << " --> ";
       total += d[curr.e][depot];
+      std::cout << depot << " " << total << std::endl;
       return total;
    };
 
-   BAndBRestrictedFirst engine(DD<TSPTW,Minimize<double>,
+   // auto curr = init();
+   // std::cout << "init()        = " << init() << "\n";
+   // std::cout << "local(init()) = " << local(init(), LocalContext::DDInit)/10000.0 << "\n";
+   // return 0;
+
+   BAndB engine(DD<TSPTW,Minimize<double>,
                 decltype(target),
                 decltype(lgf),
                 decltype(stf),
