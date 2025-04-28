@@ -58,7 +58,7 @@ void BAndB::search(Bounds& bnds)
        // cout << "----------------------------------------------------------------------" << "\n";
       
       auto bbn = pq.extractMax();
-      //std::cout << "bbn node dequeued: " << bbn << std::endl;
+      std::cout << "bbn node dequeued: " << bbn << std::endl;
       auto curDual = bbn.bound;
       bnds.setDual(bbn.node->getBound(),curDual);
       auto now = RuntimeMonitor::cputime();
@@ -81,9 +81,9 @@ void BAndB::search(Bounds& bnds)
          last = RuntimeMonitor::cputime();
       }
       auto compDual = bbn.node->getBound() + relaxed->local(bbn.node,LocalContext::DDInit);
-      //cout << "DUAL KEY:" << curDual << " dualCOMP:" << compDual << "\n";
+      cout << "DUAL KEY:" << curDual << " dualCOMP:" << compDual << "\n";
       if (!relaxed->isBetterEQ(compDual,curDual)) {
-         //cout<< " dual comp improve!\n";
+         cout<< " dual comp improve!\n";
          curDual = compDual;
       }
       primalBetter = false;
@@ -94,20 +94,20 @@ void BAndB::search(Bounds& bnds)
       cout << "\t(" << curDual << ")" << " SZ:" << pq.size() << endl;
 #endif
       ttlNode++;
-      //   cout << "CURDUAL:" << curDual << "\t PRIMAL:" << bnds.getPrimal()
-      //        << " isBetter:" << relaxed->isBetter(curDual,bnds.getPrimal()) << "\n";
+        cout << "CURDUAL:" << curDual << "\t PRIMAL:" << bnds.getPrimal()
+             << " isBetter:" << relaxed->isBetter(curDual,bnds.getPrimal()) << "\n";
       if (!relaxed->isBetter(curDual,bnds.getPrimal())) {
          bbPool->release(bbn.node);
          continue;
       }
       nNode++;
-      // cout << "relaxed->apply: " << bbn.node->getBound() << "\n";
+      cout << "relaxed->apply: " << bbn.node->getBound() << "\n";
       bool dualBetter = relaxed->apply(bbn.node,bnds);
 #ifndef _NDEBUG
-      // cout << "relaxed ran..." << "\n";
-      // relaxed->printNode(cout,bbn.node);      
+      cout << "relaxed ran..." << "\n";
+      relaxed->printNode(cout,bbn.node);      
 #endif
-      // cout << "dualBetter? " << dualBetter << "\n";
+      cout << "dualBetter? " << dualBetter << "\n";
       if (dualBetter) { //if global opt is better than current primal
          primalBetter = restricted->apply(bbn.node,bnds);
          
@@ -116,20 +116,20 @@ void BAndB::search(Bounds& bnds)
             //int k = 0;
             for(auto n : cutSet) {
                //std::cout << "CUTSET(" << k++ << ") ";
-               // std::cout << "CUTSET ";               
-               // relaxed->printNode(std::cout,n);
+               std::cout << "CUTSET ";               
+               relaxed->printNode(std::cout,n);
                
                if (n == relaxed->getRoot()) { // the cutset is the root. Only way out: increase width.
                   auto w = ddr[0]->getWidth() + 1;
                   ddr[0]->setWidth(w);
-                  // std::cout << "\t-->widening... " << w << " CUTSET SIZE:" << cutSet.size() <<  "\n";
+                  std::cout << "\t-->widening... " << w << " CUTSET SIZE:" << cutSet.size() <<  "\n";
                }
                // use the bound in n (the ones in nd are _reset_ when duplicate occurs????)
                bool newGuyDominated = false;
                if (!relaxed->isBetter(n->getBound() + n->getBackwardBound(),bnds.getPrimal()))  {
-                  // std::cout << "\tDISCARD PRIMAL=" << bnds.getPrimal();
-                  // relaxed->printNode(std::cout,n);
-                  // std::cout << "\n";
+                  std::cout << "\tDISCARD PRIMAL=" << bnds.getPrimal() << "  ";
+                  relaxed->printNode(std::cout,n);
+                  std::cout << "\n";
                   continue; // the loop over the cutset! Not the main loop
                }
                if (relaxed->hasDominance()) {
@@ -148,7 +148,7 @@ void BAndB::search(Bounds& bnds)
                         allLocs[d++] = bbn;
                   }
                   if (d) {
-                     // std::cout << "new BBNode Dominated " << d << " BB nodes" << std::endl;
+                     std::cout << "new BBNode Dominated " << d << " BB nodes" << std::endl;
                      for(auto i =0u; i < d;i++) 
                         pq.remove(allLocs[i]);
                      pruned += d;
@@ -159,7 +159,7 @@ void BAndB::search(Bounds& bnds)
                if (!newGuyDominated) {
                   auto nd = bbPool->cloneNode(n);
                   
-                  // std::cout << "CLONED and got:"  << nd << "\n";
+                  std::cout << "CLONED and got:"  << nd << "\n";
                   
                   if (nd) { // the node creation could return *NOTHING* if it was already created
                      assert(nd->getBound() == n->getBound());
@@ -167,7 +167,7 @@ void BAndB::search(Bounds& bnds)
                      if (relaxed->hasLocal()) {
                         auto newBnd = relaxed->local(nd,LocalContext::BBCtx);
                         // if (newBnd > n->getBackwardBound())                           
-                        //std::cout<<"New:"<< newBnd << " backward:" << n->getBackwardBound() << "\n";
+                        std::cout<<"New:"<< newBnd << " backward:" << n->getBackwardBound() << "\n";
                         //if (newBnd <= n->getBackwardBound())
                         if (!relaxed->isBetter(newBnd,n->getBackwardBound()))
                            bwd = newBnd;
@@ -178,8 +178,8 @@ void BAndB::search(Bounds& bnds)
                      const auto insKey = n->getBound() + bwd;
                      const auto improve = relaxed->isBetter(insKey,bnds.getPrimal());
 
-                     // std::cout<< "CLONE VALUE:" << insKey << " bwd:" << bwd << " PRIMAL:" << bnds.getPrimal()
-                     //          << " IMPROVED:" << (improve ? "T" : "F") << "\n";
+                     std::cout<< "CLONE VALUE:" << insKey << " bwd:" << bwd << " PRIMAL:" << bnds.getPrimal()
+                              << " IMPROVED:" << (improve ? "T" : "F") << "\n";
 
                      if (improve)
                         pq.insertHeap(QNode {nd, insKey }); //std::min(insKey,curDual)});
@@ -189,7 +189,7 @@ void BAndB::search(Bounds& bnds)
             }
          }
       } //else 
-      //std::cout << "DB:F " <<  "Primal:" << bnds.getPrimal() << " Dual:" << relaxed->currentOpt()  << "\n";      
+      std::cout << "DB:F " <<  "Primal:" << bnds.getPrimal() << " Dual:" << relaxed->currentOpt()  << "\n";      
       bbPool->release(bbn.node);
    }
    cout << setprecision(ss);

@@ -872,17 +872,16 @@ int min(const GNSet& inSet,const Filter& f,const Term& t) {
    return ttl;
 }
 
-template <typename Filter=bool(*)(int),typename Term=int(*)(int)>
-std::pair<int,int> argmin(const GNSet& inSet,const Filter& f,const Term& t) {
-   int ttl = std::numeric_limits<int>::max();
-   int tl;
-   for(auto v : inSet)
-      if (f(v)) {
-         const auto tv = t(v);
-         ttl = (ttl < tv) ? ttl : tv;
-         tl  = (ttl < tv) ? tl  : v;
-      }
-   return {tl, ttl};
+template <typename Term=int(*)(int)>
+std::pair<int,int> argmin(const GNSet& inSet,const Term& t) {
+   int min = std::numeric_limits<int>::max();
+   int elt;
+   for(auto v : inSet) {
+      const auto tv = t(v);
+      min = (min < tv) ? min : tv;
+      elt = (min < tv) ? elt : v;
+   }
+   return {elt, min};
 }
 
 template <typename Filter=bool(*)(int),typename Term=int(*)(int)>
