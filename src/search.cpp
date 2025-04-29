@@ -127,6 +127,7 @@ void BAndB::search(Bounds& bnds)
                // use the bound in n (the ones in nd are _reset_ when duplicate occurs????)
                bool newGuyDominated = false;
                if (!relaxed->isBetter(n->getBound() + n->getBackwardBound(),bnds.getPrimal()))  {
+                  std::cout << "!relaxed->isBetter(" << n->getBound() + n->getBackwardBound() << "," << bnds.getPrimal() << ") = " << (!relaxed->isBetter(n->getBound() + n->getBackwardBound(),bnds.getPrimal())) << std::endl;
                   std::cout << "\tDISCARD PRIMAL=" << bnds.getPrimal() << "  ";
                   relaxed->printNode(std::cout,n);
                   std::cout << "\n";
