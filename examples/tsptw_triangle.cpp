@@ -155,10 +155,10 @@ int main(int argc,char* argv[]) {
       if (s.hops >= sz-1) {
          return s.t + d[s.e][depot] <= tw[depot].b ? GNSet {depot} : GNSet{};
       } else {
-         GNSet valid; 
-         for(auto u: s.U) {
-            bool tmp = (u != depot) && (s.e != u) && (s.t + d[s.e][u] <= tw[u].b);
-            if( tmp ) valid.insert(u);
+         GNSet valid;
+         GNSet nextU = s.U - GNSet{s.e, depot}; 
+         for(auto u: nextU) {
+            if(s.t + d[s.e][u] <= tw[u].b) valid.insert(u);
          }
          //std::cout << "valid: " << valid << std::endl<< std::endl;
          return valid;
@@ -169,11 +169,9 @@ int main(int argc,char* argv[]) {
          return TSPTW { GNSet{},depot,0,sz}; 
       } else {
          int nextT = std::max(s.t+d[s.e][label], tw[label].a);
-         GNSet nextU = s.U - GNSet{label};
-         bool onTime = true;
-         for(auto u: nextU - GNSet{0}) {
+         GNSet nextU = s.U - GNSet{label, depot};
+         for(auto u: nextU) {
             if(nextT + d[label][u] > tw[u].b) {
-               onTime = false;
                return std::nullopt;
             }
          }
@@ -196,40 +194,64 @@ int main(int argc,char* argv[]) {
       } else {
          return std::nullopt; // return  the empty optional
       }
+      //return std::nullopt;
    };
    const auto eqs = [sz](const TSPTW& s) -> bool { 
       //std::cout << s.e << " == " << depot << " && " << s.hops << " == " << sz << std::endl;
-      return s.e == depot && s.hops == sz && s.U.empty(); 
+      return s.e == depot && s.hops == sz;// && s.U.empty(); 
    };
    
-   struct LocalKey {
-      GNSet U;
-      int e;
+   // struct LocalKey {
+   //    GNSet U;
+   //    int e;
 
-      std::size_t operator()(const LocalKey& lk) const { // I don't love having the key type be the hash type as well...
-         return (std::hash<GNSet>{}(lk.U) << 16) |  // check if this is OK
-                (std::hash<int>{}(lk.e));
+   //    std::size_t operator()(const LocalKey& lk) const { // I don't love having the key type be the hash type as well...
+   //       return (std::hash<GNSet>{}(lk.U) << 16) |  // check if this is OK
+   //              (std::hash<int>{}(lk.e));
+   //    }
+   //    bool operator==(const LocalKey& other) const { 
+   //       return (U==other.U && e==other.e);
+   //    }
+   // };
+   // std::unordered_map<LocalKey, int, LocalKey> localCache; 
+   int dIn[sz];
+   int dOut[sz];
+   int perm1arr[sz];
+   int perm2arr[sz];
+   for(auto j : C) {
+      GNSet allButj = C - GNSet{j};
+      auto [e1, minIn]  = argmin(allButj,[&d,j](int k) { return d[k][j];});
+      auto [e2, minOut] = argmin(allButj,[&d,j](int k) { return d[j][k];});
+      dIn[j] = minIn;
+      dOut[j] = minOut;
+      perm1arr[j] = j;
+      perm2arr[j] = j;
+   }
+   mergeSortPerm(dIn,  perm1arr, sz, [](double a, double b) { return a < b; });
+   mergeSortPerm(dOut, perm2arr, sz, [](double a, double b) { return a < b; });
+   std::vector<int> perm1(perm1arr, perm1arr+sz);
+   std::vector<int> perm2(perm2arr, perm2arr+sz);
+   std::cout << "perm2: " << perm2 << "\n" << (*perm2arr) << " " << *(perm2arr+sz-1) << "\n";
+   // std::unordered_map<LocalKey, int, LocalKey> localCache; 
+   const auto local = [&d,&C,&dIn,&dOut,&sz,&perm1,&perm2](const TSPTW& s,LocalContext) -> double {
+      GNSet curr1 = s.U | GNSet{depot};
+      GNSet curr2 = s.U | GNSet{s.e};
+      int sumIn = 0, sumOut = 0;
+      for(int i = 0, n = 0; (i < sz) && (n < sz-s.hops); i++) { 
+         if( curr1.contains(perm1[i]) ) {
+            sumIn += dIn[i];
+            n++; 
+         }
       }
-      bool operator==(const LocalKey& other) const { 
-         return (U==other.U && e==other.e);
+      for(int i = 0, n = 0; (i < sz) && (n < sz-s.hops); i++) { 
+         if( curr2.contains(perm2[i]) ) {
+            sumOut += dOut[i];
+            n++; 
+         }
       }
-   };
-   std::unordered_map<LocalKey, int, LocalKey> localCache; 
-   const auto local = [&d,&C,&localCache](const TSPTW& s,LocalContext) -> double {
-      LocalKey curr = {s.U - GNSet{depot}, s.e};
-      int total = 0;
-      while (!curr.U.empty()) {
-         std::cout << curr.e << " " << curr.U << " " << total << " --> ";
-         auto[next, minD] = argmin(curr.U, [&d, &e=curr.e](int other){ return d[e][other]; });
-         total += minD;
-         curr.e = next;
-         curr.U.remove(next);
-         std::cout << curr.e << " " << total << std::endl;
-      }
-      std::cout << curr.e << " " << curr.U << " " << total << " --> ";
-      total += d[curr.e][depot];
-      std::cout << depot << " " << total << std::endl;
-      return total;
+      //auto sumIn = sum(curr1,[&dIn](int j)   { return dIn[j];});
+      //auto sumOut = sum(curr2,[&dOut](int j) { return dOut[j];});
+      return std::max(sumIn,sumOut);   
    };
 
    // auto curr = init();
@@ -237,7 +259,7 @@ int main(int argc,char* argv[]) {
    // std::cout << "local(init()) = " << local(init(), LocalContext::DDInit)/10000.0 << "\n";
    // return 0;
 
-   BAndB engine(DD<TSPTW,Minimize<double>,
+   BAndBRestrictedFirst engine(DD<TSPTW,Minimize<double>,
                 decltype(target),
                 decltype(lgf),
                 decltype(stf),
