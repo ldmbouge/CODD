@@ -259,7 +259,8 @@ int main(int argc,char* argv[]) {
    // std::cout << "local(init()) = " << local(init(), LocalContext::DDInit)/10000.0 << "\n";
    // return 0;
 
-   BAndBRestrictedFirst engine(DD<TSPTW,Minimize<double>,
+   BAndB engine(DD<TSPTW,Minimize<double>,
+                               //                               BAndBRestrictedFirst engine(DD<TSPTW,Minimize<double>,
                 decltype(target),
                 decltype(lgf),
                 decltype(stf),
