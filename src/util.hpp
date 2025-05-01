@@ -320,6 +320,12 @@ public:
       return lv;
    }
    void insert(int p) noexcept         { _t[p >> 6] |= (1ull << (p & 63));}
+   NatSet& remove(int p) noexcept {
+      const int i = p >> 6;
+      if (0 <= i && i < nbw) 
+         _t[i] &= ~(1ull << (p & 63));
+      return *this;
+   }
    bool contains(int p) const noexcept { return (_t[p >> 6] &  (1ull << (p & 63))) != 0;}
    NatSet& complement() noexcept {
       for(short i=0;i < nbw;++i)
@@ -421,6 +427,7 @@ public:
    friend NatSet operator-(int l,const NatSet& s2) noexcept            { return NatSet(l,s2);}
    friend NatSet operator|(const NatSet& s1,const NatSet& s2) noexcept { return NatSet(s1).unionWith(s2);}
    friend NatSet operator&(const NatSet& s1,const NatSet& s2) noexcept { return NatSet(s1).interWith(s2);}
+   friend NatSet operator-(const NatSet& s1,int v) noexcept { return std::move(NatSet(s1).remove(v));}
    std::size_t hash() const noexcept {
       std::size_t hv = 0;
       for(auto i = 0;i < nbw;i++)
