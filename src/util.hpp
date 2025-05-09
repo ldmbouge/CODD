@@ -688,14 +688,16 @@ public:
       unsigned long long*    _t;
       const unsigned short _nbw;
       short                _cwi;    // current word index
-      int                  _cnt;    // rank of current bit
+      int               _cnt:31;    // rank of current bit
+      int                 _up:1;
       unsigned long long    _cw;    // current word
       iterator(unsigned long long* t,unsigned short nbw,unsigned short at)
          : _t(t),_nbw(nbw),_cwi(at),_cnt(0),_cw((at < nbw) ? t[at] : 0) {
-         while (_cw == 0 && _t && ++_cwi < _nbw) _cw = _t[_cwi];         
+         while (_cw == 0 && _t && ++_cwi < _nbw) _cw = _t[_cwi];
+         _up = 1;
       }
       iterator(unsigned long long* t,unsigned short nbw,const GNSet& gns)
-         : _t(t),_nbw(nbw),_cwi(nbw),_cnt(gns.size()),_cw(0) {} // end constructor
+         : _t(t),_nbw(nbw),_cwi(nbw),_cnt(gns.size()),_cw(0),_up(0) {} // end constructor
       static constexpr auto msb(unsigned long long w) noexcept {return (0x8000000000000000u >> __builtin_clzl(w));}
       static constexpr auto lsb(unsigned long long w)  noexcept {return w & -w;}
       static constexpr auto clearMSB(unsigned long long w) noexcept { return w ^ msb(w);}
@@ -713,11 +715,11 @@ public:
          _cwi = i._cwi;
          _cnt = i._cnt;
          _cw  = i._cw;
+         _up  = i._up;
          return *this;
       }
       iterator& operator++()  noexcept {
-         long long test = _cw & -_cw;  // only leaves LSB at 1
-         _cw ^= test;                  // clear LSB
+         _cw = clearLSB(_cw);  // clear LSB
          while (_cw == 0 && ++_cwi < _nbw)  // all bits at zero-> done with this word.            
             _cw = _t[_cwi];
          ++_cnt;
@@ -732,7 +734,7 @@ public:
             _cw  =  0;
             return *this;
          } else 
-            _cw = clearMSB(_cw);
+            _cw = clearMSB(_cw); // clear the most sig bit.
          while(_cw==0 && --_cwi >= 0) _cw = _t[_cwi];
          --_cnt;
          return *this;
@@ -749,9 +751,7 @@ public:
       iterator operator-(unsigned d) const {iterator r(*this);while(d-- > 0) --r;return r;}
       bool operator==(iterator other) const {return _cwi == other._cwi && _cw == other._cw;}
       bool operator!=(iterator other) const {return !(*this == other);}
-      //short operator*() const   { return (_cwi<<6) + __builtin_ctzl(_cw);}
-      short operator*() const   { return (_cwi<<6) + bitId(lsb(_cw));}
-
+      short operator*() const   { return (_cwi<<6) + bitId(_up ? lsb(_cw) : msb(_cw));}
       friend class GNSet;
    };
    typedef iterator const_iterator;
