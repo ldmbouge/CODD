@@ -152,6 +152,7 @@ template <unsigned short nbw=1>
 class NatSet {
    unsigned long long _t[nbw];
 public:
+   using value_type = unsigned long long;
    NatSet() {
       for(auto i=0u;i < nbw;i++)
          _t[i]=0;
@@ -371,46 +372,62 @@ public:
          assert(_cwi >= nbw || _cw <= _t[_cwi]);
          return *this;
       }
-      iterator operator++(int) { iterator retval = *this; ++(*this); return retval;}
+      // iterator& operator--() noexcept {
+      //    if (_cwi==nbw) { // i'm at the end. try to read a full word backward.
+      //       while(_cw==0 && --_cwi >=0) _cw = _t[_cwi];
+      //       assert(_cw!=0 || _cwi < 0);
+      //    } else if (_cnt==0) {
+      //       _cwi = -1;
+      //       _cw  =  0;
+      //       return *this;
+      //    } else 
+      //       _cw = clearMSB(_cw);
+      //    while(_cw==0 && --_cwi >= 0) _cw = _t[_cwi];
+      //    --_cnt;
+      //    return *this;
+      // }
+      iterator operator++(int) { iterator retval = *this; this->operator++(); return retval;}
+      iterator operator--(int) { iterator retval = *this; this->operator--(); return retval;}
+      iterator operator-(unsigned d) const {iterator r(*this);while(d-- > 0) --r;return r;}
       bool operator==(iterator other) const {return _cwi == other._cwi && _cw == other._cw;}
       bool operator!=(iterator other) const {return !(*this == other);}
       short operator*() const   { return (_cwi<<6) + __builtin_ctzl(_cw);}
       friend class NatSet;
    };
-   class citerator { 
+   class const_iterator { 
       const unsigned long long*    _t;
       unsigned short       _cwi;    // current word index
       unsigned long long    _cw; // current word
-      citerator(const unsigned long long* t,unsigned short at)
+      const_iterator(const unsigned long long* t,unsigned short at)
          : _t(t),_cwi(at),_cw((at < nbw) ? t[at] : 0)
       {
          while (_cw == 0 && ++_cwi < nbw) 
             _cw = _t[_cwi];         
       }
-      citerator(const unsigned long long* t) : _t(t),_cwi(nbw),_cw(0) {} // end constructor
+      const_iterator(const unsigned long long* t) : _t(t),_cwi(nbw),_cw(0) {} // end constructor
    public:
       using iterator_category = std::forward_iterator_tag;
       using value_type = short;
       using difference_type = short;
       using pointer = short*;
       using reference = short&;
-      citerator& operator++()  noexcept {
+      const_iterator& operator++()  noexcept {
          long long test = _cw & -_cw;  // only leaves LSB at 1
          _cw ^= test;                  // clear LSB
          while (_cw == 0 && ++_cwi < nbw)  // all bits at zero-> done with this word.            
             _cw = _t[_cwi];        
          return *this;
       }
-      citerator operator++(int) { citerator retval = *this; ++(*this); return retval;}
-      bool operator==(citerator other) const {return _cwi == other._cwi && _cw == other._cw;}
-      bool operator!=(citerator other) const {return !(*this == other);}
+      const_iterator operator++(int) { const_iterator retval = *this; ++(*this); return retval;}
+      bool operator==(const_iterator other) const {return _cwi == other._cwi && _cw == other._cw;}
+      bool operator!=(const_iterator other) const {return !(*this == other);}
       short operator*() const   { return (_cwi<<6) + __builtin_ctzl(_cw);}
       friend class NatSet;
    };
    iterator begin() const { return iterator(_t,0);}
    iterator end()   const { return iterator(_t);}
-   citerator cbegin() const { return citerator(_t,0);}
-   citerator cend()   const { return citerator(_t);}
+   const_iterator cbegin() const { return const_iterator(_t,0);}
+   const_iterator cend()   const { return const_iterator(_t);}
    friend std::ostream& operator<<(std::ostream& os,const NatSet& ps) {
       os << "{";
       auto cnt = 0;
@@ -437,6 +454,7 @@ public:
    friend struct std::hash<NatSet<nbw>>;
    friend class GNSet;
 };
+
 
 
 /**
@@ -824,9 +842,17 @@ inline int max(const GNSet& s) {
    else 
       return std::numeric_limits<int>::min();
 }
-template <typename Pred>
-GNSet filter(const GNSet& inSet,Pred p) {
-   GNSet outSet = {};
+// template <typename Pred>
+// GNSet filter(const GNSet& inSet,Pred p) {
+//    GNSet outSet = {};
+//    for(const auto& v : inSet)
+//       if (p(v))
+//          outSet.insert(v);
+//    return outSet;
+// }
+template <typename SET, typename Pred>
+SET filter(const SET& inSet,Pred p) {
+   SET outSet = {};
    for(const auto& v : inSet)
       if (p(v))
          outSet.insert(v);
@@ -1416,12 +1442,39 @@ public:
    }
 };
 
-//template <class C> DDGen::Ptr makeDDGen(Ordered<C>&& oc);
+template <unsigned short nbw=1> 
+class DDGenNatSet:public DDGen {
+   NatSet<nbw> _ns;
+   NatSet<nbw>::iterator _it;
+   const NatSet<nbw>::iterator _end;
+public:
+   DDGenNatSet(NatSet<nbw>&& ns) : _ns(std::move(ns)),
+                       _it(_ns.begin()),
+                       _end(_ns.end()) {}
+   DDGenNatSet(const NatSet<nbw>& ns) : _ns(std::move(ns)),
+                       _it(_ns.begin()),
+                       _end(_ns.end()) {}
+   ~DDGenNatSet() {
+     //std::cout << "DDGenNatSet::~DDGenNatSet " << this << "\n";
+   }
+   int getAndNext() noexcept {
+     return *_it++;
+   }
+   bool more() const noexcept {
+     return _it != _end;
+   }
+};
+
+
 template <class C> DDGen::Ptr makeDDGen(const Ordered<C>& oc) {
    return std::make_unique<DDGenOC<C>>(oc);
 }
-//DDGen::Ptr makeDDGen(GNSet&& gns);
+template <unsigned short nbw> DDGen::Ptr makeDDGen(const NatSet<nbw>& ns) {
+   return std::make_unique<DDGenNatSet<nbw>>(ns);
+}
+
 DDGen::Ptr makeDDGen(const GNSet& gns);
 DDGen::Ptr makeDDGen(const Range& r);
+
 
 #endif

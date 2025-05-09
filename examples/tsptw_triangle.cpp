@@ -117,15 +117,17 @@ int main(int argc,char* argv[]) {
    const auto target = [sz,&C,&tw]() { return TSPTW { NatSet<4>(),   depot, 0, sz }; };
    const auto lgf = [sz,&C,&d,&tw](const TSPTW& s,DDContext)  {
       if (s.hops >= sz-1) {
-         return s.t + d[s.e][depot] <= tw[depot].b ? GNSet {depot} : GNSet{};
+         return s.t + d[s.e][depot] <= tw[depot].b ? increasing(NatSet<4> {depot}) : increasing(NatSet<4>{});
+         //return s.t + d[s.e][depot] <= tw[depot].b ? NatSet<4> {depot} : NatSet<4>{};
       } else {
-         GNSet valid;
-         GNSet nextU = s.U - GNSet{s.e, depot}; 
-         for(auto u: nextU) {
-            if(s.t + d[s.e][u] <= tw[u].b) valid.insert(u);
-         }
-         //std::cout << "valid: " << valid << std::endl<< std::endl;
-         return valid;
+         // NatSet<4> valid;
+         // for(auto u: s.U) {
+         //    if(u == s.e || u == depot) continue;
+         //    if(s.t + d[s.e][u] <= tw[u].b) valid.insert(u);
+         // }
+         // //std::cout << "valid: " << valid << std::endl<< std::endl;
+         // return valid;//increasing(valid);
+         return increasing(filter(s.U, [&s,&d,&tw](auto& u){ return (u != s.e && u != depot && s.t + d[s.e][u] <= tw[u].b); }));
       }     
    };
    const auto stf = [sz,&C,&d,&tw](const TSPTW& s,const int label) -> std::optional<TSPTW> {
@@ -190,7 +192,10 @@ int main(int argc,char* argv[]) {
       }
       return std::max(sumIn,sumOut);   
    };
-
+   const auto sDom = [](const TSPTW& a,const TSPTW& b) -> bool { 
+      // if (a.U <= b.U) && (a.e == b.e) then a doms b iff a.t < b.t
+      return  (a.e == b.e) && a.t < b.t && ((a.U & b.U) == a.U);
+   };
    BAndB engine(DD<TSPTW,Minimize<double>, // to minimize
                 //   BAndBRestrictedFirst engine(DD<TSPTW,Minimize<double>,
                 decltype(target),
@@ -200,7 +205,7 @@ int main(int argc,char* argv[]) {
                 decltype(smf),
                 decltype(eqs),
                 decltype(local)
-                >::makeDD(init,target,lgf,stf,scf,smf,eqs,C,local),w);
+                >::makeDD(init,target,lgf,stf,scf,smf,eqs,C,local,sDom),w);
    engine.search(bnds);
    return 0;
 }

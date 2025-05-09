@@ -47,9 +47,9 @@ for fname in ../data/tsptw/**/*.*; do
         continue
     fi
 
-    for w in 256 1024; do
+    for w in 8 16 32 64; do
         echo $fname w:$w $(date +%d.%m.%y-%H:%M:%S)
-        output=$(gtimeout 1000 sh -c "./tsptw_triangle \"$fname\" \"$w\" | tail -1")
+        output=$(gtimeout 200 sh -c "./tsptw_triangle \"$fname\" \"$w\" | tail -1")
         if (($?)); then
             echo "T.O."
             skip_dir="$dir"

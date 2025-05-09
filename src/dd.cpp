@@ -768,7 +768,7 @@ void Relaxed::compute(Bounds& bnds)
                   if (dominator) {
                      ANode::Ptr justAdded = _dd->_an.back();
                      assert(justAdded == child);
-                     std::cout << "relaxed -> dominated!\n"; 
+                     //std::cout << "relaxed -> dominated!\n"; 
                      _dd->_an.pop_back();
                      child = dominator;
                      newNode = false;
