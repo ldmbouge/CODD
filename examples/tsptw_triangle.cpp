@@ -113,24 +113,26 @@ int main(int argc,char* argv[]) {
    const int depot = 0;
    const int sz = (const int)C.size();
 
-   const auto init = [&C,&tw]()      { return TSPTW { C - depot, depot, 0,  0 }; };
-   const auto target = [sz,&C,&tw]() { return TSPTW { NatSet<4>(),   depot, 0, sz }; };
-   const auto lgf = [sz,&C,&d,&tw](const TSPTW& s,DDContext)  {
+   const auto init = [&C]()      { return TSPTW { C - depot, depot, 0,  0 }; };
+   const auto target = [sz]() { return TSPTW { NatSet<4>(),   depot, 0, sz }; };
+   const auto lgf = [sz,&d,&tw](const TSPTW& s,DDContext)  {
       if (s.hops >= sz-1) {
-         return s.t + d[s.e][depot] <= tw[depot].b ? increasing(NatSet<4> {depot}) : increasing(NatSet<4>{});
-         //return s.t + d[s.e][depot] <= tw[depot].b ? NatSet<4> {depot} : NatSet<4>{};
+         //return s.t + d[s.e][depot] <= tw[depot].b ? increasing(NatSet<4> {depot}) : increasing(NatSet<4>{});
+         return s.t + d[s.e][depot] <= tw[depot].b ? NatSet<4> {depot} : NatSet<4>{};
       } else {
-         // NatSet<4> valid;
-         // for(auto u: s.U) {
-         //    if(u == s.e || u == depot) continue;
-         //    if(s.t + d[s.e][u] <= tw[u].b) valid.insert(u);
-         // }
-         // //std::cout << "valid: " << valid << std::endl<< std::endl;
-         // return valid;//increasing(valid);
-         return increasing(filter(s.U, [&s,&d,&tw](auto& u){ return (u != s.e && u != depot && s.t + d[s.e][u] <= tw[u].b); }));
+         // std::function<int(int)> order = [curr=s.e,t=s.t,&d,&tw](int u){
+         //    return  std::max(t+d[curr][u], tw[u].a);
+         // };
+         // return increasing(
+         //    filter(s.U, [&s,&d,&tw](auto& u){
+         //       return (u != s.e && u != depot && s.t + d[s.e][u] <= tw[u].b); 
+         //    }),
+         //    order
+         // );
+         return filter(s.U, [&s,&d,&tw](auto& u){ return (u != s.e && u != depot && s.t + d[s.e][u] <= tw[u].b); });
       }     
    };
-   const auto stf = [sz,&C,&d,&tw](const TSPTW& s,const int label) -> std::optional<TSPTW> {
+   const auto stf = [sz,&d,&tw](const TSPTW& s,const int label) -> std::optional<TSPTW> {
       if (label==depot) {
          return TSPTW { NatSet<4>(),depot,0,sz}; 
       } else {
@@ -146,7 +148,7 @@ int main(int argc,char* argv[]) {
          return TSPTW { nextU, label, nextT, s.hops+1};
       }
    };
-   const auto scf = [&d,&tw](const TSPTW& s,int label) { // partial cost function 
+   const auto scf = [&d](const TSPTW& s,int label) { // partial cost function 
       return d[s.e][label];
    };
    const auto smf = [](const TSPTW& s1,const TSPTW& s2) -> std::optional<TSPTW> {
@@ -196,7 +198,7 @@ int main(int argc,char* argv[]) {
       // if (a.U <= b.U) && (a.e == b.e) then a doms b iff a.t < b.t
       return  (a.e == b.e) && a.t < b.t && ((a.U & b.U) == a.U);
    };
-   BAndB engine(DD<TSPTW,Minimize<double>, // to minimize
+   BAndBRestrictedFirst engine(DD<TSPTW,Minimize<double>, // to minimize
                 //   BAndBRestrictedFirst engine(DD<TSPTW,Minimize<double>,
                 decltype(target),
                 decltype(lgf),

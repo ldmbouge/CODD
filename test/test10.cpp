@@ -73,6 +73,7 @@ int main()
       std::cout << i << " ";
    std::cout << "\n";
 
+   std::cout << "GNSet: \n";
    auto s0 = GNSet {1,7,4,12,253};
    std::cout << s0 << "\n";
    std::cout << "forward loop:\t";
@@ -87,5 +88,41 @@ int main()
    for(auto i = s0E; i!=s0B;i--)
       std::cout << *i << " ";
    std::cout << "\n";
+
+   std::cout << "GNSet: \n";
+   auto s1 = GNSet {};
+   srand(time(NULL));
+   for(int i = 0; i < 100; i++) s1.insert(rand() % 1000);
+   std::cout << s1 << "\n";
+   std::cout << "forward loop:\t";
+   for(auto i = s1.begin(); i!=s1.end();i++)
+      std::cout << *i << " ";
+   std::cout << "\n";
+   std::cout << "backward loop:\t";
+   auto s1E = s1.end();
+   auto s1B = s1.begin();
+   s1E = s1E - 1;
+   s1B = s1B - 1;
+   for(auto i = s1E; i!=s1B;i--)
+      std::cout << *i << " ";
+   std::cout << "\n";
+
+   std::cout << "NatSet: \n";
+   auto s2 = NatSet<16> {};
+   for(int i = 0; i < 100; i++) s2.insert(rand() % 1024);
+   std::cout << s2 << "\n";
+   std::cout << "forward loop:\t";
+   for(auto i = s2.begin(); i!=s2.end();i++)
+      std::cout << *i << " ";
+   std::cout << "\n";
+   std::cout << "backward loop:\t";
+   auto s2E = s2.end();
+   auto s2B = s2.begin();
+   s2E = s2E - 1;
+   s2B = s2B - 1;
+   for(auto i = s2E; i!=s2B;i--)
+      std::cout << *i << " ";
+   std::cout << "\n";
+
    return 0;
 }

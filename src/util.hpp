@@ -150,9 +150,9 @@ public:
  */
 template <unsigned short nbw=1> 
 class NatSet {
-   unsigned long long _t[nbw];
+   std::array<unsigned long long, nbw> _t;
 public:
-   using value_type = unsigned long long;
+   using value_type = int;
    NatSet() {
       for(auto i=0u;i < nbw;i++)
          _t[i]=0;
@@ -161,9 +161,8 @@ public:
       for(int i=0;i<nbw;i++)
          _t[i] = s._t[i];
    }
-   NatSet(NatSet&& s) {
-      memcpy(_t,s._t,sizeof(_t));
-   }
+
+   NatSet(NatSet&& s) noexcept : _t(std::move(s._t)) {}
    NatSet(int lb,int ub) {
       if (lb > ub) {
          for(auto i=0u;i < nbw;i++)
@@ -291,7 +290,7 @@ public:
       }
    }
    NatSet& operator=(const NatSet& s) noexcept {
-      memcpy(_t,s._t,sizeof(_t));
+      _t = s._t;
       return *this;
    }
    constexpr unsigned short nbWords() const noexcept { return nbw;}
@@ -344,90 +343,84 @@ public:
       return *this;
    }
    class iterator { 
-      const unsigned long long*    _t;
+      std::array<unsigned long long, nbw> _t;
       unsigned short       _cwi;    // current word index
+      int               _cnt:31;    // rank of current bit
+      int                 _up:1;
       unsigned long long    _cw; // current word
-      iterator(const unsigned long long* t,unsigned short at)
-         : _t(t),_cwi(at),_cw((at < nbw) ? t[at] : 0)
-      {
-         while (_cw == 0 && ++_cwi < nbw) 
-            _cw = _t[_cwi];
-         _cw = (_cwi < nbw) * _cw;
-         assert(_cwi >= nbw || _cw <= _t[_cwi]);
+      iterator(std::array<unsigned long long, nbw> t,unsigned short at)
+         : _t(t),_cwi(at),_cnt(0),_cw((at < nbw) ? t[at] : 0) {
+         while (_cw == 0 && ++_cwi < nbw) _cw = _t[_cwi];
+         _up = 1;
       }
-      iterator(const unsigned long long* t) : _t(t),_cwi(nbw),_cw(0) {} // end constructor
+      iterator(const std::array<unsigned long long, nbw> t,const NatSet<nbw>& ns) 
+         : _t(t),_cwi(nbw),_cnt(ns.size()),_up(0),_cw(0) {} // end constructor
+      static constexpr auto msb(unsigned long long w) noexcept {return (0x8000000000000000u >> __builtin_clzl(w));}
+      static constexpr auto lsb(unsigned long long w)  noexcept {return w & -w;}
+      static constexpr auto clearMSB(unsigned long long w) noexcept { return w ^ msb(w);}
+      static constexpr auto clearLSB(unsigned long long w) noexcept { return w ^ lsb(w);}
+      static constexpr auto bitId(unsigned long long w) noexcept { return 63 - __builtin_clzl(w);}
    public:
       using iterator_category = std::forward_iterator_tag;
       using value_type = short;
       using difference_type = short;
       using pointer = short*;
       using reference = short&;
+      iterator& operator=(const iterator i) {
+         _t = i._t;
+         _cwi = i._cwi;
+         _cnt = i._cnt;
+         _cw  = i._cw;
+         _up  = i._up;
+         return *this;
+      }
       iterator& operator++()  noexcept {
          assert(_cwi >= nbw || _cw <= _t[_cwi]);
-         long long test = _cw & -_cw;  // only leaves LSB at 1
-         _cw ^= test;                  // clear LSB
+      
+         _cw = clearLSB(_cw);  // clear LSB
          while (_cw == 0 && ++_cwi < nbw)  // all bits at zero-> done with this word.            
             _cw = _t[_cwi];
+
          _cw = (_cwi < nbw) * _cw;
+
          assert(_cwi >= nbw || _cw <= _t[_cwi]);
          return *this;
       }
-      // iterator& operator--() noexcept {
-      //    if (_cwi==nbw) { // i'm at the end. try to read a full word backward.
-      //       while(_cw==0 && --_cwi >=0) _cw = _t[_cwi];
-      //       assert(_cw!=0 || _cwi < 0);
-      //    } else if (_cnt==0) {
-      //       _cwi = -1;
-      //       _cw  =  0;
-      //       return *this;
-      //    } else 
-      //       _cw = clearMSB(_cw);
-      //    while(_cw==0 && --_cwi >= 0) _cw = _t[_cwi];
-      //    --_cnt;
-      //    return *this;
-      // }
+      iterator& operator--() noexcept {
+         if (_cwi==nbw) { // i'm at the end. try to read a full word backward.
+            while(_cw==0 && --_cwi >=0) _cw = _t[_cwi];
+            assert(_cw!=0 || _cwi < 0);
+         } else if (_cnt==0) {
+            _cwi = -1;
+            _cw  =  0;
+            return *this;
+         } else 
+            _cw = clearMSB(_cw); // clear the most sig bit.
+         while(_cw==0 && --_cwi >= 0) _cw = _t[_cwi];
+         --_cnt;
+         return *this;
+      }
       iterator operator++(int) { iterator retval = *this; this->operator++(); return retval;}
       iterator operator--(int) { iterator retval = *this; this->operator--(); return retval;}
+      auto& operator+=(int d) {
+         while(--d >= 0) this->operator++();
+         while(++d < 0) this->operator--();
+         assert(d==0);
+         return *this;
+      }
       iterator operator-(unsigned d) const {iterator r(*this);while(d-- > 0) --r;return r;}
       bool operator==(iterator other) const {return _cwi == other._cwi && _cw == other._cw;}
       bool operator!=(iterator other) const {return !(*this == other);}
-      short operator*() const   { return (_cwi<<6) + __builtin_ctzl(_cw);}
+      short operator*() const   { return (_cwi<<6) + bitId(_up ? lsb(_cw) : msb(_cw));}
       friend class NatSet;
    };
-   class const_iterator { 
-      const unsigned long long*    _t;
-      unsigned short       _cwi;    // current word index
-      unsigned long long    _cw; // current word
-      const_iterator(const unsigned long long* t,unsigned short at)
-         : _t(t),_cwi(at),_cw((at < nbw) ? t[at] : 0)
-      {
-         while (_cw == 0 && ++_cwi < nbw) 
-            _cw = _t[_cwi];         
-      }
-      const_iterator(const unsigned long long* t) : _t(t),_cwi(nbw),_cw(0) {} // end constructor
-   public:
-      using iterator_category = std::forward_iterator_tag;
-      using value_type = short;
-      using difference_type = short;
-      using pointer = short*;
-      using reference = short&;
-      const_iterator& operator++()  noexcept {
-         long long test = _cw & -_cw;  // only leaves LSB at 1
-         _cw ^= test;                  // clear LSB
-         while (_cw == 0 && ++_cwi < nbw)  // all bits at zero-> done with this word.            
-            _cw = _t[_cwi];        
-         return *this;
-      }
-      const_iterator operator++(int) { const_iterator retval = *this; ++(*this); return retval;}
-      bool operator==(const_iterator other) const {return _cwi == other._cwi && _cw == other._cw;}
-      bool operator!=(const_iterator other) const {return !(*this == other);}
-      short operator*() const   { return (_cwi<<6) + __builtin_ctzl(_cw);}
-      friend class NatSet;
-   };
+   
+   typedef iterator const_iterator;
+
    iterator begin() const { return iterator(_t,0);}
-   iterator end()   const { return iterator(_t);}
+   iterator end()   const { return iterator(_t,*this);}
    const_iterator cbegin() const { return const_iterator(_t,0);}
-   const_iterator cend()   const { return const_iterator(_t);}
+   const_iterator cend()   const { return const_iterator(_t,*this);}
    friend std::ostream& operator<<(std::ostream& os,const NatSet& ps) {
       os << "{";
       auto cnt = 0;
@@ -697,7 +690,7 @@ public:
          _up = 1;
       }
       iterator(unsigned long long* t,unsigned short nbw,const GNSet& gns)
-         : _t(t),_nbw(nbw),_cwi(nbw),_cnt(gns.size()),_cw(0),_up(0) {} // end constructor
+         : _t(t),_nbw(nbw),_cwi(nbw),_cnt(gns.size()),_up(0),_cw(0) {} // end constructor
       static constexpr auto msb(unsigned long long w) noexcept {return (0x8000000000000000u >> __builtin_clzl(w));}
       static constexpr auto lsb(unsigned long long w)  noexcept {return w & -w;}
       static constexpr auto clearMSB(unsigned long long w) noexcept { return w ^ msb(w);}
