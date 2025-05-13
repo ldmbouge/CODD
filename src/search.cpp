@@ -157,6 +157,7 @@ void BAndB::search(Bounds& bnds)
                   delete[]allLocs;
                }
                assert(n->isExact());
+               //std::cout << "new guy: " << newGuyDominated << "\n";
                if (!newGuyDominated) {
                   auto nd = bbPool->cloneNode(n);
                   
@@ -174,8 +175,7 @@ void BAndB::search(Bounds& bnds)
                            bwd = newBnd;
                         else bwd = n->getBackwardBound();
                         //bwd = n->getBackwardBound();
-                     } else bwd = n->getBackwardBound();
-                     
+                     } else bwd = n->getBackwardBound();                     
                      const auto insKey = n->getBound() + bwd;
                      const auto improve = relaxed->isBetter(insKey,bnds.getPrimal());
 
