@@ -108,13 +108,6 @@ int main(int argc,char* argv[]) {
    auto& d = instance.d;
    auto& tw = instance.twin;
    std::cout << "Cities:" << C << "\n";
-   std::cout << "Distance:\n";
-   for(int r = 0; r < d.getDim(0);r++) {
-      for(int c = 0; c < d.getDim(1);c++) {
-         std::cout << d[r][c] << " ";
-      }
-      std::cout << "\n";
-   }
    Bounds bnds([](const std::vector<int>& inc)  {
    });
 
@@ -206,7 +199,7 @@ int main(int argc,char* argv[]) {
       // if (a.U <= b.U) && (a.e == b.e) then a doms b iff a.t < b.t
       return  (a.e == b.e) && a.t < b.t && ((a.U & b.U) == a.U);
    };
-   BAndB engine(DD<TSPTW,Minimize<double>, // to minimize
+   BAndBRestrictedFirst engine(DD<TSPTW,Minimize<double>, // to minimize
                 //   BAndBRestrictedFirst engine(DD<TSPTW,Minimize<double>,
                 decltype(target),
                 decltype(lgf),

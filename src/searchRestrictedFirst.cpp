@@ -20,9 +20,9 @@ void filterLocal(Bounds& bnds, AbstractDD::Ptr dd, std::vector<ANode::Ptr> nodes
 }
 
 template<typename Ord>
-int filterDom(Bounds& bnds, AbstractDD::Ptr dd, std::vector<ANode::Ptr> nodes, Heap<QNode,Ord>* pq, std::vector<ANode::Ptr>* survived)
+int filterDom(bool &newGuyDominated, Bounds& bnds, AbstractDD::Ptr dd, std::vector<ANode::Ptr> nodes, Heap<QNode,Ord>* pq, std::vector<ANode::Ptr>* survived)
 {
-   bool newGuyDominated   = false;
+   newGuyDominated = false;
    auto end = nodes.rend();
    auto begin = nodes.rbegin();
    for (auto i = begin; i != end; i++) {
@@ -177,10 +177,20 @@ void BAndBRestrictedFirst::search(Bounds& bnds)
       }
       */
       std::vector<ANode::Ptr> survivedLocal;
+      std::vector<ANode::Ptr> survivedDom;
+
       if(relaxed->hasLocal()) {
          filterLocal(bnds, relaxed, discardSet, &survivedLocal);
       } else {
          survivedLocal = discardSet;
+      }
+      bool newGuyDominated = false;
+      if (relaxed->hasDominance()) {
+         int tmpPruned = filterDom<decltype(hOrder)>(newGuyDominated, bnds, relaxed, survivedLocal, &pq, &survivedDom);
+         insDom += discardSet.size() - survivedDom.size();
+         pruned += tmpPruned;
+      } else {
+         survivedDom = survivedLocal;
       }
       /*
       std::cout << "discardSet   :" << discardSet.size() << "\n";
@@ -194,14 +204,14 @@ void BAndBRestrictedFirst::search(Bounds& bnds)
          // std::cout << "reaching relaxed DD. Got: " << dualBetter << " B@SINK:" << relaxed->currentOpt() << "\n";         
          //std::cout << "reaching relaxed DD. Got: \n";         
          if(dualBetter) {
-            //if(!newGuyDominated) {
-            auto nd = bbPool->cloneNode(n);
-            //std::cout << "cloned and got: " << nd << std::endl;
-            if (nd) {
-               assert(nd->getBound() == n->getBound());
-               pq.insertHeap(QNode {nd, nd->getBound()+nd->getBackwardBound() });
-            }
-            //} else insDom++;
+            if(!newGuyDominated) {
+               auto nd = bbPool->cloneNode(n);
+               //std::cout << "cloned and got: " << nd << std::endl;
+               if (nd) {
+                  assert(nd->getBound() == n->getBound());
+                  pq.insertHeap(QNode {nd, nd->getBound()+nd->getBackwardBound() });
+               }
+            } else insDom++;
          }
          bbPool->release(bbn.node);
       }
