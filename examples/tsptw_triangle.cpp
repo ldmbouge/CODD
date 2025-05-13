@@ -107,6 +107,13 @@ int main(int argc,char* argv[]) {
    auto& d = instance.d;
    auto& tw = instance.twin;
    std::cout << "Cities:" << C << "\n";
+   std::cout << "Distance:\n";
+   for(int r = 0; r < d.getDim(0);r++) {
+      for(int c = 0; c < d.getDim(1);c++) {
+         std::cout << d[r][c] << " ";
+      }
+      std::cout << "\n";
+   }
    Bounds bnds([](const std::vector<int>& inc)  {
    });
 
