@@ -116,13 +116,13 @@ void BAndB::search(Bounds& bnds)
             //int k = 0;
             for(auto n : cutSet) {
                //std::cout << "CUTSET(" << k++ << ") ";
-               //std::cout << "CUTSET ";               
-               //relaxed->printNode(std::cout,n);
+               // std::cout << "CUTSET ";               
+               // relaxed->printNode(std::cout,n);
                
                if (n == relaxed->getRoot()) { // the cutset is the root. Only way out: increase width.
                   auto w = ddr[0]->getWidth() + 1;
                   ddr[0]->setWidth(w);
-                  //std::cout << "\t-->widening... " << w << " CUTSET SIZE:" << cutSet.size() <<  "\n";
+                  std::cout << "\t-->widening... " << w << " CUTSET SIZE:" << cutSet.size() <<  "\n";
                }
                // use the bound in n (the ones in nd are _reset_ when duplicate occurs????)
                bool newGuyDominated = false;
@@ -182,8 +182,9 @@ void BAndB::search(Bounds& bnds)
                      // std::cout<< "CLONE VALUE:" << insKey << " bwd:" << bwd << " PRIMAL:" << bnds.getPrimal()
                      //          << " IMPROVED:" << (improve ? "T" : "F") << "\n";
 
-                     if (improve)
+                     if (improve) {
                         pq.insertHeap(QNode {nd, insKey }); //std::min(insKey,curDual)});
+                     }
                   } else nbSeen++;
                }
                else insDom++;

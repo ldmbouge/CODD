@@ -7,34 +7,45 @@ int d2i(double d) { return (int)(d * 10000); }
 struct TimeWindow {
    int a,b;
    friend std::ostream& operator<<(std::ostream& os,const TimeWindow& t) {
-      return os << '<' << t.a << ',' << t.b << "> ";
+      return os << "[" << t.a << "," << t.b << "]";
    }
 };
 
 struct TSPTW {
    using Set = NatSet<4>;
-   Set  U; // unvisited cities
-   int        e; // current city
-   int        t; // time
-   int     hops;
+
+   Set pos;  // current city (set for merged nodes, singleton otherwise)
+   int hops; // number of visited cities
+   int ta;   // earliest and latest times at pos (a and b are same for exact nodes)
+   int tb;
+   Set must; // cities that are unvisited in all nodes in the prefix of this state
+   Set may;  // cities that are visited in some, but not all, nodes in the prefix
+
    friend std::ostream& operator<<(std::ostream& os,const TSPTW& m) {
-      return os << "<" << m.U << ',' << m.e << ',' << m.t << ',' << m.hops << ">";
+      return os << "<" << m.pos << ", " << m.hops << ", [" << m.ta << "," << m.tb << "], " << m.must << ", " << m.may << ">";
    }
 };
 
+
 template<> struct std::equal_to<TSPTW> {
    constexpr bool operator()(const TSPTW& s1,const TSPTW& s2) const {
-      return s1.e == s2.e && s1.t==s2.t && s1.hops==s2.hops && s1.U == s2.U;
-      //return s1.e == s2.e && s1.hops==s2.hops;
+      return s1.pos  == s2.pos  &&
+             s1.hops == s2.hops &&
+             s1.ta   == s2.ta   &&
+             s1.tb   == s2.tb   &&
+             s1.must == s2.must &&
+             s1.may  == s2.may   ;
    }
 };
 
 template<> struct std::hash<TSPTW> {
    std::size_t operator()(const TSPTW& v) const noexcept {
-      return (std::hash<TSPTW::Set>{}(v.U) << 32) |  // check if this is OK
-         (std::hash<int>{}(v.t) << 16) |
-         (std::hash<int>{}(v.e) << 8) |
-         std::hash<int>{}(v.hops);
+      return std::rotl(std::hash<TSPTW::Set>{}(v.pos) , 40) |
+             std::rotl(std::hash<TSPTW::Set>{}(v.must), 32) | 
+             std::rotl(std::hash<TSPTW::Set>{}(v.may) , 24) | 
+             std::rotl(std::hash<int>{}(v.hops)       , 16) |
+             std::rotl(std::hash<int>{}(v.ta)         ,  8) |
+                       std::hash<int>{}(v.tb)               ;
    }
 };
 
@@ -114,54 +125,55 @@ int main(int argc,char* argv[]) {
    const int depot = 0;
    const int sz = (const int)C.size();
 
-   const auto init = [&C]()      { return TSPTW { C - depot, depot, 0,  0 }; };
-   const auto target = [sz]() { return TSPTW { TSPTW::Set(),   depot, 0, sz }; };
+   const auto init   = [&C] () { return TSPTW { TSPTW::Set{depot},  0, 0, 0, C - depot   , TSPTW::Set{} }; };
+   const auto target = [&sz]() { return TSPTW { TSPTW::Set{depot}, sz, 0, 0, TSPTW::Set{}, TSPTW::Set{} }; };
    const auto lgf = [sz,&d,&tw](const TSPTW& s,DDContext)  {
-      if (s.hops >= sz-1) {
-         //return s.t + d[s.e][depot] <= tw[depot].b ? increasing(TSPTW::Set {depot}) : increasing(TSPTW::Set{});
-         return s.t + d[s.e][depot] <= tw[depot].b ? TSPTW::Set {depot} : TSPTW::Set{};
+      if (s.hops >= sz-1) { /*s.must.empty() && s.may.empty()*/
+         const int a = min(s.pos, [ta=s.ta,&d](const int p){ return ta + d[p][depot]; } );
+         const int b = max(s.pos, [tb=s.tb,&d](const int p){ return tb + d[p][depot]; } );
+
+         //const int b = min(s.pos, [tb=s.tb,&d](const int p){ return tb + d[p][depot]; } );
+         return (a <= tw[depot].b && b >= tw[depot].a) ? TSPTW::Set{depot} : TSPTW::Set{};
       } else {
-         // std::function<int(int)> order = [curr=s.e,t=s.t,&d,&tw](int u){
-         //    return  std::max(t+d[curr][u], tw[u].a);
-         // };
-         // return increasing(
-         //    filter(s.U, [&s,&d,&tw](auto& u){
-         //       return (u != s.e && u != depot && s.t + d[s.e][u] <= tw[u].b); 
-         //    }),
-         //    order
-         // );
-         return filter(s.U, [&s,&d,&tw](auto& u){ return (u != s.e && u != depot && s.t + d[s.e][u] <= tw[u].b); });
+         return filter(
+            s.must|s.may, 
+            [&s,&d,&tw](auto& u){ 
+               const int a = min(s.pos, [&u](const int p){ return p != u; }, [ta=s.ta,&d,&u](const int p){ return ta + d[p][u]; } );
+               //std::cout << "["<<a<<","<<b<<"]\n";
+               return a <= tw[u].b && (s.pos.size() > 1 || !s.pos.contains(u));
+            }
+         );
       }     
    };
-   const auto stf = [sz,&d,&tw](const TSPTW& s,const int label) -> std::optional<TSPTW> {
+   const auto stf = [sz,&d,&tw,&target](const TSPTW& s,const int label) -> std::optional<TSPTW> {
       if (label==depot) {
-         return TSPTW { TSPTW::Set(),depot,0,sz}; 
+         return target();
       } else {
-         int nextT = std::max(s.t+d[s.e][label], tw[label].a);
-         for(auto u: s.U) {
-            if (u== label || u == depot) continue;
-            if(nextT + d[label][u] > tw[u].b) {
-               return std::nullopt;
-            }
-         }
-         TSPTW::Set nextU = s.U;
-         nextU.remove(label).remove(depot);
-         return TSPTW { nextU, label, nextT, s.hops+1};
+         const int a = std::max(min(s.pos, [&label](const int p){ return p != label; }, [ta=s.ta, &d, &label](const int p){ return ta + d[p][label]; } ), tw[label].a);
+         const int b = (s.ta == s.tb) ? 
+                       a :
+                       std::min(max(s.pos, [&label](const int p){ return p != label; }, [tb=s.tb, &d, &label](const int p){ return tb + d[p][label]; } ), tw[label].b);
+         return TSPTW { TSPTW::Set{label}, s.hops+1, a, b, s.must-label, s.may-label };
       }
    };
    const auto scf = [&d](const TSPTW& s,int label) { // partial cost function 
-      return d[s.e][label];
+      return min(s.pos, [&label](const int p){ return p != label; }, [&label,&d](int p) { return d[p][label]; });
    };
    const auto smf = [](const TSPTW& s1,const TSPTW& s2) -> std::optional<TSPTW> {
-      if (s1.e == s2.e && s1.hops == s2.hops)  {
-         return TSPTW {s1.U | s2.U, s1.e, s1.hops, std::min(s1.t, s2.t)};
-      } else {
-         return std::nullopt; // return  the empty optional
-      }
+      if (s1.hops != s2.hops) return std::nullopt;
+
+      const auto newMust = s1.must & s2.must;
+      return TSPTW {
+         s1.pos | s2.pos,
+         s1.hops,
+         std::min(s1.ta, s2.ta),
+         std::max(s1.tb, s2.tb),
+         newMust,
+         (s1.must | s1.may | s2.must | s2.may) - newMust
+      };
    };
-   const auto eqs = [sz](const TSPTW& s) -> bool { 
-      //std::cout << s.e << " == " << depot << " && " << s.hops << " == " << sz << std::endl;
-      return s.e == depot && s.hops == sz;
+   const auto eqs = [&sz](const TSPTW& s) -> bool { 
+      return s.pos.contains(depot) && s.hops == sz;// && s.must.empty(); //&& s.may.empty();
    };
    
    int* dIn = new int[sz];
@@ -179,36 +191,42 @@ int main(int argc,char* argv[]) {
    }
    mergeSortPerm(dIn,  perm1, sz, [](double a, double b) { return a < b; });
    mergeSortPerm(dOut, perm2, sz, [](double a, double b) { return a < b; });
-   const auto local = [&dIn,&dOut,&sz,&perm1,&perm2](const TSPTW& s,LocalContext) -> double {
-      int sumIn = 0,sumOut = 0,n1=0,n2=0;
-      for(int i = 0; (i < sz) && (n1 < sz-s.hops); i++) { 
-         if( s.U.contains(perm1[i]) || perm1[i] == depot) {
-            sumIn += dIn[i];
-            n1++; 
-         }
-      }
-      for(int i = 0; (i < sz) && (n2 < sz-s.hops); i++) { 
-         if( s.U.contains(perm2[i]) || perm2[i] == s.e) {
-            sumOut += dOut[i];
-            n2++; 
-         }
-      }
-      return std::max(sumIn,sumOut);   
-   };
-   const auto sDom = [](const TSPTW& a,const TSPTW& b) -> bool { 
-      // if (a.U <= b.U) && (a.e == b.e) then a doms b iff a.t < b.t
-      return  (a.e == b.e) && a.t < b.t && ((a.U & b.U) == a.U);
-   };
-   BAndBRestrictedFirst engine(DD<TSPTW,Minimize<double>, // to minimize
+   // const auto local = [&dIn,&dOut,&sz,&perm1,&perm2](const TSPTW& s,LocalContext) -> double {
+   //    int sumIn = 0,sumOut = 0,n1=0,n2=0;
+   //    for(int i = 0; (i < sz) && (n1 < sz-s.hops); i++) { 
+   //       if( s.U.contains(perm1[i]) || perm1[i] == depot) {
+   //          sumIn += dIn[i];
+   //          n1++; 
+   //       }
+   //    }
+   //    for(int i = 0; (i < sz) && (n2 < sz-s.hops); i++) { 
+   //       if( s.U.contains(perm2[i]) || perm2[i] == s.e) {
+   //          sumOut += dOut[i];
+   //          n2++; 
+   //       }
+   //    }
+   //    return std::max(sumIn,sumOut);   
+   // };
+   // const auto sDom = [](const TSPTW& a,const TSPTW& b) -> bool { 
+   //    // if (a.U <= b.U) && (a.e == b.e) then a doms b iff a.t < b.t
+   //    return  (a.e == b.e) && a.t < b.t && ((a.U & b.U) == a.U);
+   // };
+
+   // auto s = init();
+   // std::cout << "s    = " << s << "\n";
+   // std::cout << "l(s) = " << lgf(s, DDContext::DDExact) << "\n";
+   // return 0;
+
+   BAndB engine(DD<TSPTW,Minimize<double>, // to minimize
                 //   BAndBRestrictedFirst engine(DD<TSPTW,Minimize<double>,
                 decltype(target),
                 decltype(lgf),
                 decltype(stf),
                 decltype(scf),
                 decltype(smf),
-                decltype(eqs),
-                decltype(local)
-                >::makeDD(init,target,lgf,stf,scf,smf,eqs,C,local,sDom),w);
+                decltype(eqs)/*,
+                decltype(local)*/
+                >::makeDD(init,target,lgf,stf,scf,smf,eqs,C/*,local,sDom*/),w);
    engine.search(bnds);
    return 0;
 }
