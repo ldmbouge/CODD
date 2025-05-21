@@ -818,7 +818,7 @@ std::vector<ANode::Ptr> Relaxed::computeCutSet()
       if (cur->isExact()) {
          bool akExact = true;
          for(auto ki = cur->beginKids(); akExact && ki != cur->endKids();ki++) {
-            if ((*ki)->_to->getId() == _dd->_trg->getId()) continue;
+            // if ((*ki)->_to->getId() == _dd->_trg->getId()) continue;
             akExact = (*ki)->_to->isExact();
             // if (akExact == false) {
             //    std::cout << "SINK:";
