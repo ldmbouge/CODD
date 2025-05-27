@@ -504,12 +504,15 @@ private:
       auto op = static_cast<const Node<ST>*>(src.get());
       auto vs = _stf(op->get(),label);     
       if (vs.has_value()) {
+         //std::cout << "has value!\n";
          ANode::Ptr rv;
          if (_local) {
             auto cVal = _stc(op->get(),label);
             auto dual = _local(vs.value(),DDCtx);
             auto sCost = src->getBound() + cVal + dual;
+            //std::cout << "!isBetter("<<sCost<<","<<bnds.getPrimal()<<")="<<(!isBetter(sCost,bnds.getPrimal()))<<"\n";
             if (!isBetter(sCost,bnds.getPrimal())) {
+               //std::cout << "beat by primal\n";
                return nullptr;
             }
             rv = makeNode(std::move(vs.value()),src->isExact());

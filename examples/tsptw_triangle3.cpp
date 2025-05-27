@@ -164,14 +164,14 @@ int main(int argc,char* argv[]) {
                return std::nullopt;
             }
          }
-         
+
          return TSPTW { TSPTW::Set{label}, s.hops+1, ta, tb, s.must-label, s.may-label };
       }
    };
    const auto scf = [&d](const TSPTW& s,int label) { // partial cost function 
       return min(s.pos, [&label](const int p){ return p != label; }, [&label,&d](int p) { return d[p][label]; });
    };
-   const auto smf = [](const TSPTW& s1,const TSPTW& s2) -> std::optional<TSPTW> {
+   const auto smf = [&sz](const TSPTW& s1,const TSPTW& s2) -> std::optional<TSPTW> {
       if (s1.hops != s2.hops) return std::nullopt;
 
       const auto newMust = s1.must & s2.must;
@@ -188,110 +188,43 @@ int main(int argc,char* argv[]) {
       return s.pos.contains(depot) && s.hops == sz;// && s.must.empty(); //&& s.may.empty();
    };
    
-   int* dIn = new int[sz];
-   int* dOut= new int[sz];
-   int* perm1 = new int[sz];
-   int* perm2 = new int[sz];
+   int* shortestEdge = new int[sz];
    for(auto j : C) {
-      auto allButj = C;allButj.remove(j);
-      auto [e1, minIn]  = argmin(allButj,[&d,j](int k) { return d[k][j];});
-      auto [e2, minOut] = argmin(allButj,[&d,j](int k) { return d[j][k];});
-      dIn[j] = minIn;
-      dOut[j] = minOut;
-      perm1[j] = j;
-      perm2[j] = j;
+      auto [e, minD] = argmin(C - j,[&d,j](int k) { return d[k][j];});
+      shortestEdge[j] = minD;
    }
-   mergeSortPerm(dIn,  perm1, sz, [](double a, double b) { return a < b; });
-   mergeSortPerm(dOut, perm2, sz, [](double a, double b) { return a < b; });
+   const auto& local = [&d,&shortestEdge,&sz,&tw](const TSPTW& s,LocalContext) -> double {
+      const auto inf = std::numeric_limits<int>::max();
+      const auto& violatesTW = [ta=s.ta,&tw,&shortestEdge](int p){ return ta + shortestEdge[p] > tw[p].b; };
 
-   const auto local = [&d,&dIn,&dOut,&sz,&perm1,&perm2,&tw](const TSPTW& s,LocalContext) -> double {
-      int sumIn = 0,sumOut = 0,n1=0,n2=0;
-      for(int i = 0; (i < sz) && (n1 < sz-s.hops); i++) { 
-         if( s.must.contains(perm1[i]) || perm1[i] == depot) {
-            sumIn += dIn[i];
-            n1++; 
-         }
+
+      if(any(s.must, violatesTW))
+         return inf;
+
+      const int completeTour = (sz-1) - s.hops - s.must.size();
+      int mandatory = 0;
+      int returnToDepot = min(s.must | s.may, [&d](int p){ return d[p][depot]; });
+
+      if(s.may.size() > 0) {
+         //std::cout << completeTour << "=" << sz << "-" << s.hops << "-" << s.must.size()<< " " << s.must << "\n";
+         //std::cout << s.may << " " << s.may.size() <<"-"<< count(s.may, violatesTW) <<"<"<< completeTour << "\n";
+         if(s.may.size() - count(s.may, violatesTW) < completeTour)
+            return inf;
+         
+         int shortestEdgeToMay[s.may.size()]; int tsz = 0;
+         for(const auto& p: s.may) shortestEdgeToMay[tsz++] = shortestEdge[p];
+         mergeSort(shortestEdgeToMay, tsz, [](int x, int y){ return x > y; });
+         mandatory = sum(s.must, [&shortestEdge](int p){ return shortestEdge[p]; });
+         for(int i = 0; i < completeTour; i++) mandatory += shortestEdgeToMay[i];
       }
-      for(int i = 0; (i < sz) && (n1 < sz-s.hops); i++) { 
-         if( s.may.contains(perm1[i]) || perm1[i] == depot) {
-            sumIn += dIn[i];
-            n1++; 
-         }
-      }
-      for(int i = 0; (i < sz) && (n2 < sz-s.hops); i++) { 
-         if( s.must.contains(perm2[i]) || s.pos.contains(perm2[i])) {
-            sumOut += dOut[i];
-            n2++; 
-         }
-      }
-      for(int i = 0; (i < sz) && (n2 < sz-s.hops); i++) { 
-         if( s.may.contains(perm2[i]) || s.pos.contains(perm2[i])) {
-            sumOut += dOut[i];
-            n2++; 
-         }
-      }
-      return std::max(sumIn,sumOut);  
+      if(mandatory == 0) returnToDepot = std::min(returnToDepot, min(s.pos, [&d](int x){ return d[x][depot]; }));
+
+      if(s.ta + mandatory + returnToDepot > tw[depot].b)
+         return inf;
+      
+      return mandatory + returnToDepot;
+
    };
-
-   // const auto local = [&d,&dIn,&sz,&perm,&tw](const TSPTW& s,LocalContext) -> double {
-   //    const auto inf = std::numeric_limits<int>::max();
-
-
-   //    const auto& shortestEdge = [&dIn,&perm](int p){ return dIn[perm[p]]; };
-   //    const auto& unreachable = [ta=s.ta,&dIn,&perm,&tw,&shortestEdge](int p){ return ta + shortestEdge(p) > tw[p].b; };
-   //    // Too many unreachable cities
-   //    if(count(s.may, unreachable) > sz - s.hops - s.must.size()) return inf;
-   //    // One of the mandatory cities cannot be visited
-   //    if(any(s.must, unreachable)) return inf;
-   //    // When it is imposible to return to depot in time
-   //    int minTime = s.ta + sum(s.must, shortestEdge);
-   //    if(minTime > tw[depot].b) return inf;
-
-   //    if(!s.must.empty() && minTime + min(s.must | s.may, [&d](int p){return d[p][depot];}) > tw[depot].b) return inf;
-
-   //    return minTime;
-   // };
-   // const auto& local = [&d,&dIn,&sz,&perm,&tw](const TSPTW& s,LocalContext) -> double {
-   //    const auto inf = std::numeric_limits<int>::max();
-   //    int completeTour = sz - s.hops;
-   //    int mandatory = 0;
-   //    int returnToDepot = inf;
-
-   //    for(auto i: s.must) {
-   //       completeTour--;
-   //       mandatory += dIn[perm[i]];
-   //       returnToDepot = std::min(returnToDepot, d[i][depot]);
-
-   //       int a = s.ta + dIn[perm[i]];
-   //       int b = tw[i].b;
-   //       if(a > b) return inf;
-   //    }
-
-   //    int violations = 0;
-   //    int tmp[s.may.size()]; int ti=0;
-   //    for(auto i: s.may) {
-   //       tmp[ti++] = dIn[perm[i]];
-   //       returnToDepot = std::min(returnToDepot, d[i][depot]);
-
-   //       int a = s.ta + dIn[perm[i]];
-   //       int b = tw[i].b;
-   //       if(a > b) violations++;
-   //    }
-   //    if(ti - violations < completeTour) return inf;
-
-   //    mergeSort(tmp, ti, [](int x, int y){ return x > y; });
-   //    for(int i = 0; i < completeTour; i++)
-   //       mandatory += tmp[i];
-      
-   //    if(mandatory == 0)
-   //       returnToDepot = std::min(returnToDepot, min(s.pos, [&d](int p) {return d[p][depot];}));
-      
-   //    int total = mandatory + returnToDepot;
-   //    int a = s.ta + total;
-   //    int b = tw[depot].b;
-   //    if(a > b) return inf;
-   //    else return total;
-   // };
 
 
    const auto sDom = [](const TSPTW& a,const TSPTW& b) -> bool { 

@@ -878,8 +878,16 @@ R sum(const Container& inContainer,const Term& t) {
 }
 
 
-template <typename Term=int(*)(int)>
-int sum(const GNSet& inSet,const Term& t) {
+template <typename SET, typename Filter=bool(*)(int), typename Term=int(*)(int)>
+int sum(const SET& inSet,const Filter& f,const Term& t) {
+   int ttl = 0;
+   for(auto v : inSet)
+      if(f(v))
+         ttl += t(v);
+   return ttl;
+}
+template <typename SET, typename Term=int(*)(int)>
+int sum(const SET& inSet,const Term& t) {
    int ttl = 0;
    for(auto v : inSet)
       ttl += t(v);
@@ -907,6 +915,31 @@ int min(const SET& inSet,const Filter& f,const Term& t) {
 template <typename SET, typename Term=int(*)(int)>
 int min(const SET& inSet,const Term& t) {
    return min(inSet, [](int x){return true;}, t);
+}
+
+template <typename SET, typename Filter=bool(*)(int)>
+int count(const SET& inSet,const Filter& f) {
+   int count = 0;
+   for(auto v : inSet)
+      if (f(v)) {
+         count++;
+      }
+   return count;
+}
+
+template <typename SET, typename Pred=bool(*)(int)>
+bool any(const SET& inSet,const Pred& p) {
+   for(auto v : inSet)
+      if (p(v))
+         return true;
+   return false;
+}
+template <typename SET, typename Pred=bool(*)(int)>
+bool all(const SET& inSet,const Pred& p) {
+   for(auto v : inSet)
+      if (!p(v))
+         return false;
+   return true;
 }
 
 template <typename Term=int(*)(int)>

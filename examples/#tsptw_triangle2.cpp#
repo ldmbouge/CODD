@@ -1,4 +1,4 @@
-#include "codd.hpp"
+#Include "Codd.hpp"
 #include "heap.hpp"
 #include "searchRestrictedFirst.hpp"
 
@@ -145,7 +145,7 @@ int main(int argc,char* argv[]) {
                return a <= tw[u].b && (s.pos.size() > 1 || !s.pos.contains(u));
             }
          );
-         //std::cout << "state: " << s << "\nnext: " << f << "\n";
+         // std::cout << "post-filter: " << f << "\n";
          return f;
       }     
    };
@@ -153,19 +153,11 @@ int main(int argc,char* argv[]) {
       if (label==depot) {
          return target();
       } else {
-         const int ta = std::max(min(s.pos, [&label](const int p){ return p != label; }, [ta=s.ta, &d, &label](const int p){ return ta + d[p][label]; } ), tw[label].a);
-         const int tb = (s.ta == s.tb) ? 
-                        ta :
-                        std::min(max(s.pos, [&label](const int p){ return p != label; }, [tb=s.tb, &d, &label](const int p){ return tb + d[p][label]; } ), tw[label].b);
-         
-         for(auto u: s.must) {
-            if (u == label || u == depot) continue;
-            if(ta + d[label][u] > tw[u].b) {
-               return std::nullopt;
-            }
-         }
-         
-         return TSPTW { TSPTW::Set{label}, s.hops+1, ta, tb, s.must-label, s.may-label };
+         const int a = std::max(min(s.pos, [&label](const int p){ return p != label; }, [ta=s.ta, &d, &label](const int p){ return ta + d[p][label]; } ), tw[label].a);
+         const int b = (s.ta == s.tb) ? 
+                       a :
+                       std::min(max(s.pos, [&label](const int p){ return p != label; }, [tb=s.tb, &d, &label](const int p){ return tb + d[p][label]; } ), tw[label].b);
+         return TSPTW { TSPTW::Set{label}, s.hops+1, a, b, s.must-label, s.may-label };
       }
    };
    const auto scf = [&d](const TSPTW& s,int label) { // partial cost function 

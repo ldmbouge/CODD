@@ -58,7 +58,11 @@ void BAndB::search(Bounds& bnds)
        // cout << "----------------------------------------------------------------------" << "\n";
       
       auto bbn = pq.extractMax();
-      //std::cout << "bbn node dequeued: " << bbn << std::endl;
+      // std::cout << "#nodes in pq: " << pq.size() << "\n";
+      // std::cout << "bbn node dequeued: " << bbn << std::endl;
+      // cout << "EXTRACTED:  " << bbn.node->getId() << " ::: ";
+      // relaxed->printNode(cout,bbn.node);
+      // cout << "\n";
       auto curDual = bbn.bound;
       bnds.setDual(bbn.node->getBound(),curDual);
       auto now = RuntimeMonitor::cputime();
@@ -81,9 +85,10 @@ void BAndB::search(Bounds& bnds)
          last = RuntimeMonitor::cputime();
       }
       auto compDual = bbn.node->getBound() + relaxed->local(bbn.node,LocalContext::DDInit);
-      //cout << "DUAL KEY:" << curDual << " dualCOMP:" << compDual << "\n";
-      if (!relaxed->isBetterEQ(compDual,curDual)) {
-         //cout<< " dual comp improve!\n";
+      // cout << "DUAL KEY:" << curDual << " dualCOMP:" << compDual
+      //      << " isBetter:" << relaxed->isBetter(compDual,curDual) << "\n";
+      if (!relaxed->isBetterEQ(compDual,curDual)) { 
+         // cout<< " dual comp improve!\n";
          curDual = compDual;
       }
       primalBetter = false;
@@ -113,16 +118,15 @@ void BAndB::search(Bounds& bnds)
          
          if (!restricted->isExact() && !relaxed->isExact()) {
             auto cutSet = relaxed->computeCutSet();
-            //int k = 0;
+            // std::cout << "#nodes in cutset: " << cutSet.size() << "\n";
             for(auto n : cutSet) {
-               //std::cout << "CUTSET(" << k++ << ") ";
                // std::cout << "CUTSET ";               
                // relaxed->printNode(std::cout,n);
                
                if (n == relaxed->getRoot()) { // the cutset is the root. Only way out: increase width.
                   auto w = ddr[0]->getWidth() + 1;
                   ddr[0]->setWidth(w);
-                  std::cout << "\t-->widening... " << w << " CUTSET SIZE:" << cutSet.size() <<  "\n";
+                  // std::cout << "\t-->widening... " << w << " CUTSET SIZE:" << cutSet.size() <<  "\n";
                }
                // use the bound in n (the ones in nd are _reset_ when duplicate occurs????)
                bool newGuyDominated = false;
@@ -150,14 +154,18 @@ void BAndB::search(Bounds& bnds)
                   }
                   if (d) {
                      // std::cout << "new BBNode Dominated " << d << " BB nodes" << std::endl;
-                     for(auto i =0u; i < d;i++) 
+                     for(auto i =0u; i < d;i++) {
+                        // std::cout << "doming: ";
+                        // relaxed->printNode(std::cout,allLocs[i]->value().node);
+                        // std::cout << "\n";
                         pq.remove(allLocs[i]);
+                     }
                      pruned += d;
                   }
                   delete[]allLocs;
                }
                assert(n->isExact());
-               //std::cout << "new guy: " << newGuyDominated << "\n";
+               // std::cout << "new guy: " << newGuyDominated << "\n";
                if (!newGuyDominated) {
                   auto nd = bbPool->cloneNode(n);
                   
