@@ -130,10 +130,11 @@ int main(int argc,char* argv[]) {
    const auto lgf = [sz,&d,&tw](const TSPTW& s,DDContext)  {
       if (s.hops >= sz-1) { /*s.must.empty() && s.may.empty()*/
          const int a = min(s.pos, [ta=s.ta,&d](const int p){ return ta + d[p][depot]; } );
-         const int b = max(s.pos, [tb=s.tb,&d](const int p){ return tb + d[p][depot]; } );
+         //const int b = max(s.pos, [tb=s.tb,&d](const int p){ return tb + d[p][depot]; } );
 
          //const int b = min(s.pos, [tb=s.tb,&d](const int p){ return tb + d[p][depot]; } );
-         return (a <= tw[depot].b && b >= tw[depot].a) ? TSPTW::Set{depot} : TSPTW::Set{};
+         //return (a <= tw[depot].b && b >= tw[depot].a) ? TSPTW::Set{depot} : TSPTW::Set{};
+         return (a <= tw[depot].b) ? TSPTW::Set{depot} : TSPTW::Set{};
       } else {
          // std::cout << (s) << "\n";
          // std::cout << "pre-filter : " << (s.must|s.may) << "\n";
@@ -188,21 +189,33 @@ int main(int argc,char* argv[]) {
       return s.pos.contains(depot) && s.hops == sz;// && s.must.empty(); //&& s.may.empty();
    };
    
-   int* shortestEdge = new int[sz];
-   for(auto j : C) {
-      auto [e, minD] = argmin(C - j,[&d,j](int k) { return d[k][j];});
-      shortestEdge[j] = minD;
-   }
-   const auto& local = [&d,&shortestEdge,&sz,&tw](const TSPTW& s,LocalContext) -> double {
-      const auto inf = std::numeric_limits<int>::max();
-      const auto& violatesTW = [ta=s.ta,&tw,&shortestEdge](int p){ return ta + shortestEdge[p] > tw[p].b; };
+   int* dIn     = new int[sz];
+   int* dOut    = new int[sz];
+   int* permIn  = new int[sz];
+   int* permOut = new int[sz];
 
+   for(auto j : C) {
+      auto allButj = C;allButj.remove(j);
+      auto [e1, minIn]  = argmin(allButj,[&d,j](int k) { return d[k][j];});
+      auto [e2, minOut] = argmin(allButj,[&d,j](int k) { return d[j][k];});
+      dIn[j] = minIn;
+      dOut[j] = minOut;
+      permIn[j] = j;
+      permOut[j] = j;
+   }
+   mergeSortPerm(dIn,  permIn,  sz, [](double a, double b) { return a < b; });
+   mergeSortPerm(dOut, permOut, sz, [](double a, double b) { return a < b; });
+
+   const auto& local = [dIn,dOut,sz,permIn,permOut,&tw,&d](const TSPTW& s,LocalContext) -> double {
+      const auto inf = std::numeric_limits<int>::max();
+      const auto& violatesTW = [ta=s.ta,&tw,dIn,permIn](int p){ return ta + dIn[permIn[p]] > tw[p].b; };
 
       if(any(s.must, violatesTW))
          return inf;
 
       const int completeTour = (sz-1) - s.hops - s.must.size();
-      int mandatory = 0;
+      int mandatoryIn = 0;
+      int mandatoryOut = 0;
       int returnToDepot = min(s.must | s.may, [&d](int p){ return d[p][depot]; });
 
       if(s.may.size() > 0) {
@@ -211,21 +224,80 @@ int main(int argc,char* argv[]) {
          if(s.may.size() - count(s.may, violatesTW) < completeTour)
             return inf;
          
-         int shortestEdgeToMay[s.may.size()]; int tsz = 0;
-         for(const auto& p: s.may) shortestEdgeToMay[tsz++] = shortestEdge[p];
-         mergeSort(shortestEdgeToMay, tsz, [](int x, int y){ return x > y; });
-         mandatory = sum(s.must, [&shortestEdge](int p){ return shortestEdge[p]; });
-         for(int i = 0; i < completeTour; i++) mandatory += shortestEdgeToMay[i];
-      }
-      if(mandatory == 0) returnToDepot = std::min(returnToDepot, min(s.pos, [&d](int x){ return d[x][depot]; }));
+         int shortestEdgeToMayIn [s.may.size()];
+         int shortestEdgeToMayOut[s.may.size()]; int tsz = 0;
 
-      if(s.ta + mandatory + returnToDepot > tw[depot].b)
+         for(int i = 0; i < sz; i++) {
+            if( s.may.contains(permIn [i])) shortestEdgeToMayIn [tsz  ] = dIn [i];
+            if( s.may.contains(permOut[i])) shortestEdgeToMayOut[tsz++] = dOut[i];
+         }
+         mergeSort(shortestEdgeToMayIn,  tsz, [](int x, int y){ return x > y; });
+         mergeSort(shortestEdgeToMayOut, tsz, [](int x, int y){ return x > y; });
+
+         for(int i = 0; i < sz; i++) {
+            if( s.must.contains(permIn [i])) mandatoryIn  += dIn [i];
+            if( s.must.contains(permOut[i])) mandatoryOut += dOut[i];
+         }
+
+         for(int i = 0; i < completeTour; i++) {
+            mandatoryIn  += shortestEdgeToMayIn [i];
+            mandatoryOut += shortestEdgeToMayOut[i];
+         }
+      }
+      if(mandatoryIn == 0) returnToDepot = std::min(returnToDepot, min(s.pos, [&d](int x){ return d[x][depot]; }));
+
+      if(s.ta + mandatoryIn + returnToDepot > tw[depot].b)
          return inf;
       
-      return mandatory + returnToDepot;
+      return std::max(mandatoryIn, mandatoryOut) + returnToDepot;
 
    };
 
+   /*const auto& local = [dIn,dOut,sz,permIn,permOut,&tw,&d](const TSPTW& s,LocalContext) -> double {
+      const auto inf = std::numeric_limits<int>::max();
+      const auto& violatesTW = [ta=s.ta,&tw,dIn,permIn](int p){ return ta + dIn[permIn[p]] > tw[p].b; };
+
+      if(any(s.must, violatesTW))
+         return inf;
+
+      const int completeTour = (sz-1) - s.hops - s.must.size();
+      int mandatoryIn = 0;
+      int mandatoryOut = 0;
+      int returnToDepot = min(s.must | s.may, [&d](int p){ return d[p][depot]; });
+
+      if(s.may.size() > 0) {
+         //std::cout << completeTour << "=" << sz << "-" << s.hops << "-" << s.must.size()<< " " << s.must << "\n";
+         //std::cout << s.may << " " << s.may.size() <<"-"<< count(s.may, violatesTW) <<"<"<< completeTour << "\n";
+         if(s.may.size() - count(s.may, violatesTW) < completeTour)
+            return inf;
+         
+         int nIn = s.must.size(), nOut = s.must.size();
+         for(int i = 0; i < sz; i++) {
+            if( s.must.contains(permIn [i])) mandatoryIn  += dIn [i];
+            if( s.must.contains(permOut[i])) mandatoryOut += dOut[i];
+         }
+         for(int i = 0; (i < sz) && (nIn < completeTour); i++) { 
+            if( s.may.contains(permIn[i]) && permIn[i] != depot) {
+               mandatoryIn += dIn[i];
+               nIn++; 
+            }
+         }
+         for(int i = 0; (i < sz) && (nOut < completeTour); i++) { 
+            if( s.may.contains(permOut[i]) || s.pos.contains(permOut[i])) {
+               mandatoryOut += dOut[i];
+               nOut++; 
+            }
+         }
+      }
+      if(mandatoryIn == 0) returnToDepot = std::min(returnToDepot, min(s.pos, [&d](int x){ return d[x][depot]; }));
+
+      if(s.ta + mandatoryIn + returnToDepot > tw[depot].b)
+         return inf;
+      
+      return std::max(mandatoryIn, mandatoryOut) + returnToDepot;
+
+   };
+*/
 
    const auto sDom = [](const TSPTW& a,const TSPTW& b) -> bool { 
       if(a.pos.size()==1 && b.pos.size()==1) { //if both nodes are exact use standard dom rule
