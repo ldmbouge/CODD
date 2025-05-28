@@ -198,7 +198,7 @@ void BAndBRestrictedFirst::search(Bounds& bnds)
       std::cout << "survivedLocal:" << survivedLocal.size() << "\n";
       */
       int nbRELAX = 0;
-      for(auto n: survivedLocal) {
+      for(auto n: survivedDom) {
          nbRELAX++;
          bool dualBetter = relaxed->apply(n, bnds);
          // std::cout << "reaching relaxed DD. Got: " << dualBetter << " B@SINK:" << relaxed->currentOpt() << "\n";         

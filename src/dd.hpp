@@ -358,8 +358,12 @@ class DDNodeAllocator :public AbstractNodeAllocator {
    LHashtable<ST> _nmap;
 public:
    DDNodeAllocator(LPool::Ptr pool) : AbstractNodeAllocator(pool),_nmap(pool->get(),200000) {}
-   ANode::Ptr cloneNode(ANode::Ptr src) override {
+   ANode::Ptr cloneNode(ANode::Ptr src) override {      
       auto sp = static_cast<const Node<ST>*>(src.get());
+      Node<ST>* nn = new (_base->get()) Node<ST>(_base->get(),_base->grabId(),*sp);
+      return nn;
+      /*
+      //temporarily out. Something not correct here. [ldm]
       Node<ST>* at = nullptr;
       auto inMap = _nmap.getLoc(sp->get(),at);
       bool betterBound = at != nullptr && Compare{}.better(sp->getBound(),at->getBound());
@@ -380,7 +384,8 @@ public:
          // std::cout << "added node: " << at->getBound() << ": " << at->get() << std::endl;
          // std::cout << "clone node: " << sp->getBound() << ": " << sp->get() << std::endl;
          return nullptr;
-      }
+         }
+      */
    }
    void release(ANode::Ptr src) override {
       //_base->release(src);
@@ -499,12 +504,15 @@ private:
       auto op = static_cast<const Node<ST>*>(src.get());
       auto vs = _stf(op->get(),label);     
       if (vs.has_value()) {
+         //std::cout << "has value!\n";
          ANode::Ptr rv;
          if (_local) {
             auto cVal = _stc(op->get(),label);
             auto dual = _local(vs.value(),DDCtx);
             auto sCost = src->getBound() + cVal + dual;
+            //std::cout << "!isBetter("<<sCost<<","<<bnds.getPrimal()<<")="<<(!isBetter(sCost,bnds.getPrimal()))<<"\n";
             if (!isBetter(sCost,bnds.getPrimal())) {
+               //std::cout << "beat by primal\n";
                return nullptr;
             }
             rv = makeNode(std::move(vs.value()),src->isExact());

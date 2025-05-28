@@ -342,6 +342,11 @@ public:
          _t[i] &= ps._t[i];
       return *this;
    }
+   NatSet& diffWith(const NatSet& ps) noexcept {
+      for(short i=0;i < nbw;i++)
+         _t[i] = _t[i] & ~ps._t[i];
+      return *this;
+   }
    class iterator { 
       std::array<unsigned long long, nbw> _t;
       unsigned short       _cwi;    // current word index
@@ -438,6 +443,8 @@ public:
    friend NatSet operator|(const NatSet& s1,const NatSet& s2) noexcept { return NatSet(s1).unionWith(s2);}
    friend NatSet operator&(const NatSet& s1,const NatSet& s2) noexcept { return NatSet(s1).interWith(s2);}
    friend NatSet operator-(const NatSet& s1,int v) noexcept { return std::move(NatSet(s1).remove(v));}
+   friend NatSet operator-(const NatSet& s1,const NatSet& s2) { return std::move(NatSet(s1).diffWith(s2));}
+
    std::size_t hash() const noexcept {
       std::size_t hv = 0;
       for(auto i = 0;i < nbw;i++)
@@ -871,8 +878,16 @@ R sum(const Container& inContainer,const Term& t) {
 }
 
 
-template <typename Term=int(*)(int)>
-int sum(const GNSet& inSet,const Term& t) {
+template <typename SET, typename Filter=bool(*)(int), typename Term=int(*)(int)>
+int sum(const SET& inSet,const Filter& f,const Term& t) {
+   int ttl = 0;
+   for(auto v : inSet)
+      if(f(v))
+         ttl += t(v);
+   return ttl;
+}
+template <typename SET, typename Term=int(*)(int)>
+int sum(const SET& inSet,const Term& t) {
    int ttl = 0;
    for(auto v : inSet)
       ttl += t(v);
@@ -887,8 +902,8 @@ int sum(const std::set<T>& inSet,const Term& t) {
    return ttl;
 }
 
-template <typename Filter=bool(*)(int),typename Term=int(*)(int)>
-int min(const GNSet& inSet,const Filter& f,const Term& t) {
+template <typename SET, typename Filter=bool(*)(int),typename Term=int(*)(int)>
+int min(const SET& inSet,const Filter& f,const Term& t) {
    int ttl = std::numeric_limits<int>::max();
    for(auto v : inSet)
       if (f(v)) {
@@ -896,6 +911,35 @@ int min(const GNSet& inSet,const Filter& f,const Term& t) {
          ttl = (ttl  < tv) ? ttl : tv;
       }
    return ttl;
+}
+template <typename SET, typename Term=int(*)(int)>
+int min(const SET& inSet,const Term& t) {
+   return min(inSet, [](int x){return true;}, t);
+}
+
+template <typename SET, typename Filter=bool(*)(int)>
+int count(const SET& inSet,const Filter& f) {
+   int count = 0;
+   for(auto v : inSet)
+      if (f(v)) {
+         count++;
+      }
+   return count;
+}
+
+template <typename SET, typename Pred=bool(*)(int)>
+bool any(const SET& inSet,const Pred& p) {
+   for(auto v : inSet)
+      if (p(v))
+         return true;
+   return false;
+}
+template <typename SET, typename Pred=bool(*)(int)>
+bool all(const SET& inSet,const Pred& p) {
+   for(auto v : inSet)
+      if (!p(v))
+         return false;
+   return true;
 }
 
 template <typename Term=int(*)(int)>
@@ -910,8 +954,8 @@ std::pair<int,int> argmin(const GNSet& inSet,const Term& t) {
    return {elt, min};
 }
 
-template <typename Filter=bool(*)(int),typename Term=int(*)(int)>
-int max(const GNSet& inSet,const Filter& f,const Term& t) {
+template <typename SET, typename Filter=bool(*)(int),typename Term=int(*)(int)>
+int max(const SET& inSet,const Filter& f,const Term& t) {
    int ttl = std::numeric_limits<int>::min();
    for(auto v : inSet)
       if (f(v)) {
@@ -919,6 +963,10 @@ int max(const GNSet& inSet,const Filter& f,const Term& t) {
          ttl = (ttl  > tv) ? ttl : tv;
       }
    return ttl;
+}
+template <typename SET, typename Term=int(*)(int)>
+int max(const SET& inSet,const Term& t) {
+   return max(inSet, [](int x){return true;}, t);
 }
 
 template <class T> std::ostream& operator<<(std::ostream& os,const std::set<T>& s) {

@@ -269,13 +269,33 @@ void AbstractDD::computeBestBackward(const std::string m)
       mxId = std::max(n->getId(),mxId);
    auto nl = new (_mem) DegHeap::Location*[mxId+1];
    memset(nl,0,sizeof(DegHeap::Location*)*(mxId+1));
+   // bool anyOpt = false;
    for(auto n : _an) {
       nl[n->getId()] = h.insert({n,n->nbChildren()});
       if (n != _trg)
          n->setBackwardBound(initialBest());
       else n->setBackwardBound(0);
+      // std::cout << "Considering node: ";
+      // printNode(std::cout, n.get());
+      // std::cout << "\n";
+      // int optPrefix[8] = {2, 1, 4, 3, 13, 12, 6, 9}; int i = 0;
+      // bool isOptPre = true;
+      // for(auto l = n->beginOptLabels(); l != n->endOptLabels(); l++){
+      //    if(isOptPre && *l != optPrefix[i++] ) {
+      //       isOptPre = false;
+      //       break;
+      //    }
+      // }
+      // if(i==8 && isOptPre) {
+      //    anyOpt = true;
+      //    // int x;
+      //    std::cout << "found opt prefix...\n";
+      //    // std::cin >> x;
+      //    // std::cout << x;
+      // }
    }
    h.buildHeap();
+   
    while (h.size() > 0) {
       auto n = h.extractMax();
       double cur = (n.node->nbChildren() == 0) ? n.node->getBackwardBound() : initialBest();
@@ -284,18 +304,26 @@ void AbstractDD::computeBestBackward(const std::string m)
       // printNode(std::cout,n.node);
       // std::cout << " cur = " << cur << "\n";
       
+      Edge::Ptr best = nullptr;
       for(auto ci = n.node->beginKids();ci != n.node->endKids();ci++) {
          Edge::Ptr e = *ci;
          auto ep = e->_to->_bbound + e->_obj;
-         //std::cout << "\tEDGE:" << *e << " EP=" << ep << std::endl;
+         // if(anyOpt)
+         //    std::cout << "\tEDGE:" << *e << " EP=" << ep << std::endl;
          if (isBetter(ep,cur)) {
             cur = ep;
+            best = e;
          }
       }
+      // if(anyOpt)
+      //    if(best) {
+      //       std::cout << "bwd path: " << *best << "\n";
+      //    } else std::cout << "no best path from: " << n.node << ". Using: " << cur << "\n";
+      
       if (hasLocal()) {
          auto dualBound = local(n.node,DDCtx);
          if (isBetter(cur,dualBound)) {
-            //std::cout << "\tIMPROVED from " << cur << " to " << dualBound << "\n";
+            // if(anyOpt) std::cout << n.node << "\tIMPROVED from " << cur << " to " << dualBound << "\n";
             cur = dualBound;
          }
       }
@@ -818,7 +846,7 @@ std::vector<ANode::Ptr> Relaxed::computeCutSet()
       if (cur->isExact()) {
          bool akExact = true;
          for(auto ki = cur->beginKids(); akExact && ki != cur->endKids();ki++) {
-            if ((*ki)->_to->getId() == _dd->_trg->getId()) continue;
+            // if ((*ki)->_to->getId() == _dd->_trg->getId()) continue;
             akExact = (*ki)->_to->isExact();
             // if (akExact == false) {
             //    std::cout << "SINK:";
