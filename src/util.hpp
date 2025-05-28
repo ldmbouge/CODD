@@ -421,7 +421,7 @@ public:
    };
    
    typedef iterator const_iterator;
-
+   int first() const noexcept { iterator start(_t,0);return *start;}
    iterator begin() const { return iterator(_t,0);}
    iterator end()   const { return iterator(_t,*this);}
    const_iterator cbegin() const { return const_iterator(_t,0);}
@@ -433,6 +433,12 @@ public:
          os << *i << ((cnt==ps.size()-1) ? "" : ",");
       return os << "}";
    }
+   friend bool operator<=(const NatSet& s1,const NatSet& s2) {
+      unsigned short nw = 0;
+      for(auto i = 0;i < nbw;i++)
+         nw += (s1._t[i] & s2._t[i]) == s1._t[i];
+      return nw == nbw;      
+   }
    friend bool operator==(const NatSet& s1,const NatSet& s2) {
       unsigned short nw = 0;
       for(auto i = 0;i < nbw;i++)
@@ -440,10 +446,10 @@ public:
       return nw == nbw;
    }
    friend NatSet operator-(int l,const NatSet& s2) noexcept            { return NatSet(l,s2);}
-   friend NatSet operator|(const NatSet& s1,const NatSet& s2) noexcept { return NatSet(s1).unionWith(s2);}
-   friend NatSet operator&(const NatSet& s1,const NatSet& s2) noexcept { return NatSet(s1).interWith(s2);}
+   friend NatSet operator|(const NatSet& s1,const NatSet& s2) noexcept { return std::move(NatSet(s1).unionWith(s2));}
+   friend NatSet operator&(const NatSet& s1,const NatSet& s2) noexcept { return std::move(NatSet(s1).interWith(s2));}
    friend NatSet operator-(const NatSet& s1,int v) noexcept { return std::move(NatSet(s1).remove(v));}
-   friend NatSet operator-(const NatSet& s1,const NatSet& s2) { return std::move(NatSet(s1).diffWith(s2));}
+   friend NatSet operator-(const NatSet& s1,const NatSet& s2) noexcept { return std::move(NatSet(s1).diffWith(s2));}
 
    std::size_t hash() const noexcept {
       std::size_t hv = 0;
@@ -913,8 +919,14 @@ int min(const SET& inSet,const Filter& f,const Term& t) {
    return ttl;
 }
 template <typename SET, typename Term=int(*)(int)>
-int min(const SET& inSet,const Term& t) {
-   return min(inSet, [](int x){return true;}, t);
+int min(const SET& inSet,const Term& t)
+{
+   int cur = std::numeric_limits<int>::max();
+   for(auto v : inSet) {
+      const auto tv = t(v);
+      cur = (cur  < tv) ? cur : tv;
+   }
+   return cur;
 }
 
 template <typename SET, typename Filter=bool(*)(int)>

@@ -130,21 +130,25 @@ int main(int argc,char* argv[]) {
    const auto lgf = [sz,&d,&tw](const TSPTW& s,DDContext)  {
       if (s.hops >= sz-1) { /*s.must.empty() && s.may.empty()*/
          const int a = min(s.pos, [ta=s.ta,&d](const int p){ return ta + d[p][depot]; } );
-         const int b = max(s.pos, [tb=s.tb,&d](const int p){ return tb + d[p][depot]; } );
-
+         //const int b = max(s.pos, [tb=s.tb,&d](const int p){ return tb + d[p][depot]; } );
          //const int b = min(s.pos, [tb=s.tb,&d](const int p){ return tb + d[p][depot]; } );
-         return (a <= tw[depot].b && b >= tw[depot].a) ? TSPTW::Set{depot} : TSPTW::Set{};
+         return (a <= tw[depot].b) ? TSPTW::Set{depot} : TSPTW::Set{};
       } else {
          // std::cout << (s) << "\n";
          // std::cout << "pre-filter : " << (s.must|s.may) << "\n";
          const auto f =  filter(
-            s.must|s.may, 
-            [&s,&d,&tw](auto& u){ 
-               const int a = min(s.pos, [&u](const int p){ return p != u; }, [ta=s.ta,&d,&u](const int p){ return ta + d[p][u]; } );
-               //std::cout << a << " <= " << tw[u].b <<"\n";
-               return a <= tw[u].b && (s.pos.size() > 1 || !s.pos.contains(u));
-            }
-         );
+                                s.must|s.may, 
+                                [&s,&d,&tw](const auto u){
+                                   if (s.pos.size() <= 1 && s.pos.contains(u))
+                                      return false;
+                                   else {
+                                      const int a = min(s.pos, [u](const int p){ return p != u; }, [ta=s.ta,&d,u](const int p){ return ta + d[p][u]; } );
+                                      //std::cout << a << " <= " << tw[u].b <<"\n";
+                                      return a <= tw[u].b;
+                                   }
+                                   //return a <= tw[u].b && (s.pos.size() > 1 || !s.pos.contains(u));
+                                }
+                               );
          //std::cout << "state: " << s << "\nnext: " << f << "\n";
          return f;
       }     
@@ -153,35 +157,37 @@ int main(int argc,char* argv[]) {
       if (label==depot) {
          return target();
       } else {
-         const int ta = std::max(min(s.pos, [&label](const int p){ return p != label; }, [ta=s.ta, &d, &label](const int p){ return ta + d[p][label]; } ), tw[label].a);
+         const int ta = std::max(min(s.pos, [&label](const int p){ return p != label; },
+                                     [ta=s.ta, &d, &label](const int p){ return ta + d[p][label]; } ),
+                                 tw[label].a);
          const int tb = (s.ta == s.tb) ? 
                         ta :
-                        std::min(max(s.pos, [&label](const int p){ return p != label; }, [tb=s.tb, &d, &label](const int p){ return tb + d[p][label]; } ), tw[label].b);
-         
-         for(auto u: s.must) {
-            if (u == label || u == depot) continue;
-            if(ta + d[label][u] > tw[u].b) {
-               return std::nullopt;
-            }
-         }
+                        std::min(max(s.pos, [&label](const int p){ return p != label; },
+                                     [tb=s.tb, &d, &label](const int p){ return tb + d[p][label]; } ),
+                                 tw[label].b);
+
+         if (any(s.must,[label,ta,&tw,&d](int u) { return u!=label && u!=depot && ta + d[label][u] > tw[u].b;}))
+            return std::nullopt;
 
          return TSPTW { TSPTW::Set{label}, s.hops+1, ta, tb, s.must-label, s.may-label };
       }
    };
    const auto scf = [&d](const TSPTW& s,int label) { // partial cost function 
-      return min(s.pos, [&label](const int p){ return p != label; }, [&label,&d](int p) { return d[p][label]; });
+      return min(s.pos, [label,&d](const int p) { return p==label ? std::numeric_limits<int>::max() : d[p][label];});
    };
    const auto smf = [&sz](const TSPTW& s1,const TSPTW& s2) -> std::optional<TSPTW> {
       if (s1.hops != s2.hops) return std::nullopt;
 
       const auto newMust = s1.must & s2.must;
+      auto newMay = s1.must;
+      newMay.unionWith(s1.may).unionWith(s2.must).unionWith(s2.may).diffWith(newMust);
       return TSPTW {
          s1.pos | s2.pos,
          s1.hops,
          std::min(s1.ta, s2.ta),
          std::max(s1.tb, s2.tb),
-         newMust,
-         (s1.must | s1.may | s2.must | s2.may) - newMust
+         std::move(newMust),
+         std::move(newMay) // (s1.must | s1.may | s2.must | s2.may) - newMust
       };
    };
    const auto eqs = [&sz](const TSPTW& s) -> bool { 
@@ -193,13 +199,14 @@ int main(int argc,char* argv[]) {
       auto [e, minD] = argmin(C - j,[&d,j](int k) { return d[k][j];});
       shortestEdge[j] = minD;
    }
-   const auto& local = [&d,&shortestEdge,&sz,&tw](const TSPTW& s,LocalContext) -> double {
+  const auto& local = [&d,shortestEdge,&sz,&tw](const TSPTW& s,LocalContext) -> double {
       const auto inf = std::numeric_limits<int>::max();
       const auto& violatesTW = [ta=s.ta,&tw,&shortestEdge](int p){ return ta + shortestEdge[p] > tw[p].b; };
 
-
-      if(any(s.must, violatesTW))
+      if(any(s.must, violatesTW)) {
+         abort();
          return inf;
+      }
 
       const int completeTour = (sz-1) - s.hops - s.must.size();
       int mandatory = 0;
@@ -208,19 +215,23 @@ int main(int argc,char* argv[]) {
       if(s.may.size() > 0) {
          //std::cout << completeTour << "=" << sz << "-" << s.hops << "-" << s.must.size()<< " " << s.must << "\n";
          //std::cout << s.may << " " << s.may.size() <<"-"<< count(s.may, violatesTW) <<"<"<< completeTour << "\n";
-         if(s.may.size() - count(s.may, violatesTW) < completeTour)
+         if(s.may.size() - count(s.may, violatesTW) < completeTour) {
             return inf;
+         }
          
          int shortestEdgeToMay[s.may.size()]; int tsz = 0;
-         for(const auto& p: s.may) shortestEdgeToMay[tsz++] = shortestEdge[p];
+         for(auto p : s.may) shortestEdgeToMay[tsz++] = shortestEdge[p];
          mergeSort(shortestEdgeToMay, tsz, [](int x, int y){ return x > y; });
-         mandatory = sum(s.must, [&shortestEdge](int p){ return shortestEdge[p]; });
+         mandatory = sum(s.must, [shortestEdge](int p){ return shortestEdge[p]; });
          for(int i = 0; i < completeTour; i++) mandatory += shortestEdgeToMay[i];
       }
-      if(mandatory == 0) returnToDepot = std::min(returnToDepot, min(s.pos, [&d](int x){ return d[x][depot]; }));
+      if(mandatory == 0)
+         returnToDepot = std::min(returnToDepot, min(s.pos, [&d](int x){ return d[x][depot]; }));
 
-      if(s.ta + mandatory + returnToDepot > tw[depot].b)
+      if(s.ta + mandatory + returnToDepot > tw[depot].b) {
+         abort();
          return inf;
+      }
       
       return mandatory + returnToDepot;
 
@@ -229,7 +240,7 @@ int main(int argc,char* argv[]) {
 
    const auto sDom = [](const TSPTW& a,const TSPTW& b) -> bool { 
       if(a.pos.size()==1 && b.pos.size()==1) { //if both nodes are exact use standard dom rule
-         return  (*a.pos.begin() == *b.pos.begin()) && a.ta < b.ta && ((a.must & b.must) == a.must);
+         return  (a.pos.first() == b.pos.first()) && a.ta < b.ta && (a.must <= b.must); // [ldm] <= is *subseteq*
       } else {
          return false; //otherwise no dom, TODO: think about this carefully later
          //return a.hops >= b.hops && ((a.must & b.must) == a.must) && a.pos == b.pos && a.tb < b.ta;

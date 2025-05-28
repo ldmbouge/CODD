@@ -540,7 +540,8 @@ void Restricted::compute(Bounds& bnds)
       }         
    //next:;
    }
-   _dd->computeBestBackward(getName());
+   //_dd->computeBestBackward(getName()); // testing
+   
    //_dd->computeBest(getName());
    tighten(_dd->_trg);
    //_dd->display();
