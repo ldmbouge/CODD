@@ -23,14 +23,16 @@ private:
         return os;
     }
 };
-int main() {
+
+int main()
+{
     using namespace std;
 
-    ANode tmp[3] = { ANode(1), ANode(2), ANode(3) };
+    //ANode tmp[3] = { ANode(1), ANode(2), ANode(3) };
     //vector<ANode::Ptr> nodes = {&tmp[0],&tmp[1],&tmp[2]};
     vector<ANode::Ptr> nodes = {};
 
-    auto begin = nodes.begin();
+    //auto begin = nodes.begin();
     for (auto it = nodes.end() - 1; it >= nodes.begin(); --it) {
         auto n = *it;
         cout << *n << endl;

@@ -350,13 +350,13 @@ public:
    class iterator { 
       std::array<unsigned long long, nbw> _t;
       unsigned short       _cwi;    // current word index
-      int               _cnt:31;    // rank of current bit
-      int                 _up:1;
+      unsigned int      _cnt:31;    // rank of current bit
+      unsigned int        _up:1;
       unsigned long long    _cw; // current word
       iterator(std::array<unsigned long long, nbw> t,unsigned short at)
          : _t(t),_cwi(at),_cnt(0),_cw((at < nbw) ? t[at] : 0) {
          while (_cw == 0 && ++_cwi < nbw) _cw = _t[_cwi];
-         _up = 1;
+         _up = 1u;
       }
       iterator(const std::array<unsigned long long, nbw> t,const NatSet<nbw>& ns) 
          : _t(t),_cwi(nbw),_cnt(ns.size()),_up(0),_cw(0) {} // end constructor
@@ -688,13 +688,13 @@ public:
       unsigned long long*    _t;
       const unsigned short _nbw;
       short                _cwi;    // current word index
-      int               _cnt:31;    // rank of current bit
-      int                 _up:1;
+      unsigned int      _cnt:31;    // rank of current bit
+      unsigned int        _up:1;
       unsigned long long    _cw;    // current word
       iterator(unsigned long long* t,unsigned short nbw,unsigned short at)
          : _t(t),_nbw(nbw),_cwi(at),_cnt(0),_cw((at < nbw) ? t[at] : 0) {
          while (_cw == 0 && _t && ++_cwi < _nbw) _cw = _t[_cwi];
-         _up = 1;
+         _up = 1u;
       }
       iterator(unsigned long long* t,unsigned short nbw,const GNSet& gns)
          : _t(t),_nbw(nbw),_cwi(nbw),_cnt(gns.size()),_up(0),_cw(0) {} // end constructor

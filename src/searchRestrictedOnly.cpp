@@ -18,7 +18,7 @@ void BAndBRestrictedOnly::search(Bounds& bnds)
    unsigned int nbSeen = 0;
    std::streamsize ss = cout.precision();
    auto start = RuntimeMonitor::cputime();
-   auto last = start;
+   [[maybe_unused]] auto last = start;
    cout << "B&B searching..." << endl;
    bnds.attach(_theDD);
    double optTime = 0.0;
@@ -73,7 +73,7 @@ void BAndBRestrictedOnly::search(Bounds& bnds)
       //    continue;
       // }
       nNode++;
-      bool primalBetter = restricted->apply(bbn.node,bnds);
+      [[maybe_unused]] bool primalBetter = restricted->apply(bbn.node,bnds);
       //cout << "primalBetter? " << primalBetter << endl;
       //if (primalBetter) {
             

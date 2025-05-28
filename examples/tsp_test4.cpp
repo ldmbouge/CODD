@@ -140,6 +140,8 @@ Instance readFile(const char* fName)
             rv.d[i][i] = val;
          }
       }break;
+      default:
+         abort();
    }
    f.close();
    std::cout << rv.d << "\n";

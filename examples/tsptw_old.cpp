@@ -115,7 +115,7 @@ int main(int argc,char* argv[]) {
    Instance instance = readFile(fName);
    auto C = instance.vertices();
    auto& d = instance.d;
-   auto& tw = instance.twin;
+   //auto& tw = instance.twin;
    std::cout << "Cities:" << C << "\n";
    Bounds bnds([](const std::vector<int>& inc)  {
    });
