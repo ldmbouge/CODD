@@ -206,15 +206,15 @@ int main(int argc,char* argv[]) {
       // if (a.U <= b.U) && (a.e == b.e) then a doms b iff a.t < b.t
       return  (a.e == b.e) && a.t < b.t && (a.U <= b.U);
    };
-   BAndB engine(DD<TSPTW,Minimize<double>, // to minimize
-                decltype(target),
-                decltype(lgf),
-                decltype(stf),
-                decltype(scf),
-                decltype(smf),
-                decltype(eqs),
-                decltype(local)
-                >::makeDD(init,target,lgf,stf,scf,smf,eqs,C,local,sDom),w);
+   BAndBRestrictedFirst engine(DD<TSPTW,Minimize<double>,
+                               decltype(target),
+                               decltype(lgf),
+                               decltype(stf),
+                               decltype(scf),
+                               decltype(smf),
+                               decltype(eqs),
+                               decltype(local)
+                               >::makeDD(init,target,lgf,stf,scf,smf,eqs,C,local,sDom),w);
    engine.search(bnds);
    return 0;
 }

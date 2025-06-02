@@ -224,7 +224,7 @@ int main(int argc,char* argv[]) {
    mergeSortPerm(dIn,  permIn,  sz, [](double a, double b) { return a > b; });
    mergeSortPerm(dOut, permOut, sz, [](double a, double b) { return a > b; });
 
-      const auto local = [dIn,dOut,sz,permIn,permOut,&tw,&d](const TSPTW& s,LocalContext) -> double {
+   const auto local = [dIn,dOut,sz,permIn,permOut,&tw,&d](const TSPTW& s,LocalContext) -> double {
       const auto inf = std::numeric_limits<int>::max();
       const auto violatesTW = [ta=s.ta,&tw,dIn,permIn](int p){ return ta + dIn[permIn[p]] > tw[p].b; };
 
@@ -269,8 +269,8 @@ int main(int argc,char* argv[]) {
       return a.hops == b.hops && a.ta < b.ta && a.pos == b.pos && (a.must <= b.must);
    };
 
-   BAndB engine(DD<TSPTW,Minimize<double>, // to minimize
-                //   BAndBRestrictedFirst engine(DD<TSPTW,Minimize<double>,
+   //BAndB engine(DD<TSPTW,Minimize<double>, // to minimize
+   BAndBRestrictedFirst engine(DD<TSPTW,Minimize<double>,
                 decltype(target),
                 decltype(lgf),
                 decltype(stf),

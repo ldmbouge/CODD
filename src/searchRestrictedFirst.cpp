@@ -87,7 +87,7 @@ void BAndBRestrictedFirst::search(Bounds& bnds)
    std::streamsize ss = cout.precision();
    auto start = RuntimeMonitor::cputime();
    auto last = start;
-   cout << "B&B searching..." << endl;
+   cout << "B&B(RF) searching..." << endl;
    bnds.attach(_theDD);
    double optTime = 0.0;
    bnds.onSolution([ss,start,&optTime](const auto& lbls) {
@@ -100,7 +100,7 @@ void BAndBRestrictedFirst::search(Bounds& bnds)
    restricted->setStrategy(ddr[0] = new Restricted(_mxw));
 
    AbstractDD::Ptr relaxed = _theDD->duplicate();
-   relaxed->setStrategy(ddr[1] = new Relaxed(_mxw));
+   relaxed->setStrategy(ddr[1] = new Relaxed( _mxw));
 
 
    auto hOrder = [restricted](const QNode& a,const QNode& b) {
@@ -201,8 +201,11 @@ void BAndBRestrictedFirst::search(Bounds& bnds)
       for(auto n: survivedDom) {
          nbRELAX++;
          bool dualBetter = relaxed->apply(n, bnds);
-         // std::cout << "reaching relaxed DD. Got: " << dualBetter << " B@SINK:" << relaxed->currentOpt() << "\n";         
-         //std::cout << "reaching relaxed DD. Got: \n";         
+         //std::cout << "Survivor:" << n->getBound() << " BWD:" << n->getBackwardBound() << " TTL:" << n->getTotalBound() << "\n";
+         //double localDual = relaxed->local(n, LocalContext::BBCtx);
+         //std::cout << "LOCAL(S):" << localDual << " SUM:" << n->getBound() + localDual << "\n"; 
+         //std::cout << "reaching relaxed DD. Got: " << dualBetter << " B@SINK:" << relaxed->currentOpt() << "\n";         
+         //std::cout << "reaching relaxed DD. Got: " << dualBetter <<"\n";         
          if(dualBetter) {
             if(!newGuyDominated) {
                auto nd = bbPool->cloneNode(n);
