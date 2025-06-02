@@ -311,6 +311,12 @@ public:
          az &= (_t[i] == 0);
       return az;
    }
+   bool isSingleton() const noexcept {
+      int ttl = 0;
+      for(short i=0;ttl <= 1 && i < nbw;++i)
+         ttl += __builtin_popcountll(_t[i]);
+      return ttl;
+   }
    int largest() const noexcept { // returns -1 when empty
       int lw = nbw-1;
       while(lw >= 0 && _t[lw]==0) lw--;
@@ -421,7 +427,13 @@ public:
    };
    
    typedef iterator const_iterator;
-   int first() const noexcept { iterator start(_t,0);return *start;}
+   int first() const noexcept {
+      unsigned cwi = 0;
+      auto cw  = _t[0];
+      while (cw == 0 && ++cwi < nbw) cw = _t[cwi];
+      return (cwi << 6) + 63 - __builtin_clzl(cw & -cw);
+      //iterator start(_t,0);return *start;
+   }
    iterator begin() const { return iterator(_t,0);}
    iterator end()   const { return iterator(_t,*this);}
    const_iterator cbegin() const { return const_iterator(_t,0);}

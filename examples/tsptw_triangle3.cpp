@@ -13,22 +13,40 @@ struct TimeWindow {
 
 struct TSPTW {
    using Set = NatSet<4>;
-
    Set pos;  // current city (set for merged nodes, singleton otherwise)
+   Set must; // cities that are unvisited in all nodes in the prefix of this state
+   Set may;  // cities that are visited in some, but not all, nodes in the prefix
    int hops; // number of visited cities
    int ta;   // earliest and latest times at pos (a and b are same for exact nodes)
    int tb;
-   Set must; // cities that are unvisited in all nodes in the prefix of this state
-   Set may;  // cities that are visited in some, but not all, nodes in the prefix
-
+   int pad; 
+   TSPTW() { memset(this,0,sizeof(TSPTW));}
+   TSPTW(const Set& p,const Set& m,const Set& maya,int h,int a,int b) : pos(p),must(m),may(maya),hops(h),ta(a),tb(b),pad(0) {}
+   TSPTW(Set&& p,Set&& m,Set&& maya,int h,int a,int b) : pos(p),must(m),may(maya),hops(h),ta(a),tb(b),pad(0) {}
    friend std::ostream& operator<<(std::ostream& os,const TSPTW& m) {
       return os << "<" << m.pos << ", " << m.hops << ", [" << m.ta << "," << m.tb << "], " << m.must << ", " << m.may << ">";
    }
 };
 
+template<size_t n>
+inline int fast_memcmp(const void *s1, const void *s2) {
+   switch(n & 7) {
+      case 0: {
+         const unsigned long long* p1 = static_cast<const unsigned long long*>(s1);
+         const unsigned long long* p2 = static_cast<const unsigned long long*>(s2);
+         size_t dwl = n >> 3;
+         unsigned long long diff = 0;
+         while (diff==0 && dwl--)
+            diff = *p1++ - *p2++;
+         return diff!=0;
+      }
+      default: return memcmp(s1,s2,n);
+   }
+}
 
 template<> struct std::equal_to<TSPTW> {
    constexpr bool operator()(const TSPTW& s1,const TSPTW& s2) const {
+      //return fast_memcmp<sizeof(TSPTW)>(&s1,&s2)==0;      
       return s1.pos  == s2.pos  &&
              s1.hops == s2.hops &&
              s1.ta   == s2.ta   &&
@@ -125,8 +143,8 @@ int main(int argc,char* argv[]) {
    const int depot = 0;
    const int sz = (const int)C.size();
 
-   const auto init   = [&C] () { return TSPTW { TSPTW::Set{depot},  0, 0, 0, C - depot   , TSPTW::Set{} }; };
-   const auto target = [&sz]() { return TSPTW { TSPTW::Set{depot}, sz, 0, 0, TSPTW::Set{}, TSPTW::Set{} }; };
+   const auto init   = [&C] () { return TSPTW { TSPTW::Set{depot}, C - depot   , TSPTW::Set{} ,0, 0, 0}; };
+   const auto target = [&sz]() { return TSPTW { TSPTW::Set{depot}, TSPTW::Set{}, TSPTW::Set{} ,sz, 0, 0}; };
    const auto lgf = [sz,&d,&tw](const TSPTW& s,DDContext)  {
       if (s.hops >= sz-1) { /*s.must.empty() && s.may.empty()*/
          const int a = min(s.pos, [ta=s.ta,&d](const int p){ return ta + d[p][depot]; } );
@@ -166,7 +184,7 @@ int main(int argc,char* argv[]) {
             }
          }
 
-         return TSPTW { TSPTW::Set{label}, s.hops+1, ta, tb, s.must-label, s.may-label };
+         return TSPTW { TSPTW::Set{label}, s.must-label, s.may-label,s.hops+1, ta, tb };
       }
    };
    const auto scf = [&d](const TSPTW& s,int label) { // partial cost function 
@@ -178,11 +196,11 @@ int main(int argc,char* argv[]) {
       const auto newMust = s1.must & s2.must;
       return TSPTW {
          s1.pos | s2.pos,
+         newMust,
+         (s1.must | s1.may | s2.must | s2.may) - newMust,
          s1.hops,
          std::min(s1.ta, s2.ta),
-         std::max(s1.tb, s2.tb),
-         newMust,
-         (s1.must | s1.may | s2.must | s2.may) - newMust
+         std::max(s1.tb, s2.tb)
       };
    };
    const auto eqs = [&sz](const TSPTW& s) -> bool { 
@@ -248,26 +266,12 @@ int main(int argc,char* argv[]) {
       if(mandatoryIn == 0) returnToDepot = std::min(returnToDepot, min(s.pos, [&d](int x){ return d[x][depot]; }));
 
       if(s.ta + mandatoryIn + returnToDepot > tw[depot].b)
-         return inf;
-      
+         return inf;      
       return std::max(mandatoryIn, mandatoryOut) + returnToDepot;
-
    };
-
-
    const auto sDom = [](const TSPTW& a,const TSPTW& b) -> bool { 
-      if(a.pos.size()==1 && b.pos.size()==1) { //if both nodes are exact use standard dom rule
-         return  (*a.pos.begin() == *b.pos.begin()) && a.ta < b.ta && ((a.must & b.must) == a.must);
-      } else {
-         return false; //otherwise no dom, TODO: think about this carefully later
-         //return a.hops >= b.hops && ((a.must & b.must) == a.must) && a.pos == b.pos && a.tb < b.ta;
-      }
+      return a.hops == b.hops && a.ta < b.ta && a.pos == b.pos && (a.must <= b.must);
    };
-
-   // auto s = init();
-   // std::cout << "s    = " << s << "\n";
-   // std::cout << "l(s) = " << lgf(s, DDContext::DDExact) << "\n";
-   // return 0;
 
    BAndB engine(DD<TSPTW,Minimize<double>, // to minimize
                 //   BAndBRestrictedFirst engine(DD<TSPTW,Minimize<double>,

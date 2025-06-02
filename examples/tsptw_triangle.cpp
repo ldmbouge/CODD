@@ -204,10 +204,10 @@ int main(int argc,char* argv[]) {
    };
    const auto sDom = [](const TSPTW& a,const TSPTW& b) -> bool { 
       // if (a.U <= b.U) && (a.e == b.e) then a doms b iff a.t < b.t
-      return  (a.e == b.e) && a.t < b.t && ((a.U & b.U) == a.U);
+      return  (a.e == b.e) && a.t < b.t && (a.U <= b.U);
    };
-   //BAndB engine(DD<TSPTW,Minimize<double>, // to minimize
-   BAndBRestrictedFirst engine(DD<TSPTW,Minimize<double>,
+   BAndB engine(DD<TSPTW,Minimize<double>, // to minimize
+//BAndBRestrictedFirst engine(DD<TSPTW,Minimize<double>,
                 decltype(target),
                 decltype(lgf),
                 decltype(stf),

@@ -79,9 +79,9 @@ public:
    void setBound(double b) { _bound = b;}
    void setBackwardBound(double b) { _bbound = b;}
    const auto depth() const { return _optLabels.size();}
-   const auto getBound() const { return _bound;}
-   const auto getBackwardBound() const { return _bbound;}
-   const auto getTotalBound() { return _bound + _bbound;}
+   const auto getBound() const noexcept { return _bound;}
+   const auto getBackwardBound() const noexcept { return _bbound;}
+   const auto getTotalBound() const noexcept { return _bound + _bbound;}
    const Vec<int,unsigned>& getIncumbent() const noexcept { return _optLabels;}
    void setIncumbent(auto begin,auto end) {
       for(auto it = begin;it != end;it++)
