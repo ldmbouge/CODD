@@ -6,6 +6,7 @@
 #include <set>
 #include <functional>
 #include <assert.h>
+#include <memory>
 
 class Range {
    int _from;

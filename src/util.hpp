@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <assert.h>
 #include <functional>
+#include <memory>
 
 //#if defined(__x86_64__)
 //#include <intrin.h>
