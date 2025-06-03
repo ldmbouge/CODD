@@ -207,6 +207,7 @@ int main(int argc,char* argv[]) {
       return s.pos.contains(depot) && s.hops == sz;// && s.must.empty(); //&& s.may.empty();
    };
    
+   int* dInNS   = new int[sz];
    int* dIn     = new int[sz];
    int* dOut    = new int[sz];
    int* permIn  = new int[sz];
@@ -216,20 +217,21 @@ int main(int argc,char* argv[]) {
       auto allButj = C;allButj.remove(j);
       auto [e1, minIn]  = argmin(allButj,[&d,j](int k) { return d[k][j];});
       auto [e2, minOut] = argmin(allButj,[&d,j](int k) { return d[j][k];});
-      dIn[j] = minIn;
+      dIn[j] = dInNS[j] = minIn;
       dOut[j] = minOut;
       permIn[j] = j;
       permOut[j] = j;
    }
-   mergeSortPerm(dIn,  permIn,  sz, [](double a, double b) { return a > b; });
-   mergeSortPerm(dOut, permOut, sz, [](double a, double b) { return a > b; });
+   mergeSortPerm(dIn,  permIn,  sz, [](double a, double b) { return a < b; }); // From smallest to largest
+   mergeSortPerm(dOut, permOut, sz, [](double a, double b) { return a < b; }); // From smallest to largest
 
-   const auto local = [dIn,dOut,sz,permIn,permOut,&tw,&d](const TSPTW& s,LocalContext) -> double {
+   const auto local = [dIn,dInNS,dOut,sz,permIn,permOut,&tw,&d](const TSPTW& s,LocalContext) -> double {
       const auto inf = std::numeric_limits<int>::max();
-      const auto violatesTW = [ta=s.ta,&tw,dIn,permIn](int p){ return ta + dIn[permIn[p]] > tw[p].b; };
+      const auto violatesTW = [ta=s.ta,&tw,dInNS](int p){ return ta + dInNS[p] > tw[p].b; };
 
-      if(any(s.must, violatesTW))
-         return inf;
+      if(any(s.must, violatesTW)) { // Nasty bug here. Sorting was wrong. (flipped >) 
+         return inf; // but for violatesTW to be correct, since it says "If There exist a city in must such that ..."
+      }              // the index "p" to the closure is a city name. Can't used dIn. Must use the non-sorted version.
 
       const int completeTour = (sz-1) - s.hops - s.must.size();
       int mandatoryIn = 0;
