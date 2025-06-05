@@ -172,19 +172,19 @@ int main(int argc,char* argv[]) {
       if (label==depot) {
          return target();
       } else {
-         const int ta = std::max(min(s.pos, [&label](const int p){ return p != label; }, [ta=s.ta, &d, &label](const int p){ return ta + d[p][label]; } ), tw[label].a);
+         const int ta = std::max(min(s.pos,[ta=s.ta, &d,label](const int p){ return (p==label) ? std::numeric_limits<int>::max() : ta + d[p][label]; } ),
+                                 tw[label].a);
+         auto newMust = s.must - label;
+         for(auto u: newMust) {
+            if(ta + d[label][u] > tw[u].b)
+               return std::nullopt;            
+         }
          const int tb = (s.ta == s.tb) ? 
                         ta :
-                        std::min(max(s.pos, [&label](const int p){ return p != label; }, [tb=s.tb, &d, &label](const int p){ return tb + d[p][label]; } ), tw[label].b);
+                        std::min(max(s.pos,[tb=s.tb, &d,label](const int p){ return (p==label) ? std::numeric_limits<int>::min() : tb + d[p][label]; } ),
+                                 tw[label].b);
          
-         for(auto u: s.must) {
-            if (u == label || u == depot) continue;
-            if(ta + d[label][u] > tw[u].b) {
-               return std::nullopt;
-            }
-         }
-
-         return TSPTW { TSPTW::Set{label}, s.must-label, s.may-label,s.hops+1, ta, tb };
+         return TSPTW { TSPTW::Set{label}, newMust, s.may-label,s.hops+1, ta, tb };
       }
    };
    const auto scf = [&d](const TSPTW& s,int label) { // partial cost function 
@@ -229,7 +229,8 @@ int main(int argc,char* argv[]) {
       const auto inf = std::numeric_limits<int>::max();
       const auto violatesTW = [ta=s.ta,&tw,dInNS](int p){ return ta + dInNS[p] > tw[p].b; };
 
-      if(any(s.must, violatesTW)) { // Nasty bug here. Sorting was wrong. (flipped >) 
+      if(any(s.must, violatesTW)) { // Nasty bug here. Sorting was wrong. (flipped >)
+         //std::cout << "INF1\n"; 
          return inf; // but for violatesTW to be correct, since it says "If There exist a city in must such that ..."
       }              // the index "p" to the closure is a city name. Can't used dIn. Must use the non-sorted version.
 
@@ -246,8 +247,10 @@ int main(int argc,char* argv[]) {
       if(s.may.size() > 0) {
          //std::cout << completeTour << "=" << sz << "-" << s.hops << "-" << s.must.size()<< " " << s.must << "\n";
          //std::cout << s.may << " " << s.may.size() <<"-"<< count(s.may, violatesTW) <<"<"<< completeTour << "\n";
-         if(s.may.size() - count(s.may, violatesTW) < completeTour)
-            return inf;         
+         if(s.may.size() - count(s.may, violatesTW) < completeTour) {
+            //std::cout << "INF2\n"; 
+            return inf;
+         }
          int shortestEdgeToMayIn [s.may.size()]; int nIn  = 0;
          int shortestEdgeToMayOut[s.may.size()]; int nOut = 0;
          // mergeSort(shortestEdgeToMayIn,  tsz, [](int x, int y){ return x > y; });
@@ -263,8 +266,10 @@ int main(int argc,char* argv[]) {
       }
       if(mandatoryIn == 0) returnToDepot = std::min(returnToDepot, min(s.pos, [&d](int x){ return d[x][depot]; }));
 
-      if(s.ta + mandatoryIn + returnToDepot > tw[depot].b)
-         return inf;      
+      if(s.ta + mandatoryIn + returnToDepot > tw[depot].b) {
+         //std::cout << "INF3\n"; 
+         return inf;
+      }
       return std::max(mandatoryIn, mandatoryOut) + returnToDepot;
    };
    const auto sDom = [](const TSPTW& a,const TSPTW& b) -> bool { 

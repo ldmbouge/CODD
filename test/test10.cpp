@@ -118,8 +118,8 @@ int main()
    std::cout << "backward loop:\t";
    auto s2E = s2.end();
    auto s2B = s2.begin();
-   s2E = s2E - 1;
-   s2B = s2B - 1;
+   s2E--;
+   s2B--;
    for(auto i = s2E; i!=s2B;i--)
       std::cout << *i << " ";
    std::cout << "\n";

@@ -56,9 +56,9 @@ public:
    template <typename DT> handle_ptr(DT* ptr) noexcept : _ptr(ptr) {}
    template <typename DT> handle_ptr(const handle_ptr<DT>& ptr) noexcept : _ptr(ptr._ptr) {}
    template <typename DT> handle_ptr(handle_ptr<DT>&& ptr) noexcept : _ptr(std::move(ptr._ptr)) {}
-   handle_ptr& operator=(const handle_ptr<T>& ptr) { _ptr = ptr._ptr;return *this;}
-   handle_ptr& operator=(handle_ptr<T>&& ptr)      { _ptr = std::move(ptr._ptr);return *this;}
-   handle_ptr& operator=(T* ptr)                   { _ptr = ptr;return *this;}  
+   handle_ptr& operator=(const handle_ptr<T>& ptr) noexcept { _ptr = ptr._ptr;return *this;}
+   handle_ptr& operator=(handle_ptr<T>&& ptr)      noexcept { _ptr = std::move(ptr._ptr);return *this;}
+   handle_ptr& operator=(T* ptr)                   noexcept { _ptr = ptr;return *this;}  
    const T* get() const  noexcept { return _ptr;}
    T* get() noexcept { return _ptr;}
    T* operator->() const noexcept { return _ptr;}
@@ -74,7 +74,7 @@ public:
     * @param p2 a smart pointer to a `X` instance to compare.
     * Typically \f$X <: T\f$
     */
-   template<class X> friend bool operator==(const handle_ptr<T>& p1,const handle_ptr<X>& p2)
+   template<class X> friend bool operator==(const handle_ptr<T>& p1,const handle_ptr<X>& p2) noexcept
    {
       return p1._ptr == p2.get();
    }

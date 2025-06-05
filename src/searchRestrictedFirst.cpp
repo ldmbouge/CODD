@@ -100,7 +100,8 @@ void BAndBRestrictedFirst::search(Bounds& bnds)
    restricted->setStrategy(ddr[0] = new Restricted(_mxw));
 
    AbstractDD::Ptr relaxed = _theDD->duplicate();
-   relaxed->setStrategy(ddr[1] = new Relaxed( _mxw));
+   //relaxed->killDominance();
+   relaxed->setStrategy(ddr[1] = new Relaxed(_mxw));// _mxw));
 
 
    auto hOrder = [restricted](const QNode& a,const QNode& b) {
@@ -192,16 +193,17 @@ void BAndBRestrictedFirst::search(Bounds& bnds)
       } else {
          survivedDom = survivedLocal;
       }
-      /*
-      std::cout << "discardSet   :" << discardSet.size() << "\n";
-      std::cout << "survivedDom  :" << survivedDom.size() << "\n";
-      std::cout << "survivedLocal:" << survivedLocal.size() << "\n";
-      */
+      //std::cout << "discardSet   :" << discardSet.size() << "\n";
+      //std::cout << "survivedLocal:" << survivedLocal.size() << "\n";      
+      //std::cout << "survivedDom  :" << survivedDom.size() << "\n";
       int nbRELAX = 0;
       for(auto n: survivedDom) {
          nbRELAX++;
          bool dualBetter = relaxed->apply(n, bnds);
-         //std::cout << "Survivor:" << n->getBound() << " BWD:" << n->getBackwardBound() << " TTL:" << n->getTotalBound() << "\n";
+         // std::cout << "Survivor:" << n->getBound() << " BWD:" << n->getBackwardBound() << " TTL:" << n->getTotalBound()
+         //           << " dualBetter:" << dualBetter
+         //           << " newGuyDominated:" << newGuyDominated
+         //           << "\n";
          //double localDual = relaxed->local(n, LocalContext::BBCtx);
          //std::cout << "LOCAL(S):" << localDual << " SUM:" << n->getBound() + localDual << "\n"; 
          //std::cout << "reaching relaxed DD. Got: " << dualBetter << " B@SINK:" << relaxed->currentOpt() << "\n";         

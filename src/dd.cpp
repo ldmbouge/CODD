@@ -69,7 +69,8 @@ bool AbstractDD::apply(ANode::Ptr from,Bounds& bnds)
    compute(bnds);
    bool isBetterValue = isBetter(currentOpt(), bnds.getPrimal()); //currentOpt isBetter than bnds.getPrimal
    
-   //std::cout << "isBetter: " << isBetterValue << "   currOpt: " << currentOpt() << "   bnds.primal: " << bnds.getPrimal() << std::endl; 
+   //std::cout << "isBetter: " << isBetterValue << "   currOpt: " << currentOpt() << "   bnds.primal: " << bnds.getPrimal() << std::endl;
+   
    if (isBetterValue) 
       update(bnds);
    return isBetterValue;
@@ -701,7 +702,7 @@ public:
    typedef std::shared_ptr<ANQueue> Ptr;
    ANQueue(Relaxed& dd) : _dd(dd) {}
    virtual ~ANQueue() {}
-   virtual void enQueue(ANode::Ptr n) noexcept = 0;
+   virtual void enQueue(const ANode::Ptr& n) noexcept = 0;
    virtual ANode::Ptr checkDominance(ANode::Ptr n,double nObj) = 0;
    virtual bool empty() const noexcept = 0;
    virtual std::size_t size() const noexcept = 0;
@@ -724,7 +725,7 @@ public:
    MQueue(Relaxed& dd)
       : ANQueue(dd),_rest(),_mmap(MMKey(dd.theDD()))
    {}
-   void enQueue(ANode::Ptr n) noexcept {
+   void enQueue(const ANode::Ptr& n) noexcept {
       if (_mmap.size()==0) {
          _cLayer = n->getLayer();
          _mmap.insert({n->getBound(),n});
@@ -780,7 +781,7 @@ class LQueue:public ANQueue {
    }
 public:
    LQueue(Relaxed& dd) : ANQueue(dd),_next(),_rest() {}
-   void enQueue(ANode::Ptr n) noexcept {
+   void enQueue(const ANode::Ptr& n) noexcept {
       if (_next.size() == 0) {
          _next.push_back(n);
          _cLayer = n->getLayer();
@@ -916,7 +917,8 @@ void Relaxed::compute(Bounds& bnds)
    // auto full = _dd->currentOpt();
    // std::cout << "TWO BOUNDS:" << incr << " " << full<< "\n";
    tighten(_dd->_trg);
-   _dd->computeBestBackward(getName());
+   if (_dd->_trg->nbParents() > 0)
+      _dd->computeBestBackward(getName());
    //_dd->display();
 }
 

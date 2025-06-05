@@ -155,6 +155,7 @@ class NatSet {
 public:
    using value_type = int;
    NatSet() {
+      static_assert(nbw > 0);
       for(auto i=0u;i < nbw;i++)
          _t[i]=0;
    }
@@ -355,17 +356,17 @@ public:
       return *this;
    }
    class iterator { 
-      std::array<unsigned long long, nbw> _t;
+      const std::array<unsigned long long, nbw>& _t;
       unsigned short       _cwi;    // current word index
       unsigned int      _cnt:31;    // rank of current bit
       unsigned int        _up:1;
       unsigned long long    _cw; // current word
-      iterator(std::array<unsigned long long, nbw> t,unsigned short at)
+      iterator(const std::array<unsigned long long, nbw>& t,unsigned short at)
          : _t(t),_cwi(at),_cnt(0),_cw((at < nbw) ? t[at] : 0) {
          while (_cw == 0 && ++_cwi < nbw) _cw = _t[_cwi];
          _up = 1u;
       }
-      iterator(const std::array<unsigned long long, nbw> t,const NatSet<nbw>& ns) 
+      iterator(const std::array<unsigned long long, nbw>& t,const NatSet<nbw>& ns) 
          : _t(t),_cwi(nbw),_cnt(ns.size()),_up(0),_cw(0) {} // end constructor
       static constexpr auto msb(unsigned long long w) noexcept {return (0x8000000000000000u >> __builtin_clzl(w));}
       static constexpr auto lsb(unsigned long long w)  noexcept {return w & -w;}
@@ -378,23 +379,21 @@ public:
       using difference_type = short;
       using pointer = short*;
       using reference = short&;
-      iterator& operator=(const iterator i) {
+      /*
+      iterator& operator=(const iterator& i) {
          _t = i._t;
          _cwi = i._cwi;
          _cnt = i._cnt;
          _cw  = i._cw;
          _up  = i._up;
          return *this;
-      }
+         }*/
       iterator& operator++()  noexcept {
-         assert(_cwi >= nbw || _cw <= _t[_cwi]);
-      
+         assert(_cwi >= nbw || _cw <= _t[_cwi]);      
          _cw = clearLSB(_cw);  // clear LSB
          while (_cw == 0 && ++_cwi < nbw)  // all bits at zero-> done with this word.            
             _cw = _t[_cwi];
-
          _cw = (_cwi < nbw) * _cw;
-
          assert(_cwi >= nbw || _cw <= _t[_cwi]);
          return *this;
       }
@@ -412,18 +411,18 @@ public:
          --_cnt;
          return *this;
       }
-      iterator operator++(int) { iterator retval = *this; this->operator++(); return retval;}
-      iterator operator--(int) { iterator retval = *this; this->operator--(); return retval;}
-      auto& operator+=(int d) {
+      iterator operator++(int) noexcept { iterator retval = *this; this->operator++(); return retval;}
+      iterator operator--(int) noexcept { iterator retval = *this; this->operator--(); return retval;}
+      auto& operator+=(int d) noexcept {
          while(--d >= 0) this->operator++();
          while(++d < 0) this->operator--();
          assert(d==0);
          return *this;
       }
-      iterator operator-(unsigned d) const {iterator r(*this);while(d-- > 0) --r;return r;}
-      bool operator==(iterator other) const {return _cwi == other._cwi && _cw == other._cw;}
-      bool operator!=(iterator other) const {return !(*this == other);}
-      short operator*() const   { return (_cwi<<6) + bitId(_up ? lsb(_cw) : msb(_cw));}
+      iterator operator-(unsigned d) const noexcept  { iterator r(*this);while(d-- > 0) --r;return r;}
+      bool operator==(iterator other) const noexcept { return _cwi == other._cwi && _cw == other._cw;}
+      bool operator!=(iterator other) const noexcept { return !(*this == other);}
+      short operator*() const  noexcept { return (_cwi<<6) + bitId(_up ? lsb(_cw) : msb(_cw));}
       friend class NatSet;
    };
    
@@ -452,11 +451,17 @@ public:
          nw += (s1._t[i] & s2._t[i]) == s1._t[i];
       return nw == nbw;      
    }
-   friend bool operator==(const NatSet& s1,const NatSet& s2) {
-      unsigned short nw = 0;
+   friend bool operator==(const NatSet& s1,const NatSet& s2) noexcept {
+      /*      unsigned short nw = 0;
       for(auto i = 0;i < nbw;i++)
          nw += s1._t[i] == s2._t[i];
       return nw == nbw;
+      */
+      unsigned short nw = s1._t[0] == s2._t[0], i=1;
+      for(;i < nbw && nw == i;i++)
+         nw += s1._t[i] == s2._t[i];
+      return nw == i;
+
    }
    friend NatSet operator-(int l,const NatSet& s2) noexcept            { return NatSet(l,s2);}
    friend NatSet operator|(const NatSet& s1,const NatSet& s2) noexcept { return std::move(NatSet(s1).unionWith(s2));}

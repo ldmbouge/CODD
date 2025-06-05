@@ -110,6 +110,7 @@ public:
    virtual double better(double obj1,double obj2) const = 0;
    virtual bool hasLocal() const noexcept = 0;
    virtual bool hasDominance() const noexcept = 0;
+   virtual void killDominance() = 0;
    virtual bool dominates(ANode::Ptr f,ANode::Ptr s) = 0;
    virtual void update(Bounds& bnds) const = 0;
    virtual void printNode(std::ostream& os,ANode::Ptr n) const = 0;
@@ -439,6 +440,7 @@ private:
       return Compare{}.better(obj1,obj2) ? obj1 : obj2;
    }
    bool hasLocal() const noexcept       { return _local != nullptr;}
+   void killDominance() { _sdom = nullptr;}
    bool hasDominance() const noexcept   { return _sdom != nullptr;}
    double initialBest() const noexcept  { return Compare{}.bestValue();}
    double initialWorst() const noexcept { return Compare{}.worstValue();}
@@ -512,7 +514,7 @@ private:
             auto sCost = src->getBound() + cVal + dual;
             //std::cout << "!isBetter("<<sCost<<","<<bnds.getPrimal()<<")="<<(!isBetter(sCost,bnds.getPrimal()))<<"\n";
             if (!isBetter(sCost,bnds.getPrimal())) {
-               //std::cout << "beat by primal\n";
+               //std::cout << "beat by primal " << sCost << " PRIMAL:" << bnds.getPrimal() << "\n";
                return nullptr;
             }
             rv = makeNode(std::move(vs.value()),src->isExact());
