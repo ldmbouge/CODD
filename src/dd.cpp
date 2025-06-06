@@ -50,10 +50,11 @@ void display(AbstractDD* dd)
    dd->display();
 }
 
-void AbstractDD::setStrategy(Strategy* s)
+AbstractDD* AbstractDD::setStrategy(Strategy* s)
 {
    _strat = s;
    _strat->_dd = this;
+   return this;
 }
 
 void AbstractDD::compute(Bounds& bnds)
@@ -809,7 +810,7 @@ public:
       }
       std::cout << "\n";
       */
-      int nb = 0,nbBetter = 0;      
+      [[maybe_unused]] int nbBetter = 0;      
       for(const auto& o : _next) {
          const bool objDom = theDD->isBetterEQ(o->getBound(),nObj);
          nbBetter += objDom;
@@ -817,7 +818,6 @@ public:
             //std::cout << " --> found@ " << nb << "\n";
             return o;
          }
-         nb++;
       }
       //std::cout << " --> NOT found " << nbBetter << " \n";
       return nullptr;

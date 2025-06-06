@@ -9,26 +9,28 @@
 #include "RuntimeMonitor.hpp"
 #include "pool.hpp"
 
-void filterLocal(Bounds& bnds, AbstractDD::Ptr dd, std::vector<ANode::Ptr> nodes, std::vector<ANode::Ptr>* survived)
+std::vector<ANode::Ptr> filterLocal(Bounds& bnds, AbstractDD::Ptr dd,const std::vector<ANode::Ptr>& nodes)
 {
-   for(auto n: nodes) {
+   std::vector<ANode::Ptr> survived;
+   for(const auto& n: nodes) {
       double localDual = dd->local(n, LocalContext::BBCtx);
-      if(!dd->isBetterEQ(bnds.getPrimal(), n->getBound() + localDual)) {
-         survived->push_back(n);
-      }
+      if(!dd->isBetterEQ(bnds.getPrimal(), n->getBound() + localDual)) 
+         survived.push_back(n);      
    }
+   return survived;
 }
 
 template<typename Ord>
-int filterDom(bool &newGuyDominated, Bounds& bnds, AbstractDD::Ptr dd, std::vector<ANode::Ptr> nodes, Heap<QNode,Ord>* pq, std::vector<ANode::Ptr>* survived)
+std::tuple<int,bool,std::vector<ANode::Ptr>>
+filterDom(Bounds& bnds, AbstractDD::Ptr dd,const std::vector<ANode::Ptr>& nodes, Heap<QNode,Ord>* pq)
 {
-   newGuyDominated = false;
+   std::vector<ANode::Ptr> survived;
+   bool newGuyDominated = false;
    auto end = nodes.rend();
    auto begin = nodes.rbegin();
-   for (auto i = begin; i != end; i++) {
+   for (auto i = begin; i != end; i++) { // loops backward on nodes
       auto n = *i;
-      auto sz = nodes.size();
-
+      [[maybe_unused]] auto sz = nodes.size();
       //for (auto j = i+1; j != end; j++) {
       for (auto j = begin; j != end; j++) {
          auto other = *j;
@@ -44,12 +46,12 @@ int filterDom(bool &newGuyDominated, Bounds& bnds, AbstractDD::Ptr dd, std::vect
          //    survived->push_back(n);
       }
       if(!newGuyDominated) {
-         survived->push_back(n);
+         survived.push_back(n);
       }
    }
 
    int pruned = 0;
-   for(auto n: nodes) {
+   for(const auto& n: nodes) {
       unsigned d = 0;
       auto pqSz = pq->size();
       auto allLocs = new Heap<QNode,Ord>::LocType*[pqSz];
@@ -58,10 +60,10 @@ int filterDom(bool &newGuyDominated, Bounds& bnds, AbstractDD::Ptr dd, std::vect
          bool isObjDom   = dd->isBetterEQ(other->value().node->getBound(),n->getBound());
          newGuyDominated = isObjDom && dd->dominates(other->value().node,n);
          if (newGuyDominated) {
-            goto prune;             
+            goto prune;  // n is dominated by something in the queue. kill what n dominates now            
          }        
          bool objDom   = dd->isBetterEQ(n->getBound(),other->value().node->getBound());
-         bool qnDominated = objDom && dd->dominates(n,other->value().node);
+         bool qnDominated = objDom && dd->dominates(n,other->value().node); // n dominates a node in the QUEUE. Kill queue node
          if (qnDominated)
             allLocs[d++] = other;
       }
@@ -74,19 +76,19 @@ int filterDom(bool &newGuyDominated, Bounds& bnds, AbstractDD::Ptr dd, std::vect
       }
       delete[]allLocs;
    }
-   return pruned;
+   return {pruned,newGuyDominated,std::move(survived)};
 }
 
 void BAndBRestrictedFirst::search(Bounds& bnds)
 {
    // Setup
-   static int nbRELAX = 0;
+   [[maybe_unused]] static int nbRELAX = 0;
    auto bbPool = _theDD->makeNDAllocator();
    using namespace std;
    unsigned int nbSeen = 0;
    std::streamsize ss = cout.precision();
    auto start = RuntimeMonitor::cputime();
-   auto last = start;
+   [[maybe_unused]] auto last = start;
    cout << "B&B(RF) searching..." << endl;
    bnds.attach(_theDD);
    double optTime = 0.0;
@@ -97,13 +99,10 @@ void BAndBRestrictedFirst::search(Bounds& bnds)
    WidthBounded* ddr[2];
 
    AbstractDD::Ptr restricted = _theDD->duplicate();
-   restricted->setStrategy(ddr[0] = new Restricted(_mxw));
-   //restricted->killDominance(); // doesn't help either
+   restricted->setStrategy(ddr[0] = new Restricted(_mxw));  //->killDominance(); // doesn't help either
 
-   AbstractDD::Ptr relaxed = _theDD->duplicate();
-   //relaxed->killDominance();
-   relaxed->setStrategy(ddr[1] = new Relaxed(_mxw));// _mxw));
-
+   AbstractDD::Ptr relaxed = _theDD->duplicate();   
+   relaxed->setStrategy(ddr[1] = new Relaxed(_mxw)); //->killDominance(); // doesn't help
 
    auto hOrder = [restricted](const QNode& a,const QNode& b) {
       return restricted->isBetter(a.bound,b.bound);
@@ -127,69 +126,22 @@ void BAndBRestrictedFirst::search(Bounds& bnds)
    while(!pq.empty()) {
       auto bbn = pq.extractMax();
 
-      //std::cout << "dequeued: ";
-      // restricted->printNode(std::cout, bbn.node);
-      //std::cout << std::endl;
-
-      
       auto curDual = bbn.bound;
       bnds.setDual(bbn.node->getBound(),curDual);
 
-      // if(relaxed->hasLocal()){
-      //    auto compDual = bbn.node->getBound() + relaxed->local(bbn.node,LocalContext::DDInit);
-      //    //cout << "DUAL KEY:" << curDual << " dualCOMP:" << compDual << "\n";
-      //    if (!relaxed->isBetterEQ(compDual,curDual)) {
-      //       //cout<< " dual comp improve!\n";
-      //       curDual = compDual;
-      //    }
-      // }
-
       ttlNode++;
-      // cout << "CURDUAL:" << curDual << "\t PRIMAL:" << bnds.getPrimal()
-      //        << " isBetter:" << restricted->isBetter(curDual,bnds.getPrimal()) << "\n";
-      // if (!restricted->isBetter(curDual,bnds.getPrimal())) {
-      //    bbPool->release(bbn.node);
-      //    continue;
-      // }
       nNode++;
       restricted->apply(bbn.node,bnds);
 
       auto discardSet = restricted->theDiscardedSet();
 
-
-      /*      cout << "discarded set: " << discardSet.size() << endl;
-      struct {
-         bool operator()(ANode::Ptr a,ANode::Ptr b) const {
-            return a->getBound() < b->getBound();
-         }
-      } custom;
-      std::sort(discardSet.begin(),discardSet.end(),custom);
-      const int last = discardSet.size()-1;
-      cout << "FIRST:" << discardSet[0]->getTotalBound()   << "\n";
-      cout << "LAST :" << discardSet[last]->getTotalBound() << "\n";
+      std::vector<ANode::Ptr> survivedLocal = relaxed->hasLocal() ? filterLocal(bnds, relaxed, discardSet) : discardSet;
       
-      std::vector<ANode::Ptr> survivedLocal;
       std::vector<ANode::Ptr> survivedDom;
-      
       bool newGuyDominated = false;
       if (relaxed->hasDominance()) {
-         int tmpPruned = filterDom<decltype(hOrder)>(bnds, relaxed, discardSet, &pq, &survivedDom);
-         insDom += discardSet.size() - survivedDom.size() - tmpPruned;
-         pruned += tmpPruned;
-      }
-      */
-      std::vector<ANode::Ptr> survivedLocal;
-      std::vector<ANode::Ptr> survivedDom;
-
-      if(relaxed->hasLocal()) {
-         filterLocal(bnds, relaxed, discardSet, &survivedLocal);
-      } else {
-         survivedLocal = discardSet;
-      }
-      bool newGuyDominated = false;
-      if (relaxed->hasDominance()) {
-         int tmpPruned = filterDom<decltype(hOrder)>(newGuyDominated, bnds, relaxed, survivedLocal, &pq, &survivedDom);
-         insDom += discardSet.size() - survivedDom.size();
+         auto [tmpPruned,newGuyDominated,survivedDom] = filterDom<decltype(hOrder)>(bnds, relaxed, survivedLocal, &pq);
+         insDom += survivedLocal.size() - survivedDom.size();
          pruned += tmpPruned;
       } else {
          survivedDom = survivedLocal;
@@ -197,8 +149,8 @@ void BAndBRestrictedFirst::search(Bounds& bnds)
       //std::cout << "discardSet   :" << discardSet.size() << "\n";
       //std::cout << "survivedLocal:" << survivedLocal.size() << "\n";      
       //std::cout << "survivedDom  :" << survivedDom.size() << "\n";
-      int nbRELAX = 0;
-      for(auto n: survivedDom) {
+      [[maybe_unused]] int nbRELAX = 0;
+      for(const auto& n: survivedDom) {
          nbRELAX++;
          bool dualBetter = relaxed->apply(n, bnds);
          // std::cout << "Survivor:" << n->getBound() << " BWD:" << n->getBackwardBound() << " TTL:" << n->getTotalBound()
@@ -239,9 +191,3 @@ void BAndBRestrictedFirst::search(Bounds& bnds)
         //<< "\n";
    // cout << ddr[0]->getWidth() << " " << nNode << " " << spent/1000 << " " << bnds.getPrimal() << endl;
 }
-
-// breaksRF 4     -> [1 1 0 1 1 1 0 1 1 1 1 1 1 1 1 1 1 1 0 1 0 1 0 1 1 1 1 1], 1323
-// longest prefix -> [1 1 0 1 1 1 0 1 1 1 1 1 1 1 1 1 1 1 
-
-//discarded: 24,T,<19,439>,B=819,BB=0,LBLS:[0:1 1:1 2:1 3:1 4:0 5:1 6:1 7:1 8:0 9:0 10:1 11:1 12:1 13:1 14:1 15:1 16:1 17:1 18:0 ]
-//discarded: 10,T,<19,439>,B=684,BB=0,LBLS:[0:1 1:1 2:0 3:1 4:1 5:1 6:1 7:1 8:1 9:1 10:1 11:1 12:1 13:0 14:0 15:0 16:0 17:1 18:0 ]

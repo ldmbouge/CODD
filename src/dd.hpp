@@ -124,7 +124,7 @@ public:
    std::vector<ANode::Ptr> computeCutSet();
    std::vector<ANode::Ptr> theDiscardedSet();
    void print(std::ostream& os,std::string gLabel);
-   void setStrategy(Strategy* s);
+   AbstractDD* setStrategy(Strategy* s);
    void display();
    bool isExact() const { return _exact;}
    virtual AbstractDD::Ptr duplicate() = 0;
