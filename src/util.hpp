@@ -151,7 +151,7 @@ public:
  */
 template <unsigned short nbw=1> 
 class NatSet {
-   std::array<unsigned long long, nbw> _t;
+   unsigned long long _t[nbw];
 public:
    using value_type = int;
    NatSet() {
@@ -164,7 +164,10 @@ public:
          _t[i] = s._t[i];
    }
 
-   NatSet(NatSet&& s) noexcept : _t(std::move(s._t)) {}
+   NatSet(NatSet&& s) noexcept {
+      for(int i=0;i<nbw;i++)
+         _t[i] = s._t[i];      
+   }
    NatSet(int lb,int ub) {
       if (lb > ub) {
          for(auto i=0u;i < nbw;i++)
@@ -356,17 +359,17 @@ public:
       return *this;
    }
    class iterator { 
-      const std::array<unsigned long long, nbw>& _t;
+      const unsigned long long*    _t;
       unsigned short       _cwi;    // current word index
       unsigned int      _cnt:31;    // rank of current bit
       unsigned int        _up:1;
       unsigned long long    _cw; // current word
-      iterator(const std::array<unsigned long long, nbw>& t,unsigned short at)
+      iterator(const unsigned long long* t,unsigned short at)
          : _t(t),_cwi(at),_cnt(0),_cw((at < nbw) ? t[at] : 0) {
          while (_cw == 0 && ++_cwi < nbw) _cw = _t[_cwi];
          _up = 1u;
       }
-      iterator(const std::array<unsigned long long, nbw>& t,const NatSet<nbw>& ns) 
+      iterator(const unsigned long long* t,const NatSet<nbw>& ns) 
          : _t(t),_cwi(nbw),_cnt(ns.size()),_up(0),_cw(0) {} // end constructor
       static constexpr auto msb(unsigned long long w) noexcept {return (0x8000000000000000u >> __builtin_clzl(w));}
       static constexpr auto lsb(unsigned long long w)  noexcept {return w & -w;}
@@ -441,27 +444,41 @@ public:
    friend std::ostream& operator<<(std::ostream& os,const NatSet& ps) {
       os << "{";
       auto cnt = 0;
-      for(auto i=ps.cbegin();i!= ps.cend();i++,cnt++)
+      for(auto i=ps.begin();i!= ps.end();i++,cnt++)
          os << *i << ((cnt==ps.size()-1) ? "" : ",");
       return os << "}";
    }
-   friend bool operator<=(const NatSet& s1,const NatSet& s2) {
+   friend bool operator<=(const NatSet& s1,const NatSet& s2) noexcept {
       unsigned short nw = 0;
       for(auto i = 0;i < nbw;i++)
          nw += (s1._t[i] & s2._t[i]) == s1._t[i];
       return nw == nbw;      
    }
    friend bool operator==(const NatSet& s1,const NatSet& s2) noexcept {
-      /*      unsigned short nw = 0;
-      for(auto i = 0;i < nbw;i++)
-         nw += s1._t[i] == s2._t[i];
-      return nw == nbw;
-      */
-      unsigned short nw = s1._t[0] == s2._t[0], i=1;
-      for(;i < nbw && nw == i;i++)
-         nw += s1._t[i] == s2._t[i];
-      return nw == i;
-
+      switch(nbw) {
+         case 4: {
+            typedef unsigned _BitInt(128) u128;
+            u128* p1 = (u128*)s1._t;
+            u128* p2 = (u128*)s2._t;
+            u128* p3 = (u128*)(s1._t+2);
+            u128* p4 = (u128*)(s2._t+2);
+            return (*p1 == *p2) && (*p3 == *p4);
+         }break;
+         case 2: {
+            typedef unsigned _BitInt(128) u128;
+            u128* p1 = (u128*)&s1._t;
+            u128* p2 = (u128*)&s2._t;
+            return *p1 == *p2;
+         }break;
+         case 1: {
+            return s1._t[0] == s2._t[0];
+         }break;
+         default:
+            unsigned short nw = s1._t[0] == s2._t[0], i=1;
+            for(;i < nbw && nw == i;i++)
+               nw += s1._t[i] == s2._t[i];
+            return nw == i;
+      }
    }
    friend NatSet operator-(int l,const NatSet& s2) noexcept            { return NatSet(l,s2);}
    friend NatSet operator|(const NatSet& s1,const NatSet& s2) noexcept { return std::move(NatSet(s1).unionWith(s2));}

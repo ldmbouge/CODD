@@ -27,9 +27,7 @@ int filterDom(bool &newGuyDominated, Bounds& bnds, AbstractDD::Ptr dd, std::vect
    auto begin = nodes.rbegin();
    for (auto i = begin; i != end; i++) {
       auto n = *i;
-      auto sz = nodes.size();
-
-      //for (auto j = i+1; j != end; j++) {
+      [[maybe_unused]] auto sz = nodes.size();
       for (auto j = begin; j != end; j++) {
          auto other = *j;
          if(i == j) continue;
@@ -38,10 +36,6 @@ int filterDom(bool &newGuyDominated, Bounds& bnds, AbstractDD::Ptr dd, std::vect
          if (newGuyDominated) {
             break;          
          }
-         // bool objDom   = dd->isBetterEQ(n->getBound(),(*j)->getBound());
-         // bool qnDominated = objDom && dd->dominates(n,*j);
-         // if (!qnDominated)
-         //    survived->push_back(n);
       }
       if(!newGuyDominated) {
          survived->push_back(n);
@@ -80,13 +74,13 @@ int filterDom(bool &newGuyDominated, Bounds& bnds, AbstractDD::Ptr dd, std::vect
 void BAndBRestrictedFirst::search(Bounds& bnds)
 {
    // Setup
-   static int nbRELAX = 0;
+   [[maybe_unused]] static int nbRELAX = 0;
    auto bbPool = _theDD->makeNDAllocator();
    using namespace std;
    unsigned int nbSeen = 0;
    std::streamsize ss = cout.precision();
    auto start = RuntimeMonitor::cputime();
-   auto last = start;
+   [[maybe_unused]] auto last = start;
    cout << "B&B(RF) searching..." << endl;
    bnds.attach(_theDD);
    double optTime = 0.0;
@@ -197,7 +191,7 @@ void BAndBRestrictedFirst::search(Bounds& bnds)
       //std::cout << "discardSet   :" << discardSet.size() << "\n";
       //std::cout << "survivedLocal:" << survivedLocal.size() << "\n";      
       //std::cout << "survivedDom  :" << survivedDom.size() << "\n";
-      int nbRELAX = 0;
+      [[maybe_unused]] int nbRELAX = 0;
       for(auto n: survivedDom) {
          nbRELAX++;
          bool dualBetter = relaxed->apply(n, bnds);

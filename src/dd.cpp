@@ -32,7 +32,7 @@ struct MMDKey {
    AbstractDD* _dd;
    MMDKey(AbstractDD* dd) : _dd(dd) {}
    bool operator()( const double& lhs, const double& rhs ) const {
-      return _dd->isBetter(lhs,rhs);
+      return _dd->isBetterEQ(lhs,rhs);
    }
 };
 
@@ -55,17 +55,38 @@ public:
    }
    ANode::Ptr checkDominance(ANode::Ptr n,double nObj) {
       AbstractDD* theDD = _dd.theDD();
-      auto cmp = _mmap.key_comp();
+      //auto cmp = _mmap.key_comp();
       // for(const auto& [key,o] : _mmap) {
-      //    std::cout << std::fixed << key << " BETTER " << nObj << " " << cmp(key,nObj) << " ";         
+      //    std::cout << std::fixed << "(" << key
+      //              << " <= " << nObj << " " << cmp(key,nObj) << ") ";         
       // }
       // std::cout << "\n";
-      for(const auto& [key,o] : _mmap) {
-         if (cmp(key,nObj)) {
-            if (theDD->dominates(o,n)) 
-               return o;
-         } else break;
+      [[maybe_unused]] int nb = 0;
+      auto at = _mmap.upper_bound(nObj);
+      auto start = _mmap.begin();      
+      // std::cout << "UB from:"<< nObj << " yields:"
+      //           << (at != _mmap.end() ? at->first : -1) << " Distance:"
+      //           << std::distance(start,at) << "\n";
+      //for(auto it = start;it != at;it++) {
+      for(auto it = at;it != start;it--) {
+         //auto key = it->first;
+         auto o   = it->second;
+         //assert(cmp(key,nObj) > 0);
+         if (theDD->dominates(o,n)) {
+            //std::cout << "DOM:" << nb << "/" << _mmap.size() << "\n";
+            return o;
+         }
+         nb++;
       }
+      // for(const auto& [key,o] : _mmap) {
+      //    if (cmp(key,nObj)) {
+      //       if (theDD->dominates(o,n)) {
+      //          std::cout << "DOM:" << nb << "/" << _mmap.size() << "\n";
+      //          return o;
+      //       }
+      //    } else break;
+      //    nb++;
+      // }
       return nullptr;      
    }
    bool empty() const noexcept {
@@ -549,6 +570,7 @@ void Restricted::compute(Bounds& bnds)
       discarding = false;
       //std::cout << "qn popped" << std::endl;
       auto lk = qn.pullLayer(); // We have in lk the queue content for layer cL, dk is what we discard
+      ANode::Ptr lastDom = nullptr;
       for(auto p : lk) { // loop over layer lk. p is a "parent" node.         
          if(discarding) { // pickup discarded parents
             _discardedSet.push_back(p);
@@ -563,8 +585,14 @@ void Restricted::compute(Bounds& bnds)
                auto theCost = _dd->cost(p,l);
                auto ep = p->getBound() + theCost;
                if (hasDom && newNode) {
-                  auto dominator = qn.checkDominance(child,ep);
+                  ANode::Ptr dominator = nullptr;
+                  /*if (lastDom && _dd->isBetterEQ(lastDom->getBound(),ep)
+                      && _dd->dominates(lastDom,child))
+                     dominator = lastDom;
+                     else */
+                  dominator = qn.checkDominance(child,ep);
                   if (dominator) {
+                     lastDom = dominator;
                      _dd->_an.pop_back();
                      child = dominator;
                      newNode = false;
