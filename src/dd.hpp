@@ -275,12 +275,13 @@ public:
    }
 };
 
+class DQueue;
 class WidthBounded :public Strategy {
 protected:
    unsigned _mxw;
    NDArray  _nda;
    NDArray& pullLayer(CQueue<ANode::Ptr>& q);
-   std::size_t estimate(CQueue<ANode::Ptr>& q);
+   std::size_t estimate(DQueue&);
 public:
    WidthBounded(const unsigned mxw) : Strategy(),_mxw(mxw) {}
    void setWidth(unsigned  mxw) { _mxw = mxw;}

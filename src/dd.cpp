@@ -14,6 +14,88 @@
 #include <sys/wait.h>
 #include <stdlib.h>
 
+class ANQueue {
+protected:
+   Relaxed&   _dd;
+public:
+   typedef std::shared_ptr<ANQueue> Ptr;
+   ANQueue(Relaxed& dd) : _dd(dd) {}
+   virtual ~ANQueue() {}
+   virtual void enQueue(const ANode::Ptr& n) noexcept = 0;
+   virtual ANode::Ptr checkDominance(ANode::Ptr n,double nObj) = 0;
+   virtual bool empty() const noexcept = 0;
+   virtual std::size_t size() const noexcept = 0;
+   virtual std::list<ANode::Ptr> pullLayer() noexcept = 0;
+};
+
+struct MMDKey {
+   AbstractDD* _dd;
+   MMDKey(AbstractDD* dd) : _dd(dd) {}
+   bool operator()( const double& lhs, const double& rhs ) const {
+      return _dd->isBetter(lhs,rhs);
+   }
+};
+
+class DQueue {
+   Restricted&                             _dd;
+   std::list<ANode::Ptr>                   _rest;
+   std::multimap<double,ANode::Ptr,MMDKey> _mmap;
+   unsigned                              _cLayer;
+public:
+   DQueue(Restricted& dd)
+      : _dd(dd),_rest(),_mmap(MMDKey(dd.theDD()))
+   {}
+   void enQueue(const ANode::Ptr& n) noexcept {
+      if (_mmap.size()==0) {
+         _cLayer = n->getLayer();
+         _mmap.insert({n->getBound(),n});
+      } else if (_cLayer == n->getLayer())
+         _mmap.insert({n->getBound(),n});
+      else _rest.push_back(n);
+   }
+   ANode::Ptr checkDominance(ANode::Ptr n,double nObj) {
+      AbstractDD* theDD = _dd.theDD();
+      auto cmp = _mmap.key_comp();
+      // for(const auto& [key,o] : _mmap) {
+      //    std::cout << std::fixed << key << " BETTER " << nObj << " " << cmp(key,nObj) << " ";         
+      // }
+      // std::cout << "\n";
+      for(const auto& [key,o] : _mmap) {
+         if (cmp(key,nObj)) {
+            if (theDD->dominates(o,n)) 
+               return o;
+         } else break;
+      }
+      return nullptr;      
+   }
+   bool empty() const noexcept {
+      return _mmap.size() + _rest.size() ==0;
+   }
+   std::size_t size() const noexcept {
+      return _mmap.size() + _rest.size(); 
+   }
+   std::size_t firstLayerSize() const noexcept {
+      return _mmap.size();
+   }
+   std::list<ANode::Ptr> pullLayer() noexcept {
+      std::list<ANode::Ptr> retVal;
+      for(const auto& [key,val] : _mmap)
+         retVal.push_back(val);  // keep the same order
+      _mmap.clear(); // empties the map.
+      _cLayer = (_rest.size() > 0) ? _rest.front()->getLayer() : -1;
+      for(auto i = _rest.begin(); i != _rest.end();) {
+         const auto n = *i;
+         if (n->getLayer() != _cLayer)
+            break;
+         //std::cout << "adding: " << (*i)->getId() << "\n" << std::flush;
+         _mmap.insert({n->getBound(),n});
+         i = _rest.erase(i);        
+      }
+      // Only thing left in _rest are guys with layer > _cLayer
+      return retVal;
+   } 
+};
+
 
 Bounds::Bounds(std::shared_ptr<AbstractDD> dd)
 {
@@ -399,17 +481,18 @@ NDArray& WidthBounded::pullLayer(CQueue<ANode::Ptr>& qn)
    return _nda;
 }
 
-std::size_t WidthBounded::estimate(CQueue<ANode::Ptr>& qn)
+std::size_t WidthBounded::estimate(DQueue& qn)
 {
-   ANode::Ptr n = qn.peek();
-   auto layer = n->getLayer();
-   std::size_t nb = 0;
-   qn.doOnAll([layer,&nb](auto aNodeLoc) {
-      // std::cout << "aNodeLoc->value()->getLayer() = " << aNodeLoc->value()->getLayer();
-      // std::cout << " TRG: " << layer << "\n";
-      nb += aNodeLoc->value()->getLayer()==layer;
-   });
-   return nb;
+   return qn.firstLayerSize();
+   // ANode::Ptr n = qn.peek();
+   // auto layer = n->getLayer();
+   // std::size_t nb = 0;
+   // qn.doOnAll([layer,&nb](auto aNodeLoc) {
+   //    // std::cout << "aNodeLoc->value()->getLayer() = " << aNodeLoc->value()->getLayer();
+   //    // std::cout << " TRG: " << layer << "\n";
+   //    nb += aNodeLoc->value()->getLayer()==layer;
+   // });
+   // return nb;
 }
 
 void WidthBounded::tighten(ANode::Ptr nd) noexcept
@@ -457,44 +540,30 @@ void Restricted::compute(Bounds& bnds)
    _dd->_exact = true;
    auto root = _dd->init();
    _dd->target();
-   CQueue<ANode::Ptr> qn(32);
+   DQueue qn(*this);
    root->setLayer(0);
    qn.enQueue(root);
-
    bool discarding = false;
    _discardedSet.clear();
-
    while (!qn.empty()) {
       discarding = false;
       //std::cout << "qn popped" << std::endl;
-      auto& lk = pullLayer(qn); // We have in lk the queue content for layer cL
-      for(auto p : lk) { // loop over layer lk. p is a "parent" node.
-         
+      auto lk = qn.pullLayer(); // We have in lk the queue content for layer cL, dk is what we discard
+      for(auto p : lk) { // loop over layer lk. p is a "parent" node.         
          if(discarding) { // pickup discarded parents
-            //std::cout << "discarding parent..." << std::endl;
             _discardedSet.push_back(p);
             continue; // do not expand discarded parent
-         }
-
-         // std::cout << "parent: ";
-         // _dd->printNode(std::cout, p);
-         // std::cout << std::endl;
-         
+         }         
          auto remLabels = _dd->getLabels(p,DDRestricted);
          while(remLabels->more()) {
             auto l = remLabels->getAndNext();
-            //std::cout << "label: " << l << std::endl;
             auto child = _dd->transition(bnds,p,l); // we get back a new node, or an already existing one.
             if (child) {
-               // std::cout << "child: ";
-               // _dd->printNode(std::cout, child);
-               // std::cout << std::endl;
-
                bool newNode = child->nbParents()==0; // is this a newly created node?
                auto theCost = _dd->cost(p,l);
                auto ep = p->getBound() + theCost;
                if (hasDom && newNode) {
-                  auto dominator = checkDominance(qn,child,ep);
+                  auto dominator = qn.checkDominance(child,ep);
                   if (dominator) {
                      _dd->_an.pop_back();
                      child = dominator;
@@ -504,46 +573,32 @@ void Restricted::compute(Bounds& bnds)
                Edge::Ptr e = new (_dd->_mem) Edge(p,child,l);
                e->_obj = theCost;
                _dd->addArc(e); // connect to new node
-               //std::cout << "isBetter(parent+cost=" << ep << ", child=" << child->getBound() << ") = " << _dd->isBetter(ep,child->getBound()) << std::endl;
                if (_dd->isBetter(ep,child->getBound())) {
                   child->setBound(ep);
                   child->_optLabels = p->_optLabels;
                   child->_optLabels.push_back(e->_lbl);
                }
                child->setLayer(std::max(child->getLayer(),p->getLayer()+1));
-
                if(discarding) { // if node has additional labels, add it to discarded
-                  // std::cout << "discarding child...  ";
-                  // _dd->printNode(std::cout, child);
-                  // std::cout << std::endl;
                   _discardedSet.push_back(child);
-                  //goto nextParent; // do not process discarded child
                   goto nextLabel;
                }
-
                if (!_dd->eqSink(child)) {
                   if (newNode) {
                      qn.enQueue(child);
                      auto nbNode = estimate(qn);
-                     //std::cout << "#NODES: " << nbNode << "\n";
                      if (nbNode > _mxw - 1) {
-                        //std::cout << "JUMP..." << nbNode << '/' << _mxw << "\n";
                         _dd->_exact = false;
                         discarding = true;
-                        //goto nextParent;
-                        //goto next;
                      }
                   }
                }
             }  
             nextLabel:;          
          }
-         //nextParent:;
       }         
-   //next:;
    }
-   //_dd->computeBestBackward(getName()); // testing
-   
+   //_dd->computeBestBackward(getName()); // testing   
    //_dd->computeBest(getName());
    tighten(_dd->_trg);
    //_dd->display();
@@ -696,19 +751,7 @@ void Relaxed::adjustBounds(ANode::Ptr nd)
       }
    }
 } 
-class ANQueue {
-protected:
-   Relaxed&   _dd;
-public:
-   typedef std::shared_ptr<ANQueue> Ptr;
-   ANQueue(Relaxed& dd) : _dd(dd) {}
-   virtual ~ANQueue() {}
-   virtual void enQueue(const ANode::Ptr& n) noexcept = 0;
-   virtual ANode::Ptr checkDominance(ANode::Ptr n,double nObj) = 0;
-   virtual bool empty() const noexcept = 0;
-   virtual std::size_t size() const noexcept = 0;
-   virtual std::list<ANode::Ptr> pullLayer() noexcept = 0;
-};
+
 
 struct MMKey {
    AbstractDD* _dd;
@@ -735,9 +778,10 @@ public:
       else _rest.push_back(n);
    }
    ANode::Ptr checkDominance(ANode::Ptr n,double nObj) {
-      AbstractDD* theDD = _dd.theDD();      
+      AbstractDD* theDD = _dd.theDD();
+      auto cmp = _mmap.key_comp();
       for(const auto& [key,o] : _mmap) {
-         if (key > nObj) break;
+         if (cmp(key,nObj)) break;
          if (theDD->dominates(o,n)) 
             return o;         
       }
