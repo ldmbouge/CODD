@@ -50,61 +50,43 @@ void BAndBRestrictedOnly::search(Bounds& bnds)
    cout << "----------------------------------------------\n";
    while(!pq.empty()) {
       auto bbn = pq.extractMax();
-
-      // std::cout << "dequeued: ";
-      // restricted->printNode(std::cout, bbn.node);
-      // std::cout << std::endl;
-
-      
       auto curDual = bbn.bound;
       bnds.setDual(bbn.node->getBound(),curDual);
-
-      // auto compDual = bbn.node->getBound() + restricted->local(bbn.node, LocalContext::DDInit);
-      // //cout << "DUAL KEY:" << curDual << " dualCOMP:" << compDual << "\n";
-      // if (!restricted->isBetterEQ(compDual,curDual)) {
-      //    //cout<< " dual comp improve!\n";
-      //    curDual = compDual;
-      // }
       ttlNode++;
-      // cout << "CURDUAL:" << curDual << "\t PRIMAL:" << bnds.getPrimal()
-      //        << " isBetter:" << restricted->isBetter(curDual,bnds.getPrimal()) << "\n";
-      // if (!restricted->isBetter(curDual,bnds.getPrimal())) {
-      //    bbPool->release(bbn.node);
-      //    continue;
-      // }
       nNode++;
-      [[maybe_unused]] bool primalBetter = restricted->apply(bbn.node,bnds);
-      //cout << "primalBetter? " << primalBetter << endl;
-      //if (primalBetter) {
+      restricted->apply(bbn.node,bnds);
             
-         auto discardSet = restricted->theDiscardedSet();
-         //cout << "discarded set: " << discardSet << endl;
-         for(auto n : discardSet) {
-               
-            // std::cout << "discarded: ";
-            // restricted->printNode(std::cout, n);
-            // std::cout << std::endl;
+      auto discardSet = restricted->theDiscardedSet();
 
-            // if (!restricted->isBetter(n->getBound() + n->getBackwardBound(),bnds.getDual())) {
-            //    continue; // the loop over the discard set! Not the main loop
-            // }
+      // std::vector<ANode::Ptr> survivedLocal;
+      // std::vector<ANode::Ptr> survivedDom;
 
-            auto nd = bbPool->cloneNode(n);
-            if (nd) {
-               assert(nd->getBound() == n->getBound());
-               //cout << "new bnd: " << nd->getBound() << endl;
-               // cout << "adding to q: ";
-               // restricted->printNode(std::cout, nd);
-               // cout << endl;
-               pq.insertHeap(QNode {nd, nd->getBound()+nd->getBackwardBound() });
-            } // else {
-            //    cout << "clone failed: " << endl << "\t";
-            //    restricted->printNode(std::cout, n);
-            //    cout << endl;
-            // }
+      // if(restricted->hasLocal()) {
+      //    filterLocal(bnds, restricted, discardSet, &survivedLocal);
+      // } else {
+      //    survivedLocal = discardSet;
+      // }
+      // bool newGuyDominated = false;
+      // if (restricted->hasDominance()) {
+      //    int tmpPruned = filterDom<decltype(hOrder)>(newGuyDominated, bnds, restricted, survivedLocal, &pq, &survivedDom);
+      //    insDom += discardSet.size() - survivedDom.size();
+      //    pruned += tmpPruned;
+      // } else {
+      //    survivedDom = survivedLocal;
+      // }
+
+      for(auto n : discardSet) {
+
+         // if (!restricted->isBetter(n->getBound() + n->getBackwardBound(),bnds.getDual())) {
+         //    continue; // the loop over the discard set! Not the main loop
+         // }
+
+         auto nd = bbPool->cloneNode(n);
+         if (nd) {
+            assert(nd->getBound() == n->getBound());
+            pq.insertHeap(QNode {nd, nd->getBound()+nd->getBackwardBound() });
          }
-
-      //}
+      }
       bbPool->release(bbn.node);
    }
 

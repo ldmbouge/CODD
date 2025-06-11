@@ -129,6 +129,8 @@ public:
    bool isExact() const { return _exact;}
    virtual AbstractDD::Ptr duplicate() = 0;
    virtual void makeInitFrom(ANode::Ptr src) {}
+   template <class ST> static constexpr auto nullmerge = [](const ST&,const ST&) -> std::optional<ST> {return std::nullopt;};
+   template <class ST> using nullmerge_t = decltype(nullmerge<ST>);
 };
 
 class Strategy {
@@ -539,6 +541,7 @@ private:
       auto cVal = _stc(op->get(),label);
       return cVal;
    }
+
    ANode::Ptr merge(const ANode::Ptr f,const ANode::Ptr s) {
       auto fp = static_cast<const Node<ST>*>(f.get());
       auto sp = static_cast<const Node<ST>*>(s.get());
@@ -567,7 +570,7 @@ private:
       auto sp = static_cast<const Node<ST>*>(s.get());
       return _sdom(fp->get(),sp->get());
    }
-public:
+public:   
    DD(std::function<ST()> sti,IBL2 stt,LGF lgf,STF stf,STC stc,SMF smf,
       EQSink eqs,const GNSet& labels,
       std::function<double(const ST&,LocalContext)> local = nullptr,
