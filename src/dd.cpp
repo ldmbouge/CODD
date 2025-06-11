@@ -53,14 +53,8 @@ public:
          _mmap.insert({n->getBound(),n});
       else _rest.push_back(n);
    }
-   ANode::Ptr checkDominance(ANode::Ptr n,double nObj) {
+   std::pair<ANode::Ptr,std::list<ANode::Ptr>> checkDominance(ANode::Ptr n,double nObj) {
       AbstractDD* theDD = _dd.theDD();
-      //auto cmp = _mmap.key_comp();
-      // for(const auto& [key,o] : _mmap) {
-      //    std::cout << std::fixed << "(" << key
-      //              << " <= " << nObj << " " << cmp(key,nObj) << ") ";         
-      // }
-      // std::cout << "\n";
       [[maybe_unused]] int nb = 0;
       auto at = _mmap.upper_bound(nObj);
       auto start = _mmap.begin();      
@@ -68,26 +62,37 @@ public:
       //           << (at != _mmap.end() ? at->first : -1) << " Distance:"
       //           << std::distance(start,at) << "\n";
       //for(auto it = start;it != at;it++) {
-      for(auto it = at;it != start;it--) {
+      ANode::Ptr dominator = nullptr;
+      for(auto it = at;it != start && it != _mmap.end();it--) {
          //auto key = it->first;
          auto o   = it->second;
          //assert(cmp(key,nObj) > 0);
          if (theDD->dominates(o,n)) {
             //std::cout << "DOM:" << nb << "/" << _mmap.size() << "\n";
-            return o;
+            dominator = o;
+            break;
          }
          nb++;
       }
-      // for(const auto& [key,o] : _mmap) {
-      //    if (cmp(key,nObj)) {
-      //       if (theDD->dominates(o,n)) {
-      //          std::cout << "DOM:" << nb << "/" << _mmap.size() << "\n";
-      //          return o;
-      //       }
-      //    } else break;
-      //    nb++;
-      // }
-      return nullptr;      
+      //return {dominator,std::list<ANode::Ptr>()};
+      //int nbDom = 0;
+      std::list<ANode::Ptr> dominee;
+      for(auto it = at; it != _mmap.end();) {
+         auto key = it->first;
+         auto o = it->second; // these guys are worse than (n,nObj) (>= nObj when minimizing).
+         // They could be dominated. Collate them into a list to be all replaced by the new guy
+         // (or its dominator)
+         if (theDD->dominates(n,o)) {
+            //nbDom++;
+            // std::cout << "new:" << std::fixed << nObj
+            //           << " dominates " << key << " SZ:" << nbDom << "/" << _mmap.size()
+            //           << " #children:" << o->nbChildren()
+            //           << "\n";
+            it = _mmap.erase(it);
+            dominee.push_back(o);
+         } else it++;
+      }
+      return {dominator,dominee};      
    }
    bool empty() const noexcept {
       return _mmap.size() + _rest.size() ==0;
@@ -570,7 +575,6 @@ void Restricted::compute(Bounds& bnds)
       discarding = false;
       //std::cout << "qn popped" << std::endl;
       auto lk = qn.pullLayer(); // We have in lk the queue content for layer cL, dk is what we discard
-      ANode::Ptr lastDom = nullptr;
       for(auto p : lk) { // loop over layer lk. p is a "parent" node.         
          if(discarding) { // pickup discarded parents
             _discardedSet.push_back(p);
@@ -585,17 +589,19 @@ void Restricted::compute(Bounds& bnds)
                auto theCost = _dd->cost(p,l);
                auto ep = p->getBound() + theCost;
                if (hasDom && newNode) {
-                  ANode::Ptr dominator = nullptr;
-                  /*if (lastDom && _dd->isBetterEQ(lastDom->getBound(),ep)
-                      && _dd->dominates(lastDom,child))
-                     dominator = lastDom;
-                     else */
-                  dominator = qn.checkDominance(child,ep);
+                  auto [dominator,dominee] = qn.checkDominance(child,ep);
                   if (dominator) {
-                     lastDom = dominator;
                      _dd->_an.pop_back();
                      child = dominator;
                      newNode = false;
+                  }
+                  for(const auto& dominated : dominee) {
+                     if (dominated == child) {
+                        std::cout << "Something wrong. We should not have the new guy in the dominee list\n"; 
+                        abort();                        
+                     }
+                     transferArcs(dominated,child); // child replace all of them
+                     _dd->_an.remove(dominated);    // they are no longer in the DD
                   }
                }         
                Edge::Ptr e = new (_dd->_mem) Edge(p,child,l);
@@ -635,7 +641,7 @@ void Restricted::compute(Bounds& bnds)
 // ----------------------------------------------------------------------
 // Relaxed DD Strategy
 
-void Relaxed::transferArcs(ANode::Ptr donor,ANode::Ptr receiver)
+void WidthBounded::transferArcs(ANode::Ptr donor,ANode::Ptr receiver)
 {
    for(auto ei = donor->beginPar(); ei != donor->endPar();ei++) {
       auto ep = *ei;

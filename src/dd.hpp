@@ -284,6 +284,7 @@ protected:
    NDArray  _nda;
    NDArray& pullLayer(CQueue<ANode::Ptr>& q);
    std::size_t estimate(DQueue&);
+   void transferArcs(ANode::Ptr donor,ANode::Ptr receiver);
 public:
    WidthBounded(const unsigned mxw) : Strategy(),_mxw(mxw) {}
    void setWidth(unsigned  mxw) { _mxw = mxw;}
@@ -312,7 +313,6 @@ struct NDAction {
 };
 
 class Relaxed :public WidthBounded {
-   void transferArcs(ANode::Ptr donor,ANode::Ptr receiver);
 public:
    Relaxed(const unsigned mxw) : WidthBounded(mxw) {}
    const std::string getName() const { return "Relaxed";}
