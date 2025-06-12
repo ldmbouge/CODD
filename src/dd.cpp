@@ -84,7 +84,7 @@ public:
          // (or its dominator)
          if (theDD->dominates(n,o)) {
             //nbDom++;
-            // std::cout << "new:" << std::fixed << nObj
+            // std::cout << "new:" << std:G:fixed << nObj
             //           << " dominates " << key << " SZ:" << nbDom << "/" << _mmap.size()
             //           << " #children:" << o->nbChildren()
             //           << "\n";
