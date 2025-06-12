@@ -9,17 +9,6 @@
 #include "RuntimeMonitor.hpp"
 #include "pool.hpp"
 
-std::vector<ANode::Ptr> filterLocal(Bounds& bnds, AbstractDD::Ptr dd, std::vector<ANode::Ptr> nodes)
-{
-   std::vector<ANode::Ptr> survived;
-   for(auto n: nodes) {
-      double localDual = dd->local(n, LocalContext::BBCtx);
-      if(!dd->isBetterEQ(bnds.getPrimal(), n->getBound() + localDual)) 
-         survived.push_back(n);      
-   }
-   return survived;
-}
-
 template<typename Heap>
 std::tuple<int,bool,std::vector<ANode::Ptr>> filterDom(Bounds& bnds,
                                                        AbstractDD::Ptr dd,

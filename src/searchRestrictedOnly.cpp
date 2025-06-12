@@ -93,7 +93,7 @@ void BAndBRestrictedOnly::search(Bounds& bnds)
         << "\t Time:" << optTime/1000 << "/" << spent/1000 << "s"
         << "\t LIM?:" << (pq.size() > 0)
         << "\t Seen:" << nbSeen
-        << "\nSol: " << bnds
+      //   << "\nSol: " << bnds
         << "\n";
 }
 

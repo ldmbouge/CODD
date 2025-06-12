@@ -60,6 +60,6 @@ void BAndBRestrictedOnlyNoQ::search(Bounds& bnds)
    cout << "Done(" << _mxw << "):" << bnds.getPrimal() << "\t #iterations:" <<  nIter
         << "\t Time:" << optTime/1000 << "/" << spent/1000 << "s"
         << "\tWidth: " << _mxw << "/" << ddr->getWidth()
-        << "\nSol: " << bnds
+        //<< "\nSol: " << bnds
         << "\n";
 }
