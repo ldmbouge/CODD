@@ -58,14 +58,10 @@ void BAndBRestrictedOnly::search(Bounds& bnds)
             
       auto discardSet = restricted->theDiscardedSet();
 
-      // std::vector<ANode::Ptr> survivedLocal;
       // std::vector<ANode::Ptr> survivedDom;
+      // std::vector<ANode::Ptr> survivedLocal = restricted->hasLocal() ?
+      //    filterLocal(bnds, restricted, discardSet) : discardSet;
 
-      // if(restricted->hasLocal()) {
-      //    filterLocal(bnds, restricted, discardSet, &survivedLocal);
-      // } else {
-      //    survivedLocal = discardSet;
-      // }
       // bool newGuyDominated = false;
       // if (restricted->hasDominance()) {
       //    int tmpPruned = filterDom<decltype(hOrder)>(newGuyDominated, bnds, restricted, survivedLocal, &pq, &survivedDom);
