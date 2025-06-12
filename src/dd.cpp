@@ -78,7 +78,7 @@ public:
       //int nbDom = 0;
       std::list<ANode::Ptr> dominee;
       for(auto it = at; it != _mmap.end();) {
-         auto key = it->first;
+         //auto key = it->first;
          auto o = it->second; // these guys are worse than (n,nObj) (>= nObj when minimizing).
          // They could be dominated. Collate them into a list to be all replaced by the new guy
          // (or its dominator)
