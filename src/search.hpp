@@ -4,6 +4,7 @@
 #include <functional>
 #include "dd.hpp"
 #include "store.hpp"
+#include "heap.hpp"
 
 struct QNode {
    ANode::Ptr node;
@@ -14,6 +15,59 @@ struct QNode {
                 << q.node->getBackwardBound() << ")," << q.bound << "]";
    }
 };
+
+void filterLocal(Bounds& bnds, AbstractDD::Ptr dd, std::vector<ANode::Ptr> nodes, std::vector<ANode::Ptr>* survived);
+template<typename Ord>
+int filterDom(bool &newGuyDominated, Bounds& bnds, AbstractDD::Ptr dd, std::vector<ANode::Ptr> nodes, Heap<QNode,Ord>* pq, std::vector<ANode::Ptr>* survived)
+{
+   newGuyDominated = false;
+   auto end = nodes.rend();
+   auto begin = nodes.rbegin();
+   for (auto i = begin; i != end; i++) {
+      auto n = *i;
+      [[maybe_unused]] auto sz = nodes.size();
+      for (auto j = begin; j != end; j++) {
+         auto other = *j;
+         if(i == j) continue;
+         bool isObjDom = dd->isBetterEQ(other->getBound(),n->getBound());
+         newGuyDominated = isObjDom && dd->dominates(other,n);
+         if (newGuyDominated) {
+            break;          
+         }
+      }
+      if(!newGuyDominated) {
+         survived->push_back(n);
+      }
+   }
+
+   int pruned = 0;
+   for(auto n: nodes) {
+      unsigned d = 0;
+      auto pqSz = pq->size();
+      auto allLocs = new Heap<QNode,Ord>::LocType*[pqSz];
+      for(unsigned k = 0;k < pqSz;k++) {
+         auto other = (*pq)[k];
+         bool isObjDom   = dd->isBetterEQ(other->value().node->getBound(),n->getBound());
+         newGuyDominated = isObjDom && dd->dominates(other->value().node,n);
+         if (newGuyDominated) {
+            goto prune;             
+         }        
+         bool objDom   = dd->isBetterEQ(n->getBound(),other->value().node->getBound());
+         bool qnDominated = objDom && dd->dominates(n,other->value().node);
+         if (qnDominated)
+            allLocs[d++] = other;
+      }
+
+      prune:
+      if (d) {
+         for(auto i =0u; i < d;i++) 
+            pq->remove(allLocs[i]);
+         pruned += d;
+      }
+      delete[]allLocs;
+   }
+   return pruned;
+}
 
 class BAndB {
 protected:

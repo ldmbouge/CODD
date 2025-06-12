@@ -1,4 +1,5 @@
 build/**
+debug/**
 release/**
 **/.DS_Store
 **/*~

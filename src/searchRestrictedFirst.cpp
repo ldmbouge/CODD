@@ -163,7 +163,6 @@ void BAndBRestrictedFirst::search(Bounds& bnds)
 
       auto discardSet = restricted->theDiscardedSet();
       std::vector<ANode::Ptr> survivedLocal = hasLocal ? filterLocal(bnds, relaxed, discardSet) : discardSet;
-
       auto [tmpPruned,newGuyDominated,survivedDom] = filterDom(bnds, relaxed, survivedLocal, &pq);
       insDom += survivedLocal.size() - survivedDom.size();
       pruned += tmpPruned;
@@ -201,7 +200,8 @@ void BAndBRestrictedFirst::search(Bounds& bnds)
 
    cout << setprecision(ss);
    auto spent = RuntimeMonitor::elapsedSince(start);
-   cout << "Done(" << _mxw << "):" << std::setprecision (std::numeric_limits<double>::digits10 + 1) << bnds.getPrimal() << "\t #nodes:" <<  nNode << "/" << ttlNode
+   cout << "Done(" << _mxw << "):" << std::setprecision (std::numeric_limits<double>::digits10 + 1)
+        << bnds.getPrimal() << "\t #nodes:" <<  nNode << "/" << ttlNode
         << "\t P/D:" << pruned << "/" << insDom
         << "\t Time:" << optTime/1000 << "/" << spent/1000 << "s"
         << "\t LIM?:" << (pq.size() > 0)
