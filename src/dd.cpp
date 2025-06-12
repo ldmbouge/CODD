@@ -77,14 +77,17 @@ public:
       //return {dominator,std::list<ANode::Ptr>()};
       //int nbDom = 0;
       std::list<ANode::Ptr> dominee;
+      const auto ref      = dominator == nullptr ? n    : dominator;
+      const auto refBound = dominator == nullptr ? nObj : dominator->getBound();
       for(auto it = at; it != _mmap.end();) {
          //auto key = it->first;
          auto o = it->second; // these guys are worse than (n,nObj) (>= nObj when minimizing).
          // They could be dominated. Collate them into a list to be all replaced by the new guy
          // (or its dominator)
-         if (theDD->dominates(n,o)) {
+         bool betterObj = theDD->isBetterEQ(refBound,o->getBound()); // Can't use the key, the bound on o may have changed.
+         if (betterObj && theDD->dominates(ref,o)) {
             //nbDom++;
-            // std::cout << "new:" << std::fixed << nObj
+            // std::cout << "new:" << std:G:fixed << nObj
             //           << " dominates " << key << " SZ:" << nbDom << "/" << _mmap.size()
             //           << " #children:" << o->nbChildren()
             //           << "\n";
