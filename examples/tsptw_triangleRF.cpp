@@ -125,8 +125,8 @@ int main(int argc,char* argv[]) {
    const auto target = [sz]() { return TSPTW { TSPTW::Set(),   depot, 0, sz }; };
    const auto lgf = [sz,&d,&tw](const TSPTW& s,DDContext)  {
       if (s.hops >= sz-1) {
-         //return s.t + d[s.e][depot] <= tw[depot].b ? increasing(TSPTW::Set {depot}) : increasing(TSPTW::Set{});
-         return s.t + d[s.e][depot] <= tw[depot].b ? TSPTW::Set {depot} : TSPTW::Set{};
+         return s.t + d[s.e][depot] <= tw[depot].b ? increasing(TSPTW::Set {depot}) : increasing(TSPTW::Set{});
+         //return s.t + d[s.e][depot] <= tw[depot].b ? TSPTW::Set {depot} : TSPTW::Set{};
       } else {
          // std::function<int(int)> order = [curr=s.e,t=s.t,&d,&tw](int u){
          //    return  std::max(t+d[curr][u], tw[u].a);
@@ -137,7 +137,9 @@ int main(int argc,char* argv[]) {
          //    }),
          //    order
          // );
-         return filter(s.U, [&s,&d,&tw](auto& u){ return (u != s.e && u != depot && s.t + d[s.e][u] <= tw[u].b); });
+         //return filter(s.U, [&s,&d,&tw](auto& u){ return (u != s.e && u != depot && s.t + d[s.e][u] <= tw[u].b); });
+         return increasing(filter(s.U, [&s,&d,&tw](auto& u){ return (u != s.e && u != depot && s.t + d[s.e][u] <= tw[u].b);}),
+                           [&d,from=s.e](int to) { return d[from][to];});
       }     
    };
    const auto stf = [sz,&d,&tw](const TSPTW& s,const int label) -> std::optional<TSPTW> {
