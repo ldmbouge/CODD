@@ -20,10 +20,18 @@ std::vector<ANode::Ptr> filterLocal(Bounds& bnds, AbstractDD::Ptr dd, std::vecto
    return survived;
 }
 
-template<typename Ord>
-int filterDom(bool &newGuyDominated, Bounds& bnds, AbstractDD::Ptr dd, std::vector<ANode::Ptr> nodes, Heap<QNode,Ord>* pq, std::vector<ANode::Ptr>* survived)
+template<typename Heap>
+std::tuple<int,bool,std::vector<ANode::Ptr>> filterDom(Bounds& bnds,
+                                                       AbstractDD::Ptr dd,
+                                                       const std::vector<ANode::Ptr>& nodes,
+                                                       Heap* pq)
 {
-   newGuyDominated = false;
+   bool newGuyDominated = false;
+   std::vector<ANode::Ptr> survived;
+   if (!dd->hasDominance()) {
+      survived = nodes;
+      return {0,false,survived};
+   }
    auto end = nodes.rend();
    auto begin = nodes.rbegin();
    for (auto i = begin; i != end; i++) {
@@ -39,7 +47,7 @@ int filterDom(bool &newGuyDominated, Bounds& bnds, AbstractDD::Ptr dd, std::vect
          }
       }
       if(!newGuyDominated) {
-         survived->push_back(n);
+         survived.push_back(n);
       }
    }
 
@@ -47,7 +55,7 @@ int filterDom(bool &newGuyDominated, Bounds& bnds, AbstractDD::Ptr dd, std::vect
    for(auto n: nodes) {
       unsigned d = 0;
       auto pqSz = pq->size();
-      auto allLocs = new Heap<QNode,Ord>::LocType*[pqSz];
+      auto allLocs = new Heap::LocType*[pqSz];
       for(unsigned k = 0;k < pqSz;k++) {
          auto other = (*pq)[k];
          bool isObjDom   = dd->isBetterEQ(other->value().node->getBound(),n->getBound());
@@ -69,7 +77,7 @@ int filterDom(bool &newGuyDominated, Bounds& bnds, AbstractDD::Ptr dd, std::vect
       }
       delete[]allLocs;
    }
-   return pruned;
+   return {pruned,newGuyDominated,survived};
 }
 
 void BAndBRestrictedFirst::search(Bounds& bnds)
@@ -114,7 +122,7 @@ void BAndBRestrictedFirst::search(Bounds& bnds)
    } else {
       pq.insertHeap(QNode { rootNode, restricted->initialWorst() } );
    }
-
+   const bool hasLocal = relaxed->hasLocal();
    unsigned nNode = 0,ttlNode = 0,insDom=0,pruned=0;
    bool primalBetter = false;
    // Main Loop
@@ -154,18 +162,12 @@ void BAndBRestrictedFirst::search(Bounds& bnds)
       primalBetter = restricted->apply(bbn.node,bnds);
 
       auto discardSet = restricted->theDiscardedSet();
-      std::vector<ANode::Ptr> survivedDom;
-      std::vector<ANode::Ptr> survivedLocal = relaxed->hasLocal() ?
-         filterLocal(bnds, relaxed, discardSet) : discardSet;
+      std::vector<ANode::Ptr> survivedLocal = hasLocal ? filterLocal(bnds, relaxed, discardSet) : discardSet;
 
-      bool newGuyDominated = false;
-      if (relaxed->hasDominance()) {
-         int tmpPruned = filterDom<decltype(hOrder)>(newGuyDominated, bnds, relaxed, survivedLocal, &pq, &survivedDom);
-         insDom += discardSet.size() - survivedDom.size();
-         pruned += tmpPruned;
-      } else {
-         survivedDom = survivedLocal;
-      }
+      auto [tmpPruned,newGuyDominated,survivedDom] = filterDom(bnds, relaxed, survivedLocal, &pq);
+      insDom += survivedLocal.size() - survivedDom.size();
+      pruned += tmpPruned;
+      
       //std::cout << "discardSet   :" << discardSet.size() << "\n";
       //std::cout << "survivedLocal:" << survivedLocal.size() << "\n";      
       //std::cout << "survivedDom  :" << survivedDom.size() << "\n";
