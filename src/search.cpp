@@ -9,14 +9,15 @@
 #include "pool.hpp"
 #include "heap.hpp"
 
-void filterLocal(Bounds& bnds, AbstractDD::Ptr dd, std::vector<ANode::Ptr> nodes, std::vector<ANode::Ptr>* survived)
+std::vector<ANode::Ptr> filterLocal(Bounds& bnds, AbstractDD::Ptr dd, std::vector<ANode::Ptr> nodes)
 {
+   std::vector<ANode::Ptr> survived;
    for(auto n: nodes) {
       double localDual = dd->local(n, LocalContext::BBCtx);
-      if(!dd->isBetterEQ(bnds.getPrimal(), n->getBound() + localDual)) {
-         survived->push_back(n);
-      }
+      if(!dd->isBetterEQ(bnds.getPrimal(), n->getBound() + localDual)) 
+         survived.push_back(n);      
    }
+   return survived;
 }
 
 void BAndB::search(Bounds& bnds)
