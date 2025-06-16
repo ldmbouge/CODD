@@ -7,6 +7,7 @@
 #include <limits>
 #include <cstdio>
 #include <map>
+#include <execution>
 #include <unistd.h>
 #include "heap.hpp"
 #include "queue.hpp"
@@ -57,16 +58,11 @@ public:
       AbstractDD* theDD = _dd.theDD();
       [[maybe_unused]] int nb = 0;
       auto at = _mmap.upper_bound(nObj);
-      auto start = _mmap.begin();      
-      ANode::Ptr dominator = nullptr;
-      for(auto it = at;it != start && it != _mmap.end();it--) {
-         auto o   = it->second;
-         if (theDD->dominates(o,n)) {
-            dominator = o;
-            break;
-         }
-         nb++;
-      }
+      auto domIt = std::find_if(_mmap.begin(),at,[theDD,n](const auto& p) {
+         return theDD->dominates(p.second,n);
+      });
+      auto dominator = (domIt != at && domIt != _mmap.end()) ? domIt->second : nullptr;
+
       std::list<ANode::Ptr> dominee;
       const auto ref      = dominator == nullptr ? n    : dominator;
       const auto refBound = dominator == nullptr ? nObj : dominator->getBound();
