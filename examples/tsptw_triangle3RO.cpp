@@ -145,7 +145,7 @@ int main(int argc,char* argv[]) {
 
    const auto init   = [&C] () { return TSPTW { TSPTW::Set{depot}, C - depot   , TSPTW::Set{} ,0, 0, 0}; };
    const auto target = [&sz]() { return TSPTW { TSPTW::Set{depot}, TSPTW::Set{}, TSPTW::Set{} ,sz, 0, 0}; };
-   const auto lgf = [sz,&d,&tw](const TSPTW& s,DDContext)  {
+   const auto lgf = [sz,&d,&tw](const TSPTW& s,DDContext)  noexcept {
       if (s.hops >= sz-1) { /*s.must.empty() && s.may.empty()*/
          const int a = min(s.pos, [ta=s.ta,&d](const int p){ return ta + d[p][depot]; } );
          //const int b = max(s.pos, [tb=s.tb,&d](const int p){ return tb + d[p][depot]; } );
@@ -168,7 +168,7 @@ int main(int argc,char* argv[]) {
          return f;
       }     
    };
-   const auto stf = [sz,&d,&tw,&target](const TSPTW& s,const int label) -> std::optional<TSPTW> {
+   const auto stf = [sz,&d,&tw,&target](const TSPTW& s,const int label) noexcept -> std::optional<TSPTW> {
       if (label==depot) {
          return target();
       } else {
@@ -187,10 +187,10 @@ int main(int argc,char* argv[]) {
          return TSPTW { TSPTW::Set{label}, newMust, s.may-label,s.hops+1, ta, tb };
       }
    };
-   const auto scf = [&d](const TSPTW& s,int label) { // partial cost function 
+   const auto scf = [&d](const TSPTW& s,int label) noexcept { // partial cost function 
       return min(s.pos, [&label](const int p){ return p != label; }, [&label,&d](int p) { return d[p][label]; });
    };
-   const auto eqs = [&sz](const TSPTW& s) -> bool { 
+   const auto eqs = [&sz](const TSPTW& s) noexcept -> bool { 
       return s.pos.contains(depot) && s.hops == sz;// && s.must.empty(); //&& s.may.empty();
    };
    
@@ -259,7 +259,7 @@ int main(int argc,char* argv[]) {
       }
       return std::max(mandatoryIn, mandatoryOut) + returnToDepot;
    };
-   const auto sDom = [](const TSPTW& a,const TSPTW& b) -> bool { 
+   const auto sDom = [](const TSPTW& a,const TSPTW& b) noexcept -> bool { 
       return a.hops == b.hops && a.ta < b.ta && a.pos == b.pos && (a.must <= b.must);
    };
 
