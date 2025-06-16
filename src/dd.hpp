@@ -282,8 +282,7 @@ class WidthBounded :public Strategy {
 protected:
    unsigned _mxw;
    NDArray  _nda;
-   NDArray& pullLayer(CQueue<ANode::Ptr>& q);
-   std::size_t estimate(DQueue&);
+   NDArray& pullLayer(CQueue<ANode::Ptr>& q);  
    void transferArcs(ANode::Ptr donor,ANode::Ptr receiver);
 public:
    WidthBounded(const unsigned mxw) : Strategy(),_mxw(mxw) {}

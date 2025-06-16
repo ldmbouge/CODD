@@ -105,6 +105,69 @@ public:
    } 
 };
 
+class FQueue { // flat queue
+   AbstractDD*                            _theDD;
+   std::list<ANode::Ptr>                   _rest;
+   std::list<ANode::Ptr>                   _main;
+   unsigned                              _cLayer;
+public:
+   FQueue(Restricted& dd)
+      : _theDD(dd.theDD()),_rest(),_main()
+   {}
+   void enQueue(const ANode::Ptr& n) noexcept {
+      if (_main.size()==0) {
+         _cLayer = n->getLayer();
+         _main.push_back(n);
+      } else if (_cLayer == n->getLayer())
+         _main.push_back(n);
+      else _rest.push_back(n);
+   }
+   std::pair<ANode::Ptr,std::list<ANode::Ptr>> checkDominance(ANode::Ptr n,double nObj) {
+      ANode::Ptr dominator = nullptr;
+      std::list<ANode::Ptr> dominee;
+      for(auto it = _main.begin();it != _main.end();) {
+         const auto o   = *it;
+         if (_theDD->isBetterEQ(o->getBound(),nObj) > 0) { // key is better. Could DOMINATE nObj
+            if (dominator==nullptr && _theDD->dominates(o,n)) // no dominator yet
+               dominator = o;
+            it = std::next(it);
+         } else { // key is worse. Could be dominated by nObj
+            if (_theDD->dominates(n,o)) { // new guy dominates iterate (o)
+               dominee.push_back(o);
+               it = _main.erase(it);
+            } else it = std::next(it);
+         }
+      }
+      return {dominator,dominee};      
+   }
+   bool empty() const noexcept {
+      return _main.size() + _rest.size() ==0;
+   }
+   std::size_t size() const noexcept {
+      return _main.size() + _rest.size(); 
+   }
+   std::size_t firstLayerSize() const noexcept {
+      return _main.size();
+   }
+   std::list<ANode::Ptr> pullLayer() noexcept {
+      std::list<ANode::Ptr> retVal = std::move(_main);
+      retVal.sort([dd = _theDD](const ANode::Ptr& a,const ANode::Ptr& b) {
+         return dd->isBetterEQ(a->getBound(),b->getBound());
+      });
+      _cLayer = (_rest.size() > 0) ? _rest.front()->getLayer() : -1;
+      for(auto i = _rest.begin(); i != _rest.end();) {
+         const auto n = *i;
+         if (n->getLayer() != _cLayer)
+            break;
+         //std::cout << "adding: " << (*i)->getId() << "\n" << std::flush;
+         _main.push_back(n);
+         i = _rest.erase(i);        
+      }
+      // Only thing left in _rest are guys with layer > _cLayer
+      return retVal;
+   } 
+};
+
 
 Bounds::Bounds(std::shared_ptr<AbstractDD> dd)
 {
@@ -490,19 +553,6 @@ NDArray& WidthBounded::pullLayer(CQueue<ANode::Ptr>& qn)
    return _nda;
 }
 
-std::size_t WidthBounded::estimate(DQueue& qn)
-{
-   return qn.firstLayerSize();
-   // ANode::Ptr n = qn.peek();
-   // auto layer = n->getLayer();
-   // std::size_t nb = 0;
-   // qn.doOnAll([layer,&nb](auto aNodeLoc) {
-   //    // std::cout << "aNodeLoc->value()->getLayer() = " << aNodeLoc->value()->getLayer();
-   //    // std::cout << " TRG: " << layer << "\n";
-   //    nb += aNodeLoc->value()->getLayer()==layer;
-   // });
-   // return nb;
-}
 
 void WidthBounded::tighten(ANode::Ptr nd) noexcept
 {
@@ -549,7 +599,7 @@ void Restricted::compute(Bounds& bnds)
    _dd->_exact = true;
    auto root = _dd->init();
    _dd->target();
-   DQueue qn(*this);
+   FQueue qn(*this);
    root->setLayer(0);
    qn.enQueue(root);
    bool discarding = false;
@@ -599,7 +649,7 @@ void Restricted::compute(Bounds& bnds)
                if (!_dd->eqSink(child)) {
                   if (newNode) {
                      qn.enQueue(child);
-                     auto nbNode = estimate(qn);
+                     auto nbNode = qn.firstLayerSize();
                      if (nbNode > _mxw - 1) {
                         _dd->_exact = false;
                         discarding = true;
