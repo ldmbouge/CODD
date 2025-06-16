@@ -58,39 +58,23 @@ public:
       [[maybe_unused]] int nb = 0;
       auto at = _mmap.upper_bound(nObj);
       auto start = _mmap.begin();      
-      // std::cout << "UB from:"<< nObj << " yields:"
-      //           << (at != _mmap.end() ? at->first : -1) << " Distance:"
-      //           << std::distance(start,at) << "\n";
-      //for(auto it = start;it != at;it++) {
       ANode::Ptr dominator = nullptr;
       for(auto it = at;it != start && it != _mmap.end();it--) {
-         //auto key = it->first;
          auto o   = it->second;
-         //assert(cmp(key,nObj) > 0);
          if (theDD->dominates(o,n)) {
-            //std::cout << "DOM:" << nb << "/" << _mmap.size() << "\n";
             dominator = o;
             break;
          }
          nb++;
       }
-      //return {dominator,std::list<ANode::Ptr>()};
-      //int nbDom = 0;
       std::list<ANode::Ptr> dominee;
       const auto ref      = dominator == nullptr ? n    : dominator;
       const auto refBound = dominator == nullptr ? nObj : dominator->getBound();
       for(auto it = at; it != _mmap.end();) {
-         //auto key = it->first;
          auto o = it->second; // these guys are worse than (n,nObj) (>= nObj when minimizing).
-         // They could be dominated. Collate them into a list to be all replaced by the new guy
-         // (or its dominator)
+         // They could be dominated. Collate them into a list to be all replaced by the new guy (or its dominator)
          bool betterObj = theDD->isBetterEQ(refBound,o->getBound()); // Can't use the key, the bound on o may have changed.
          if (betterObj && theDD->dominates(ref,o)) {
-            //nbDom++;
-            // std::cout << "new:" << std:G:fixed << nObj
-            //           << " dominates " << key << " SZ:" << nbDom << "/" << _mmap.size()
-            //           << " #children:" << o->nbChildren()
-            //           << "\n";
             it = _mmap.erase(it);
             dominee.push_back(o);
          } else it++;
@@ -599,10 +583,6 @@ void Restricted::compute(Bounds& bnds)
                      newNode = false;
                   }
                   for(const auto& dominated : dominee) {
-                     if (dominated == child) {
-                        std::cout << "Something wrong. We should not have the new guy in the dominee list\n"; 
-                        abort();                        
-                     }
                      transferArcs(dominated,child); // child replace all of them
                      _dd->_an.remove(dominated);    // they are no longer in the DD
                   }
