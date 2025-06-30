@@ -14,6 +14,7 @@
 #include "util.hpp"
 #include "msort.hpp"
 #include "pool.hpp"
+#include <atomic>
 
 class Strategy;
 class AbstractDD;
@@ -21,7 +22,7 @@ class AbstractDD;
 typedef std::function<void(const std::vector<int>&)> SolutionCB;
 
 class Bounds {
-   double _primal,_g,_dual;
+   std::atomic<double> _primal,_g,_dual;
    bool _primalSet,_dualSet;
    std::vector<int> _inc;
    std::list<SolutionCB> _checker;
