@@ -26,6 +26,7 @@ struct TQNode {
       VETTED 
    };
    enum State state = State::OPEN;
+   void setState(State newState) { state = newState; }
 };
 
 template<typename Heap>
@@ -144,15 +145,15 @@ public:
          do {
             if(i >= size()) i = 0;
             at = _heap[i];
-         } while(at->value.state != T::State::OPEN);
-         at->value().state = T::State::STOLEN;
+         } while(at->value().state != T::State::OPEN);
+         at->value().setState(T::State::STOLEN);
          lock.unlock();
          if(p(at->value())) {
             lock.lock();
             _heap.remove(at);
          } else {
             lock.lock();
-            at->value().state = T::State::VETTED;
+            at->value().setState(T::State::VETTED);
          }
          lock.unlock();
       }
