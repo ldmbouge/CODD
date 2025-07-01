@@ -9,6 +9,7 @@
 #include <thread>
 #include <mutex>
 #include <condition_variable>
+#include <queue>
 #include "RuntimeMonitor.hpp"
 #include "pool.hpp"
 
@@ -27,6 +28,7 @@ struct TQNode {
    };
    enum State state = State::OPEN;
    void setState(State newState) { state = newState; }
+   const State getState() const { return state; }
 };
 
 template<typename Heap>
@@ -92,7 +94,7 @@ std::tuple<int,bool,std::vector<ANode::Ptr>> filterDom(Bounds& bnds,
 template <class T,typename Ord = bool(*)(const T&,const T&)> class ThreadSafeHeap {
 
 public:
-   ThreadSafeHeap(Pool::Ptr p,int sz,Ord ord): _heap(p, sz, ord) {}
+   ThreadSafeHeap(Pool::Ptr p,int sz,Ord ord): _heap(p, sz, ord), _ord(ord) {}
 
    typedef Heap<T,Ord>::LocType LocType;
 
@@ -114,21 +116,58 @@ public:
    }
    std::optional<T> extractMax() { 
       std::unique_lock<std::mutex> lock(_mtx);
-      if(size() <= 0) return std::nullopt;
-      return _heap.extractMax();
+      if(empty()) return std::nullopt;
+      std::cout << _heap.size() << "(" << empty() << ")" << "\n";
+      auto tmp = _heap.extractMax();
+      std::cout << _heap.size() << "(" << empty() << ")" << "\n\n";
+      return tmp;
       // unlock _mtx
    }
+
+   template <typename PRED = bool(*)(const T&)>
+   std::optional<T> extractFirstValid(PRED isValid) {
+        auto indexOrd = [this](int a, int b) { return !_ord(**_heap[a], **_heap[b]); }; //std queue used opposite default order
+        std::priority_queue<int, std::vector<int>, decltype(indexOrd)> frontier(indexOrd);
+
+        std::unique_lock<std::mutex> lock(_mtx);
+        _cv.wait(lock, [&]() { return !empty(); });
+
+        frontier.push(0);
+        while (!frontier.empty()) {
+            //std::cout << frontier.__get_container() << "\n";
+            int i = frontier.top();
+            frontier.pop();
+
+            LocType* currLoc = _heap[i];
+            //std::cout << i << " " << *currLoc << "\n";
+            if (isValid(currLoc->value())) {
+                _heap.remove(currLoc);
+                return currLoc->value();
+                //unlock
+            }
+
+            unsigned int left  = 2*i + 1;
+            unsigned int right = 2*i + 2;
+
+            if (left  < size()) frontier.push(left );
+            if (right < size()) frontier.push(right);
+            //std::cout << frontier.__get_container() << "\n";
+      }
+      return std::nullopt;
+      //unlock
+   }
+
    LocType* operator[](int i) {
       std::unique_lock<std::mutex> lock(_mtx);
       return _heap[i];
       // unlock _mtx
    }
-   T remove(LocType* at) {
-      std::unique_lock<std::mutex> lock(_mtx);
-      _cv.wait(lock, [&]() { return !empty(); });
-      return _heap.remove(at);
-      // unlock _mtx 
-   }
+   // T remove(LocType* at) {
+   //    std::unique_lock<std::mutex> lock(_mtx);
+   //    _cv.wait(lock, [&]() { return !empty(); });
+   //    return _heap.remove(at);
+   //    // unlock _mtx 
+   // }
    template <typename PRED>
    void filter(PRED&& p) {
       //std::cout << "filtering...\n";
@@ -145,7 +184,7 @@ public:
          do {
             if(i >= size()) i = 0;
             at = _heap[i];
-         } while(at->value().state != T::State::OPEN);
+         } while(at->value().getState() != T::State::OPEN);
          at->value().setState(T::State::STOLEN);
          lock.unlock();
          if(p(at->value())) {
@@ -166,11 +205,19 @@ public:
    }
 private:
    Heap<T,Ord> _heap;
+   Ord _ord;
    std::mutex _mtx;
    std::condition_variable _cv;
    std::atomic_bool _done = false;
 };
 
+struct MyNode {
+   int value;
+   bool valid;
+   friend std::ostream& operator<<(std::ostream& os,const MyNode& q) {
+      return os << "Node[" << q.value << "(" << q.valid << ")]";
+   }
+};
 void BAndBRestrictedFirstThreaded::search(Bounds& bnds)
 {
    // Setup
@@ -230,33 +277,17 @@ void BAndBRestrictedFirstThreaded::search(Bounds& bnds)
    // Main Loop
    cout << "B&B Nodes          " << setw(6) << "Dual\t " << setw(6) << "Primal\t Gap(%)\n";
    cout << "----------------------------------------------\n";
+   auto valid = [](const TQNode& n){ return n.getState() != TQNode::State::STOLEN; };
    while(!pq.empty()) {
-      auto bbnOpt = pq.extractMax();
+      auto bbnOpt = pq.extractFirstValid(valid);
       TQNode bbn;
       if(bbnOpt.has_value()) {
          bbn = bbnOpt.value();
-      } else { 
-         break;
+      } else if(pq.empty()) { 
+         break; // if there is no valid node to extract and there are no stolen nodes, we're done
+      } else {
+         continue; // if there is no valid node, but there are stolen nodes, we have to wait for stolen nodes to be returned
       }
-
-      //TODO replace with actual implementation of top k
-      bool done = false;
-      std::vector<TQNode> stolen;
-      while(!done && bbn.state == TQNode::State::STOLEN) {
-         stolen.push_back(bbn);
-         if(pq.empty()) {
-            done = true;
-            break;
-         }
-         auto bbnOpt = pq.extractMax();
-         if(bbnOpt.has_value()) { 
-            bbn = bbnOpt.value();
-         } else {
-            done = true;
-         }
-      }
-      if(done) break;
-      for(auto& n: stolen) pq.insertHeap(n);
 
       auto curDual = bbn.bound;
       bnds.setDual(bbn.node->getBound(),curDual);
