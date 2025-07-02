@@ -295,7 +295,8 @@ public:
       }
    }
    NatSet& operator=(const NatSet& s) noexcept {
-      _t = s._t;
+      for(auto i=0u;i < nbw;i++)
+         _t[i] = s._t[i];
       return *this;
    }
    constexpr unsigned short nbWords() const noexcept { return nbw;}
