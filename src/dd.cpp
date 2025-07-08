@@ -844,12 +844,13 @@ public:
       AbstractDD* theDD = _dd.theDD();
       auto cmp = _mmap.key_comp();
       for(const auto& [key,o] : _mmap) {
-         if (cmp(key,nObj)) break;
-         if (theDD->dominates(o,n)) 
+         const bool objDom = theDD->isBetterEQ(o->getBound(),nObj);
+         //if (cmp(objDom,nObj)) break;
+         if (objDom && theDD->dominates(o,n)) 
             return o;         
       }
       return nullptr;      
-   }
+   }   
    bool empty() const noexcept {
       return _mmap.size() + _rest.size() ==0;
    }
