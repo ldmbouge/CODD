@@ -171,18 +171,26 @@ public:
             _cv.wait(lock);
          }
          if(_done) break;
-
-         // std::cout << "vetting candidate (" << size() << ")";
+         //std::cout << "vetting candidate (" << _heap.size() << "," << vetted.size() << ")\n";
          auto candidate = _heap.extractMax();
-         // std::cout << " -> (" << size() << ")\n";
-         lock.unlock();
-         if(p(candidate)) {
+         if (vetted.size() < _heap.size() * 0.1) {
             vetted.insertHeap(candidate);
-         } else if(empty()) { // if the last candidate was rejected wake the main thread manually
-            // std::cout << "ran out, wake up main!\n";
-            vetted.notify_one(); 
-         } 
-         lock.lock();
+            continue;
+         } else {            
+         // std::cout << " -> (" << size() << ")\n";
+            lock.unlock();
+            if(p(candidate)) {
+               //std::cout << "vetting -> moved:" << candidate.node->getBound() << "\n";
+               vetted.insertHeap(candidate);
+            } else {
+               //std::cout << "rejecting --> " << candidate.node->getBound() << "\n";
+               if(empty()) { // if the last candidate was rejected wake the main thread manually
+                  // std::cout << "ran out, wake up main!\n";
+                  vetted.notify_one(); 
+               }
+            }
+            lock.lock();
+         }
       }
       std::cout << "done vetting\n";
    }
@@ -323,7 +331,7 @@ void BAndBRestrictedFirstThreaded::search(Bounds& bnds)
       return pq.empty();
    };
    pq.onArrival(pred, [&](){
-      std::cout << "waiting room: " << unvetted.size() << "   vetted: " << pq.size() << "\n";
+      //std::cout << "waiting room: " << unvetted.size() << "   vetted: " << pq.size() << "\n";
       auto bbnOpt = pq.extractMax();
       TQNode bbn;
       if(bbnOpt.has_value()) {
