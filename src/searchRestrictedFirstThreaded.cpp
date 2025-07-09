@@ -21,14 +21,6 @@ struct TQNode {
                 << q.node->getBound() << ','
                 << q.node->getBackwardBound() << ")," << q.bound << "]";
    }
-   enum State { 
-      OPEN, 
-      STOLEN, 
-      VETTED 
-   };
-   enum State state = State::OPEN;
-   void setState(State newState) { state = newState; }
-   const State getState() const { return state; }
 };
 
 template<typename Heap>
@@ -99,15 +91,17 @@ public:
    typedef Heap<T,Ord>::LocType LocType;
 
    void insertHeap(T item) {
+      //std::cout << "inserting!\n";
       std::lock_guard<std::mutex> lock(_mtx); 
       _heap.insertHeap(item); 
       _cv.notify_one();
       // unlock _mtx
    }
    template <typename U, typename TRANS = std::optional<T>(*)(const U&)>
-   void insertAllIf(std::vector<U> toAdd, TRANS transformer) {
+   void insertAllIf(std::vector<U>& toAdd, TRANS&& transformer) {
       std::lock_guard<std::mutex> lock(_mtx); 
-      for(auto u: toAdd) {
+      for(const auto& u: toAdd) {
+         // std::cout << "inserting!\n";
          std::optional<T> t = transformer(u);
          if(t.has_value()) _heap.insertHeap(t.value());
       }
@@ -116,46 +110,46 @@ public:
    }
    std::optional<T> extractMax() { 
       std::unique_lock<std::mutex> lock(_mtx);
-      if(empty()) return std::nullopt;
-      std::cout << _heap.size() << "(" << empty() << ")" << "\n";
+      if(empty()) return std::nullopt; // unlock _mtx
+      //std::cout << _heap.size() << "(" << empty() << ")" << "\n";
       auto tmp = _heap.extractMax();
-      std::cout << _heap.size() << "(" << empty() << ")" << "\n\n";
+      //std::cout << _heap.size() << "(" << empty() << ")" << "\n\n";
       return tmp;
       // unlock _mtx
    }
 
-   template <typename PRED = bool(*)(const T&)>
-   std::optional<T> extractFirstValid(PRED isValid) {
-        auto indexOrd = [this](int a, int b) { return !_ord(**_heap[a], **_heap[b]); }; //std queue used opposite default order
-        std::priority_queue<int, std::vector<int>, decltype(indexOrd)> frontier(indexOrd);
+   // template <typename PRED = bool(*)(const T&)>
+   // std::optional<T> extractFirstValid(PRED isValid) {
+   //      auto indexOrd = [this](int a, int b) { return !_ord(**_heap[a], **_heap[b]); }; //std queue used opposite default order
+   //      std::priority_queue<int, std::vector<int>, decltype(indexOrd)> frontier(indexOrd);
 
-        std::unique_lock<std::mutex> lock(_mtx);
-        _cv.wait(lock, [&]() { return !empty(); });
+   //      std::unique_lock<std::mutex> lock(_mtx);
+   //      _cv.wait(lock, [&]() { return !empty(); });
 
-        frontier.push(0);
-        while (!frontier.empty()) {
-            //std::cout << frontier.__get_container() << "\n";
-            int i = frontier.top();
-            frontier.pop();
+   //      frontier.push(0);
+   //      while (!frontier.empty()) {
+   //          //std::cout << frontier.__get_container() << "\n";
+   //          int i = frontier.top();
+   //          frontier.pop();
 
-            LocType* currLoc = _heap[i];
-            //std::cout << i << " " << *currLoc << "\n";
-            if (isValid(currLoc->value())) {
-                _heap.remove(currLoc);
-                return currLoc->value();
-                //unlock
-            }
+   //          LocType* currLoc = _heap[i];
+   //          //std::cout << i << " " << *currLoc << "\n";
+   //          if (isValid(currLoc->value())) {
+   //              _heap.remove(currLoc);
+   //              return currLoc->value();
+   //              //unlock
+   //          }
 
-            unsigned int left  = 2*i + 1;
-            unsigned int right = 2*i + 2;
+   //          unsigned int left  = 2*i + 1;
+   //          unsigned int right = 2*i + 2;
 
-            if (left  < size()) frontier.push(left );
-            if (right < size()) frontier.push(right);
-            //std::cout << frontier.__get_container() << "\n";
-      }
-      return std::nullopt;
-      //unlock
-   }
+   //          if (left  < size()) frontier.push(left );
+   //          if (right < size()) frontier.push(right);
+   //          //std::cout << frontier.__get_container() << "\n";
+   //    }
+   //    return std::nullopt;
+   //    //unlock
+   // }
 
    LocType* operator[](int i) {
       std::unique_lock<std::mutex> lock(_mtx);
@@ -169,34 +163,76 @@ public:
    //    // unlock _mtx 
    // }
    template <typename PRED>
-   void filter(PRED&& p) {
-      //std::cout << "filtering...\n";
-      size_t i = 0;
-      std::unique_lock<std::mutex> lock(_mtx, std::defer_lock); // create, but don't lock, the mutex
+   void vetHeap(PRED&& p, ThreadSafeHeap<T,Ord>& vetted) {
+      std::cout << "vetting...\n";
+      std::unique_lock<std::mutex> lock(_mtx);
       while(true) {
+         while (empty() && !_done) {
+            _cv.wait(lock);
+         }
+         if(_done) break;
+
+         // std::cout << "vetting candidate (" << size() << ")";
+         auto candidate = _heap.extractMax();
+         // std::cout << " -> (" << size() << ")\n";
+         lock.unlock();
+         if(p(candidate)) {
+            vetted.insertHeap(candidate);
+         } else if(empty()) { // if the last candidate was rejected wake the main thread manually
+            // std::cout << "ran out, wake up main!\n";
+            vetted.notify_one(); 
+         } 
          lock.lock();
-         _cv.wait(lock, [&]() { return !empty() || _done; });
-         if(_done) {
-            //std::cout << "done culling\n";
-            return;
-         }
-         LocType* at;
-         do {
-            if(i >= size()) i = 0;
-            at = _heap[i];
-         } while(at->value().getState() != T::State::OPEN);
-         at->value().setState(T::State::STOLEN);
-         lock.unlock();
-         if(p(at->value())) {
-            lock.lock();
-            _heap.remove(at);
-         } else {
-            lock.lock();
-            at->value().setState(T::State::VETTED);
-         }
-         lock.unlock();
       }
-   } 
+      std::cout << "done vetting\n";
+   }
+
+   template <typename ACTION, typename PRED>
+   void onArrival(PRED&& p, ACTION&& action) {
+      std::unique_lock<std::mutex> lock(_mtx);
+
+      while (true) {
+         while (p() && !_done) {
+            _cv.wait(lock); 
+            // std::cout << "waking up...\n";
+         }
+         if (_done) break;
+
+         lock.unlock();
+         action();
+         lock.lock(); 
+      }
+   }
+   // template <typename PRED>
+   // void filter(PRED&& p) {
+   //    //std::cout << "filtering...\n";
+   //    size_t i = 0;
+   //    std::unique_lock<std::mutex> lock(_mtx, std::defer_lock); // create, but don't lock, the mutex
+   //    while(true) {
+   //       lock.lock();
+   //       _cv.wait(lock, [&]() { return !empty() || _done; });
+   //       if(_done) {
+   //          //std::cout << "done culling\n";
+   //          return;
+   //       }
+   //       LocType* at;
+   //       do {
+   //          if(i >= size()) i = 0;
+   //          at = _heap[i];
+   //       } while(at->value().getState() != T::State::OPEN);
+   //       at->value().setState(T::State::STOLEN);
+   //       lock.unlock();
+   //       if(p(at->value()) && !empty()) {
+   //          lock.lock();
+   //          _heap.remove(at);
+   //       } else {
+   //          lock.lock();
+   //          at->value().setState(T::State::VETTED);
+   //       }
+   //       lock.unlock();
+   //    }
+   // } 
+   void notify_one() { _cv.notify_one(); }
    bool empty() { return _heap.empty(); }
    unsigned size() { return _heap.size(); }
    void setDone() {
@@ -238,18 +274,20 @@ void BAndBRestrictedFirstThreaded::search(Bounds& bnds)
    WidthBounded* ddr[2];
 
    AbstractDD::Ptr restricted = _theDD->duplicate();
-   restricted->setStrategy(ddr[0] = new Restricted(4096));
+   restricted->setStrategy(ddr[0] = new Restricted(_mxw));
    //restricted->killDominance(); // doesn't help either
 
    AbstractDD::Ptr relaxed = _theDD->duplicate();
    //relaxed->killDominance();
-   relaxed->setStrategy(ddr[1] = new Relaxed(4096)); //512= >100s 1024=10s 2048=2s
+   relaxed->setStrategy(ddr[1] = new Relaxed(_mxw)); //512= >100s 1024=10s 2048=2s
 
 
    auto hOrder = [restricted](const TQNode& a,const TQNode& b) {
       return restricted->isBetter(a.bound,b.bound);
    };
-   ThreadSafeHeap<TQNode,decltype(hOrder)> pq(bbPool->get(),64000,hOrder);
+   ThreadSafeHeap<TQNode,decltype(hOrder)> pq(bbPool->get(),64000,hOrder); // the main B&B queue
+   ThreadSafeHeap<TQNode,decltype(hOrder)> unvetted(bbPool->get(),64000,hOrder); // the queue where new nodes are sent to be vetted or culled before added to the main queue
+
    ANode::Ptr rootNode = bbPool->cloneNode(restricted->init());
 
    if (restricted->hasLocal()) {
@@ -265,28 +303,37 @@ void BAndBRestrictedFirstThreaded::search(Bounds& bnds)
    bool primalBetter = false;
 
    int nDualCulled = 0;
-   std::thread dualCuller([&pq, &relaxed, &bnds, &nDualCulled]() {
-      pq.filter([&relaxed, &bnds, &nDualCulled](TQNode n) {
-         //return false;
-         bool dualWorse = !relaxed->apply(n.node,bnds); 
-         if(dualWorse) nDualCulled++;
-         return dualWorse;
-      });
+   std::thread dualCuller([&unvetted, &pq, &relaxed, &bnds, &nDualCulled]() {
+      unvetted.vetHeap([&relaxed, &bnds, &nDualCulled](TQNode& candidate){ 
+         bool dualBetter = relaxed->apply(candidate.node,bnds); 
+         if(dualBetter) nDualCulled++;
+         return dualBetter;
+      }, pq);
    });
 
    // Main Loop
    cout << "B&B Nodes          " << setw(6) << "Dual\t " << setw(6) << "Primal\t Gap(%)\n";
    cout << "----------------------------------------------\n";
-   auto valid = [](const TQNode& n){ return n.getState() != TQNode::State::STOLEN; };
-   while(!pq.empty()) {
-      auto bbnOpt = pq.extractFirstValid(valid);
+   const auto& pred = [&](){ 
+      if(pq.empty() && unvetted.empty()) { 
+         pq.setDone();
+         unvetted.setDone();
+         return false;
+      } 
+      return pq.empty();
+   };
+   pq.onArrival(pred, [&](){
+      std::cout << "waiting room: " << unvetted.size() << "   vetted: " << pq.size() << "\n";
+      auto bbnOpt = pq.extractMax();
       TQNode bbn;
       if(bbnOpt.has_value()) {
          bbn = bbnOpt.value();
-      } else if(pq.empty()) { 
-         break; // if there is no valid node to extract and there are no stolen nodes, we're done
+      } else if(pq.empty() && unvetted.empty()) { 
+         pq.setDone();
+         unvetted.setDone();
+         return;
       } else {
-         continue; // if there is no valid node, but there are stolen nodes, we have to wait for stolen nodes to be returned
+         return; // if there is no valid node, but there are stolen nodes, we have to wait for stolen nodes to be returned
       }
 
       auto curDual = bbn.bound;
@@ -294,8 +341,11 @@ void BAndBRestrictedFirstThreaded::search(Bounds& bnds)
       auto now = RuntimeMonitor::cputime();
       auto fs = RuntimeMonitor::elapsedMilliseconds(start,now);
       auto fl = RuntimeMonitor::elapsedMilliseconds(last,now);
-      if (_timeLimit && _timeLimit(fs))         
-         break;      
+      if (_timeLimit && _timeLimit(fs)) {        
+         pq.setDone();
+         unvetted.setDone();
+         return;      
+      }
       if (primalBetter || fl > 5000) {
          double gap = 100 * std::abs(bnds.getPrimal() - curDual) / bnds.getPrimal();      
          cout << std::fixed << "B&B(" << setw(5) << nNode << ")\t " << setprecision(6);
@@ -315,25 +365,32 @@ void BAndBRestrictedFirstThreaded::search(Bounds& bnds)
       primalBetter = restricted->apply(bbn.node,bnds);
 
       auto discardSet = restricted->theDiscardedSet();
+      //std::cout << "comp discard\n";
       // std::vector<ANode::Ptr> survivedLocal = hasLocal ? filterLocal(bnds, relaxed, discardSet) : discardSet;
       // auto [tmpPruned,newGuyDominated,survivedDom] = filterDom(bnds, relaxed, survivedLocal, &pq);
       // insDom += survivedLocal.size() - survivedDom.size();
       // pruned += tmpPruned;
-      
-      pq.insertAllIf(discardSet, [&bbPool, &bbn](ANode::Ptr n){
+      //std::cout << "inserting: " << discardSet << "\n";
+      int i = 32;
+      unvetted.insertAllIf(discardSet, [&bbPool, &bbn, &pq, &i](ANode::Ptr n){
+         // std::cout << "try insert\n";
          auto nd = bbPool->cloneNode(n);
          std::optional<TQNode> ret = std::nullopt;
          if (nd) {
             assert(nd->getBound() == n->getBound());
             ret = TQNode {nd, nd->getBound()+nd->getBackwardBound() };
+            // std::cout << "insert\n";
+            if((i--) > 0) {
+               pq.insertHeap(ret.value());
+               ret = std::nullopt;
+            }
          }
          bbPool->release(bbn.node);
          return ret;
       });
-   }
+      // std::cout << "done inserting\n";
+   });
 
-   pq.setDone();
-   //std::cout << "Sending done signal to culler\n";
    dualCuller.join();
 
    cout << setprecision(ss);
