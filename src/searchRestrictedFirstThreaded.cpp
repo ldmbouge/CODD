@@ -183,7 +183,7 @@ public:
                //std::cout << "vetting -> moved:" << candidate.node->getBound() << "\n";
                vetted.insertHeap(candidate);
             } else {
-               std::cout << "rejecting --> " << candidate.node->getBound() << "\n";
+               //std::cout << "rejecting --> " << candidate.node->getBound() << "\n";
                if(empty()) { // if the last candidate was rejected wake the main thread manually
                   // std::cout << "ran out, wake up main!\n";
                   vetted.notify_one(); 
