@@ -183,7 +183,7 @@ public:
                //std::cout << "vetting -> moved:" << candidate.node->getBound() << "\n";
                vetted.insertHeap(candidate);
             } else {
-               //std::cout << "rejecting --> " << candidate.node->getBound() << "\n";
+               std::cout << "rejecting --> " << candidate.node->getBound() << "\n";
                if(empty()) { // if the last candidate was rejected wake the main thread manually
                   // std::cout << "ran out, wake up main!\n";
                   vetted.notify_one(); 
@@ -314,7 +314,7 @@ void BAndBRestrictedFirstThreaded::search(Bounds& bnds)
    std::thread dualCuller([&unvetted, &pq, &relaxed, &bnds, &nDualCulled]() {
       unvetted.vetHeap([&relaxed, &bnds, &nDualCulled](TQNode& candidate){ 
          bool dualBetter = relaxed->apply(candidate.node,bnds); 
-         if(dualBetter) nDualCulled++;
+         if(!dualBetter) nDualCulled++;
          return dualBetter;
       }, pq);
    });
