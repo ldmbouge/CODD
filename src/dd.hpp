@@ -325,6 +325,22 @@ public:
    void adjustBounds(ANode::Ptr nd);
 };
 
+template <typename Ord>
+class RestrictedDFS :public WidthBounded {
+   void truncate(NDArray& layer);
+protected:
+   ThreadSafeHeap<ANode::Ptr, Ord> _discardedSet;
+public:
+   RestrictedDFS(const unsigned mxw) : WidthBounded(mxw), _discardedSet(ThreadSafeHeap<ANode::Ptr, Ord> {}) { }
+   const std::string getName() const { return "RestrictedDFS";}
+   void compute(Bounds& );
+   bool primal() const { return true;}
+   ANode::Ptr checkDominance(CQueue<ANode::Ptr>& qn,ANode::Ptr n,double nObj);
+   ThreadSafeHeap<ANode::Ptr, Ord> theDiscardedSet() { return _discardedSet; }
+   template <typename ACTION, typename PRED>
+   void onDiscarded(PRED&& p, ACTION&& action) { _discardedSet.onArrival(p, action); }
+};
+
 template<typename T>
 concept Comparable = requires(const T& a,const T& b)
 {

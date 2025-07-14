@@ -82,8 +82,8 @@ void BAndBRestrictedOnly::search(Bounds& bnds)
             assert(nd->getBound() == n->getBound());
             pq.insertHeap(QNode {nd, nd->getBound()+nd->getBackwardBound() });
          }
+         bbPool->release(bbn.node);
       }
-      bbPool->release(bbn.node);
    }
 
    cout << setprecision(ss);

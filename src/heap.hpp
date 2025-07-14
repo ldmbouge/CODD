@@ -20,6 +20,8 @@
 #include <algorithm>
 #include <iostream>
 #include <functional>
+#include <mutex>
+#include <condition_variable>
 #include "store.hpp"
 
 template <class T,typename Ord = bool(*)(const T&,const T&)> class Heap {
@@ -189,6 +191,178 @@ public:
       }
       return os;
    }
+};
+
+template <class T,typename Ord = bool(*)(const T&,const T&)> class ThreadSafeHeap {
+
+public:
+   ThreadSafeHeap(Pool::Ptr p,int sz,Ord ord): _heap(p, sz, ord), _ord(ord) {}
+
+   typedef Heap<T,Ord>::LocType LocType;
+
+   void insertHeap(T item) {
+      //std::cout << "inserting!\n";
+      std::lock_guard<std::mutex> lock(_mtx); 
+      _heap.insertHeap(item); 
+      _cv.notify_one();
+      // unlock _mtx
+   }
+   template <typename U, typename TRANS = std::optional<T>(*)(const U&)>
+   void insertAllIf(std::vector<U>& toAdd, TRANS&& transformer) {
+      std::lock_guard<std::mutex> lock(_mtx); 
+      for(const auto& u: toAdd) {
+         // std::cout << "inserting!\n";
+         std::optional<T> t = transformer(u);
+         if(t.has_value()) _heap.insertHeap(t.value());
+      }
+      _cv.notify_one();
+      // unlock _mtx
+   }
+   std::optional<T> extractMax() { 
+      std::unique_lock<std::mutex> lock(_mtx);
+      if(empty()) return std::nullopt; // unlock _mtx
+      //std::cout << _heap.size() << "(" << empty() << ")" << "\n";
+      auto tmp = _heap.extractMax();
+      //std::cout << _heap.size() << "(" << empty() << ")" << "\n\n";
+      return tmp;
+      // unlock _mtx
+   }
+
+   // template <typename PRED = bool(*)(const T&)>
+   // std::optional<T> extractFirstValid(PRED isValid) {
+   //      auto indexOrd = [this](int a, int b) { return !_ord(**_heap[a], **_heap[b]); }; //std queue used opposite default order
+   //      std::priority_queue<int, std::vector<int>, decltype(indexOrd)> frontier(indexOrd);
+
+   //      std::unique_lock<std::mutex> lock(_mtx);
+   //      _cv.wait(lock, [&]() { return !empty(); });
+
+   //      frontier.push(0);
+   //      while (!frontier.empty()) {
+   //          //std::cout << frontier.__get_container() << "\n";
+   //          int i = frontier.top();
+   //          frontier.pop();
+
+   //          LocType* currLoc = _heap[i];
+   //          //std::cout << i << " " << *currLoc << "\n";
+   //          if (isValid(currLoc->value())) {
+   //              _heap.remove(currLoc);
+   //              return currLoc->value();
+   //              //unlock
+   //          }
+
+   //          unsigned int left  = 2*i + 1;
+   //          unsigned int right = 2*i + 2;
+
+   //          if (left  < size()) frontier.push(left );
+   //          if (right < size()) frontier.push(right);
+   //          //std::cout << frontier.__get_container() << "\n";
+   //    }
+   //    return std::nullopt;
+   //    //unlock
+   // }
+
+   LocType* operator[](int i) {
+      std::unique_lock<std::mutex> lock(_mtx);
+      return _heap[i];
+      // unlock _mtx
+   }
+   // T remove(LocType* at) {
+   //    std::unique_lock<std::mutex> lock(_mtx);
+   //    _cv.wait(lock, [&]() { return !empty(); });
+   //    return _heap.remove(at);
+   //    // unlock _mtx 
+   // }
+   template <typename PRED>
+   void vetHeap(PRED&& p, ThreadSafeHeap<T,Ord>& vetted) {
+      std::cout << "vetting...\n";
+      std::unique_lock<std::mutex> lock(_mtx);
+      while(true) {
+         while (empty() && !_done) {
+            _cv.wait(lock);
+         }
+         if(_done) break;
+         //std::cout << "vetting candidate (" << _heap.size() << "," << vetted.size() << ")\n";
+         auto candidate = _heap.extractMax();
+         if (vetted.size() < _heap.size() * 0.1) {
+            vetted.insertHeap(candidate);
+            continue;
+         } else {            
+         // std::cout << " -> (" << size() << ")\n";
+            lock.unlock();
+            if(p(candidate)) {
+               //std::cout << "vetting -> moved:" << candidate.node->getBound() << "\n";
+               vetted.insertHeap(candidate);
+            } else {
+               //std::cout << "rejecting --> " << candidate.node->getBound() << "\n";
+               if(empty()) { // if the last candidate was rejected wake the main thread manually
+                  // std::cout << "ran out, wake up main!\n";
+                  vetted.notify_one(); 
+               }
+            }
+            lock.lock();
+         }
+      }
+      std::cout << "done vetting\n";
+   }
+
+   template <typename ACTION, typename PRED>
+   void onArrival(PRED&& p, ACTION&& action) {
+      std::unique_lock<std::mutex> lock(_mtx);
+
+      while (true) {
+         while (p() && !_done) {
+            _cv.wait(lock); 
+            // std::cout << "waking up...\n";
+         }
+         if (_done) break;
+
+         lock.unlock();
+         action();
+         lock.lock(); 
+      }
+   }
+   // template <typename PRED>
+   // void filter(PRED&& p) {
+   //    //std::cout << "filtering...\n";
+   //    size_t i = 0;
+   //    std::unique_lock<std::mutex> lock(_mtx, std::defer_lock); // create, but don't lock, the mutex
+   //    while(true) {
+   //       lock.lock();
+   //       _cv.wait(lock, [&]() { return !empty() || _done; });
+   //       if(_done) {
+   //          //std::cout << "done culling\n";
+   //          return;
+   //       }
+   //       LocType* at;
+   //       do {
+   //          if(i >= size()) i = 0;
+   //          at = _heap[i];
+   //       } while(at->value().getState() != T::State::OPEN);
+   //       at->value().setState(T::State::STOLEN);
+   //       lock.unlock();
+   //       if(p(at->value()) && !empty()) {
+   //          lock.lock();
+   //          _heap.remove(at);
+   //       } else {
+   //          lock.lock();
+   //          at->value().setState(T::State::VETTED);
+   //       }
+   //       lock.unlock();
+   //    }
+   // } 
+   void notify_one() { _cv.notify_one(); }
+   bool empty() { return _heap.empty(); }
+   unsigned size() { return _heap.size(); }
+   void setDone() {
+      _done = true;
+      _cv.notify_all();
+   }
+private:
+   Heap<T,Ord> _heap;
+   Ord _ord;
+   std::mutex _mtx;
+   std::condition_variable _cv;
+   std::atomic_bool _done = false;
 };
 
 #endif
