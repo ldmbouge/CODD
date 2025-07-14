@@ -55,6 +55,7 @@ public:
    friend class AbstractDD;
    friend class Relaxed;
    friend class Restricted;
+   template<typename> friend class RestrictedDFS;
    friend class WidthBounded;
    friend class ANList;
    ANode(Pool::Ptr mem,unsigned nid,bool exact);

@@ -5,6 +5,7 @@
 #include <iomanip>
 #include <type_traits>
 #include "node.hpp"
+#include "heap.hpp"
 #include <vector>
 #include <list>
 #include <optional>
@@ -83,6 +84,7 @@ protected:
    friend class Strategy;
    friend class Exact;
    friend class Restricted;
+   template<typename> friend class RestrictedDFS;
    friend class Relaxed;
    friend class WidthBounded;
    Strategy* _strat;
@@ -329,14 +331,15 @@ template <typename Ord>
 class RestrictedDFS :public WidthBounded {
    void truncate(NDArray& layer);
 protected:
-   ThreadSafeHeap<ANode::Ptr, Ord> _discardedSet;
+   using HeapType = ThreadSafeHeap<ANode::Ptr, Ord>;
+   HeapType _discardedSet;
 public:
-   RestrictedDFS(const unsigned mxw) : WidthBounded(mxw), _discardedSet(ThreadSafeHeap<ANode::Ptr, Ord> {}) { }
+   RestrictedDFS(const unsigned mxw) : WidthBounded(mxw), _discardedSet(HeapType{}) { }
    const std::string getName() const { return "RestrictedDFS";}
    void compute(Bounds& );
    bool primal() const { return true;}
    ANode::Ptr checkDominance(CQueue<ANode::Ptr>& qn,ANode::Ptr n,double nObj);
-   ThreadSafeHeap<ANode::Ptr, Ord> theDiscardedSet() { return _discardedSet; }
+   HeapType theDiscardedSet() { return _discardedSet; }
    template <typename ACTION, typename PRED>
    void onDiscarded(PRED&& p, ACTION&& action) { _discardedSet.onArrival(p, action); }
 };
