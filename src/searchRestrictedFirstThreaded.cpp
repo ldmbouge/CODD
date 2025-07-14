@@ -219,10 +219,10 @@ void BAndBRestrictedFirstThreaded::search(Bounds& bnds)
                ret = std::nullopt;
             }
          }
-         bbPool->release(bbn.node);
          return ret;
       });
       // std::cout << "done inserting\n";
+      bbPool->release(bbn.node);
    });
 
    dualCuller.join();

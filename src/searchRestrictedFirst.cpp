@@ -181,8 +181,8 @@ void BAndBRestrictedFirst::search(Bounds& bnds)
                }
             } else insDom++;
          }
-         bbPool->release(bbn.node);
       }
+      bbPool->release(bbn.node);
       //std::cout << "nbRELAX:" << nbRELAX << "\t PQ = " << pq.size() << "\n";
    }
 

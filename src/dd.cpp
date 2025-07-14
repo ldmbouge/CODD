@@ -168,6 +168,8 @@ public:
    } 
 };
 
+//TODO: create a doubled ended queue for combination DFS-BFS
+//Using this structure doesn't make sense
 template <typename Ord>
 class FStack { // flat stack
    AbstractDD*                            _theDD;
