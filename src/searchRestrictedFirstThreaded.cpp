@@ -137,10 +137,13 @@ void BAndBRestrictedFirstThreaded::search(Bounds& bnds)
    bool primalBetter = false;
 
    int nDualCulled = 0;
-   std::thread dualCuller([&unvetted, &pq, &relaxed, &bnds, &nDualCulled]() {
-      unvetted.vetHeap([&relaxed, &bnds, &nDualCulled](TQNode& candidate){ 
+   std::thread dualCuller([&unvetted, &pq, &relaxed, &bnds, &nDualCulled, &bbPool]() {
+      unvetted.vetHeap([&relaxed, &bnds, &nDualCulled, &bbPool](TQNode& candidate){ 
          bool dualBetter = relaxed->apply(candidate.node,bnds); 
-         if(!dualBetter) nDualCulled++;
+         if(!dualBetter) {
+            nDualCulled++;
+            bbPool->release(candidate.node);
+         }
          return dualBetter;
       }, pq);
    });

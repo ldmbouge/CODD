@@ -383,8 +383,19 @@ public:
    DDNodeAllocator(LPool::Ptr pool) : AbstractNodeAllocator(pool),_nmap(pool->get(),200000) {}
    ANode::Ptr cloneNode(ANode::Ptr src) override {      
       auto sp = static_cast<const Node<ST>*>(src.get());
-      Node<ST>* nn = new (_base->get()) Node<ST>(_base->get(),_base->grabId(),*sp);
-      return nn;
+      // Node<ST>* nn = new (_base->get()) Node<ST>(_base->get(),_base->grabId(),*sp);
+      // return nn;
+      auto reuse = _base->claimNode();
+      if (reuse) {
+         Node<ST>* nn = static_cast<Node<ST>*>(reuse.get());
+         nn->resetWith(sp);
+         //if(!inMap) _nmap.safeInsertAt(inMap,nn); //TODO: check if correct
+         return nn;
+      } else {
+         Node<ST>* nn = new (_base->get()) Node<ST>(_base->get(),_base->grabId(),*sp);
+         //if(!inMap) _nmap.safeInsertAt(inMap,nn); //TODO: check if correct
+         return nn;
+      }
       /*
       //temporarily out. Something not correct here. [ldm]
       Node<ST>* at = nullptr;
@@ -411,7 +422,7 @@ public:
       */
    }
    void release(ANode::Ptr src) override {
-      //_base->release(src);
+      _base->release(src);
    }
 };
 
