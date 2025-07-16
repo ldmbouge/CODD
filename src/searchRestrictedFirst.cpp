@@ -120,11 +120,10 @@ void BAndBRestrictedFirst::search(Bounds& bnds)
    while(!pq.empty()) {
       auto bbn = pq.extractMax();
 
-      //std::cout << "dequeued: ";
-      // restricted->printNode(std::cout, bbn.node);
+      //std::cout << "dequeued: " << bbn.node << " ";
+      //restricted->printNode(std::cout, bbn.node);
       //std::cout << std::endl;
-
-      
+     
       auto curDual = bbn.bound;
       bnds.setDual(bbn.node->getBound(),curDual);
       auto now = RuntimeMonitor::cputime();
@@ -149,7 +148,9 @@ void BAndBRestrictedFirst::search(Bounds& bnds)
       ttlNode++;
       nNode++;
       primalBetter = restricted->apply(bbn.node,bnds);
-
+      using namespace RuntimeMonitor;
+      //std::cout << "BACK restricted:"  << elapsedMilliseconds(start,cputime())/1000.0 << " " << bbn.node << " \n";
+      
       auto discardSet = restricted->theDiscardedSet();
       std::vector<ANode::Ptr> survivedLocal = hasLocal ? filterLocal(bnds, relaxed, discardSet) : discardSet;
       auto [tmpPruned,newGuyDominated,survivedDom] = filterDom(bnds, relaxed, survivedLocal, &pq);
@@ -157,9 +158,12 @@ void BAndBRestrictedFirst::search(Bounds& bnds)
       pruned += tmpPruned;
       
       //std::cout << "discardSet   :" << discardSet.size() << "\n";
-      //std::cout << "survivedLocal:" << survivedLocal.size() << "\n";      
       //std::cout << "survivedDom  :" << survivedDom.size() << "\n";
+      //std::cout << "discardSet FILTER:"  << elapsedMilliseconds(start,cputime())/1000.0 << " " << bbn.node << " \n";
+
+      //std::cout << "survivedLocal:" << survivedLocal.size() << "\n";      
       [[maybe_unused]] int nbRELAX = 0;
+      int nbINS = 0;
       for(auto n: survivedDom) {
          nbRELAX++;
          bool dualBetter = relaxed->apply(n, bnds);
@@ -169,7 +173,9 @@ void BAndBRestrictedFirst::search(Bounds& bnds)
          //           << "\n";
          //double localDual = relaxed->local(n, LocalContext::BBCtx);
          //std::cout << "LOCAL(S):" << localDual << " SUM:" << n->getBound() + localDual << "\n"; 
-         //std::cout << "reaching relaxed DD. Got: " << dualBetter << " B@SINK:" << relaxed->currentOpt() << "\n";         
+         // std::cout << "RELAX:" << n->getBound() << " | " << n->getTotalBound()
+         //           << " DOM?:" << (newGuyDominated ? "T" : "F")
+         //           << " Got: " << dualBetter << " B@SINK:" << relaxed->currentOpt() << "\n";         
          //std::cout << "reaching relaxed DD. Got: " << dualBetter <<"\n";         
          if(dualBetter) {
             if(!newGuyDominated) {
@@ -178,10 +184,12 @@ void BAndBRestrictedFirst::search(Bounds& bnds)
                if (nd) {
                   assert(nd->getBound() == n->getBound());
                   pq.insertHeap(QNode {nd, nd->getBound()+nd->getBackwardBound() });
+                  nbINS++;
                }
             } else insDom++;
          }
       }
+      //std::cout << "ADDQUEUE: " << nbINS << " out of " << nbRELAX << "\n";
       bbPool->release(bbn.node);
       //std::cout << "nbRELAX:" << nbRELAX << "\t PQ = " << pq.size() << "\n";
    }
