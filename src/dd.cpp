@@ -110,9 +110,11 @@ class FQueue { // flat queue
    std::list<ANode::Ptr>                   _rest;
    std::list<ANode::Ptr>                   _main;
    unsigned                              _cLayer;
+   unsigned                              _mxw;
+   friend class RestrictedND;
 public:
-   FQueue(AbstractDD* dd)
-      : _theDD(dd),_rest(),_main()
+   FQueue(AbstractDD* dd,unsigned mxw)
+      : _theDD(dd),_rest(),_main(),_mxw(mxw)
    {}
    void enQueue(const ANode::Ptr& n) noexcept {
       if (_main.size()==0) {
@@ -122,14 +124,35 @@ public:
          _main.push_back(n);
       else _rest.push_back(n);
    }
+   bool hasDominator(ANode::Ptr n,double nObj) {
+      for(const auto o : _main) {
+         if (_theDD->isBetterEQ(o->getBound(),nObj)) { // key is better. Could DOMINATE nObj
+            if (_theDD->dominates(o,n)) 
+               return true;            
+         }
+      }
+      return false;
+   }
+   void spliceDominee(ANode::Ptr n,double nObj) {
+      for(auto it = _main.begin();it != _main.end();) {
+         const auto o   = *it;
+         if (!_theDD->isBetterEQ(o->getBound(),nObj)) { // key is NOT better. Could DOMINATE nObj
+            if (_theDD->dominates(n,o)) {
+               it = _main.erase(it);
+            } else it = std::next(it);
+         } else it = std::next(it);         
+      }
+   }
    std::pair<ANode::Ptr,std::list<ANode::Ptr>> checkDominance(ANode::Ptr n,double nObj) {
       ANode::Ptr dominator = nullptr;
       std::list<ANode::Ptr> dominee;
       for(auto it = _main.begin();it != _main.end();) {
          const auto o   = *it;
          if (_theDD->isBetterEQ(o->getBound(),nObj) > 0) { // key is better. Could DOMINATE nObj
-            if (dominator==nullptr && _theDD->dominates(o,n)) // no dominator yet
+            if (dominator==nullptr && _theDD->dominates(o,n)) { // no dominator yet
                dominator = o;
+               break;
+            }
             it = std::next(it);
          } else { // key is worse. Could be dominated by nObj
             if (_theDD->dominates(n,o)) { // new guy dominates iterate (o)
@@ -152,8 +175,16 @@ public:
    std::list<ANode::Ptr> pullLayer() noexcept {
       std::list<ANode::Ptr> retVal = std::move(_main);
       retVal.sort([dd = _theDD](const ANode::Ptr& a,const ANode::Ptr& b) {
-         return dd->isBetterEQ(a->getBound(),b->getBound());
+         return dd->isBetter(a->getBound(),b->getBound());
       });
+      if (retVal.size() > _mxw) {
+         //std::cout << "RETVAL bef:" << retVal.size() << "   MXW:" << _mxw << "\n";
+         auto from = retVal.begin();
+         std::advance(from,_mxw);
+         retVal.erase(from,retVal.end()); // trim the list
+         //std::cout << "RETVAL now:" << retVal.size() << "\n";
+         std::cout << "layer with pruning:" << _cLayer << "\n";
+      }
       _cLayer = (_rest.size() > 0) ? _rest.front()->getLayer() : -1;
       for(auto i = _rest.begin(); i != _rest.end();) {
          const auto n = *i;
@@ -577,7 +608,7 @@ void Restricted::compute(Bounds& bnds)
    _dd->_exact = true;
    auto root = _dd->init();
    _dd->target();
-   FQueue qn(this->theDD());
+   FQueue qn(this->theDD(),_mxw);
    root->setLayer(0);
    qn.enQueue(root);
    bool discarding = false;
@@ -651,18 +682,14 @@ void RestrictedND::compute(Bounds& bnds)
    _dd->_exact = true;
    auto root = _dd->init();
    _dd->target();
-   FQueue qn(this->theDD());
+   FQueue qn(this->theDD(),_mxw);
    root->setLayer(0);
    qn.enQueue(root);
-   bool discarding = false;
    while (!qn.empty()) {
-      discarding = false;
       //std::cout << "qn popped" << std::endl;
+      _dd->_exact &= qn.firstLayerSize() <= _mxw;
       auto lk = qn.pullLayer(); // We have in lk the queue content for layer cL, dk is what we discard
       for(auto p : lk) { // loop over layer lk. p is a "parent" node.         
-         if(discarding) { // pickup discarded parents
-            continue; // do not expand discarded parent
-         }         
          auto remLabels = _dd->getLabels(p,DDRestricted);
          while(remLabels->more()) {
             auto l = remLabels->getAndNext();
@@ -672,59 +699,32 @@ void RestrictedND::compute(Bounds& bnds)
                auto theCost = _dd->cost(p,l);
                auto ep = p->getBound() + theCost;
                if (hasDom && newNode) {
-                  auto [dominator,dominee] = qn.checkDominance(child,ep);
-                  if (dominator) {
-                     _dd->_an.pop_back();
-                     child = dominator;
-                     newNode = false;
-                  }
-                  for(const auto& dominated : dominee) {
-                     transferArcs(dominated,child); // child replace all of them
-                     _dd->_an.remove(dominated);    // they are no longer in the DD
-                  }
-               }         
-               Edge::Ptr e = new (_dd->_mem) Edge(p,child,l);
-               e->_obj = theCost;
-               _dd->addArc(e); // connect to new node
-               if (_dd->isBetter(ep,child->getBound())) {
-                  child->setBound(ep);
-                  child->_optLabels = p->_optLabels;
-                  child->_optLabels.push_back(e->_lbl);
-               }
-               child->setLayer(std::max(child->getLayer(),p->getLayer()+1));
-
-               auto gx = child->getBound();
-               auto hx = child->getLBound();
-               auto fx = gx + hx;
-               auto gamma = bnds.getPrimal();
-               if (fx >= gamma)
-                  std::cout  << "Child: " << std::fixed << fx << " = " << gx << " + " << hx << "\n"; 
-
-               
-               if(discarding) { // if node has additional labels, add it to discarded
-                  goto nextLabel;
-               }
-               if (!_dd->eqSink(child)) {
-                  if (newNode) {
-                     qn.enQueue(child);
-                     auto nbNode = qn.firstLayerSize();
-                     if (nbNode > _mxw - 1) {
-                        _dd->_exact = false;
-                        discarding = true;
+                  if (!qn.hasDominator(child,ep)) {
+                     //std::cout << "No dominator...\n"; 
+                     if (_dd->isBetter(ep + child->getLBound(),bnds.getPrimal())) {
+                        qn.spliceDominee(child,ep);
+                        Edge::Ptr e = new (_dd->_mem) Edge(p,child,l);
+                        e->_obj = theCost;
+                        _dd->addArc(e); // connect to new node
+                        if (_dd->isBetter(ep,child->getBound())) {
+                           child->setBound(ep);
+                           child->_optLabels = p->_optLabels;
+                           child->_optLabels.push_back(e->_lbl);
+                        }
+                        child->setLayer(std::max(child->getLayer(),p->getLayer()+1));
+                        if (!_dd->eqSink(child)) {
+                           if (newNode)
+                              qn.enQueue(child);                           
+                        } else {
+                           bool isBetterValue = _dd->isBetter(_dd->currentOpt(), bnds.getPrimal()); 
+                           if (isBetterValue) 
+                              _dd->update(bnds);                  
+                           goto done;
+                        }
                      }
                   }
-               } else {
-                  // THis *IS* the sink.
-                  std::cout  << "@SINK: " << std::fixed << fx << " = " << gx << " + " << hx << " : " << _dd->currentOpt() << "\n";
-                  bool isBetterValue = _dd->isBetter(_dd->currentOpt(), bnds.getPrimal()); 
-                  if (isBetterValue) {
-                     //std::cout << "Updating....\n"; 
-                     _dd->update(bnds);
-                  }
-                  goto done;
-               }
+               }         
             }  
-            nextLabel:;          
          }
       }         
    }
