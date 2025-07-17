@@ -111,8 +111,8 @@ class FQueue { // flat queue
    std::list<ANode::Ptr>                   _main;
    unsigned                              _cLayer;
 public:
-   FQueue(Restricted& dd)
-      : _theDD(dd.theDD()),_rest(),_main()
+   FQueue(AbstractDD* dd)
+      : _theDD(dd),_rest(),_main()
    {}
    void enQueue(const ANode::Ptr& n) noexcept {
       if (_main.size()==0) {
@@ -571,34 +571,13 @@ void WidthBounded::tighten(ANode::Ptr nd) noexcept
 // ----------------------------------------------------------------------
 // Restricted DD Strategy
 
-void Restricted::truncate(NDArray& layer)
-{
-   _dd->_exact = false;
-   auto from = layer.at(_mxw);
-   for(auto start=from;start != layer.end();start++) {
-      (*start)->disconnect();
-      _dd->_an.remove(*start);
-   }
-   layer.eraseSuffix(from);
-}
-
-ANode::Ptr Restricted::checkDominance(CQueue<ANode::Ptr>& qn,ANode::Ptr n,double nObj)
-{
-   auto rv = qn.foldl([theDD = _dd,nObj,n](ANode::Ptr acc,ANode::Ptr o) {
-      const bool objDom = theDD->isBetterEQ(o->getBound(),nObj);
-      return (objDom && theDD->dominates(o,n)) ? o : acc;
-   },nullptr);
-   return rv;
-}
-
-
 void Restricted::compute(Bounds& bnds)
 {
    const bool hasDom = _dd->hasDominance();
    _dd->_exact = true;
    auto root = _dd->init();
    _dd->target();
-   FQueue qn(*this);
+   FQueue qn(this->theDD());
    root->setLayer(0);
    qn.enQueue(root);
    bool discarding = false;
@@ -666,6 +645,78 @@ void Restricted::compute(Bounds& bnds)
    //_dd->display();
 }
 
+void RestrictedND::compute(Bounds& bnds)
+{
+   const bool hasDom = _dd->hasDominance();
+   _dd->_exact = true;
+   auto root = _dd->init();
+   _dd->target();
+   FQueue qn(this->theDD());
+   root->setLayer(0);
+   qn.enQueue(root);
+   bool discarding = false;
+   while (!qn.empty()) {
+      discarding = false;
+      //std::cout << "qn popped" << std::endl;
+      auto lk = qn.pullLayer(); // We have in lk the queue content for layer cL, dk is what we discard
+      for(auto p : lk) { // loop over layer lk. p is a "parent" node.         
+         if(discarding) { // pickup discarded parents
+            continue; // do not expand discarded parent
+         }         
+         auto remLabels = _dd->getLabels(p,DDRestricted);
+         while(remLabels->more()) {
+            auto l = remLabels->getAndNext();
+            auto child = _dd->transition(bnds,p,l); // we get back a new node, or an already existing one.
+            if (child) {
+               bool newNode = child->nbParents()==0; // is this a newly created node?
+               auto theCost = _dd->cost(p,l);
+               auto ep = p->getBound() + theCost;
+               if (hasDom && newNode) {
+                  auto [dominator,dominee] = qn.checkDominance(child,ep);
+                  if (dominator) {
+                     _dd->_an.pop_back();
+                     child = dominator;
+                     newNode = false;
+                  }
+                  for(const auto& dominated : dominee) {
+                     transferArcs(dominated,child); // child replace all of them
+                     _dd->_an.remove(dominated);    // they are no longer in the DD
+                  }
+               }         
+               Edge::Ptr e = new (_dd->_mem) Edge(p,child,l);
+               e->_obj = theCost;
+               _dd->addArc(e); // connect to new node
+               if (_dd->isBetter(ep,child->getBound())) {
+                  child->setBound(ep);
+                  child->_optLabels = p->_optLabels;
+                  child->_optLabels.push_back(e->_lbl);
+               }
+               child->setLayer(std::max(child->getLayer(),p->getLayer()+1));
+               if(discarding) { // if node has additional labels, add it to discarded
+                  goto nextLabel;
+               }
+               if (!_dd->eqSink(child)) {
+                  if (newNode) {
+                     qn.enQueue(child);
+                     auto nbNode = qn.firstLayerSize();
+                     if (nbNode > _mxw - 1) {
+                        _dd->_exact = false;
+                        discarding = true;
+                     }
+                  }
+               }
+            }  
+            nextLabel:;          
+         }
+      }         
+   }
+   //_dd->computeBestBackward(getName()); // testing   
+   //_dd->computeBest(getName());
+   tighten(_dd->_trg);
+   //_dd->display();
+}
+
+
 // doesn't create a discard set in a "batched" way
 // every time a node is discarded it is added to the 
 // discard set, which is a threaded heap
@@ -678,7 +729,7 @@ void RestrictedDFS<Ord>::compute(Bounds& bnds)
    _dd->_exact = true;
    auto root = _dd->init();
    _dd->target();
-   FQueue qn(*this);
+   FQueue qn(this->theDD());
    root->setLayer(0);
    qn.enQueue(root);
    bool discarding = false;

@@ -22,6 +22,7 @@ ANode::ANode(Pool::Ptr mem,unsigned nid,bool exact)
      _optLabels(mem),
      _bound(0),
      _bbound(0),
+     _lbound(0),
      _layer(0),
      _exact(exact),
      _nid(nid),
@@ -36,6 +37,7 @@ ANode::ANode(Pool::Ptr mem,unsigned nid,const ANode& o,bool exact)
      _optLabels(mem,o._optLabels),
      _bound(o._bound),
      _bbound(o._bbound),
+     _lbound(o._lbound),
      _layer(0),
      _exact(exact),
      _nid(nid),
@@ -49,6 +51,7 @@ void ANode::reset()
    _children.clear();
    _optLabels.clear();
    _bound = _bbound = 0;
+   _lbound = 0;
    _layer = 0;
    _exact = true;
    _next = _prev = nullptr;

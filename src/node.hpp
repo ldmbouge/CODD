@@ -46,6 +46,7 @@ protected:
    Vec<int,unsigned>       _optLabels;
    double                  _bound;
    double                  _bbound;
+   double                  _lbound;
    unsigned                _layer:31; // will be used in restricted / (relaxed?)
    unsigned                _exact:1;  // true if node is exact
    unsigned                _nid;
@@ -55,6 +56,7 @@ public:
    friend class AbstractDD;
    friend class Relaxed;
    friend class Restricted;
+   friend class RestrictedND;
    template<typename> friend class RestrictedDFS;
    friend class WidthBounded;
    friend class ANList;
@@ -77,12 +79,15 @@ public:
    auto endKids()   { return _children.end();}
    auto beginOptLabels() { return _optLabels.begin();}
    auto endOptLabels() { return _optLabels.end();}
-   void setBound(double b) { _bound = b;}
-   void setBackwardBound(double b) { _bbound = b;}
+   void setBound(double b) noexcept { _bound = b;}
+   void setLBound(double b) noexcept { _lbound = b;}
+   void setBackwardBound(double b) noexcept { _bbound = b;}
    const auto depth() const { return _optLabels.size();}
    const auto getBound() const noexcept { return _bound;}
    const auto getBackwardBound() const noexcept { return _bbound;}
    const auto getTotalBound() const noexcept { return _bound + _bbound;}
+   const auto getLBound() const noexcept { return _lbound;}
+   const auto getFBound() const noexcept { return _bound + _lbound;}
    const Vec<int,unsigned>& getIncumbent() const noexcept { return _optLabels;}
    void setIncumbent(auto begin,auto end) {
       for(auto it = begin;it != end;it++)

@@ -28,7 +28,7 @@ void BAndBRestrictedOnlyNoQ::search(Bounds& bnds)
    });
    AbstractDD::Ptr restricted = _theDD->duplicate();
    WidthBounded* ddr;
-   restricted->setStrategy(ddr = new Restricted(_mxw));
+   restricted->setStrategy(ddr = new RestrictedND(_mxw)); // forget the discard tracking
 
    auto hOrder = [restricted](const QNode& a,const QNode& b) {
       return restricted->isBetter(a.bound,b.bound);
@@ -53,6 +53,7 @@ void BAndBRestrictedOnlyNoQ::search(Bounds& bnds)
       exact = restricted->isExact();
       ddr->setWidth(ddr->getWidth() << 1);
       nIter++;
+      std::cout << "Expanded:" << restricted->nbNodes() << "\n";
    }
    
    cout << setprecision(ss);

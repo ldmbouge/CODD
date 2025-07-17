@@ -91,6 +91,7 @@ protected:
    friend class Strategy;
    friend class Exact;
    friend class Restricted;
+   friend class RestrictedND;
    template<typename> friend class RestrictedDFS;
    friend class Relaxed;
    friend class WidthBounded;
@@ -108,6 +109,7 @@ public:
    virtual void reset() = 0;
    virtual ANode::Ptr init() = 0;
    virtual ANode::Ptr target() = 0;
+   virtual unsigned nbNodes() const noexcept = 0;
    virtual ANode::Ptr transition(Bounds& bnds,ANode::Ptr src,int label) = 0;
    virtual ANode::Ptr merge(const ANode::Ptr first,const ANode::Ptr snd) = 0;
    virtual double cost(ANode::Ptr src,int label) = 0;
@@ -302,7 +304,6 @@ public:
 };
 
 class Restricted: public WidthBounded {
-   void truncate(NDArray& layer);
 protected:
    std::vector<ANode::Ptr> _discardedSet;
 public:
@@ -310,8 +311,15 @@ public:
    const std::string getName() const { return "Restricted";}
    void compute(Bounds& );
    bool primal() const { return true;}
-   ANode::Ptr checkDominance(CQueue<ANode::Ptr>& qn,ANode::Ptr n,double nObj);
    std::vector<ANode::Ptr> theDiscardedSet() { return _discardedSet; }
+};
+
+class RestrictedND: public WidthBounded {
+public:
+   RestrictedND(const unsigned mxw) : WidthBounded(mxw) { }
+   const std::string getName() const { return "RestrictedND";}
+   void compute(Bounds& );
+   bool primal() const { return true;}
 };
 
 
@@ -489,7 +497,8 @@ private:
          //std::cout << "setting primal to better(bound=" << _trg->getBound() << ", primal=" << bnds.getPrimal() << ") = " << DD::better(_trg->getBound(),bnds.getPrimal()) << std::endl;
          bnds.setPrimal(DD::better(_trg->getBound(),bnds.getPrimal()));
          bnds.setIncumbent(_trg->beginOptLabels(),_trg->endOptLabels());
-         std::cout <<  std::fixed << std::setprecision(6) << "P TIGHTEN: " << bnds << "\n";
+         auto fb = _trg->getFBound();
+         std::cout <<  std::fixed << std::setprecision(6) << "P TIGHTEN: " << bnds << " " << fb << " #" << nbNodes() << "\n";
       }
       else if (_strat->dual() && _exact) {
          bnds.setPrimal(DD::better(_trg->getBound(),bnds.getPrimal()));
@@ -532,6 +541,7 @@ private:
    ANode::Ptr target() {
       return _trg = makeNode(_stt());
    }
+   unsigned nbNodes() const noexcept { return _ndId;}
    DDGen::Ptr getLabels(ANode::Ptr src,DDContext c) const {
       auto op = static_cast<const Node<ST>*>(src.get());
       return makeDDGen(_lgf(op->get(),c));
@@ -560,6 +570,8 @@ private:
             rv = makeNode(std::move(vs.value()),src->isExact());
             if (!isBetter(dual,rv->getBackwardBound()))
                rv->setBackwardBound(dual);
+            if (isBetter(dual,rv->getLBound()))
+               rv->setLBound(dual);
          } else {
             rv = makeNode(std::move(vs.value()),src->isExact());
          }             
