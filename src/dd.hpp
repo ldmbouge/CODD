@@ -570,8 +570,9 @@ private:
             rv = makeNode(std::move(vs.value()),src->isExact());
             if (!isBetter(dual,rv->getBackwardBound()))
                rv->setBackwardBound(dual);
-            if (isBetter(dual,rv->getLBound()))
+            if (!isBetter(dual,rv->getLBound()))
                rv->setLBound(dual);
+            //std::cout << "TRAN:" << std::fixed << dual << " ||| " << rv->getLBound() << "\n";
          } else {
             rv = makeNode(std::move(vs.value()),src->isExact());
          }             

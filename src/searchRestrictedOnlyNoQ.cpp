@@ -30,15 +30,12 @@ void BAndBRestrictedOnlyNoQ::search(Bounds& bnds)
    WidthBounded* ddr;
    restricted->setStrategy(ddr = new RestrictedND(_mxw)); // forget the discard tracking
 
-   auto hOrder = [restricted](const QNode& a,const QNode& b) {
-      return restricted->isBetter(a.bound,b.bound);
-   };
    ANode::Ptr rootNode = bbPool->cloneNode(restricted->init());
 
    if (restricted->hasLocal()) {
-      auto primalRootValue = restricted->local(rootNode,LocalContext::BBCtx);
-      cout << "primal@root:" << primalRootValue << "\n";
-      rootNode->setBackwardBound(primalRootValue);
+      auto dualRootValue = restricted->local(rootNode,LocalContext::BBCtx);
+      cout << "dual@root:" << std::fixed << dualRootValue << "\n";
+      rootNode->setBackwardBound(dualRootValue);
    }
 
    unsigned nIter = 0;
@@ -47,17 +44,20 @@ void BAndBRestrictedOnlyNoQ::search(Bounds& bnds)
    cout << "----------------------------------------------\n";
    
    bool exact = false;
+   long ttl = 0;
    while(!exact) {
       std::cout << "trying width=" << ddr->getWidth() << "...\n";
       restricted->apply(rootNode,bnds);
       exact = restricted->isExact();
       ddr->setWidth(ddr->getWidth() << 1);
       nIter++;
+      ttl += restricted->nbNodes();
       std::cout << "Expanded:" << restricted->nbNodes() << "\n";
    }
    
    cout << setprecision(ss);
    auto spent = RuntimeMonitor::elapsedSince(start);
+   cout << "TOTAL # nodes:" << ttl << "\n";
    cout << "Done(" << _mxw << "):" << bnds.getPrimal() << "\t #iterations:" <<  nIter
         << "\t Time:" << optTime/1000 << "/" << spent/1000 << "s"
         << "\tWidth: " << _mxw << "/" << ddr->getWidth()

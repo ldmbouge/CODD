@@ -692,6 +692,15 @@ void RestrictedND::compute(Bounds& bnds)
                   child->_optLabels.push_back(e->_lbl);
                }
                child->setLayer(std::max(child->getLayer(),p->getLayer()+1));
+
+               auto gx = child->getBound();
+               auto hx = child->getLBound();
+               auto fx = gx + hx;
+               auto gamma = bnds.getPrimal();
+               if (fx >= gamma)
+                  std::cout  << "Child: " << std::fixed << fx << " = " << gx << " + " << hx << "\n"; 
+
+               
                if(discarding) { // if node has additional labels, add it to discarded
                   goto nextLabel;
                }
@@ -704,12 +713,22 @@ void RestrictedND::compute(Bounds& bnds)
                         discarding = true;
                      }
                   }
+               } else {
+                  // THis *IS* the sink.
+                  std::cout  << "@SINK: " << std::fixed << fx << " = " << gx << " + " << hx << " : " << _dd->currentOpt() << "\n";
+                  bool isBetterValue = _dd->isBetter(_dd->currentOpt(), bnds.getPrimal()); 
+                  if (isBetterValue) {
+                     //std::cout << "Updating....\n"; 
+                     _dd->update(bnds);
+                  }
+                  goto done;
                }
             }  
             nextLabel:;          
          }
       }         
    }
+ done:
    //_dd->computeBestBackward(getName()); // testing   
    //_dd->computeBest(getName());
    tighten(_dd->_trg);
