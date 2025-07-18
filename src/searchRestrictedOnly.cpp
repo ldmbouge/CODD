@@ -36,10 +36,10 @@ void BAndBRestrictedOnly::search(Bounds& bnds)
    ANode::Ptr rootNode = bbPool->cloneNode(restricted->init());
 
    if (restricted->hasLocal()) {
-      auto primalRootValue = restricted->local(rootNode,LocalContext::BBCtx);
-      cout << "primal@root:" << primalRootValue << "\n";
-      rootNode->setBackwardBound(primalRootValue);
-      pq.insertHeap(QNode { rootNode, primalRootValue } );   
+      auto dualRootValue = restricted->local(rootNode,LocalContext::BBCtx);
+      cout << "dual@root:" << std::fixed << dualRootValue << "\n";
+      rootNode->setBackwardBound(dualRootValue);
+      pq.insertHeap(QNode { rootNode, dualRootValue } );   
    } else {
       pq.insertHeap(QNode { rootNode, restricted->initialWorst() } );
    }

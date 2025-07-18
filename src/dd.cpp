@@ -120,9 +120,10 @@ public:
       if (_main.size()==0) {
          _cLayer = n->getLayer();
          _main.push_back(n);
-      } else if (_cLayer == n->getLayer())
+      } else if (_cLayer == n->getLayer()) {
+         //if (_main.size() <= _mxw)
          _main.push_back(n);
-      else _rest.push_back(n);
+      } else _rest.push_back(n);
    }
    bool hasDominator(ANode::Ptr n,double nObj) {
       for(const auto o : _main) {
@@ -179,11 +180,14 @@ public:
       });
       if (retVal.size() > _mxw) {
          //std::cout << "RETVAL bef:" << retVal.size() << "   MXW:" << _mxw << "\n";
+         auto isz = retVal.size();
          auto from = retVal.begin();
          std::advance(from,_mxw);
          retVal.erase(from,retVal.end()); // trim the list
+         auto fsz = retVal.size();
          //std::cout << "RETVAL now:" << retVal.size() << "\n";
-         std::cout << "layer with pruning:" << _cLayer << "\n";
+         std::cout << "layer with pruning:" << _cLayer << " mxw:" << _mxw << " drop:" << isz-fsz
+                   << " REST:" << _rest.size() <<"\n";
       }
       _cLayer = (_rest.size() > 0) ? _rest.front()->getLayer() : -1;
       for(auto i = _rest.begin(); i != _rest.end();) {
@@ -613,6 +617,7 @@ void Restricted::compute(Bounds& bnds)
    qn.enQueue(root);
    bool discarding = false;
    _discardedSet.clear();
+   int ttlDom = 0;
    while (!qn.empty()) {
       discarding = false;
       //std::cout << "qn popped" << std::endl;
@@ -637,6 +642,8 @@ void Restricted::compute(Bounds& bnds)
                      child = dominator;
                      newNode = false;
                   }
+                  //if (dominee.size()>=1) std::cout << "DOMINEE SIZE:"<< dominee.size() << "\n";
+                  ttlDom += dominee.size();
                   for(const auto& dominated : dominee) {
                      transferArcs(dominated,child); // child replace all of them
                      _dd->_an.remove(dominated);    // they are no longer in the DD
@@ -664,6 +671,12 @@ void Restricted::compute(Bounds& bnds)
                         discarding = true;
                      }
                   }
+               } else {
+                  bool isBetterValue = _dd->isBetter(_dd->currentOpt(), bnds.getPrimal()); 
+                  if (isBetterValue) {
+                     std::cout << "update in RO " << std::fixed << _dd->currentOpt() << "\n";
+                     _dd->update(bnds);
+                  }
                }
             }  
             nextLabel:;          
@@ -674,6 +687,7 @@ void Restricted::compute(Bounds& bnds)
    //_dd->computeBest(getName());
    tighten(_dd->_trg);
    //_dd->display();
+   std::cout << "TOTAL DOM:" << ttlDom << "\n";
 }
 
 void RestrictedND::compute(Bounds& bnds)

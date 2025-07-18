@@ -193,9 +193,8 @@ int main(int argc,char* argv[]) {
    int* permOut = new int[sz];
 
    for(auto j : C) {
-      auto allButj = C;allButj.remove(j);
-      auto [e1, minIn]  = argmin(allButj,[&d,j](int k) { return d[k][j];});
-      auto [e2, minOut] = argmin(allButj,[&d,j](int k) { return d[j][k];});
+      auto [e1, minIn]  = argmin(C - j,[&d,j](int k) { return d[k][j];});
+      auto [e2, minOut] = argmin(C - j,[&d,j](int k) { return d[j][k];});
       dIn[j] = dInNS[j] = minIn;
       dOut[j] = minOut;
       permIn[j] = j;

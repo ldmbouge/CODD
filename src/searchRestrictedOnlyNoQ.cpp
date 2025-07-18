@@ -49,7 +49,7 @@ void BAndBRestrictedOnlyNoQ::search(Bounds& bnds)
       std::cout << "trying width=" << ddr->getWidth() << "...\n";
       restricted->apply(rootNode,bnds);
       exact = restricted->isExact();
-      ddr->setWidth(ddr->getWidth() << 1);
+      if (!exact) ddr->setWidth(ddr->getWidth() << 1);
       nIter++;
       ttl += restricted->nbNodes();
       std::cout << "Expanded:" << restricted->nbNodes() << "\n";

@@ -14,10 +14,10 @@ struct TimeWindow {
 
 struct TSPTW {
    using Set = NatSet<4>;
-   Set  U; // unvisited cities
-   int        e; // current city
-   int        t; // time
-   int     hops;
+   Set    U; // unvisited cities
+   int    e; // current city
+   int    t; // time
+   int hops;
    friend std::ostream& operator<<(std::ostream& os,const TSPTW& m) {
       return os << "<" << m.U << ',' << m.e << ',' << m.t << ',' << m.hops << ">";
    }
@@ -111,9 +111,9 @@ int main(int argc,char* argv[]) {
    std::cout << "Cities:" << C << "\n";
    std::cout << "Distance:\n";
    for(int r = 0; r < d.getDim(0);r++) {
-      for(int c = 0; c < d.getDim(1);c++) {
-         std::cout << d[r][c] << " ";
-      }
+      std::cout << "R(" << std::setw(2) << r << "): ";
+      for(int c = 0; c < d.getDim(1);c++) 
+         std::cout << d[r][c] << " ";      
       std::cout << "\n";
    }
    Bounds bnds([](const std::vector<int>& inc)  {
@@ -122,28 +122,23 @@ int main(int argc,char* argv[]) {
    const int depot = 0;
    const int sz = (const int)C.size();
 
-   const auto init = [&C]()      { return TSPTW { C - depot, depot, 0,  0 }; };
+   const auto init = [&C]()   { return TSPTW { C - depot, depot, 0,  0 }; };
    const auto target = [sz]() { return TSPTW { TSPTW::Set(),   depot, 0, sz }; };
    const auto lgf = [sz,&d,&tw](const TSPTW& s,DDContext)  {
-      if (s.hops >= sz-1) {
-         return s.t + d[s.e][depot] <= tw[depot].b ? TSPTW::Set {depot} : TSPTW::Set{};
-      } else {
-         return filter(s.U, [&s,&d,&tw](auto& u){ return (u != s.e && u != depot && s.t + d[s.e][u] <= tw[u].b); });
-      }     
+      if (s.hops >= sz-1) 
+         return (s.t + d[s.e][depot] <= tw[depot].b) ? TSPTW::Set {depot} : TSPTW::Set{}; // that's the only way to return the depot
+      else 
+         return filter(s.U, [&s,&d,&tw](auto& u){ return s.t + d[s.e][u] <= tw[u].b; }); // neither s.e nor depot IN s.U     
    };
    const auto stf = [sz,&d,&tw](const TSPTW& s,const int label) -> std::optional<TSPTW> {
       if (label==depot) {
          return TSPTW { TSPTW::Set(),depot,0,sz}; 
       } else {
-         int nextT = std::max(s.t+d[s.e][label], tw[label].a);
-         for(auto u: s.U) {
-            if (u== label || u == depot) continue;
-            if(nextT + d[label][u] > tw[u].b) {
-               return std::nullopt;
-            }
-         }
-         TSPTW::Set nextU = s.U;
-         nextU.remove(label).remove(depot);
+         const int nextT = std::max(s.t+d[s.e][label], tw[label].a);
+         TSPTW::Set nextU = s.U - label;
+         for(auto u : nextU) 
+            if(nextT + d[label][u] > tw[u].b) 
+               return std::nullopt;                     
          return TSPTW { nextU, label, nextT, s.hops+1};
       }
    };
@@ -153,40 +148,8 @@ int main(int argc,char* argv[]) {
    const auto eqs = [sz](const TSPTW& s) noexcept -> bool { 
       return s.e == depot && s.hops == sz;
    };
-   
-   int* dIn = new int[sz];
-   int* dOut= new int[sz];
-   int* perm1 = new int[sz];
-   int* perm2 = new int[sz];
-   for(auto j : C) {
-      auto [e1, minIn]  = argmin(C - j,[&d,j](int k) { return d[k][j];});
-      auto [e2, minOut] = argmin(C - j,[&d,j](int k) { return d[j][k];});
-      dIn[j] = minIn;
-      dOut[j] = minOut;
-      perm1[j] = j;
-      perm2[j] = j;
-   }
-   mergeSortPerm(dIn,  perm1, sz, [](double a, double b) { return a < b; });
-   mergeSortPerm(dOut, perm2, sz, [](double a, double b) { return a < b; });
-   const auto local = [&dIn,&dOut,&sz,&perm1,&perm2](const TSPTW& s,LocalContext) -> double {
-      int sumIn = 0,sumOut = 0,n1=0,n2=0;
-      for(int i = 0; (i < sz) && (n1 < sz-s.hops); i++) { 
-         if( s.U.contains(perm1[i]) || perm1[i] == depot) {
-            sumIn += dIn[i];
-            n1++; 
-         }
-      }
-      for(int i = 0; (i < sz) && (n2 < sz-s.hops); i++) { 
-         if( s.U.contains(perm2[i]) || perm2[i] == s.e) {
-            sumOut += dOut[i];
-            n2++; 
-         }
-      }
-      return std::max(sumIn,sumOut);   
-   };
    const auto sDom = [](const TSPTW& a,const TSPTW& b) -> bool { 
-      // if (a.U <= b.U) && (a.e == b.e) then a doms b iff a.t < b.t
-      return  (a.e == b.e) && a.t < b.t && (a.U <= b.U);
+      return  (a.U == b.U) && (a.e == b.e) && a.t < b.t;
    };
    BAndBRestrictedOnly engine(DD<TSPTW,Minimize<double>,
                               decltype(target),
@@ -194,9 +157,8 @@ int main(int argc,char* argv[]) {
                               decltype(stf),
                               decltype(scf),
                               AbstractDD::nullmerge_t<TSPTW>,
-                              decltype(eqs),
-                              decltype(local)
-                              >::makeDD(init,target,lgf,stf,scf,AbstractDD::nullmerge<TSPTW>,eqs,C,local,sDom),w);
+                              decltype(eqs)
+                              >::makeDD(init,target,lgf,stf,scf,AbstractDD::nullmerge<TSPTW>,eqs,C,nullptr,sDom),w);
    engine.search(bnds);
    return 0;
 }

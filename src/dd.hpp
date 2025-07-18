@@ -498,7 +498,8 @@ private:
          bnds.setPrimal(DD::better(_trg->getBound(),bnds.getPrimal()));
          bnds.setIncumbent(_trg->beginOptLabels(),_trg->endOptLabels());
          auto fb = _trg->getFBound();
-         std::cout <<  std::fixed << std::setprecision(6) << "P TIGHTEN: " << bnds << " " << fb << " #" << nbNodes() << "\n";
+         std::cout <<  std::fixed << std::setprecision(6) << "P TIGHTEN: " << bnds << " " << fb << " "
+                   << _trg->getBound() << " + " << _trg->getLBound() << " #" << nbNodes() << "\n";
       }
       else if (_strat->dual() && _exact) {
          bnds.setPrimal(DD::better(_trg->getBound(),bnds.getPrimal()));
