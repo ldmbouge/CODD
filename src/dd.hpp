@@ -662,7 +662,7 @@ public:
       EQSink eqs,
       const GNSet& labels,
       std::function<double(const ST&,LocalContext)> local = nullptr,
-      std::function<DC(const ST&)> pfun=nullptr,
+      std::function<DC(const ST&)> pfun=[](const ST&) { return std::make_tuple(0);},
       SDOM dom=nullptr
      )
       : AbstractDD(labels),
