@@ -152,6 +152,7 @@ int main(int argc,char* argv[])
    */
    
    BAndB engine(DD<SGRuler,Minimize<double>, // to minimize
+                std::tuple<int>,
                 ///decltype(init), 
                 decltype(target),
                 decltype(lgf),

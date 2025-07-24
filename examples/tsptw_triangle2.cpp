@@ -309,15 +309,17 @@ int main(int argc,char* argv[]) {
    // return 0;
 
    BAndB engine(DD<TSPTW,Minimize<double>, // to minimize
+                std::tuple<int>,
                 //   BAndBRestrictedFirst engine(DD<TSPTW,Minimize<double>,
                 decltype(target),
                 decltype(lgf),
                 decltype(stf),
                 decltype(scf),
                 decltype(smf),
-                decltype(eqs),
-                decltype(local)
-                >::makeDD(init,target,lgf,stf,scf,smf,eqs,C,local,sDom),w);
+                decltype(eqs)
+                >::makeDD(init,target,lgf,stf,scf,smf,eqs,C,local,
+                          [](const TSPTW&) { return std::make_tuple(0);}, // 1 class
+                          sDom),w);
    engine.search(bnds);
    return 0;
 }

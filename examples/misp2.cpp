@@ -196,6 +196,7 @@ int main(int argc,char* argv[])
    };
 
    BAndB engine(DD<MISP,Maximize<double>, // to maximize
+                std::tuple<int>,
                 //decltype(myInit), 
                 decltype(myTarget), // MISP(*)(),
                 decltype(lgf),

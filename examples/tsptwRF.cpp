@@ -205,14 +205,14 @@ int main(int argc,char* argv[]) {
    };
 
    BAndBRestrictedFirst engine(DD<TSPTW,Minimize<double>,
-                decltype(target),
-                decltype(lgf),
-                decltype(stf),
-                decltype(scf),
-                decltype(smf),
-                decltype(eqs),
-                decltype(local)
-                >::makeDD(init,target,lgf,stf,scf,smf,eqs,C,local),w);
+                               std::tuple<int>,
+                               decltype(target),
+                               decltype(lgf),
+                               decltype(stf),
+                               decltype(scf),
+                               decltype(smf),
+                               decltype(eqs)
+                               >::makeDD(init,target,lgf,stf,scf,smf,eqs,C,local),w);
    engine.search(bnds);
    return 0;
 }

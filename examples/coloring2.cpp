@@ -211,6 +211,7 @@ int main(int argc,char* argv[])
    const auto eqs = [K](const COLOR& s) -> bool { return s.vtx == K;};
 
    BAndB engine(DD<COLOR,Minimize<double>, // to minimize
+                std::tuple<int>,
                 decltype(target),
                 decltype(lgf),
                 decltype(stf),

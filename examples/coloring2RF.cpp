@@ -212,13 +212,14 @@ int main(int argc,char* argv[])
    const auto eqs = [K](const COLOR& s) -> bool { return s.vtx == K;};
 
    BAndBRestrictedFirst engine(DD<COLOR,Minimize<double>, // to minimize
-                decltype(target),
-                decltype(lgf),
-                decltype(stf),
-                decltype(scf),
-                decltype(smf),
-                decltype(eqs)
-                >::makeDD(init,target,lgf,stf,scf,smf,eqs,labels),w);
+                               std::tuple<int>,
+                               decltype(target),
+                               decltype(lgf),
+                               decltype(stf),
+                               decltype(scf),
+                               decltype(smf),
+                               decltype(eqs)
+                               >::makeDD(init,target,lgf,stf,scf,smf,eqs,labels),w);
    //engine.setTimeLimit([](double elapsed) { return elapsed >= 120000;});
    engine.search(bnds);
    return 0;

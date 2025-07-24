@@ -63,15 +63,17 @@ int main(int argc,char* argv[]) {
    const auto eqs = [](const int& s) -> bool {return false;};
    const auto local = [](const int& s,LocalContext) -> double {return 0;};
    const auto sDom = [](const int& a,const int& b) -> bool {return false;};
-
-   testQueue(bnds, DD<int,Minimize<double>,
-                decltype(target),
-                decltype(lgf),
-                decltype(stf),
-                decltype(scf),
-                decltype(smf),
-                decltype(eqs),
-                decltype(local)
-                >::makeDD(init,target,lgf,stf,scf,smf,eqs,0,local,sDom));
+   const auto project = [](const int& t) -> std::tuple<int> { return std::make_tuple(0);};
+   testQueue(bnds,
+             DD<int,Minimize<double>,
+             std::tuple<int>,
+             decltype(target),
+             decltype(lgf),
+             decltype(stf),
+             decltype(scf),
+             decltype(smf),
+             decltype(eqs),
+             decltype(sDom)
+             >::makeDD(init,target,lgf,stf,scf,smf,eqs,0,local,project,sDom));
    return 0;
 }

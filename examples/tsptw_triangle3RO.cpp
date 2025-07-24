@@ -259,14 +259,16 @@ int main(int argc,char* argv[]) {
 
    //BAndB engine(DD<TSPTW,Minimize<double>, // to minimize
    BAndBRestrictedOnly engine(DD<TSPTW,Minimize<double>,
-                decltype(target),
-                decltype(lgf),
-                decltype(stf),
-                decltype(scf),
-                AbstractDD::nullmerge_t<TSPTW>,
-                decltype(eqs),
-                decltype(local)
-                >::makeDD(init,target,lgf,stf,scf,AbstractDD::nullmerge<TSPTW>,eqs,C,local,sDom),w);
+                              std::tuple<TSPTW::Set,int>,
+                              decltype(target),
+                              decltype(lgf),
+                              decltype(stf),
+                              decltype(scf),
+                              AbstractDD::nullmerge_t<TSPTW>,
+                              decltype(eqs)
+                              >::makeDD(init,target,lgf,stf,scf,AbstractDD::nullmerge<TSPTW>,eqs,C,local,
+                                        [](const TSPTW& s) { return std::make_tuple(s.pos,s.hops);},
+                                        sDom),w);
    engine.search(bnds);
    return 0;
 }

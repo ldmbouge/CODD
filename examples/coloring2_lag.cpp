@@ -428,6 +428,7 @@ int main(int argc,char* argv[])
    
 
    BAndB engine(DD<COLOR,Minimize<double>, // to minimize
+                std::tuple<int>,
                 decltype(target),
                 decltype(lgf),
                 decltype(stf),

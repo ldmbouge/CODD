@@ -215,13 +215,13 @@ int main(int argc,char* argv[]) {
    // return 0;
 
    BAndB engine(DD<TSPTW,Minimize<double>,
+                std::tuple<int>,
                 decltype(target),
                 decltype(lgf),
                 decltype(stf),
                 decltype(scf),
                 decltype(smf),
-                decltype(eqs),
-                decltype(local)
+                decltype(eqs)
                 >::makeDD(init,target,lgf,stf,scf,smf,eqs,C,local),w);
    engine.search(bnds);
    return 0;

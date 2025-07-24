@@ -207,14 +207,16 @@ int main(int argc,char* argv[]) {
       return  (a.e == b.e) && a.t < b.t && (a.U <= b.U);
    };
    BAndB engine(DD<TSPTW,Minimize<double>, // to minimize
+                std::tuple<int>,
                 decltype(target),
                 decltype(lgf),
                 decltype(stf),
                 decltype(scf),
                 decltype(smf),
-                decltype(eqs),
-                decltype(local)
-                >::makeDD(init,target,lgf,stf,scf,smf,eqs,C,local,sDom),w);
+                decltype(eqs)
+                >::makeDD(init,target,lgf,stf,scf,smf,eqs,C,local,
+                          [](const TSPTW& a) { return std::make_tuple(a.e);},
+                          sDom),w);
    engine.search(bnds);
    return 0;
 }

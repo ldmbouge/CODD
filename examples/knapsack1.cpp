@@ -129,13 +129,14 @@ int main(int argc,char* argv[])
    const auto sEq = [I](const SKS& s) -> bool              { return s.n == I;};
       
    BAndB engine(DD<SKS,Maximize<double>,
-               decltype(target),
-               decltype(lgf),
-               decltype(stf),
-               decltype(scf),
-               decltype(smf),
-               decltype(sEq)
-               >::makeDD(init,target,lgf,stf,scf,smf,sEq,labels),width);
+                std::tuple<int>,
+                decltype(target),
+                decltype(lgf),
+                decltype(stf),
+                decltype(scf),
+                decltype(smf),
+                decltype(sEq)
+                >::makeDD(init,target,lgf,stf,scf,smf,sEq,labels),width);
    engine.search(bnds);
 
    return 0;

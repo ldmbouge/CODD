@@ -646,14 +646,14 @@ int main(int argc,char* argv[])
          throw std::invalid_argument("Invalid LBopt value! Must be 0, 1, or 2.");
    }
    BAndB engine(DD<MISP,Maximize<double>, // to maximize
+                std::tuple<int>,
                 //decltype(myInit),
                 decltype(myTarget), // MISP(*)(),
                 decltype(lgf),
                 decltype(myStf),
                 decltype(scf),
                 decltype(smf),
-                decltype(eqs),
-                decltype(local)
+                decltype(eqs)
                 >::makeDD(myInit,myTarget,lgf,myStf,scf,smf,eqs,labels,local),w);
    engine.search(bnds);
    return 0;

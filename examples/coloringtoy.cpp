@@ -114,6 +114,7 @@ int main()
    std::cout << "LABELS:" << labels << "\n";
 
    BAndB engine(DD<COLOR,Minimize<double>, // to minimize
+                std::tuple<int>,
                 ///decltype(init), 
                 decltype(target),
                 decltype(lgf),

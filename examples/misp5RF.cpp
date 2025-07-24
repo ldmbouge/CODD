@@ -176,15 +176,14 @@ int main(int argc,char* argv[])
    };      
 
    BAndBRestrictedFirst engine(DD<MISP,Maximize<double>, // to maximize
-                //decltype(myInit), 
-                decltype(myTarget), // MISP(*)(),
-                decltype(lgf),
-                decltype(myStf),
-                decltype(scf),
-                decltype(smf),
-                decltype(eqs),
-                decltype(local)
-                >::makeDD(myInit,myTarget,lgf,myStf,scf,smf,eqs,labels,local),w);
+                               std::tuple<int>,
+                               decltype(myTarget), // MISP(*)(),
+                               decltype(lgf),
+                               decltype(myStf),
+                               decltype(scf),
+                               decltype(smf),
+                               decltype(eqs)
+                               >::makeDD(myInit,myTarget,lgf,myStf,scf,smf,eqs,labels,local),w);
    engine.search(bnds);
    return 0;
 }

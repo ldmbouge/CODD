@@ -112,6 +112,7 @@ int main()
    
    
    BAndB engine(DD<MISP,Maximize<double>, // to maximize
+                std::tuple<int>,
                 //decltype(myInit), 
                 decltype(myTarget), // MISP(*)(),
                 decltype(lgf),

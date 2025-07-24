@@ -245,6 +245,7 @@ int main(int argc,char* argv[])
    std::cout << "LABELS:" << labels << "\n";
 
    BAndB engine(DD<COLOR,Minimize<double>, // to minimize
+                std::tuple<int>,
                 ///decltype(init), 
                 decltype(target),
                 decltype(lgf),

@@ -153,13 +153,16 @@ int main(int argc,char* argv[])
       return  a.n <= b.n && a.c >= b.c;
    };
    BAndB engine(DD<SKS,Maximize<double>,
-               decltype(target),
-               decltype(lgf),
-               decltype(stf),
-               decltype(scf),
-               decltype(smf),
-               decltype(sEq)
-               >::makeDD(init,target,lgf,stf,scf,smf,sEq,labels,local,sDom),width);
+                std::tuple<int>,
+                decltype(target),
+                decltype(lgf),
+                decltype(stf),
+                decltype(scf),
+                decltype(smf),
+                decltype(sEq)
+                >::makeDD(init,target,lgf,stf,scf,smf,sEq,labels,local,
+                          [](const SKS&) { return std::make_tuple(0);},
+                          sDom),width);
    engine.search(bnds);
 
    return 0;

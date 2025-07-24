@@ -77,6 +77,7 @@ int main(int argc,char* argv[]) {
    const auto eqs = [sz](const TSP& s) -> bool { return s.e == 1 && s.hops == sz;};
 
    BAndB engine(DD<TSP,Minimize<double>,
+                std::tuple<int>,
                 decltype(target),
                 decltype(lgf),
                 decltype(stf),
