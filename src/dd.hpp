@@ -2,6 +2,7 @@
 #define __DD_HPP__
 
 #include <algorithm>
+#include <map>
 #include <iomanip>
 #include <type_traits>
 #include "node.hpp"
@@ -20,6 +21,16 @@
 
 class Strategy;
 class AbstractDD;
+
+typedef std::list<ANode::Ptr>::iterator LLoc;
+
+class ADOMClass {
+public:
+   typedef std::shared_ptr<ADOMClass> Ptr;
+   ADOMClass() {}
+   virtual ~ADOMClass() {}
+   virtual std::list<LLoc>& classFor(ANode::Ptr p) = 0;   
+};
 
 typedef std::function<void(const std::vector<int>&)> SolutionCB;
 
@@ -110,6 +121,7 @@ public:
    virtual ANode::Ptr init() = 0;
    virtual ANode::Ptr target() = 0;
    virtual unsigned nbNodes() const noexcept = 0;
+   virtual ADOMClass::Ptr makeDominanceManager() = 0;
    virtual ANode::Ptr transition(Bounds& bnds,ANode::Ptr src,int label) = 0;
    virtual ANode::Ptr merge(const ANode::Ptr first,const ANode::Ptr snd) = 0;
    virtual double cost(ANode::Ptr src,int label) = 0;
@@ -122,7 +134,6 @@ public:
    virtual double better(double obj1,double obj2) const = 0;
    virtual bool hasLocal() const noexcept = 0;
    virtual bool hasDominance() const noexcept = 0;
-   virtual void killDominance() = 0;
    virtual bool dominates(ANode::Ptr f,ANode::Ptr s) = 0;
    virtual void update(Bounds& bnds) const = 0;
    virtual void printNode(std::ostream& os,ANode::Ptr n) const = 0;
@@ -141,7 +152,9 @@ public:
    bool isExact() const { return _exact;}
    virtual AbstractDD::Ptr duplicate() = 0;
    virtual void makeInitFrom(ANode::Ptr src) {}
-   template <class ST> static constexpr auto nullmerge = [](const ST&,const ST&) -> std::optional<ST> {return std::nullopt;};
+   template <class ST> static constexpr auto nullmerge = [](const ST&,const ST&) -> std::optional<ST> {
+      return std::nullopt;
+   };
    template <class ST> using nullmerge_t = decltype(nullmerge<ST>);
 };
 
@@ -442,15 +455,35 @@ public:
 };
 
 
+template <class ST,class DC>
+class CDOMClass :public ADOMClass {
+   std::function<DC(ST)> project;
+   std::unordered_map<DC,std::list<LLoc>> _theMap;  
+public:
+   CDOMClass(const std::function<DC(ST)>& fun) : project(fun) {}
+   std::list<LLoc>& classFor(ANode::Ptr p) {
+      auto fp = static_cast<const Node<ST>*>(p.get());
+      auto key = project(fp->get());
+      auto at = _theMap.find(key);
+      if (at != _theMap.end()) {
+         return at->second;
+      } else {
+         auto [now,didIt] = _theMap.insert({key,std::list<LLoc>{}});
+         return now->second;
+      }
+   }
+};
+
+
 template <typename ST,
           class Compare = Minimize<double>,
+          typename DC   = ST,
           typename IBL2 = ST(*)(),
           typename LGF  = Range(*)(const ST&,DDContext),
           typename STF  = std::optional<ST>(*)(const ST&,int),
           typename STC  = double(*)(const ST&,int),
           typename SMF  = std::optional<ST>(*)(const ST&,const ST&),
           typename EQSink = bool(*)(const ST&),
-          typename LOCAL = double(*)(const ST&,LocalContext),
           typename SDOM = bool(*)(const ST&,const ST&),
           class Equal = std::equal_to<ST>
           >
@@ -465,10 +498,14 @@ private:
    SMF _smf;
    EQSink _eqs;
    std::function<double(const ST&,LocalContext)> _local;
+   std::function<DC(const ST&)> _project;
    SDOM _sdom;
    LHashtable<ST> _nmap;
    unsigned _ndId;
    std::function<ANode::Ptr()> _initClosure;
+   ADOMClass::Ptr makeDominanceManager() {
+      return ADOMClass::Ptr(new CDOMClass<ST,DC>(_project));
+   }
    bool eq(ANode::Ptr f,ANode::Ptr s) const noexcept {
       auto fp = static_cast<const Node<ST>*>(f.get());
       auto sp = static_cast<const Node<ST>*>(s.get());
@@ -482,13 +519,12 @@ private:
       return Compare{}.better(obj1,obj2);
    }
    bool   isBetterEQ(double obj1,double obj2) const noexcept {
-      return Compare{}.betterEQ(obj1,obj2);
+      return Compare{}.betterEQ(obj1,obj2); 
    }
    double better(double obj1,double obj2) const noexcept {
       return Compare{}.better(obj1,obj2) ? obj1 : obj2;
    }
    bool hasLocal() const noexcept       { return _local != nullptr;}
-   void killDominance() { _sdom = nullptr;}
    bool hasDominance() const noexcept   { return _sdom != nullptr;}
    double initialBest() const noexcept  { return Compare{}.bestValue();}
    double initialWorst() const noexcept { return Compare{}.worstValue();}
@@ -623,9 +659,12 @@ private:
    }
 public:   
    DD(std::function<ST()> sti,IBL2 stt,LGF lgf,STF stf,STC stc,SMF smf,
-      EQSink eqs,const GNSet& labels,
+      EQSink eqs,
+      const GNSet& labels,
       std::function<double(const ST&,LocalContext)> local = nullptr,
-      SDOM dom=nullptr)
+      std::function<DC(const ST&)> pfun=nullptr,
+      SDOM dom=nullptr
+     )
       : AbstractDD(labels),
         _sti(sti),
         _stt(stt),
@@ -635,6 +674,7 @@ public:
         _smf(smf),
         _eqs(eqs),
         _local(local),
+        _project(pfun),
         _sdom(dom),
         _nmap(_mem,200000),
         _ndId(0)
@@ -658,8 +698,8 @@ public:
       auto sp = static_cast<const Node<ST>*>(n.get());
       sp->print(os);
    }
-   AbstractDD::Ptr duplicate() {
-      auto theDD = new DD(_sti,_stt,_lgf,_stf,_stc,_smf,_eqs,_labels,_local,_sdom);
+   AbstractDD::Ptr duplicate() { // must update this one each time we *add* an argument to constructor.
+      auto theDD = new DD(_sti,_stt,_lgf,_stf,_stc,_smf,_eqs,_labels,_local,_project,_sdom);
       return AbstractDD::Ptr(theDD);
    }
    ANode::Ptr duplicate(const ANode::Ptr src) {

@@ -2,6 +2,7 @@
 #include "heap.hpp"
 #include "searchRestrictedFirst.hpp"
 #include "searchRestrictedOnly.hpp"
+#include "searchRestrictedOnlyNoQ.hpp"
 
 int d2i(double d) { return (int)(d * 10000); }
 
@@ -187,7 +188,7 @@ int main(int argc,char* argv[]) {
       return 0.0;
    };
    
-   BAndBRestrictedOnly engine(DD<TSPTW,Minimize<double>,
+   BAndBRestrictedOnlyNoQ engine(DD<TSPTW,Minimize<double>,
                               Projection<TSPTW,0,1>::Tuple,
                               decltype(target),
                               decltype(lgf),
@@ -198,7 +199,7 @@ int main(int argc,char* argv[]) {
                               decltype(sDom)
                               >::makeDD(init,target,
                                         lgf,stf,scf,
-                                        merge,
+                                         merge,
                                         eqs,
                                         C,
                                         local,

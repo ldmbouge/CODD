@@ -90,10 +90,8 @@ void BAndBRestrictedFirst::search(Bounds& bnds)
 
    AbstractDD::Ptr restricted = _theDD->duplicate();
    restricted->setStrategy(ddr[0] = new Restricted(_mxw));
-   //restricted->killDominance(); // doesn't help either
 
    AbstractDD::Ptr relaxed = _theDD->duplicate();
-   //relaxed->killDominance();
    relaxed->setStrategy(ddr[1] = new Relaxed(_mxw));// _mxw));
 
 

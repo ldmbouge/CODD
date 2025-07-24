@@ -28,7 +28,7 @@ void BAndBRestrictedOnlyNoQ::search(Bounds& bnds)
    });
    AbstractDD::Ptr restricted = _theDD->duplicate();
    WidthBounded* ddr;
-   restricted->setStrategy(ddr = new RestrictedND(_mxw)); // forget the discard tracking
+   restricted->setStrategy(ddr = new Restricted(_mxw)); // forget the discard tracking
 
    ANode::Ptr rootNode = bbPool->cloneNode(restricted->init());
 

@@ -111,22 +111,25 @@ class FQueue { // flat queue
    std::list<ANode::Ptr>                   _main;
    unsigned                              _cLayer;
    unsigned                              _mxw;
+   ADOMClass::Ptr _mgr;
    friend class RestrictedND;
 public:
    FQueue(AbstractDD* dd,unsigned mxw)
-      : _theDD(dd),_rest(),_main(),_mxw(mxw)
+      : _theDD(dd),_rest(),_main(),_mxw(mxw),_mgr(dd->makeDominanceManager())
    {}
    void enQueue(const ANode::Ptr& n) noexcept {
       if (_main.size()==0) {
          _cLayer = n->getLayer();
-         _main.push_back(n);
+         auto loc = _main.insert(_main.end(),n);
+         _mgr->classFor(n).emplace_back(loc);
       } else if (_cLayer == n->getLayer()) {
          //if (_main.size() <= _mxw)
-         _main.push_back(n);
+         auto loc = _main.insert(_main.end(),n);
+         _mgr->classFor(n).emplace_back(loc);
       } else _rest.push_back(n);
    }
    bool hasDominator(ANode::Ptr n,double nObj) {
-      for(const auto o : _main) {
+      for(const auto& o : _main) {
          if (_theDD->isBetterEQ(o->getBound(),nObj)) { // key is better. Could DOMINATE nObj
             if (_theDD->dominates(o,n)) 
                return true;            
@@ -147,8 +150,22 @@ public:
    std::pair<ANode::Ptr,std::list<ANode::Ptr>> checkDominance(ANode::Ptr n,double nObj) {
       ANode::Ptr dominator = nullptr;
       std::list<ANode::Ptr> dominee;
-      for(auto it = _main.begin();it != _main.end();) {
-         const auto o   = *it;
+
+      auto& main = _mgr->classFor(n);
+      /*
+      std::cout << "checkDOM:"<< main.size() << " | " << _main.size() << " for ";
+      _theDD->printNode(std::cout,n);
+      std::cout << "\n";
+      for(auto k : main) {
+         std::cout << "\t";
+         _theDD->printNode(std::cout,*k);
+         std::cout << std::endl;
+      }
+      */
+      
+      for(auto it = main.begin();it != main.end();) {
+         const auto at = *it;
+         const auto o  = *at;
          if (_theDD->isBetterEQ(o->getBound(),nObj) > 0) { // key is better. Could DOMINATE nObj
             if (dominator==nullptr && _theDD->dominates(o,n)) { // no dominator yet
                dominator = o;
@@ -158,7 +175,9 @@ public:
          } else { // key is worse. Could be dominated by nObj
             if (_theDD->dominates(n,o)) { // new guy dominates iterate (o)
                dominee.push_back(o);
-               it = _main.erase(it);
+               //std::cout << "\t\t dominee removed:" << o << "\n"; 
+               _main.erase(at);      // erase from the main list
+               it = main.erase(it);  // erase from the list in the CLManager.
             } else it = std::next(it);
          }
       }
@@ -189,6 +208,8 @@ public:
          std::cout << "layer with pruning:" << _cLayer << " mxw:" << _mxw << " drop:" << isz-fsz
                    << " REST:" << _rest.size() <<"\n";
       }
+      // std::cout << "pullLayer(" << _cLayer << "): " << retVal.size() << " | "
+      //           << _main.size() << " | " << _rest.size() << "\n";
       _cLayer = (_rest.size() > 0) ? _rest.front()->getLayer() : -1;
       for(auto i = _rest.begin(); i != _rest.end();) {
          const auto n = *i;
@@ -199,6 +220,7 @@ public:
          i = _rest.erase(i);        
       }
       // Only thing left in _rest are guys with layer > _cLayer
+      _mgr = _theDD->makeDominanceManager(); // reset for next round.
       return retVal;
    } 
 };
@@ -617,7 +639,7 @@ void Restricted::compute(Bounds& bnds)
    qn.enQueue(root);
    bool discarding = false;
    _discardedSet.clear();
-   int ttlDom = 0;
+   [[maybe_unused]] int ttlDom = 0;
    while (!qn.empty()) {
       discarding = false;
       //std::cout << "qn popped" << std::endl;
@@ -687,7 +709,7 @@ void Restricted::compute(Bounds& bnds)
    //_dd->computeBest(getName());
    tighten(_dd->_trg);
    //_dd->display();
-   std::cout << "TOTAL DOM:" << ttlDom << "\n";
+   //std::cout << "TOTAL DOM:" << ttlDom << "\n";
 }
 
 void RestrictedND::compute(Bounds& bnds)

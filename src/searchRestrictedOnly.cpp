@@ -44,6 +44,7 @@ void BAndBRestrictedOnly::search(Bounds& bnds)
       pq.insertHeap(QNode { rootNode, restricted->initialWorst() } );
    }
 
+   bool primalBetter = false;
    unsigned nNode = 0,ttlNode = 0,insDom=0,pruned=0;
    // Main Loop
    cout << "B&B Nodes          " << setw(6) << "Dual\t " << setw(6) << "Primal\t Gap(%)\n";
@@ -52,12 +53,35 @@ void BAndBRestrictedOnly::search(Bounds& bnds)
       auto bbn = pq.extractMax();
       auto curDual = bbn.bound;
       bnds.setDual(bbn.node->getBound(),curDual);
+
+      auto now = RuntimeMonitor::cputime();
+      auto fs = RuntimeMonitor::elapsedMilliseconds(start,now);
+      auto fl = RuntimeMonitor::elapsedMilliseconds(last,now);
+      //std::cout << fl << "\n";
+      if (_timeLimit && _timeLimit(fs))         
+         break;      
+      if (primalBetter || fl > 5000) {
+         double gap = 100 * std::abs(bnds.getPrimal() - curDual) / bnds.getPrimal();      
+         cout << std::fixed << "RO-B&B(" << setw(5) << nNode << ")\t " << setprecision(6);
+         if (curDual == restricted->initialWorst())
+            cout << setw(7) << "-"  << "\t " << setw(7) << bnds.getPrimal() << "\t ";
+         else
+            cout << setw(7) << curDual << "\t " << setw(7) << bnds.getPrimal() << "\t ";
+         if (gap > 100)
+            cout << setw(6) << "-";
+         else cout << setw(6) << setprecision(4) << gap << "%";
+         cout << "\t time:" << setw(6) << setprecision(4) <<  fs / 1000.0 << "s";
+         cout << "\n";
+         last = RuntimeMonitor::cputime();
+      }
+
+      
       ttlNode++;
       nNode++;
-      restricted->apply(bbn.node,bnds);
+      primalBetter = restricted->apply(bbn.node,bnds);
             
       auto discardSet = restricted->theDiscardedSet();
-
+      //std::cout << "DISCARD Set: " << discardSet.size() << "\n";
       // std::vector<ANode::Ptr> survivedDom;
       // std::vector<ANode::Ptr> survivedLocal = restricted->hasLocal() ?
       //    filterLocal(bnds, restricted, discardSet) : discardSet;

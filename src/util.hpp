@@ -80,6 +80,21 @@ namespace std {
    }
 };
 
+template <typename... TF>
+std::ostream& operator<<(std::ostream& os,const std::tuple<TF...>& t) {
+    os << "<";
+    std::apply([&os](const auto&... tupleArgs) {
+        size_t index = 0;
+        auto printElem = [&os,&index](const auto& x) {
+            if (index++ > 0) 
+                   os << ", ";
+            os << x;
+        };
+        (printElem(tupleArgs), ...);
+    }, t);
+    return os << ">";
+}
+
 class Range {
    int _from;
    int _to;
@@ -1565,5 +1580,59 @@ template <unsigned short nbw> DDGen::Ptr makeDDGen(const NatSet<nbw>& ns) {
 DDGen::Ptr makeDDGen(const GNSet& gns);
 DDGen::Ptr makeDDGen(const Range& r);
 
+// Generic tuple hashing using template expansion. Avoid having to write your
+// own hashing (providing that states in CODD use "tuple<>"
+namespace std {
+    namespace {
+        // Code from boost
+        // Reciprocal of the golden ratio helps spread entropy
+        //     and handles duplicates.
+        // See Mike Seymour in magic-numbers-in-boosthash-combine:
+        //     http://stackoverflow.com/questions/4948780
+
+        template <class T> inline void hash_combine(std::size_t& seed, T const& v) {
+            seed ^= std::hash<T>()(v) + 0x9e3779b9 + (seed<<6) + (seed>>2);
+        }
+
+        // Recursive template code derived from Matthieu M.
+        template <class Tuple, size_t Index = std::tuple_size<Tuple>::value - 1>
+        struct HashValueImpl {
+          static void apply(size_t& seed, Tuple const& tuple) { // induction on tuple size
+            HashValueImpl<Tuple, Index-1>::apply(seed, tuple);
+            hash_combine(seed, std::get<Index>(tuple));
+          }
+        };
+
+        template <class Tuple> struct HashValueImpl<Tuple,0> {  // base of induction on pack
+          static void apply(size_t& seed, Tuple const& tuple) {
+            hash_combine(seed, std::get<0>(tuple));
+          }
+        };
+    }
+
+    template <typename ... TT> struct hash<std::tuple<TT...>> {
+        size_t operator()(std::tuple<TT...> const& tt) const {                                              
+            size_t seed = 0;                             
+            HashValueImpl<std::tuple<TT...> >::apply(seed, tt);    
+            return seed;                                 
+        }                                              
+    };
+}
+
+template<typename T, size_t... indexes>
+class Projection{
+public:
+    using Tuple = std::tuple<typename std::tuple_element<indexes, T>::type...>;
+};
+
+template<size_t... indexes, typename T>
+auto project(const T &t) -> typename Projection<T, indexes...>::Tuple {
+    return typename Projection<T, indexes...>::Tuple(std::get<indexes>(t)...);
+}
+
+template<typename T,size_t... indexes>
+auto project2(const T &t) -> typename Projection<T, indexes...>::Tuple {
+    return typename Projection<T, indexes...>::Tuple(std::get<indexes>(t)...);
+}
 
 #endif
