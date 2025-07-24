@@ -177,14 +177,32 @@ int main(int argc,char* argv[]) {
    const auto sDom = [](const TSPTW& a,const TSPTW& b) -> bool { 
       const auto& [aU,ae,at,ahops] = a;
       const auto& [bU,be,bt,bhops] = b;
-      return  (aU == bU) && (ae == be) && at < bt;
+      //return  (aU == bU) && (ae == be) && at < bt;
+      return  at < bt;
       //return ae==be && at < bt;
    };
    const auto merge = [](const TSPTW&a,const TSPTW& b) -> std::optional<TSPTW> {
       return std::nullopt;
    };
-   const auto local = [](const TSPTW& s,LocalContext) -> double {
-      return 0.0;
+
+   int* dIn = new int[sz];
+   int* dOut= new int[sz];
+   std::cout << "C =  "  << C << " depot:" << depot << "\n";
+   for(auto j : C) {
+      auto [e1, minIn]  = argmin(C - j,[&d,j](int k) { return d[k][j];});
+      auto [e2, minOut] = argmin(C - j,[&d,j](int k) { return d[j][k];});
+      dIn[j] = minIn;
+      dOut[j] = minOut;
+   }
+   for(auto j : C) std::cout << j << ":" << dIn[j] << " ";std::cout << "\n";
+   for(auto j : C) std::cout << j << ":" << dOut[j] << " ";std::cout << "\n";
+   
+   const auto local = [dIn,dOut,sz,depot](const TSPTW& s,LocalContext) -> double {
+      const auto& [U,e,t,hops] = s;
+      if (e == depot) return 0;
+      int sumIn  = sum(U,[dIn](int j) { return dIn[j];})  + dIn[depot];
+      int sumOut = sum(U,[dOut](int j) { return dOut[j];}) + dOut[e];
+      return std::max(sumIn,sumOut);   
    };
    
    BAndBRestrictedOnly engine(DD<TSPTW,Minimize<double>,
