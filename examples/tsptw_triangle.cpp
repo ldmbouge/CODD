@@ -121,23 +121,15 @@ int main(int argc,char* argv[]) {
    const int depot = 0;
    const int sz = (const int)C.size();
 
-   const auto init = [&C]()      { return TSPTW { C - depot, depot, 0,  0 }; };
+   const auto init = [&C]()   { return TSPTW { C - depot, depot, 0,  0 }; };
    const auto target = [sz]() { return TSPTW { TSPTW::Set(),   depot, 0, sz }; };
    const auto lgf = [sz,&d,&tw](const TSPTW& s,DDContext)  {
       if (s.hops >= sz-1) {
-         //return s.t + d[s.e][depot] <= tw[depot].b ? increasing(TSPTW::Set {depot}) : increasing(TSPTW::Set{});
          return s.t + d[s.e][depot] <= tw[depot].b ? TSPTW::Set {depot} : TSPTW::Set{};
       } else {
-         // std::function<int(int)> order = [curr=s.e,t=s.t,&d,&tw](int u){
-         //    return  std::max(t+d[curr][u], tw[u].a);
-         // };
-         // return increasing(
-         //    filter(s.U, [&s,&d,&tw](auto& u){
-         //       return (u != s.e && u != depot && s.t + d[s.e][u] <= tw[u].b); 
-         //    }),
-         //    order
-         // );
-         return filter(s.U, [&s,&d,&tw](auto& u){ return (u != s.e && u != depot && s.t + d[s.e][u] <= tw[u].b); });
+         return filter(s.U, [&s,&d,&tw](auto& u){
+            return (u != s.e && u != depot && s.t + d[s.e][u] <= tw[u].b);
+         });
       }     
    };
    const auto stf = [sz,&d,&tw](const TSPTW& s,const int label) -> std::optional<TSPTW> {
@@ -167,7 +159,6 @@ int main(int argc,char* argv[]) {
       }
    };
    const auto eqs = [sz](const TSPTW& s) -> bool { 
-      //std::cout << s.e << " == " << depot << " && " << s.hops << " == " << sz << std::endl;
       return s.e == depot && s.hops == sz;
    };
    
@@ -176,9 +167,8 @@ int main(int argc,char* argv[]) {
    int* perm1 = new int[sz];
    int* perm2 = new int[sz];
    for(auto j : C) {
-      auto allButj = C;allButj.remove(j);
-      auto [e1, minIn]  = argmin(allButj,[&d,j](int k) { return d[k][j];});
-      auto [e2, minOut] = argmin(allButj,[&d,j](int k) { return d[j][k];});
+      auto [e1, minIn]  = argmin(C - j,[&d,j](int k) { return d[k][j];});
+      auto [e2, minOut] = argmin(C - j,[&d,j](int k) { return d[j][k];});
       dIn[j] = minIn;
       dOut[j] = minOut;
       perm1[j] = j;
@@ -202,12 +192,12 @@ int main(int argc,char* argv[]) {
       }
       return std::max(sumIn,sumOut);   
    };
+      
    const auto sDom = [](const TSPTW& a,const TSPTW& b) -> bool { 
-      // if (a.U <= b.U) && (a.e == b.e) then a doms b iff a.t < b.t
-      return  (a.e == b.e) && a.t < b.t && (a.U <= b.U);
+      return  a.e==b.e && a.t < b.t && (a.U <= b.U);
    };
    BAndB engine(DD<TSPTW,Minimize<double>, // to minimize
-                std::tuple<int,int>,
+                std::tuple<int>,
                 decltype(target),
                 decltype(lgf),
                 decltype(stf),
@@ -215,7 +205,7 @@ int main(int argc,char* argv[]) {
                 decltype(smf),
                 decltype(eqs)
                 >::makeDD(init,target,lgf,stf,scf,smf,eqs,C,local,
-                          [](const TSPTW& a) { return std::make_tuple(a.e,a.hops);},
+                          [](const TSPTW& s) { return std::make_tuple(s.e);}, // s.e,s.hops);},
                           sDom),w);
    engine.search(bnds);
    return 0;

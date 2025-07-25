@@ -185,7 +185,6 @@ int main(int argc,char* argv[]) {
       return std::max(sumIn,sumOut);   
    };
    const auto sDom = [](const TSPTW& a,const TSPTW& b) -> bool { 
-      // if (a.U <= b.U) && (a.e == b.e) then a doms b iff a.t < b.t
       return  (a.e == b.e) && a.t < b.t && (a.U <= b.U);
    };
    BAndBRestrictedOnly engine(DD<TSPTW,Minimize<double>,
