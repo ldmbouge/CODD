@@ -185,10 +185,10 @@ int main(int argc,char* argv[]) {
       return std::max(sumIn,sumOut);   
    };
    const auto sDom = [](const TSPTW& a,const TSPTW& b) -> bool { 
-      return  (a.e == b.e) && a.t < b.t && (a.U <= b.U);
+      return  a.t < b.t;
    };
    BAndBRestrictedOnly engine(DD<TSPTW,Minimize<double>,
-                              std::tuple<int,int>,
+                              std::tuple<TSPTW::Set,int>,
                               decltype(target),
                               decltype(lgf),
                               decltype(stf),
@@ -196,7 +196,7 @@ int main(int argc,char* argv[]) {
                               AbstractDD::nullmerge_t<TSPTW>,
                               decltype(eqs)
                               >::makeDD(init,target,lgf,stf,scf,AbstractDD::nullmerge<TSPTW>,eqs,C,local,
-                                        [](const TSPTW& s) { return std::make_tuple(s.hops,s.e);},
+                                        [](const TSPTW& s) { return std::make_tuple(s.U,s.e);},
                                         sDom),w);
    engine.search(bnds);
    return 0;

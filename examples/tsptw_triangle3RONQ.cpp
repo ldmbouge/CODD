@@ -249,12 +249,13 @@ int main(int argc,char* argv[]) {
       return std::max(mandatoryIn, mandatoryOut) + returnToDepot;
    };
    const auto sDom = [](const TSPTW& a,const TSPTW& b) noexcept -> bool { 
-      return (a.must <= b.must) && a.ta < b.ta && a.hops == b.hops && a.pos == b.pos;
+      //return (a.must <= b.must) && a.ta < b.ta && a.hops == b.hops && a.pos == b.pos;
+      return a.ta < b.ta;
    };
 
    //BAndB engine(DD<TSPTW,Minimize<double>, // to minimize
    BAndBRestrictedOnlyNoQ engine(DD<TSPTW,Minimize<double>,
-                                 std::tuple<TSPTW::Set,int>,
+                                 std::tuple<TSPTW::Set,TSPTW::Set,TSPTW::Set,int>,
                                  decltype(target),
                                  decltype(lgf),
                                  decltype(stf),
@@ -262,7 +263,7 @@ int main(int argc,char* argv[]) {
                                  AbstractDD::nullmerge_t<TSPTW>,
                                  decltype(eqs)
                                  >::makeDD(init,target,lgf,stf,scf,AbstractDD::nullmerge<TSPTW>,eqs,C,local,
-                                           [](const TSPTW& s) { return std::make_tuple(s.pos,s.hops);},
+                                           [](const TSPTW& s) { return std::make_tuple(s.pos,s.must,s.may,s.hops);},
                                            sDom),w);
    engine.search(bnds);
    return 0;
