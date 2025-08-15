@@ -320,9 +320,15 @@ void Exact::compute(Bounds& bnds)
          if (child) {
             const bool newNode = child->nbParents()==0; // is this a newly created node?
             auto theCost = _dd->cost(p,l);
+            auto ep = p->getBound() + theCost;
             Edge::Ptr e = new (_dd->_mem) Edge(p,child,l);
             e->_obj = theCost;
             _dd->addArc(e); // connect to new node
+            if (_dd->isBetter(ep,child->getBound())) {
+               child->setBound(ep);
+               child->_optLabels = p->_optLabels;
+               child->_optLabels.push_back(e->_lbl);
+            }
             if (!_dd->eqSink(child)) {
                if (newNode)
                   qn.enQueue(child);
