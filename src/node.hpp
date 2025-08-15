@@ -54,6 +54,7 @@ protected:
    void addArc(Edge::Ptr ep);
 public:
    friend class AbstractDD;
+   friend class Exact;
    friend class Relaxed;
    friend class Restricted;
    friend class RestrictedND;
