@@ -7,3 +7,5 @@ release/**
 *.csv
 *.dat
 comp
+.idea/**
+cmake-build-*/
