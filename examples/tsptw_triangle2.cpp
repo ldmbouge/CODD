@@ -13,7 +13,6 @@ struct TimeWindow {
 
 struct TSPTW {
    using Set = NatSet<4>;
-
    Set pos;  // current city (set for merged nodes, singleton otherwise)
    int hops; // number of visited cities
    int ta;   // earliest and latest times at pos (a and b are same for exact nodes)
@@ -129,19 +128,15 @@ int main(int argc,char* argv[]) {
    const auto target = [&sz]() { return TSPTW { TSPTW::Set{depot}, sz, 0, 0, TSPTW::Set{}, TSPTW::Set{} }; };
    const auto lgf = [sz,&d,&tw](const TSPTW& s,DDContext)  {
       if (s.hops >= sz-1) { /*s.must.empty() && s.may.empty()*/
-         const int a = min(s.pos, [ta=s.ta,&d](const int p){ return ta + d[p][depot]; } );
-         const int b = max(s.pos, [tb=s.tb,&d](const int p){ return tb + d[p][depot]; } );
-
-         //const int b = min(s.pos, [tb=s.tb,&d](const int p){ return tb + d[p][depot]; } );
-         return (a <= tw[depot].b && b >= tw[depot].a) ? TSPTW::Set{depot} : TSPTW::Set{};
+         const int a = s.ta + min(s.pos, [&d](const int p){ return d[p][depot]; } );
+         return (a <= tw[depot].b) ? TSPTW::Set{depot} : TSPTW::Set{};
       } else {
          // std::cout << (s) << "\n";
          // std::cout << "pre-filter : " << (s.must|s.may) << "\n";
          const auto f =  filter(
             s.must|s.may, 
-            [&s,&d,&tw](auto& u){ 
-               const int a = min(s.pos, [&u](const int p){ return p != u; }, [ta=s.ta,&d,&u](const int p){ return ta + d[p][u]; } );
-               //std::cout << a << " <= " << tw[u].b <<"\n";
+            [&s,&d,&tw](const auto u){
+               const int a = s.ta + min(s.pos - u,[&d,u](const int p){ return d[p][u]; } );
                return a <= tw[u].b && (s.pos.size() > 1 || !s.pos.contains(u));
             }
          );
@@ -149,27 +144,24 @@ int main(int argc,char* argv[]) {
          return f;
       }     
    };
-   const auto stf = [sz,&d,&tw,&target](const TSPTW& s,const int label) -> std::optional<TSPTW> {
+   const auto stf = [sz,&d,&tw,&target](const TSPTW& s,const int label) noexcept -> std::optional<TSPTW> {
       if (label==depot) {
          return target();
       } else {
-         const int ta = std::max(min(s.pos, [&label](const int p){ return p != label; }, [ta=s.ta, &d, &label](const int p){ return ta + d[p][label]; } ), tw[label].a);
+         const int ta = std::max(s.ta + min(s.pos - label,[&d,label](const int p){ return d[p][label]; } ),
+                                 tw[label].a);
+         auto newMust = s.must - label;
+         if (any(newMust,[&d,&tw,label,ta](int u) { return ta + d[label][u] > tw[u].b;}))
+            return std::nullopt; // at least one in the next must violates its time window ub.
          const int tb = (s.ta == s.tb) ? 
-                        ta :
-                        std::min(max(s.pos, [&label](const int p){ return p != label; }, [tb=s.tb, &d, &label](const int p){ return tb + d[p][label]; } ), tw[label].b);
-         
-         for(auto u: s.must) {
-            if (u == label || u == depot) continue;
-            if(ta + d[label][u] > tw[u].b) {
-               return std::nullopt;
-            }
-         }
-         
-         return TSPTW { TSPTW::Set{label}, s.hops+1, ta, tb, s.must-label, s.may-label };
+            ta :
+            std::min(s.tb + max(s.pos - label,[&d,label](const int p){ return d[p][label]; } ),
+                     tw[label].b);         
+         return TSPTW { TSPTW::Set{label}, s.hops+1,ta,tb,newMust, s.may-label };
       }
    };
    const auto scf = [&d](const TSPTW& s,int label) { // partial cost function 
-      return min(s.pos, [&label](const int p){ return p != label; }, [&label,&d](int p) { return d[p][label]; });
+      return min(s.pos - label,[label,&d](int p) { return d[p][label]; });
    };
    const auto smf = [](const TSPTW& s1,const TSPTW& s2) -> std::optional<TSPTW> {
       if (s1.hops != s2.hops) return std::nullopt;
@@ -193,9 +185,8 @@ int main(int argc,char* argv[]) {
    int* perm1 = new int[sz];
    int* perm2 = new int[sz];
    for(auto j : C) {
-      auto allButj = C;allButj.remove(j);
-      auto [e1, minIn]  = argmin(allButj,[&d,j](int k) { return d[k][j];});
-      auto [e2, minOut] = argmin(allButj,[&d,j](int k) { return d[j][k];});
+      auto [e1, minIn]  = argmin(C - j,[&d,j](int k) { return d[k][j];});
+      auto [e2, minOut] = argmin(C - j,[&d,j](int k) { return d[j][k];});
       dIn[j] = minIn;
       dOut[j] = minOut;
       perm1[j] = j;
@@ -232,85 +223,14 @@ int main(int argc,char* argv[]) {
       }
       return std::max(sumIn,sumOut);  
    };
-
-   // const auto local = [&d,&dIn,&sz,&perm,&tw](const TSPTW& s,LocalContext) -> double {
-   //    const auto inf = std::numeric_limits<int>::max();
-
-
-   //    const auto& shortestEdge = [&dIn,&perm](int p){ return dIn[perm[p]]; };
-   //    const auto& unreachable = [ta=s.ta,&dIn,&perm,&tw,&shortestEdge](int p){ return ta + shortestEdge(p) > tw[p].b; };
-   //    // Too many unreachable cities
-   //    if(count(s.may, unreachable) > sz - s.hops - s.must.size()) return inf;
-   //    // One of the mandatory cities cannot be visited
-   //    if(any(s.must, unreachable)) return inf;
-   //    // When it is imposible to return to depot in time
-   //    int minTime = s.ta + sum(s.must, shortestEdge);
-   //    if(minTime > tw[depot].b) return inf;
-
-   //    if(!s.must.empty() && minTime + min(s.must | s.may, [&d](int p){return d[p][depot];}) > tw[depot].b) return inf;
-
-   //    return minTime;
-   // };
-   // const auto& local = [&d,&dIn,&sz,&perm,&tw](const TSPTW& s,LocalContext) -> double {
-   //    const auto inf = std::numeric_limits<int>::max();
-   //    int completeTour = sz - s.hops;
-   //    int mandatory = 0;
-   //    int returnToDepot = inf;
-
-   //    for(auto i: s.must) {
-   //       completeTour--;
-   //       mandatory += dIn[perm[i]];
-   //       returnToDepot = std::min(returnToDepot, d[i][depot]);
-
-   //       int a = s.ta + dIn[perm[i]];
-   //       int b = tw[i].b;
-   //       if(a > b) return inf;
-   //    }
-
-   //    int violations = 0;
-   //    int tmp[s.may.size()]; int ti=0;
-   //    for(auto i: s.may) {
-   //       tmp[ti++] = dIn[perm[i]];
-   //       returnToDepot = std::min(returnToDepot, d[i][depot]);
-
-   //       int a = s.ta + dIn[perm[i]];
-   //       int b = tw[i].b;
-   //       if(a > b) violations++;
-   //    }
-   //    if(ti - violations < completeTour) return inf;
-
-   //    mergeSort(tmp, ti, [](int x, int y){ return x > y; });
-   //    for(int i = 0; i < completeTour; i++)
-   //       mandatory += tmp[i];
-      
-   //    if(mandatory == 0)
-   //       returnToDepot = std::min(returnToDepot, min(s.pos, [&d](int p) {return d[p][depot];}));
-      
-   //    int total = mandatory + returnToDepot;
-   //    int a = s.ta + total;
-   //    int b = tw[depot].b;
-   //    if(a > b) return inf;
-   //    else return total;
-   // };
-
-
-   const auto sDom = [](const TSPTW& a,const TSPTW& b) -> bool { 
-      if(a.pos.size()==1 && b.pos.size()==1) { //if both nodes are exact use standard dom rule
-         return  (*a.pos.begin() == *b.pos.begin()) && a.ta < b.ta && ((a.must & b.must) == a.must);
-      } else {
-         return false; //otherwise no dom, TODO: think about this carefully later
-         //return a.hops >= b.hops && ((a.must & b.must) == a.must) && a.pos == b.pos && a.tb < b.ta;
-      }
+   
+   const auto sDom = [](const TSPTW& a,const TSPTW& b) -> bool {
+      return (b.must <= a.must) && a.may==b.may && a.ta < b.ta && a.hops==b.hops;
    };
 
-   // auto s = init();
-   // std::cout << "s    = " << s << "\n";
-   // std::cout << "l(s) = " << lgf(s, DDContext::DDExact) << "\n";
-   // return 0;
-
+   //   BAndBRestrictedFirst engine(DD<TSPTW,Minimize<double>,
    BAndB engine(DD<TSPTW,Minimize<double>, // to minimize
-                std::tuple<int>,
-                //   BAndBRestrictedFirst engine(DD<TSPTW,Minimize<double>,
+                std::tuple<TSPTW::Set,int>,
                 decltype(target),
                 decltype(lgf),
                 decltype(stf),
@@ -318,7 +238,7 @@ int main(int argc,char* argv[]) {
                 decltype(smf),
                 decltype(eqs)
                 >::makeDD(init,target,lgf,stf,scf,smf,eqs,C,local,
-                          [](const TSPTW&) { return std::make_tuple(0);}, // 1 class
+                          [](const TSPTW& s) { return std::make_tuple(s.pos,s.hops);}, 
                           sDom),w);
    engine.search(bnds);
    return 0;

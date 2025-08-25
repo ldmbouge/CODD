@@ -265,8 +265,8 @@ int main(int argc,char* argv[]) {
          return inf;      
       return std::max(mandatoryIn, mandatoryOut) + returnToDepot;
    };
-   const auto sDom = [](const TSPTW& a,const TSPTW& b) -> bool { 
-      return a.hops == b.hops && a.ta < b.ta && a.pos == b.pos && (a.must <= b.must);
+   const auto sDom = [](const TSPTW& a,const TSPTW& b) -> bool {
+      return a.ta < b.ta && a.hops==b.hops && a.pos == b.pos && a.may == b.may && (b.must <= a.must);
    };
 
    BAndB engine(DD<TSPTW,Minimize<double>, // to minimize
