@@ -225,7 +225,7 @@ int main(int argc,char* argv[]) {
    };
    
    const auto sDom = [](const TSPTW& a,const TSPTW& b) -> bool {
-      return (b.must <= a.must) && a.may==b.may && a.ta < b.ta && a.hops==b.hops;
+      return (b.must <= a.must) && a.may==b.may && a.ta < b.ta; //  && a.hops==b.hops;
    };
 
    //   BAndBRestrictedFirst engine(DD<TSPTW,Minimize<double>,
