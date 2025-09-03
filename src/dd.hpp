@@ -118,6 +118,9 @@ public:
    ANode::Ptr getRoot() { return _root;}
    virtual ~AbstractDD();
    virtual void reset() = 0;
+   virtual std::size_t getPoolSize() const noexcept = 0;
+   virtual unsigned actualPoolSize() const noexcept = 0;
+   virtual void setPoolSize(std::size_t sz) = 0;
    virtual ANode::Ptr init() = 0;
    virtual ANode::Ptr target() = 0;
    virtual unsigned nbNodes() const noexcept = 0;
@@ -140,7 +143,7 @@ public:
    virtual void printNode(std::ostream& os,ANode::Ptr n) const = 0;
    virtual DDGen::Ptr getLabels(ANode::Ptr src,DDContext) const = 0;
    virtual unsigned getLastId() const noexcept = 0;
-   virtual AbstractNodeAllocator::Ptr makeNDAllocator() const noexcept = 0;
+   virtual AbstractNodeAllocator::Ptr makeNDAllocator(std::size_t sz = 200000) const noexcept = 0;
    double currentOpt() const { return _trg->getBound();}
    bool apply(ANode::Ptr from,Bounds& bnds);
    std::vector<int> incumbent();
@@ -167,6 +170,7 @@ public:
    Strategy() : _dd(nullptr) {}
    AbstractDD* theDD() const noexcept { return _dd;}
    virtual const std::string getName() const = 0;
+   virtual void init() = 0;
    virtual void compute(Bounds&) {}
    virtual std::vector<ANode::Ptr> computeCutSet() { return std::vector<ANode::Ptr> {};}
    virtual std::vector<ANode::Ptr> theDiscardedSet() { return std::vector<ANode::Ptr> {}; }
@@ -312,7 +316,9 @@ protected:
    void transferArcs(ANode::Ptr donor,ANode::Ptr receiver);
 public:
    WidthBounded(const unsigned mxw) : Strategy(),_mxw(mxw) {}
-   void setWidth(unsigned  mxw) { _mxw = mxw;}
+   void setWidth(unsigned  mxw) {
+      _mxw = mxw;
+   }
    unsigned getWidth() const  { return _mxw;}
    void tighten(ANode::Ptr nd) noexcept;
 };
@@ -322,6 +328,13 @@ protected:
    std::vector<ANode::Ptr> _discardedSet;
 public:
    Restricted(const unsigned mxw) : WidthBounded(mxw), _discardedSet(std::vector<ANode::Ptr> {}) { }
+   void init() {
+      auto oldSize = _dd->actualPoolSize();
+      auto oldMaxSize = _dd->getPoolSize();
+      _dd->reset();
+      auto newSize = oldSize >= oldMaxSize ? oldSize * 2 : oldMaxSize;
+      _dd->setPoolSize(newSize);
+   } 
    const std::string getName() const { return "Restricted";}
    void compute(Bounds& );
    bool primal() const { return true;}
@@ -331,6 +344,9 @@ public:
 class RestrictedND: public WidthBounded {
 public:
    RestrictedND(const unsigned mxw) : WidthBounded(mxw) { }
+   void init() {
+      _dd->reset();
+   } 
    const std::string getName() const { return "RestrictedND";}
    void compute(Bounds& );
    bool primal() const { return true;}
@@ -347,6 +363,9 @@ class Relaxed :public WidthBounded {
 public:
    Relaxed(const unsigned mxw) : WidthBounded(mxw) {}
    const std::string getName() const { return "Relaxed";}
+   void init() {
+      _dd->reset();
+   } 
    void compute(Bounds&);
    std::vector<ANode::Ptr> computeCutSet();
    bool dual() const { return true;}
@@ -365,6 +384,9 @@ protected:
 public:
    RestrictedDFS(const unsigned mxw) : WidthBounded(mxw), _discardedSet(HeapType{}) { }
    const std::string getName() const { return "RestrictedDFS";}
+   void init() {
+      _dd->reset();
+   } 
    void compute(Bounds& );
    bool primal() const { return true;}
    ANode::Ptr checkDominance(CQueue<ANode::Ptr>& qn,ANode::Ptr n,double nObj);
@@ -409,7 +431,7 @@ template <typename ST, class Compare> requires Printable<ST> && Hashable<ST>
 class DDNodeAllocator :public AbstractNodeAllocator {
    LHashtable<ST> _nmap;
 public:
-   DDNodeAllocator(LPool::Ptr pool) : AbstractNodeAllocator(pool),_nmap(pool->get(),200000) {}
+   DDNodeAllocator(LPool::Ptr pool,std::size_t sz = 200000) : AbstractNodeAllocator(pool),_nmap(pool->get(),sz) {}
    ANode::Ptr cloneNode(ANode::Ptr src) override {      
       auto sp = static_cast<const Node<ST>*>(src.get());
       return new (_base->get()) Node<ST>(_base->get(),_base->grabId(),*sp);
@@ -501,7 +523,7 @@ private:
    std::function<double(const ST&,LocalContext)> _local;
    std::function<DC(const ST&)> _project;
    SDOM _sdom;
-   LHashtable<ST> _nmap;
+   LHashtable<ST>* _nmap;
    unsigned _ndId;
    std::function<ANode::Ptr()> _initClosure;
    ADOMClass::Ptr makeDominanceManager() {
@@ -546,12 +568,12 @@ private:
    }
    ANode::Ptr hasNode(const ST& state) {
       Node<ST>* at = nullptr;
-      _nmap.getLoc(state,at);
+      _nmap->getLoc(state,at);
       return at;
    }
    ANode::Ptr makeNode(ST&& state,bool pExact = true) {
       Node<ST>* at = nullptr;
-      auto inMap = _nmap.getLoc(state,at);
+      auto inMap = _nmap->getLoc(state,at);
       if (inMap) {
          at->setExact(at->isExact() & pExact);
          if (at->nbParents() == 0 && at != _root && at != _trg) {
@@ -561,14 +583,14 @@ private:
          return at;
       } else {
          auto value = new (_mem) Node<ST>(_mem,std::move(state),_ndId++,pExact);
-         _nmap.safeInsertAt(inMap,value);
+         _nmap->safeInsertAt(inMap,value);
          _an.push_back(value);
          value->setBound(initialBest());
          return value;
       }
    }
    void makeInitFrom(ANode::Ptr src) {
-      reset();
+      // reset(); // done via strategy init
       _initClosure = [theRoot = duplicate(src)]() {
          return theRoot;
       };
@@ -690,10 +712,10 @@ public:
         _local(local),
         _project(pfun),
         _sdom(dom),
-        _nmap(_mem,200000),
         _ndId(0)
    {
       _baseline = _mem->mark();
+      _nmap = new (_mem) LHashtable<ST>(_mem,200000);
       _initClosure = [this]() {
          ANode::Ptr retVal = makeNode(_sti());
          retVal->setBound(0);
@@ -705,8 +727,8 @@ public:
    static AbstractDD::Ptr makeDD(Args&&... args) {
       return AbstractDD::Ptr(new DD(std::forward<Args>(args)...));
    }
-   AbstractNodeAllocator::Ptr makeNDAllocator() const noexcept {
-      return std::shared_ptr<DDNodeAllocator<ST, Compare>>(new DDNodeAllocator<ST, Compare>(new LPool(new Pool)));
+   AbstractNodeAllocator::Ptr makeNDAllocator(std::size_t sz = 200000) const noexcept {
+      return std::shared_ptr<DDNodeAllocator<ST, Compare>>(new DDNodeAllocator<ST, Compare>(new LPool(new Pool),sz));
    }
    void printNode(std::ostream& os,ANode::Ptr n) const {
       auto sp = static_cast<const Node<ST>*>(n.get());
@@ -719,7 +741,7 @@ public:
    ANode::Ptr duplicate(const ANode::Ptr src) {
       Node<ST>* at = nullptr;
       auto sp = static_cast<const Node<ST>*>(src.get());
-      auto inMap = _nmap.getLoc(sp->get(),at);
+      auto inMap = _nmap->getLoc(sp->get(),at);
       if (inMap) {
          assert(src->getBound() == at->getBound()); // this fires. The node was already there with another bound   
          return at; // node already in this pool. Return it "untouched". It will be added to
@@ -734,18 +756,23 @@ public:
          // assertion here. Can we ever inject a node with same state and different bound?
       } else {
          auto nn = new (_mem) Node<ST>(_mem,_ndId++,*sp);
-         _nmap.rawInsertAt(inMap,nn);
+         _nmap->rawInsertAt(inMap,nn);
          _an.push_back(nn);
          return nn;
       }
    }
    unsigned getLastId() const noexcept { return _ndId;}
+   std::size_t getPoolSize() const noexcept { return _nmap->maxSize();}
+   unsigned actualPoolSize() const noexcept { return _nmap->size();}
+   void setPoolSize(std::size_t sz) {
+      _nmap = new (_mem) LHashtable<ST>(_mem,sz);
+   }
    void reset() {
       _ndId = 0;
-      _nmap.doOnAll([](Node<ST>* np) {
+      _nmap->doOnAll([](Node<ST>* np) {
          np->~Node<ST>();
       });
-      _nmap.clear();      
+      _nmap->clear();      
       _an.clear();
       _mem->clear(_baseline);
       _root = _trg = nullptr;

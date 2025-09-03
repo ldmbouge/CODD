@@ -279,6 +279,7 @@ void AbstractDD::compute(Bounds& bnds)
 
 bool AbstractDD::apply(ANode::Ptr from,Bounds& bnds)
 {
+   _strat->init();
    makeInitFrom(from);
    compute(bnds);
    bool isBetterValue = isBetter(currentOpt(), bnds.getPrimal()); //currentOpt isBetter than bnds.getPrimal

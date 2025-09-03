@@ -24,11 +24,10 @@ Pool::Pool(std::size_t defSize)
      _segSize(defSize),
      _top(0),
      _seg(0),
-     _nbSeg(1),
+     _nbSeg(0),
      _mxs(32)
 {
    _store = new Segment*[_mxs];
-   _store[0] = new Segment(_segSize);
 }
 
 Pool::~Pool()
@@ -43,6 +42,16 @@ void* Pool::allocate(std::size_t sz)
    if (sz & 0xF)  // unaligned on 8 bytes boundary
       sz = (sz | 0xF) + 1; // increase to align
    assert((sz & 0xF) == 0 && sz != 0);           // check alignment
+   if (_seg >= _nbSeg) {
+      if (_nbSeg == _mxs) {
+         Segment** tab = new Segment*[_mxs << 1];
+         for(auto i = 0u;i < _mxs;++i) tab[i] = _store[i];
+         delete []_store;
+         _store = tab;
+         _mxs <<= 1;
+      }
+      _store[_nbSeg++] = new Segment(std::max(_segSize,sz));      
+   }
    auto s = _store[_seg];
    while(_top + sz > s->_sz) {
       assert(_top != 0);

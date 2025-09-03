@@ -78,7 +78,17 @@ public:
     * @brief Restore the pool to a specified mark. One can only shrink the pool.
     * @param m the mark to restore to.
     */
-   void clear(const PoolMark& m) { _top = m._top;_seg = m._seg;}
+   void clear(const PoolMark& m) {
+      _top = m._top;
+      _seg = m._seg;
+      if (_seg == 0 && _top == 0) {
+         for(auto i = 0u;i < _nbSeg;++i) {
+            delete _store[i];
+            _store[i]=nullptr;
+         }
+         _nbSeg = 0;
+      }
+   }
    /**
     * @brief Capture the current mark and return it.
     * @return a PoolMark instance referring to the size of the allocator now.
