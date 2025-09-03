@@ -294,13 +294,8 @@ int main(int argc,char* argv[]) {
    // };
 
 
-   const auto sDom = [](const TSPTW& a,const TSPTW& b) -> bool { 
-      if(a.pos.size()==1 && b.pos.size()==1) { //if both nodes are exact use standard dom rule
-         return  (*a.pos.begin() == *b.pos.begin()) && a.ta < b.ta && ((a.must & b.must) == a.must);
-      } else {
-         return false; //otherwise no dom, TODO: think about this carefully later
-         //return a.hops >= b.hops && ((a.must & b.must) == a.must) && a.pos == b.pos && a.tb < b.ta;
-      }
+   const auto sDom = [](const TSPTW& a,const TSPTW& b) -> bool {
+      return (b.must <= a.must) && a.may==b.may && a.ta < b.ta;
    };
 
    // auto s = init();
@@ -308,8 +303,8 @@ int main(int argc,char* argv[]) {
    // std::cout << "l(s) = " << lgf(s, DDContext::DDExact) << "\n";
    // return 0;
 
-   BAndBRestrictedFirst engine(DD<TSPTW,Minimize<double>,
-                               std::tuple<int>,
+   BAndBRestrictedFirst engine(DD<TSPTW,Minimize<double>, // to minimize
+                               std::tuple<TSPTW::Set,int>,
                                decltype(target),
                                decltype(lgf),
                                decltype(stf),
@@ -317,8 +312,8 @@ int main(int argc,char* argv[]) {
                                decltype(smf),
                                decltype(eqs)
                                >::makeDD(init,target,lgf,stf,scf,smf,eqs,C,local,
-                                         [](const TSPTW&) { return std::make_tuple(0);}, // 1 class
-                                         sDom),w);
+                                        [](const TSPTW& s) { return std::make_tuple(s.pos,s.hops);}, 
+                                        sDom),w);
    engine.search(bnds);
    return 0;
 }

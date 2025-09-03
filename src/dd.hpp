@@ -135,6 +135,7 @@ public:
    virtual bool hasLocal() const noexcept = 0;
    virtual bool hasDominance() const noexcept = 0;
    virtual bool dominates(ANode::Ptr f,ANode::Ptr s) = 0;
+   virtual bool dominatesEq(ANode::Ptr f,ANode::Ptr s) = 0;
    virtual void update(Bounds& bnds) const = 0;
    virtual void printNode(std::ostream& os,ANode::Ptr n) const = 0;
    virtual DDGen::Ptr getLabels(ANode::Ptr src,DDContext) const = 0;
@@ -656,6 +657,15 @@ private:
       auto fp = static_cast<const Node<ST>*>(f.get());
       auto sp = static_cast<const Node<ST>*>(s.get());
       return _sdom(fp->get(),sp->get());
+   }
+   bool dominatesEq(ANode::Ptr f,ANode::Ptr s) {
+      auto fp = static_cast<const Node<ST>*>(f.get());
+      auto sp = static_cast<const Node<ST>*>(s.get());
+      auto dc1 = _project(fp->get());
+      auto dc2 = _project(sp->get());
+      if (dc1==dc2)
+         return _sdom(fp->get(),sp->get());
+      else return false;
    }
 public:   
    DD(std::function<ST()> sti,IBL2 stt,LGF lgf,STF stf,STC stc,SMF smf,

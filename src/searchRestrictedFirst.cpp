@@ -30,7 +30,7 @@ std::tuple<int,bool,std::vector<ANode::Ptr>> filterDom(Bounds& bnds,
          auto other = *j;
          if(i == j) continue;
          bool isObjDom = dd->isBetterEQ(other->getBound(),n->getBound());
-         newGuyDominated = isObjDom && dd->dominates(other,n);
+         newGuyDominated = isObjDom && dd->dominatesEq(other,n);
          if (newGuyDominated) {
             break;          
          }
@@ -48,12 +48,12 @@ std::tuple<int,bool,std::vector<ANode::Ptr>> filterDom(Bounds& bnds,
       for(unsigned k = 0;k < pqSz;k++) {
          auto other = (*pq)[k];
          bool isObjDom   = dd->isBetterEQ(other->value().node->getBound(),n->getBound());
-         newGuyDominated = isObjDom && dd->dominates(other->value().node,n);
+         newGuyDominated = isObjDom && dd->dominatesEq(other->value().node,n);
          if (newGuyDominated) {
             goto prune;             
          }        
          bool objDom   = dd->isBetterEQ(n->getBound(),other->value().node->getBound());
-         bool qnDominated = objDom && dd->dominates(n,other->value().node);
+         bool qnDominated = objDom && dd->dominatesEq(n,other->value().node);
          if (qnDominated)
             allLocs[d++] = other;
       }

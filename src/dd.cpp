@@ -166,6 +166,9 @@ public:
       for(auto it = main.begin();it != main.end();) {
          const auto at = *it;
          const auto o  = *at;
+
+
+
          if (_theDD->isBetterEQ(o->getBound(),nObj) > 0) { // key is better. Could DOMINATE nObj
             if (dominator==nullptr && _theDD->dominates(o,n)) { // no dominator yet
                dominator = o;
@@ -1126,11 +1129,18 @@ public:
       // theDD->printNode(std::cout,n);
       // std::cout << "\n";
 
+      // std::cout << "n: "; 
+      // _dd.theDD()->printNode(std::cout, n);
+      // std::cout << "\n"; 
+
       [[maybe_unused]] int nbBetter = 0;
       for(auto it = main.begin();it != main.end();it++) {
          //for(auto it = _next.begin();it != _next.end();it++) {
          auto at= *it;
          auto o = *at;
+         // std::cout << "\tat: "; 
+         // _dd.theDD()->printNode(std::cout, at->get());
+         // std::cout << "\n"; 
          //for(const auto& o : _next) {
          const bool objDom = theDD->isBetterEQ(o->getBound(),nObj);
          nbBetter += objDom;

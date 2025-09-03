@@ -156,11 +156,11 @@ void BAndB::search(Bounds& bnds)
                   for(unsigned k = 0;k < pqSz;k++) {
                      auto bbn = pq[k];
                      bool isObjDom   = relaxed->isBetterEQ(bbn->value().node->getBound(),n->getBound());
-                     newGuyDominated = isObjDom && relaxed->dominates(bbn->value().node,n);
+                     newGuyDominated = isObjDom && relaxed->dominatesEq(bbn->value().node,n);
                      if (newGuyDominated)
                         break;                     
                      bool objDom   = relaxed->isBetterEQ(n->getBound(),bbn->value().node->getBound());
-                     bool qnDominated = objDom && relaxed->dominates(n,bbn->value().node);
+                     bool qnDominated = objDom && relaxed->dominatesEq(n,bbn->value().node);
                      if (qnDominated)
                         allLocs[d++] = bbn;
                   }
