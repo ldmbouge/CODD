@@ -15,46 +15,6 @@ struct TimeWindow {
 
 using Set = NatSet<4>;
 using TSPTW = std::tuple<Set,int,int,int>;
-//using DC = Projection<TSPTW,0,1>::Tuple;
-
-/*
-std::ostream& operator<<(std::ostream& os,const TSPTW& m) {
-   const auto& [U,e,t,h] = m;
-   return os << "<" << U << ',' << e << ',' << t << ',' << h << ">";
-   }*/
-
-/*struct TSPTW {
-   Set    U; // unvisited cities
-   int    e; // current city
-   int    t; // time
-   int hops;
-   friend std::ostream& operator<<(std::ostream& os,const TSPTW& m) {
-      return os << "<" << m.U << ',' << m.e << ',' << m.t << ',' << m.hops << ">";
-   }
-};
-*/
-/*
-template<> struct std::equal_to<TSPTW> {
-   constexpr bool operator()(const TSPTW& s1,const TSPTW& s2) const {
-      const auto& [s1U,s1e,s1t,s1h] = s1;
-      const auto& [s2U,s2e,s2t,s2h] = s2;
-      return s1e==s2e && s1t==s2t && s1h==s2h && s1U==s2U;
-      //return s1.e == s2.e && s1.t==s2.t && s1.hops==s2.hops && s1.U == s2.U;
-      //return s1.e == s2.e && s1.hops==s2.hops;
-   }
-};
-*/
-/*
-template<> struct std::hash<TSPTW> {
-   std::size_t operator()(const TSPTW& v) const noexcept {
-      const auto&  [U,e,t,h] = v;
-      return (std::hash<Set>{}(U) << 32) |  // check if this is OK
-         (std::hash<int>{}(t) << 16) |
-         (std::hash<int>{}(e) << 8) |
-         std::hash<int>{}(h);
-   }
-};
-*/
 
 struct Instance {
    size_t nv;
@@ -169,25 +129,15 @@ int main(int argc,char* argv[]) {
       //const auto& [U,e,t,hops] = s;
       return std::get<1>(s) == depot && std::get<3>(s) == sz;
    };
-   /*
-   const auto domClass = [](const TSPTW& a,const TSPTW& b) -> bool {
-      [[maybe_unused]] const auto& [aU,ae,at,ah] = a;
-      [[maybe_unused]] const auto& [bU,be,bt,bh] = b;
-      return aU==bU && ae == be;
-      };*/
    const auto sDom = [](const TSPTW& a,const TSPTW& b) -> bool { 
       const auto& [aU,ae,at,ahops] = a;
       const auto& [bU,be,bt,bhops] = b;
-      return  (aU == bU) && (ae == be) && at < bt;
-      //return ae==be && at < bt;
+      //return  (aU == bU) && (ae == be) && at < bt;
+      return at < bt;
    };
    const auto merge = [](const TSPTW&a,const TSPTW& b) -> std::optional<TSPTW> {
       return std::nullopt;
    };
-   // const auto local = [](const TSPTW& s,LocalContext) -> double {
-   //    return 0.0;
-   // };
-
    int* dIn = new int[sz];
    int* dOut= new int[sz];
    for(auto j : C) {
@@ -208,22 +158,22 @@ int main(int argc,char* argv[]) {
 
    
    BAndBRestrictedOnlyNoQ engine(DD<TSPTW,Minimize<double>,
-                              Projection<TSPTW,0,1>::Tuple,
-                              decltype(target),
-                              decltype(lgf),
-                              decltype(stf),
-                              decltype(scf),
-                              decltype(merge),
-                              decltype(eqs),
-                              decltype(sDom)
-                              >::makeDD(init,target,
-                                        lgf,stf,scf,
-                                         merge,
-                                        eqs,
-                                        C,
-                                        local,
-                                        project2<TSPTW,0,1>,
-                                        sDom),w);
+                                 Projection<TSPTW,0,1>::Tuple,
+                                 decltype(target),
+                                 decltype(lgf),
+                                 decltype(stf),
+                                 decltype(scf),
+                                 decltype(merge),
+                                 decltype(eqs),
+                                 decltype(sDom)
+                                 >::makeDD(init,target,
+                                           lgf,stf,scf,
+                                           merge,
+                                           eqs,
+                                           C,
+                                           local,
+                                           project2<TSPTW,0,1>,
+                                           sDom),w);
    engine.search(bnds);
    return 0;
 }
