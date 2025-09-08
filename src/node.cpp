@@ -57,14 +57,6 @@ void ANode::reset()
    _next = _prev = nullptr;
 }
 
-void ANode::addArc(Edge::Ptr ep)
-{
-   if (ep->_from == this)
-      ep->_fix = _children.push_back(ep);
-   else if (ep->_to == this)
-      ep->_tix = _parents.push_back(ep);
-}
-
 void ANode::disconnect()
 {
    for(auto e : _parents) {

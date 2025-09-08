@@ -98,7 +98,10 @@ protected:
    ANList      _an;
    bool _exact;
    PoolMark _baseline;
-   void addArc(Edge::Ptr e);
+   void addArc(Edge::Ptr e) const noexcept {
+      e->_from->addArc(e);
+      e->_to->addArc(e);
+   }
    friend class Strategy;
    friend class Exact;
    friend class Restricted;

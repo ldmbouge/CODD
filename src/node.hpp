@@ -51,7 +51,12 @@ protected:
    unsigned                _exact:1;  // true if node is exact
    unsigned                _nid;
    ANode::Ptr              _next,_prev;
-   void addArc(Edge::Ptr ep);
+   void addArc(Edge::Ptr ep) noexcept {
+      if (ep->_from == this)
+         ep->_fix = _children.push_back(ep);
+      else if (ep->_to == this)
+         ep->_tix = _parents.push_back(ep);
+   }
 public:
    friend class AbstractDD;
    friend class Exact;

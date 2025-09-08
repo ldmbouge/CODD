@@ -252,12 +252,6 @@ AbstractDD::~AbstractDD()
    delete _mem;
 }
 
-void AbstractDD::addArc(Edge::Ptr e)
-{
-   e->_from->addArc(e);
-   e->_to->addArc(e);
-}
-
 void display(AbstractDD* dd)
 {
    dd->display();
