@@ -197,9 +197,15 @@ public:
    }
    std::list<ANode::Ptr> pullLayer() noexcept {
       std::list<ANode::Ptr> retVal = std::move(_main);
-      retVal.sort([dd = _theDD](const ANode::Ptr& a,const ANode::Ptr& b) {
-         return dd->isBetter(a->getBound(),b->getBound());
-      });
+      if(_theDD->hasLocal()) {
+         retVal.sort([dd = _theDD](const ANode::Ptr& a,const ANode::Ptr& b) {
+            return !dd->isBetter(a->getFBound(),b->getFBound()); //FBound is full bound, bound + lbound
+         });
+      } else {
+         retVal.sort([dd = _theDD](const ANode::Ptr& a,const ANode::Ptr& b) {
+            return !dd->isBetter(a->getBound(),b->getBound());
+         });
+      }
       if (retVal.size() > _mxw) {
          //std::cout << "RETVAL bef:" << retVal.size() << "   MXW:" << _mxw << "\n";
          auto isz = retVal.size();
@@ -614,9 +620,18 @@ NDArray& WidthBounded::pullLayer(CQueue<ANode::Ptr>& qn)
       n = qn.deQueue();
       _nda.push_back(n);         
    }
-   _nda.sort([dd = _dd](const ANode::Ptr& a,const ANode::Ptr& b) { // sort better to worse
-      return dd->isBetter(a->getBound(),b->getBound());
-   });
+   // _nda.sort([dd = _dd](const ANode::Ptr& a,const ANode::Ptr& b) { // sort better to worse
+   //    return dd->isBetter(a->getBound(),b->getBound());
+   // });
+   if(_dd->hasLocal()) {
+      _nda.sort([dd = _dd](const ANode::Ptr& a,const ANode::Ptr& b) {
+         return !dd->isBetter(a->getFBound(),b->getFBound()); //FBound is full bound, bound + lbound
+      });
+   } else {
+      _nda.sort([dd = _dd](const ANode::Ptr& a,const ANode::Ptr& b) {
+         return !dd->isBetter(a->getBound(),b->getBound());
+      });
+   }
    return _nda;
 }
 
@@ -1164,9 +1179,15 @@ public:
    std::list<ANode::Ptr> pullLayer() noexcept {
       std::list<ANode::Ptr> retVal = std::move(_next);
       //sort and collapse the layer via merging when the layer is pulled.
-      retVal.sort([dd = _dd.theDD()](const ANode::Ptr& a,const ANode::Ptr& b) {
-         return !dd->isBetter(a->getBound(),b->getBound());
-      });
+      if(_dd.theDD()->hasLocal()) {
+         retVal.sort([dd = _dd.theDD()](const ANode::Ptr& a,const ANode::Ptr& b) {
+            return !dd->isBetter(a->getFBound(),b->getFBound()); //FBound is full bound, bound + lbound
+         });
+      } else {
+         retVal.sort([dd = _dd.theDD()](const ANode::Ptr& a,const ANode::Ptr& b) {
+            return !dd->isBetter(a->getBound(),b->getBound());
+         });
+      }
       _dd.mergeLayer(retVal,[this](ANode::Ptr dn)  {
          _dd.adjustBounds(dn);         
       });
