@@ -130,7 +130,6 @@ void BAndBRestrictedFirstThreaded::search(Bounds& bnds)
    } else {
       pq.insertHeap(TQNode { rootNode, restricted->initialWorst() } );
    }
-   const bool hasLocal = relaxed->hasLocal();
    unsigned nNode = 0,ttlNode = 0,insDom=0,pruned=0;
    bool primalBetter = false;
 

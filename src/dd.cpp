@@ -7,7 +7,6 @@
 #include <limits>
 #include <cstdio>
 #include <map>
-#include <execution>
 #include <unistd.h>
 #include "heap.hpp"
 #include "queue.hpp"

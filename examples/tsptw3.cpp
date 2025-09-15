@@ -25,7 +25,7 @@ struct TSPTW {
    int ta;   // earliest and latest times at pos (a and b are same for exact nodes)
    int tb;
    int pad; 
-   TSPTW() { memset(this,0,sizeof(TSPTW));}
+   TSPTW() { memset(static_cast<void*>(this),0,sizeof(TSPTW));}
    TSPTW(const Set& p,const Set& m,const Set& maya,int h,int a,int b) : pos(p),must(m),may(maya),hops(h),ta(a),tb(b),pad(0) {}
    TSPTW(Set&& p,Set&& m,Set&& maya,int h,int a,int b) : pos(p),must(m),may(maya),hops(h),ta(a),tb(b),pad(0) {}
    friend std::ostream& operator<<(std::ostream& os,const TSPTW& m) {

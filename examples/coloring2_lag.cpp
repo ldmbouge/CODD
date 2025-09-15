@@ -413,7 +413,7 @@ int main(int argc,char* argv[])
             return bnds.getDual() - bnds.getG();
          }
          return 0;
-         double cb = CliqueBound(instance.adj, S);
+         //double cb = CliqueBound(instance.adj, S);
          //double lb = std::max(cb, bnds.getDual());
          //double ub = bnds.getPrimal();
          //if (cb > bnds.getDual()) {

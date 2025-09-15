@@ -471,9 +471,9 @@ public:
       return nw == nbw;      
    }
    friend bool operator==(const NatSet& s1,const NatSet& s2) noexcept {
+       using u128 = unsigned __int128;
       switch(nbw) {
          case 4: {
-            typedef unsigned _BitInt(128) u128;
             u128* p1 = (u128*)s1._t;
             u128* p2 = (u128*)s2._t;
             u128* p3 = (u128*)(s1._t+2);
@@ -481,7 +481,6 @@ public:
             return (*p1 == *p2) && (*p3 == *p4);
          }break;
          case 2: {
-            typedef unsigned _BitInt(128) u128;
             u128* p1 = (u128*)&s1._t;
             u128* p2 = (u128*)&s2._t;
             return *p1 == *p2;

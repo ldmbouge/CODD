@@ -15,7 +15,6 @@ void BAndBRestrictedOnlyNoQ::search(Bounds& bnds)
 
    auto bbPool = _theDD->makeNDAllocator();
    using namespace std;
-   unsigned int nbSeen = 0;
    std::streamsize ss = cout.precision();
    auto start = RuntimeMonitor::cputime();
    [[maybe_unused]] auto last = start;
