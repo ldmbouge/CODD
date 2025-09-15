@@ -1,87 +1,50 @@
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.28)
 
-project(C++DDOpt VERSION 1.0)
+project(CODD VERSION 1.0 LANGUAGES CXX)
 
-# ------------------------------------------------------------------------
-# Let's go for Debug by default
+# Compilation
 if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE Release)
+    set(CMAKE_BUILD_TYPE "Release")
 endif()
-# ------------------------------------------------------------------------
-set(CMAKE_VERBOSE_MAKEFILE False)
-set(CMAKE_CXX_STANDARD 23)
-set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-option(USE_CXX_EXCEPTIONS "Enable C++ exception support" ON)
 
-if (CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-  set(CMAKE_CXX_COMPILER "clang++")
-endif()  
-if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
-  set(CMAKE_CXX_COMPILER "clang++-18")
-endif()
+# C++
+set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_FLAGS " -Wall")
+set(CMAKE_CXX_FLAGS_DEBUG          " -O0 -g -fno-omit-frame-pointer")
+set(CMAKE_CXX_FLAGS_RELWITHDEBINFO " -O2 -g -fno-omit-frame-pointer -DNDEBUG")
+set(CMAKE_CXX_FLAGS_RELEASE        " -O3                            -DNDEBUG -march=native")
+string(TOUPPER "${CMAKE_BUILD_TYPE}" BUILD_TYPE_UPPER)
+string(REGEX REPLACE "  +" " " CXX_COMPILE_OPTIONS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_${BUILD_TYPE_UPPER}}")
 
-set(CMAKE_CXX_FLAGS "-Wall -Wsign-compare -Wno-vla-cxx-extension")
-set(CMAKE_CXX_FLAGS_DEBUG "-g")
-set(CMAKE_CXX_FLAGS_RELEASE "-O3 -D_NDEBUG -DNDEBUG -Wno-unused-lambda-capture  -march=native")  #[[ comment  ]]
+# Information
+message(STATUS "BUILD TYPE: ${CMAKE_BUILD_TYPE}")
+message(STATUS "C++ COMPILER: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}")
+message(STATUS "C++ FLAGS: ${CXX_COMPILE_OPTIONS}")
 
-message("FR   : ${CMAKE_CXX_FLAGS_RELEASE}")
-message("Build: ${CMAKE_BUILD_TYPE}")
+# CODD
+file(GLOB CODD_SRC "${PROJECT_SOURCE_DIR}/src/*.cpp")
+add_library(codd ${CODD_SRC})
+target_include_directories(codd PUBLIC "${PROJECT_SOURCE_DIR}/src")
+target_include_directories(codd PUBLIC "${PROJECT_SOURCE_DIR}/ctl")
 
-#This is the full list of exapmles for miniCPP		
-################################################################################
-file(GLOB libs "src/*.cpp")
-message("Lib: ${libs}")
-add_library(ddOpt
-  ${libs}
-)
+# Executables
+function(add_executables DIR FILTER LIBS)
+    string(TOUPPER "${DIR}" DIR_UPPER)
+    set(DIR_MSG "${DIR_UPPER}: ")
+    file(GLOB DIR_SRC "${PROJECT_SOURCE_DIR}/${DIR}/${FILTER}")
+    foreach (EXE_SRC ${DIR_SRC})
+        get_filename_component(EXE_NAME ${EXE_SRC} NAME_WE)
+        set(DIR_MSG "${DIR_MSG} ${EXE_NAME}")
+        add_executable(${EXE_NAME} ${EXE_SRC})
+        foreach (LIB ${LIBS})
+            target_link_libraries(${EXE_NAME} ${LIB})
+        endforeach()
+    endforeach()
+    message(STATUS ${DIR_MSG})
+endfunction()
 
-include_directories(src)
-file(GLOB files "*.cpp")
-message("${files}")
-
-# ----------------------------------------------------------------------
-# Library
-
-foreach (file ${files})
-	get_filename_component(base ${file} NAME_WE)
-	get_filename_component(dir ${file} DIRECTORY)
-#	message("BASE    IS: [${base}]")
-	message("HEADERS IS: [${PROJECT_SOURCE_DIR}/src]")
-	target_include_directories(${base} PRIVATE ${PROJECT_SOURCE_DIR}/src)
-	add_executable(${base} ${dir}/${base}.cpp)
-	target_link_libraries(${base} ddOpt)
-	add_dependencies(${base} ddOpt)
-endforeach()
-
-
-message("------------------------------------------------------------")
-file(GLOB tests "test/*cpp")
-message("Tests: ${tests}")
-
-foreach (file ${tests})
-	get_filename_component(base ${file} NAME_WE)
-	get_filename_component(dir ${file} DIRECTORY)
-	message("BASE IS: [${base}]")
-	message("HEADERS IS: [${PROJECT_SOURCE_DIR}/src]")
-	message("ARG: [$dir/${base}.cpp]")
-	add_executable(${base} ${dir}/${base}.cpp)
-	target_include_directories(${base} PRIVATE ${PROJECT_SOURCE_DIR}/src)
-	target_link_libraries(${base} ddOpt)
-	add_dependencies(${base} ddOpt)  
-endforeach()
-
-message("------------------------------------------------------------")
-file(GLOB examples "examples/*cpp")
-message("Examples: ${examples}")
-
-foreach (file ${examples})
-	get_filename_component(base ${file} NAME_WE)
-	get_filename_component(dir ${file} DIRECTORY)
-#	message("BASE IS: [${base}]")
-	add_executable(${base} ${dir}/${base}.cpp)
-	target_include_directories(${base} PRIVATE ${PROJECT_SOURCE_DIR}/src)
-	target_link_libraries(${base} ddOpt)
-	add_dependencies(${base} ddOpt)  
-endforeach()
-
+# C++
+add_executables("tests" "*.cpp" codd)
+add_executables("examples" "*.cpp" codd)
