@@ -82,7 +82,7 @@ void BAndBRestrictedFirst::search(Bounds& bnds)
    cout << "B&B(RF) searching..." << endl;
    bnds.attach(_theDD);
    double optTime = 0.0;
-   bnds.onSolution([ss,start,&optTime](const auto& lbls) {
+   bnds.onSolution([start,&optTime](const auto& lbls) {
       optTime = RuntimeMonitor::elapsedSince(start);
       //std::cout << "TIME:" << setprecision(ss) << optTime << "\n";
    });

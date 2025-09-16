@@ -27,7 +27,7 @@ message(STATUS "C++ FLAGS: ${CXX_COMPILE_OPTIONS}")
 file(GLOB CODD_SRC "${PROJECT_SOURCE_DIR}/src/*.cpp")
 add_library(codd ${CODD_SRC})
 target_include_directories(codd PUBLIC "${PROJECT_SOURCE_DIR}/src")
-target_include_directories(codd PUBLIC "${PROJECT_SOURCE_DIR}/ctl")
+target_include_directories(codd PUBLIC "${PROJECT_SOURCE_DIR}/gfl")
 
 # Executables
 function(add_executables DIR FILTER LIBS)
@@ -48,3 +48,6 @@ endfunction()
 # C++
 add_executables("tests" "*.cpp" codd)
 add_executables("examples" "*.cpp" codd)
+
+# CUDA
+add_executables("examples_gpu" "*.cpp" codd)

@@ -88,9 +88,9 @@ void mergeSortPerm(T* c,int* perm,std::size_t sz,const F& cmp)
       paux[i] = perm[i];
    }
    mergeSortPermAux(c,perm,0,sz,cmp,aux,paux);
-   for(auto i=0u;i < sz;i++) {
-      std::cout << i << " " << aux[i] << " " << perm[i] << " " << c[i] << "\n";
-   }
+   // for(auto i=0u;i < sz;i++) {
+   //    std::cout << i << " " << aux[i] << " " << perm[i] << " " << c[i] << "\n";
+   // }
 }
 
 #endif

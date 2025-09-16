@@ -1,15 +1,14 @@
-#ifndef __SEARCH_RESTRICTED_ONLY_NO_Q_HPP__
-#define __SEARCH_RESTRICTED_ONLY_NO_Q_HPP__
+#pragma once
 
 #include <functional>
 #include "dd.hpp"
 #include "store.hpp"
 #include "search.hpp"
 
-class BAndBRestrictedOnlyNoQ: BAndB {
+class BAndBRestrictedOnlyNoQ: public BAndB
+{
     using BAndB::BAndB;
+
 public:
     void search(Bounds &bnds);
 };
-
-#endif

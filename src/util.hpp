@@ -156,6 +156,14 @@ public:
    }
 };
 
+
+// References
+// - https://softwareengineering.stackexchange.com/a/402543
+// - https://www.boost.org/doc/libs/1_55_0/doc/html/hash/reference.html#boost.hash_combine
+inline
+void hash_combine(std::size_t& seed, std::size_t const & hash) {
+    seed ^= hash + 0x9e3779b97f4a7c16ull + (seed<<6) + (seed>>2);
+}
 /**
  * Bounded Set for Naturals [0..64*nbw)
  * It does not resizes and all storage is self-contained.
@@ -471,23 +479,23 @@ public:
       return nw == nbw;      
    }
    friend bool operator==(const NatSet& s1,const NatSet& s2) noexcept {
-       using u128 = unsigned __int128;
+      // using u128 = unsigned __int128;
       switch(nbw) {
-         case 4: {
-            u128* p1 = (u128*)s1._t;
-            u128* p2 = (u128*)s2._t;
-            u128* p3 = (u128*)(s1._t+2);
-            u128* p4 = (u128*)(s2._t+2);
-            return (*p1 == *p2) && (*p3 == *p4);
-         }break;
-         case 2: {
-            u128* p1 = (u128*)&s1._t;
-            u128* p2 = (u128*)&s2._t;
-            return *p1 == *p2;
-         }break;
-         case 1: {
-            return s1._t[0] == s2._t[0];
-         }break;
+         // case 4: {
+         //    u128* p1 = (u128*)s1._t;
+         //    u128* p2 = (u128*)s2._t;
+         //    u128* p3 = (u128*)(s1._t+2);
+         //    u128* p4 = (u128*)(s2._t+2);
+         //    return (*p1 == *p2) && (*p3 == *p4);
+         // }break;
+         // case 2: {
+         //    u128* p1 = (u128*)&s1._t;
+         //    u128* p2 = (u128*)&s2._t;
+         //    return *p1 == *p2;
+         // }break;
+         // case 1: {
+         //    return s1._t[0] == s2._t[0];
+         // }break;
          default:
             unsigned short nw = s1._t[0] == s2._t[0], i=1;
             for(;i < nbw && nw == i;i++)
@@ -502,10 +510,10 @@ public:
    friend NatSet operator-(const NatSet& s1,const NatSet& s2) noexcept { return std::move(NatSet(s1).diffWith(s2));}
 
    std::size_t hash() const noexcept {
-      std::size_t hv = 0;
-      for(auto i = 0;i < nbw;i++)
-         hv = hv ^ _t[i];
-      return hv;
+      std::size_t seed = 0;
+      for (auto i = 0;i < nbw;i++)
+          hash_combine(seed, static_cast<std::size_t>(_t[i]));
+      return seed;
    }
    friend struct std::hash<NatSet<nbw>>;
    friend class GNSet;
@@ -1124,6 +1132,10 @@ public:
          _tab = new T[_mx];
       else _tab = nullptr;
    }
+   template <class A>
+   FArray(std::size_t isz, A & allocator) : _mx(isz) {
+        _tab = _mx > 0 ? new (allocator) T[_mx] : nullptr;
+   }
    FArray(std::size_t isz,const T& value) : _mx(isz) {
       _tab = new T[_mx];
       for(auto i=0u;i < _mx;i++)
@@ -1220,7 +1232,7 @@ template <class FAT,int arity> class  FMatrixProxy {
    FMatrixProxy(FAT& flat,const int* sfx,int acc) : _flat(flat),_sfx(sfx),_acc(acc) {}
 public:
    FMatrixProxy<FAT,arity-1> operator[](const int idx) {
-      return FMatrixProxy<FAT,arity-1>(_flat,_sfx+1,_acc * *_sfx + idx);   
+      return FMatrixProxy<FAT,arity-1>(_flat,_sfx+1,_acc * *_sfx + idx);
    }
 };
 
@@ -1280,6 +1292,8 @@ public:
    FMatrix() {}
    FMatrix(const FMatrix<FAT,arity>& mtx);
    FMatrix(const int* dims);
+   template<typename A>
+   FMatrix(const int* dims, A & allocator);
    FMatrix<FAT,arity>& operator=(const FMatrix<FAT,arity>& mtx);
    FMatrixProxy<FAT,arity-1> operator[](const int idx);
    FMatrixProxyCst<FAT,arity-1> operator[](const int idx) const;
@@ -1310,6 +1324,14 @@ template <class FAT,int arity> FMatrix<FAT,arity>::FMatrix(const int* dims)
    _flat  = FAT(prodOf(dims,arity));
    for(int k=0;k<arity;k++)
       _dims[k] = dims[k];
+}
+template <class FAT,int arity>
+template<typename A>
+FMatrix<FAT,arity>::FMatrix(const int* dims, A & allocator)
+{
+    _flat  = FAT(prodOf(dims,arity), allocator);
+    for(int k=0;k<arity;k++)
+        _dims[k] = dims[k];
 }
 
 template <class FAT,int arity> 
@@ -1365,6 +1387,11 @@ public:
    Matrix(int nbr,int nbc) : FMatrix<FArray<T>,2>() {
       int rt[] = {nbr,nbc};
       this->prepare(rt);
+   }
+   template<class A>
+   Matrix(int nbr,int nbc, A & allocator) : FMatrix<FArray<T>,2>() {
+       int rt[] = {nbr,nbc};
+       this->prepare(rt);
    }
 };
 

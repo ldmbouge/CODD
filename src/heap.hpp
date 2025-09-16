@@ -133,7 +133,7 @@ public:
    }
    void clear() noexcept { _at = 1;}
    unsigned size() const noexcept { return (unsigned)(_at - 1);}
-   bool empty() const noexcept { return _at == 1;}
+   bool empty() const noexcept {return _at == 1;}
    Location* operator[](int i) const noexcept {
       return _data[i+1];
    }

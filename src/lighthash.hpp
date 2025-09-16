@@ -27,7 +27,7 @@
 #include "store.hpp"
 #include "node.hpp"
 
-template <class ST,class Hash = std::hash<ST>,class Equal = std::equal_to<ST>> class LHashtable {
+template <class ST,class Hash = std::hash<ST>, class Equal = std::equal_to<ST>> class LHashtable {
    struct HTNode {
       Node<ST>* _data;
       HTNode*   _next;
@@ -97,7 +97,7 @@ template <class ST,class Hash = std::hash<ST>,class Equal = std::equal_to<ST>> c
 public:
    LHashtable(Pool::Ptr p,std::size_t sz) : _pool(p) {
       _mxs = primeSize(sz);
-      std::cout << "sz(LightHashtable):" << _mxs << '\n';
+      //std::cout << "sz(LightHashtable):" << _mxs << '\n';
       _tab = new (_pool) HTNode*[_mxs];
       _mgc = new (_pool) unsigned[_mxs];
       memset(_tab,0,sizeof(HTNode*)*_mxs);
@@ -107,7 +107,7 @@ public:
    }
    void resize(std::size_t sz) {
       auto newSZ = primeSize(sz);
-      std::cout << "sz(LightHashtable):" << newSZ << '\n';
+      //std::cout << "sz(LightHashtable):" << newSZ << '\n';
       auto newtab = new (_pool) HTNode*[newSZ];
       auto newmgc = new (_pool) unsigned[newSZ];
       memset(_tab,0,sizeof(HTNode*)*newSZ);

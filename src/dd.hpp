@@ -18,6 +18,7 @@
 #include "pool.hpp"
 #include <atomic>
 #include "RuntimeMonitor.hpp"
+#include "model.hpp"
 
 class Strategy;
 class AbstractDD;
@@ -86,8 +87,8 @@ public:
    typedef std::shared_ptr<AbstractNodeAllocator> Ptr;   
 };
 
-enum LocalContext { BBCtx, DDCtx, DDInit };
-enum DDContext { DDRelaxed,DDRestricted,DDExact};
+enum LocalContext : int { BBCtx, DDCtx, DDInit };
+enum DDContext : int { DDRelaxed,DDRestricted,DDExact};
 
 class AbstractDD {
 protected:
@@ -481,65 +482,67 @@ public:
 };
 
 
-template <class ST,class DC>
-class CDOMClass :public ADOMClass {
-   std::function<DC(ST)> project;
-   std::unordered_map<DC,std::list<LLoc>> _theMap;  
+template <typename M>
+class CDOMClass : public ADOMClass {
+    using ST = M::State;
+    struct KeyHash
+    {
+        std::size_t operator()(ANode::Ptr const & p) const noexcept
+        {
+            auto s = static_cast<const Node<ST>*>(p.get())->get();
+            return M::domHash(s);
+        }
+    };
+    struct KeyEq {
+        bool operator()(ANode::Ptr const & p1, ANode::Ptr const & p2) const noexcept {
+            auto s1 = static_cast<const Node<ST>*>(p1.get())->get();
+            auto s2 = static_cast<const Node<ST>*>(p2.get())->get();
+            return M::domEq(s1,s2);
+        }
+    };
+   std::unordered_map<ANode::Ptr,std::list<LLoc>, KeyHash, KeyEq> _theMap;
 public:
-   CDOMClass(const std::function<DC(ST)>& fun) : project(fun) {}
+   CDOMClass() {}
    std::list<LLoc>& classFor(ANode::Ptr p) {
-      auto fp = static_cast<const Node<ST>*>(p.get());
-      auto key = project(fp->get());
-      auto at = _theMap.find(key);
-      if (at != _theMap.end()) {
-         return at->second;
-      } else {
-         auto [now,didIt] = _theMap.insert({key,std::list<LLoc>{}});
-         return now->second;
-      }
+       auto [it,_] = _theMap.try_emplace(p,std::list<LLoc>{});
+       return it->second;
+      // using ST = M::State;
+      // auto fp = static_cast<const Node<ST>*>(p.get());
+      // auto key = M::domProj(fp->get());
+      // auto at = _theMap.find(key);
+      // if (at != _theMap.end()) {
+      //    return at->second;
+      // } else {
+      //    auto [now,didIt] = _theMap.insert({key,std::list<LLoc>{}});
+      //    return now->second;
+      // }
    }
 };
 
 
-template <typename ST,
-          class Compare = Minimize<double>,
-          typename DC   = ST,
-          typename IBL2 = ST(*)(),
-          typename LGF  = Range(*)(const ST&,DDContext),
-          typename STF  = std::optional<ST>(*)(const ST&,int),
-          typename STC  = double(*)(const ST&,int),
-          typename SMF  = std::optional<ST>(*)(const ST&,const ST&),
-          typename EQSink = bool(*)(const ST&),
-          typename SDOM = bool(*)(const ST&,const ST&),
-          class Equal = std::equal_to<ST>
-          >
-requires Printable<ST> && Hashable<ST>
+template <class Model, class Compare>
+requires
+    IsModel<Model> and
+    Printable<typename Model::State> and
+    Hashable<typename Model::State>
 class DD :public AbstractDD {
+    using ST = Model::State;
 private:
-   std::function<ST()> _sti;
-   IBL2 _stt;
-   LGF _lgf;
-   STF _stf;
-   STC _stc;
-   SMF _smf;
-   EQSink _eqs;
-   std::function<double(const ST&,LocalContext)> _local;
-   std::function<DC(const ST&)> _project;
-   SDOM _sdom;
+   Model const * const _model;
    LHashtable<ST>* _nmap;
    unsigned _ndId;
    std::function<ANode::Ptr()> _initClosure;
    ADOMClass::Ptr makeDominanceManager() {
-      return ADOMClass::Ptr(new CDOMClass<ST,DC>(_project));
+      return ADOMClass::Ptr(new CDOMClass<Model>());
    }
    bool eq(ANode::Ptr f,ANode::Ptr s) const noexcept {
       auto fp = static_cast<const Node<ST>*>(f.get());
       auto sp = static_cast<const Node<ST>*>(s.get());
-      return Equal{}(fp->get(),sp->get());
+      return ST::equal(fp->get(),sp->get());
    }
    bool eqSink(ANode::Ptr s) const noexcept {
       auto sp = static_cast<const Node<ST>*>(s.get());
-      return _eqs(sp->get());
+      return _model->isTarget(sp->get());
    }
    bool   isBetter(double obj1,double obj2) const noexcept {
       return Compare{}.better(obj1,obj2);
@@ -550,8 +553,8 @@ private:
    double better(double obj1,double obj2) const noexcept {
       return Compare{}.better(obj1,obj2) ? obj1 : obj2;
    }
-   bool hasLocal() const noexcept       { return _local != nullptr;}
-   bool hasDominance() const noexcept   { return _sdom != nullptr;}
+   bool hasLocal() const noexcept       { return _model->has_local;}
+   bool hasDominance() const noexcept   { return _model->has_dom;}
    double initialBest() const noexcept  { return Compare{}.bestValue();}
    double initialWorst() const noexcept { return Compare{}.worstValue();}
    void update(Bounds& bnds) const {
@@ -602,12 +605,12 @@ private:
       return _root = _initClosure();
    }
    ANode::Ptr target() {
-      return _trg = makeNode(_stt());
+      return _trg = makeNode(_model->target());
    }
    unsigned nbNodes() const noexcept { return _ndId;}
    DDGen::Ptr getLabels(ANode::Ptr src,DDContext c) const {
       auto op = static_cast<const Node<ST>*>(src.get());
-      return makeDDGen(_lgf(op->get(),c));
+      return makeDDGen(_model->lgf(op->get(),c));
       //auto valSet = _lgf(op->get(),c);
       // if constexpr (std::is_same<decltype(valSet),GNSet>::value) {
       //    return valSet;
@@ -617,13 +620,13 @@ private:
    }
    ANode::Ptr transition(Bounds& bnds,ANode::Ptr src,int label) {
       auto op = static_cast<const Node<ST>*>(src.get());
-      auto vs = _stf(op->get(),label);     
+      auto vs = _model->stf(op->get(),label);
       if (vs.has_value()) {
          //std::cout << "has value!\n";
          ANode::Ptr rv;
-         if (_local) {
-            auto cVal = _stc(op->get(),label);
-            auto dual = _local(vs.value(),DDCtx);
+         if (hasLocal()) {
+            auto cVal = _model->scf(op->get(),label);
+            auto dual = _model->local(vs.value(),DDCtx);
             auto sCost = src->getBound() + cVal + dual;
             //std::cout << "!isBetter("<<sCost<<","<<bnds.getPrimal()<<")="<<(!isBetter(sCost,bnds.getPrimal()))<<"\n";
             if (!isBetter(sCost,bnds.getPrimal())) {
@@ -643,22 +646,22 @@ private:
       } else return nullptr;
    }
    double local(ANode::Ptr src,LocalContext lc) {
-      if (_local) {
+      if (hasLocal()) {
          auto op = static_cast<const Node<ST>*>(src.get());
-         return _local(op->get(),lc);
+         return _model->local(op->get(),lc);
       }
       else return initialWorst();
    }
    double cost(ANode::Ptr src,int label) {
       auto op = static_cast<const Node<ST>*>(src.get());
-      auto cVal = _stc(op->get(),label);
+      auto cVal = _model->scf(op->get(),label);
       return cVal;
    }
 
    ANode::Ptr merge(const ANode::Ptr f,const ANode::Ptr s) {
       auto fp = static_cast<const Node<ST>*>(f.get());
       auto sp = static_cast<const Node<ST>*>(s.get());
-      auto vs = _smf(fp->get(),sp->get());
+      auto vs = _model->smf(fp->get(),sp->get());
       if (vs.has_value()) {
          ANode::Ptr inMap = hasNode(vs.value());
          // std::cout << "Merge\n";
@@ -681,46 +684,31 @@ private:
    bool dominates(ANode::Ptr f,ANode::Ptr s) {
       auto fp = static_cast<const Node<ST>*>(f.get());
       auto sp = static_cast<const Node<ST>*>(s.get());
-      auto dc1 = _project(fp->get());
-      auto dc2 = _project(sp->get());
+      auto dc1 = _model->domHash(fp->get());
+      auto dc2 = _model->domHash(sp->get());
       if (dc1==dc2)
-         return _sdom(fp->get(),sp->get());
+         return _model->dom(fp->get(),sp->get());
       else return false;
    }
    bool dominatesEq(ANode::Ptr f,ANode::Ptr s) {
       auto fp = static_cast<const Node<ST>*>(f.get());
       auto sp = static_cast<const Node<ST>*>(s.get());
-      auto dc1 = _project(fp->get());
-      auto dc2 = _project(sp->get());
+      auto dc1 = _model->domHash(fp->get());
+      auto dc2 = _model->domHash(sp->get());
       if (dc1==dc2)
-         return _sdom(fp->get(),sp->get());
+         return _model->dom(fp->get(),sp->get());
       else return false;
    }
 public:   
-   DD(std::function<ST()> sti,IBL2 stt,LGF lgf,STF stf,STC stc,SMF smf,
-      EQSink eqs,
-      const GNSet& labels,
-      std::function<double(const ST&,LocalContext)> local = nullptr,
-      std::function<DC(const ST&)> pfun=[](const ST&) { return std::make_tuple(0);},
-      SDOM dom=nullptr
-     )
+   DD(Model const * model, GNSet const & labels)
       : AbstractDD(labels),
-        _sti(sti),
-        _stt(stt),
-        _lgf(lgf),
-        _stf(stf),
-        _stc(stc),
-        _smf(smf),
-        _eqs(eqs),
-        _local(local),
-        _project(pfun),
-        _sdom(dom),
+        _model(model),
         _ndId(0)
    {
-      _baseline = _mem->mark();
       _nmap = new (_mem) LHashtable<ST>(_mem,200000);
+      _baseline = _mem->mark();
       _initClosure = [this]() {
-         ANode::Ptr retVal = makeNode(_sti());
+         ANode::Ptr retVal = makeNode(_model->initial());
          retVal->setBound(0);
          return retVal;
       };
@@ -738,7 +726,7 @@ public:
       sp->print(os);
    }
    AbstractDD::Ptr duplicate() { // must update this one each time we *add* an argument to constructor.
-      auto theDD = new DD(_sti,_stt,_lgf,_stf,_stc,_smf,_eqs,_labels,_local,_project,_sdom);
+      auto theDD = new DD(_model,_labels);
       return AbstractDD::Ptr(theDD);
    }
    ANode::Ptr duplicate(const ANode::Ptr src) {
@@ -746,7 +734,7 @@ public:
       auto sp = static_cast<const Node<ST>*>(src.get());
       auto inMap = _nmap->getLoc(sp->get(),at);
       if (inMap) {
-         assert(src->getBound() == at->getBound()); // this fires. The node was already there with another bound   
+         assert(src->getBound() == at->getBound()); // this fires. The node was already there with another bound
          return at; // node already in this pool. Return it "untouched". It will be added to
          // the heap for the B&B. CAVEAT: it was already there. First time it was inserted it
          // received 0 as a bound (went through the else part). Calls to duplicate are *ONLY*

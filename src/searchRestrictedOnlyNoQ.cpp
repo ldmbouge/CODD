@@ -21,7 +21,7 @@ void BAndBRestrictedOnlyNoQ::search(Bounds& bnds)
    cout << "B&B searching..." << endl;
    bnds.attach(_theDD);
    double optTime = 0.0;
-   bnds.onSolution([ss,start,&optTime](const auto& lbls) {
+   bnds.onSolution([start,&optTime](const auto& lbls) {
       optTime = RuntimeMonitor::elapsedSince(start);
       //std::cout << "TIME:" << setprecision(ss) << optTime << "\n";
    });
@@ -41,17 +41,18 @@ void BAndBRestrictedOnlyNoQ::search(Bounds& bnds)
    // Main Loop
    cout << "B&B Nodes          " << setw(6) << "Dual\t " << setw(6) << "Primal\t Gap(%)\n";
    cout << "----------------------------------------------\n";
-   
+
    bool exact = false;
    long ttl = 0;
    while(!exact) {
-      std::cout << "trying width=" << ddr->getWidth() << "...\n";
+      auto spent = RuntimeMonitor::elapsedSince(start);
+      std::cout << "[" << spent/1000 << "s] Trying width = " << ddr->getWidth() << std::endl ;
       restricted->apply(rootNode,bnds);
       exact = restricted->isExact();
       if (!exact) ddr->setWidth(ddr->getWidth() << 1);
       nIter++;
       ttl += restricted->nbNodes();
-      std::cout << "Expanded:" << restricted->nbNodes() << "\n";
+      std::cout << "Expanded: " << restricted->nbNodes() << "\n";
    }
    
    cout << setprecision(ss);

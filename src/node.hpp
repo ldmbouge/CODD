@@ -200,7 +200,7 @@ public:
 
 void print(const ANList& l);
 
-template <typename T> requires Printable<T> && Hashable<T>
+template <typename T> requires Printable<T>
 class Node :public ANode {
    T _val;  
 public:

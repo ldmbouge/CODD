@@ -198,11 +198,11 @@ public:
       std::list<ANode::Ptr> retVal = std::move(_main);
       if(_theDD->hasLocal()) {
          retVal.sort([dd = _theDD](const ANode::Ptr& a,const ANode::Ptr& b) {
-            return !dd->isBetter(a->getFBound(),b->getFBound()); //FBound is full bound, bound + lbound
+            return dd->isBetter(a->getFBound(),b->getFBound()); //FBound is full bound, bound + lbound
          });
       } else {
          retVal.sort([dd = _theDD](const ANode::Ptr& a,const ANode::Ptr& b) {
-            return !dd->isBetter(a->getBound(),b->getBound());
+            return dd->isBetter(a->getBound(),b->getBound());
          });
       }
       if (retVal.size() > _mxw) {
@@ -669,7 +669,7 @@ void Restricted::compute(Bounds& bnds)
       discarding = false;
       //std::cout << "qn popped" << std::endl;
       auto lk = qn.pullLayer(); // We have in lk the queue content for layer cL, dk is what we discard
-      for(auto p : lk) { // loop over layer lk. p is a "parent" node.         
+      for(auto p : lk) { // loop over layer lk. p is a "parent" node.
          if(discarding) { // pickup discarded parents
             _discardedSet.push_back(p);
             continue; // do not expand discarded parent
