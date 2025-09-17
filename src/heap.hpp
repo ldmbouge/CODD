@@ -22,6 +22,7 @@
 #include <functional>
 #include <mutex>
 #include <condition_variable>
+#include <optional>
 #include "store.hpp"
 
 template <class T,typename Ord = bool(*)(const T&,const T&)> class Heap {

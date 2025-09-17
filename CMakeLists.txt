@@ -18,6 +18,27 @@ set(CMAKE_CXX_FLAGS_RELEASE        " -O3                            -DNDEBUG -ma
 string(TOUPPER "${CMAKE_BUILD_TYPE}" BUILD_TYPE_UPPER)
 string(REGEX REPLACE "  +" " " CXX_COMPILE_OPTIONS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_${BUILD_TYPE_UPPER}}")
 
+# CUDA
+if (ENABLE_GPU)
+    if(NOT CMAKE_CUDA_ARCHITECTURES)
+        set(CMAKE_CUDA_ARCHITECTURES "native")
+    endif()
+    enable_language(CUDA)
+    find_package(CUDAToolkit REQUIRED)
+    set(CMAKE_CUDA_STANDARD 20)
+    set(CMAKE_CUDA_STANDARD_REQUIRED ON)
+    set(CMAKE_CUDA_SEPARABLE_COMPILATION ON)
+    set(CMAKE_CUDA_FLAGS " --extended-lambda")
+    set(CMAKE_CUDA_FLAGS_DEBUG          " -O0 -G")
+    set(CMAKE_CUDA_FLAGS_RELWITHDEBINFO " -O2    -lineinfo -DNDEBUG")
+    set(CMAKE_CUDA_FLAGS_RELEASE        " -O3              -DNDEBUG")
+    # Forward C++ options
+    separate_arguments(CXX_COMPILE_OPTIONS_TMP UNIX_COMMAND "${CXX_COMPILE_OPTIONS}")
+    list(JOIN CXX_COMPILE_OPTIONS_TMP "," CXX_COMPILE_OPTIONS_TMP)
+    string(APPEND CMAKE_CUDA_FLAGS " -Xcompiler=${CXX_COMPILE_OPTIONS_TMP}")
+    string(REGEX REPLACE "  +" " " CUDA_COMPILE_OPTIONS "${CMAKE_CUDA_FLAGS} ${CMAKE_CUDA_FLAGS_${BUILD_TYPE_UPPER}}")
+endif()
+
 # Dependencies
 include(FetchContent)
 FetchContent_Declare(
@@ -59,4 +80,4 @@ add_executables("tests" "*.cpp" codd)
 add_executables("examples" "*.cpp" codd)
 
 # CUDA
-add_executables("examples_gpu" "*.cpp" "codd;cxxopts")
+add_executables("examples_gpu" "*.cu" "codd;cxxopts")

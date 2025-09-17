@@ -7,6 +7,7 @@
 #include <StackAllocator.hpp>
 #include "tsptw_model.hpp"
 #include <cxxopts.hpp>
+#include <Malloc.hpp>
 
 void parseFile(TSPTW * const model, std::string const & instance, gfl::StackAllocator & allocator)
 {
@@ -94,7 +95,14 @@ int main(int argc,char* argv[])
         exit(EXIT_SUCCESS);
     }
 
-    gfl::StackAllocator allocator(malloc(ReadOnlyMemSize), ReadOnlyMemSize);
+    auto * const readOnlyMem =
+#ifdef __CUDACC__
+            gfl::mallocManaged<void>(ReadOnlyMemSize);
+#else
+            gfl::mallocStd<void>(ReadOnlyMemSize);
+#endif
+
+    gfl::StackAllocator allocator(readOnlyMem, ReadOnlyMemSize);
     auto * const model = new (allocator) TSPTW();
     parseFile(model, instance, allocator);
 
