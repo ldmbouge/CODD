@@ -18,6 +18,15 @@ set(CMAKE_CXX_FLAGS_RELEASE        " -O3                            -DNDEBUG -ma
 string(TOUPPER "${CMAKE_BUILD_TYPE}" BUILD_TYPE_UPPER)
 string(REGEX REPLACE "  +" " " CXX_COMPILE_OPTIONS "${CMAKE_CXX_FLAGS} ${CMAKE_CXX_FLAGS_${BUILD_TYPE_UPPER}}")
 
+# Dependencies
+include(FetchContent)
+FetchContent_Declare(
+        cxxopts
+        GIT_REPOSITORY https://github.com/jarro2783/cxxopts.git
+        GIT_TAG        master
+)
+FetchContent_MakeAvailable(cxxopts)
+
 # Information
 message(STATUS "BUILD TYPE: ${CMAKE_BUILD_TYPE}")
 message(STATUS "C++ COMPILER: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}")
