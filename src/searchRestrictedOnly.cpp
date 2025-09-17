@@ -4,7 +4,6 @@
 #include "heap.hpp"
 #include <iostream>
 #include <iomanip>
-#include <unistd.h>
 #include <stdlib.h>
 #include "RuntimeMonitor.hpp"
 #include "pool.hpp"

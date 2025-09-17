@@ -1,53 +1,41 @@
 #include "codd.hpp"
-#include "search.hpp"
+#include "searchRelaxedFirst.hpp"
 #include "searchRestrictedFirst.hpp"
 #include "searchRestrictedOnly.hpp"
 #include "searchRestrictedOnlyNoQ.hpp"
 #include "searchRestrictedFirstThreaded.hpp"
-#include <getopt.h>
 #include <StackAllocator.hpp>
 #include "tsptw_model.hpp"
+#include <cxxopts.hpp>
 
-void skip(std::ifstream& f) {
-   char ch = 0;
-   std::string comment;
-   do {
-      ch = f.get();
-      if (ch == '#') {
-         std::getline(f,comment);
-         ch = ' ';
-      }
-   } while (isspace(ch) && !f.eof());
-   if (!f.eof())
-      f.unget();
-}
-
-void parseFile(TSPTW * const model, const char* fName, gfl::StackAllocator & allocator)
+void parseFile(TSPTW * const model, std::string const & instance, gfl::StackAllocator & allocator)
 {
     auto m = model;
 
-    using namespace std;
-    ifstream f(fName);
-    skip(f);
-    f >> m->n;
+    std::ifstream file(instance);
+    if (not file.good())
+    {
+        std::cerr << "File does not exist or could not be opened: " << instance << std::endl;
+        exit(EXIT_FAILURE);
+    }
+    file >> m->n;
     m->d = Matrix<int, 2>(m->n, m->n, allocator);
-    skip(f);
     for (auto i = 0; i < m->n; i++)
     {
         for (auto j = 0; j < m->n; j++)
         {
-            f >> m->d[i][j];
+            file >> m->d[i][j];
         }
     }
-    skip(f);
     m->tw = FArray<TSPTW::TimeWindow>(m->n, allocator);
     for (auto i = 0; i < m->n; i++)
     {
         int a, b;
-        f >> a >> b;
+        file >> a >> b;
         m->tw[i] = TSPTW::TimeWindow(a, b);
     }
-    f.close();
+    file.close();
+
     m->dInNS = FArray<int>(m->n, allocator);
     m->dIn = FArray<int>(m->n, allocator);
     m->dOut = FArray<int>(m->n, allocator);
@@ -64,112 +52,93 @@ void parseFile(TSPTW * const model, const char* fName, gfl::StackAllocator & all
         m->permIn[j] = j;
         m->permOut[j] = j;
     }
-    mergeSortPerm(&m->dIn[0], &m->permIn[0], m->n, [](double a, double b) { return a < b; });   // From smallest to largest
-    mergeSortPerm(&m->dOut[0], &m->permOut[0], m->n, [](double a, double b) { return a < b; }); // From smallest to largest
+    mergeSortPerm(m->dIn.data(), m->permIn.data(), m->n, [](double a, double b) { return a < b; });   // From smallest to largest
+    mergeSortPerm(m->dOut.data(), m->permOut.data(), m->n, [](double a, double b) { return a < b; }); // From smallest to largest
 }
 
 constexpr auto static ReadOnlyMemSize{24 * 1024}; // Cached in shared memory
 
 int main(int argc,char* argv[])
 {
-    const char* fName = nullptr;
-    int w = -1;
-    std::string solver = "XF"; // Default value
+    // Parse arguments
+    int width = 0;
+    int timeout = std::numeric_limits<int>::max(); // 68 years
+    std::string strategy;
+    std::string instance;
+    cxxopts::Options options("tsptw3gpu", "A C++ solver for the TSPTW");
+    options.add_options("Available")
+        ("w,width"   , "Non-negative integer specifying the maximum width", cxxopts::value(width))
+        ("s,strategy", "Search strategy to use among XF,RF,RO,RONQ", cxxopts::value(strategy))
+        ("h,help"    , "Show this help message and exit")
+        ("i,instance", "Path to the instance file", cxxopts::value(instance))
+        ("t,timeout", "Timeout in seconds", cxxopts::value(timeout));
+    options.parse_positional({"instance"});
+    options.custom_help("<OPTIONS>");
+    options.positional_help("<INSTANCE>");
+    auto const result = options.parse(argc, argv);
 
-    const option long_opts[] = {
-        {"instance", required_argument, 0, 'i'},
-        {"width", required_argument, 0, 'w'},
-        {"solver", required_argument, 0, 's'},
-        {"help", no_argument, 0, 'h'},
-        {0, 0, 0, 0}
-    };
-
-    int opt;
-    while ((opt = getopt_long(argc, argv, "i:w:s:h", long_opts, nullptr)) != -1)
+    // Option validation
+    if (width <= 0)
     {
-        switch (opt)
-        {
-        case 'i':
-            fName = optarg;
-            break;
-        case 'w':
-            w = std::atoi(optarg);
-            if (w < 0)
-            {
-                std::cerr << "Error: Width must be a non-negative integer.\n";
-                return -1;
-            }
-            break;
-        case 's':
-            solver = optarg;
-            break;
-        case 'h':
-            std::cout << "Usage: " << argv[0] <<
-                " --instance <file> --width <int> [--solver <name>] [--nolocal] [--nodom]\n"
-                << "  -i, --instance <file>   Path to the instance file (required)\n"
-                << "  -w, --width <int>       Non-negative integer specifying the max width (required)\n"
-                << "  -s, --solver <name>     Name of the solver to use (optional, default: XF)\n"
-                << "  -h, --help              Show this help message and exit\n";
-            return 0;
-        case '?':
-        default:
-            return -1;
-        }
+        std::cerr << "Negative or zero width" << std::endl;
+        exit(EXIT_FAILURE);
     }
-
-    if (fName == nullptr || w < 0)
+    if (instance.empty())
     {
-        std::cerr << "Error: --instance and --width are required.\n";
-        return -1;
+        std::cerr << "Missing instance file" << std::endl;
+        exit(EXIT_FAILURE);
     }
-
-    std::cout << "Instance file: " << fName << '\n';
-    std::cout << "Width: " << w << '\n';
-    std::cout << "Solver: " << solver << '\n';
+    if (result.count("help") > 0)
+    {
+        std::cout << options.help();
+        exit(EXIT_SUCCESS);
+    }
 
     gfl::StackAllocator allocator(malloc(ReadOnlyMemSize), ReadOnlyMemSize);
     auto * const model = new (allocator) TSPTW();
-    parseFile(model, fName, allocator);
+    parseFile(model, instance, allocator);
+
     auto labels = TSPTW::Labels(0, model->n-1);
     auto dd = DD<TSPTW, Minimize<double>>::makeDD(model, labels);
     Bounds bnds([](const std::vector<int>& inc)  {});
+    BAndB * engine = nullptr;
 
-    if (solver == "XF")
+    if (strategy == "XF")
     {
-        BAndB engine(dd,w);
-        engine.search(bnds);
+        engine = new BAndBRelaxedFirst(dd, width);
     }
-    else if (solver == "RF")
+    else if(strategy == "RF")
     {
-        BAndBRestrictedFirst engine(dd,w);
-        engine.search(bnds);
+        engine = new BAndBRestrictedFirst(dd, width);
     }
-    else if (solver == "RFT")
+    else if(strategy == "RFT")
     {
-        BAndBRestrictedFirstThreaded engine(dd,w);
-        engine.search(bnds);
+        engine = new BAndBRestrictedFirstThreaded(dd, width);
     }
-    else if (solver == "RO")
+    else if(strategy == "RO")
     {
-        BAndBRestrictedOnly engine(dd,w);
-        engine.search(bnds);
+        engine = new BAndBRestrictedOnly(dd, width);
     }
-    else if (solver == "RONQ")
+    else if(strategy == "RONQ")
     {
-        BAndBRestrictedOnlyNoQ engine(dd,w);
-        engine.search(bnds);
+        engine = new BAndBRestrictedOnlyNoQ(dd, width);
     }
     else
     {
-        std::cerr << "The solver " << solver << " is unknown.\n"
-            << "This model only supports the following solvers:\n"
-            << "XF     relaXed First\n"
-            << "RF     Restricted First\n"
-            << "RFT    Restricted First Threaded\n"
-            << "RO     Restricted Only\n"
-            << "RONQ   Restricted Only No Queue (CABS-style)";
-        return -1;
+        std::cerr << "Unknown search strategy. Supported strategies are:" << std::endl
+                  << "XF     RelaXed First" << std::endl
+                  << "RF     Restricted First" << std::endl
+                  << "RFT    Restricted First Threaded" << std::endl
+                  << "RO     Restricted Only" << std::endl
+                  << "RONQ   Restricted Only No Queue (CABS style)";
+        exit(EXIT_FAILURE);
     }
 
-    return 0;
+    std::cout << "Instance file: " << instance << std::endl;
+    std::cout << "Width: " << width << std::endl;
+    std::cout << "Strategy: " << strategy << std::endl;
+    engine->setTimeLimit([timeout](auto ms){return ms / 1000 > timeout;});
+    engine->search(bnds);
+
+    return EXIT_SUCCESS;
 }

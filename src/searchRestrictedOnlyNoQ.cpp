@@ -44,23 +44,31 @@ void BAndBRestrictedOnlyNoQ::search(Bounds& bnds)
 
    bool exact = false;
    long ttl = 0;
-   while(!exact) {
-      auto spent = RuntimeMonitor::elapsedSince(start);
-      std::cout << "[" << spent/1000 << "s] Trying width = " << ddr->getWidth() << std::endl ;
+   bool timeout = false;
+   while(!exact and not timeout) {
+      auto ess_ms = RuntimeMonitor::elapsedSince(start);
+      std::cout << "[" << ess_ms/1000 << "s] Trying width = " << ddr->getWidth() << std::endl ;
       restricted->apply(rootNode,bnds);
       exact = restricted->isExact();
       if (!exact) ddr->setWidth(ddr->getWidth() << 1);
       nIter++;
       ttl += restricted->nbNodes();
       std::cout << "Expanded: " << restricted->nbNodes() << "\n";
+      timeout = _timeLimit && _timeLimit(RuntimeMonitor::elapsedSince(start));
    }
-   
-   cout << setprecision(ss);
-   auto spent = RuntimeMonitor::elapsedSince(start);
-   cout << "TOTAL # nodes:" << ttl << "\n";
-   cout << "Done(" << _mxw << "):" << bnds.getPrimal() << "\t #iterations:" <<  nIter
-        << "\t Time:" << optTime/1000 << "/" << spent/1000 << "s"
-        << "\tWidth: " << _mxw << "/" << ddr->getWidth()
-        //<< "\nSol: " << bnds
-        << "\n";
+   if (timeout)
+   {
+       cout << "TIMEOUT" << "\n";
+   }
+   else
+   {
+       cout << setprecision(ss);
+       auto spent = RuntimeMonitor::elapsedSince(start);
+       cout << "TOTAL # nodes:" << ttl << "\n";
+       cout << "Done(" << _mxw << "):" << bnds.getPrimal() << "\t #iterations:" <<  nIter
+            << "\t Time:" << optTime/1000 << "/" << spent/1000 << "s"
+            << "\tWidth: " << _mxw << "/" << ddr->getWidth()
+            //<< "\nSol: " << bnds
+            << "\n";
+   }
 }

@@ -705,8 +705,8 @@ public:
         _model(model),
         _ndId(0)
    {
-      _nmap = new (_mem) LHashtable<ST>(_mem,200000);
       _baseline = _mem->mark();
+      _nmap = new (_mem) LHashtable<ST>(_mem,200000);
       _initClosure = [this]() {
          ANode::Ptr retVal = makeNode(_model->initial());
          retVal->setBound(0);

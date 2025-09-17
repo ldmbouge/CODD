@@ -5,6 +5,31 @@
 
 struct TSPTW
 {
+   // Instance data
+    struct TimeWindow
+    {
+        int a,b;
+
+        TimeWindow() noexcept : a(std::numeric_limits<int>::max()), b(std::numeric_limits<int>::min()) {}
+        TimeWindow(int const a,int const b) noexcept : a(a),b(b) {}
+        friend std::ostream & operator<<(std::ostream & os, TimeWindow const & t)
+        {
+            return os << "[" << t.a << "," << t.b << "]";
+        }
+
+    };
+
+    constexpr static int depot = 0;
+    int n;
+    Matrix<int,2> d;
+    FArray<TimeWindow> tw;
+    FArray<int> dInNS;
+    FArray<int> dIn;
+    FArray<int> dOut;
+    FArray<int> permIn;
+    FArray<int> permOut;
+
+    // Model
     using Labels = NatSet<4>;
     struct State
     {
@@ -53,29 +78,6 @@ struct TSPTW
                 "MAY=" << s.may << ">";
         }
     };
-
-    // Instance data
-    struct TimeWindow
-    {
-        int a,b;
-
-        TimeWindow() noexcept : a(std::numeric_limits<int>::max()), b(std::numeric_limits<int>::min()) {}
-        TimeWindow(int const a,int const b) noexcept : a(a),b(b) {}
-        friend std::ostream & operator<<(std::ostream & os, TimeWindow const & t)
-        {
-            return os << "[" << t.a << "," << t.b << "]";
-        }
-
-    };
-    constexpr static int depot = 0;
-    int n;
-    Matrix<int,2> d;
-    FArray<TimeWindow> tw;
-    FArray<int> dInNS;
-    FArray<int> dIn;
-    FArray<int> dOut;
-    FArray<int> permIn;
-    FArray<int> permOut;
 
     State initial() const noexcept
     {

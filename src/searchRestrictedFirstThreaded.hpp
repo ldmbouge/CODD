@@ -6,7 +6,7 @@
 #include "store.hpp"
 #include "search.hpp"
 
-class BAndBRestrictedFirstThreaded: BAndB {
+class BAndBRestrictedFirstThreaded: public BAndB {
     using BAndB::BAndB;
 public:
     void search(Bounds &bnds);

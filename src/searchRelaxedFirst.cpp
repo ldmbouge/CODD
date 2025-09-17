@@ -1,26 +1,12 @@
-#include "search.hpp"
 #include "node.hpp"
 #include "heap.hpp"
 #include <iostream>
 #include <iomanip>
-#include <unistd.h>
 #include <stdlib.h>
 #include "RuntimeMonitor.hpp"
-#include "pool.hpp"
-#include "heap.hpp"
+#include "searchRelaxedFirst.hpp"
 
-std::vector<ANode::Ptr> filterLocal(Bounds& bnds, AbstractDD::Ptr dd, std::vector<ANode::Ptr> nodes)
-{
-   std::vector<ANode::Ptr> survived;
-   for(auto n: nodes) {
-      double localDual = dd->local(n, LocalContext::BBCtx);
-      if(!dd->isBetterEQ(bnds.getPrimal(), n->getBound() + localDual)) 
-         survived.push_back(n);      
-   }
-   return survived;
-}
-
-void BAndB::search(Bounds& bnds)
+void BAndBRelaxedFirst::search(Bounds& bnds)
 {
    auto bbPool = _theDD->makeNDAllocator();
    using namespace std;

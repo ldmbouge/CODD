@@ -6,7 +6,7 @@
 #include "store.hpp"
 #include "search.hpp"
 
-class BAndBRestrictedOnly: BAndB {
+class BAndBRestrictedOnly: public BAndB {
     using BAndB::BAndB;
 public:
     void search(Bounds &bnds);

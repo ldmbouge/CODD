@@ -1167,6 +1167,7 @@ public:
       a._tab = nullptr;
       return *this;
    }
+   T * data() const noexcept { return _tab;}
    std::size_t size() const noexcept { return _mx;}
    T& operator[](std::size_t i) noexcept { assert(i>=0 && i < _mx);return _tab[i];}
    const T& operator[](std::size_t i) const noexcept { assert(i>=0 && i < _mx);return _tab[i];}

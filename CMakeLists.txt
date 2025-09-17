@@ -59,4 +59,4 @@ add_executables("tests" "*.cpp" codd)
 add_executables("examples" "*.cpp" codd)
 
 # CUDA
-add_executables("examples_gpu" "*.cpp" codd)
+add_executables("examples_gpu" "*.cpp" "codd;cxxopts")
