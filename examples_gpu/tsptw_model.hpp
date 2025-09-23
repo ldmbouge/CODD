@@ -131,6 +131,10 @@ struct TSPTW
     GFL_HOST_DEVICE
     gfl::optional<State> stf(State const & s, int l) const noexcept
     {
+
+        auto * flatD = d.getFlat().data();
+        auto rSize = n;
+
         if (l == depot)
         {
             return target();
@@ -144,9 +148,12 @@ struct TSPTW
             auto tmpMax = INT_MIN;
             for (auto p : tmpPos)
             {
-                auto const v = d[p][l];
-                tmpMin = gfl::min<int>(tmpMin, v);
-                tmpMax = gfl::max<int>(tmpMax, v);
+                assert(tmpPos.size() > 0);
+                int idx = rSize*p + l;
+                auto const v = flatD + idx;
+                auto const vVal = *v;
+                tmpMin = gfl::min<int>(tmpMin, vVal);
+                tmpMax = gfl::max<int>(tmpMax, vVal);
             }
             auto const ta = max(s.ta + tmpMin, tw[l].a);
 

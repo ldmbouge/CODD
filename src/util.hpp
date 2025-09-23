@@ -166,6 +166,7 @@ GFL_HOST_DEVICE inline
 void hash_combine(std::size_t& seed, std::size_t const & hash) {
     seed ^= hash + 0x9e3779b97f4a7c16ull + (seed<<6) + (seed>>2);
 }
+
 /**
  * Bounded Set for Naturals [0..64*nbw)
  * It does not resizes and all storage is self-contained.
@@ -338,7 +339,7 @@ public:
    int size() const noexcept {
       int ttl = 0;
       for(short i=0;i < nbw;++i)
-         ttl += __builtin_popcountll(_t[i]);
+         ttl += gfl::popcount(_t[i]);
       return ttl;
    }
    bool empty() const noexcept {
@@ -427,11 +428,6 @@ public:
       GFL_HOST_DEVICE
       iterator(const unsigned long long* t,const NatSet<nbw>& ns) 
          : _t(t),_cwi(nbw),_cnt(ns.size()),_up(0),_cw(0) {} // end constructor
-      static constexpr auto msb(unsigned long long w) noexcept {return (0x8000000000000000u >> __builtin_clzl(w));}
-      static constexpr auto lsb(unsigned long long w)  noexcept {return w & -w;}
-      static constexpr auto clearMSB(unsigned long long w) noexcept { return w ^ msb(w);}
-      static constexpr auto clearLSB(unsigned long long w) noexcept { return w ^ lsb(w);}
-      static constexpr auto bitId(unsigned long long w) noexcept { return 63 - __builtin_clzl(w);}
    public:
       using iterator_category = std::forward_iterator_tag;
       using value_type = short;
@@ -466,7 +462,7 @@ public:
             _cw  =  0;
             return *this;
          } else 
-            _cw = clearMSB(_cw); // clear the most sig bit.
+            _cw = gfl::flipMsb(_cw); // clear the most sig bit.
          while(_cw==0 && --_cwi >= 0) _cw = _t[_cwi];
          --_cnt;
          return *this;
@@ -1357,7 +1353,7 @@ public:
    GFL_HOST_DEVICE
    FMatrixProxyCst<FAT,arity-1> operator[](const int idx) const;
    GFL_HOST_DEVICE
-   FAT getFlat()           { return _flat;}
+   FAT const & getFlat() const     { return _flat;}
    int getArity() const    { return arity;}
    int getDim(int d) const { return _dims[d];}
    void print(std::ostream& os) const { int* path = (int*)alloca(sizeof(int)*arity);print(os,path,0,0);}

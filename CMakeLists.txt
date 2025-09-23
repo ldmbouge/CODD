@@ -30,7 +30,7 @@ if (ENABLE_GPU)
     set(CMAKE_CUDA_STANDARD_REQUIRED ON)
     set(CMAKE_CUDA_SEPARABLE_COMPILATION ON)
     set(CMAKE_CUDA_FLAGS " --extended-lambda")
-    set(CMAKE_CUDA_FLAGS_DEBUG          " -O0 -G")
+    set(CMAKE_CUDA_FLAGS_DEBUG          " -O0 -g -G")
     set(CMAKE_CUDA_FLAGS_RELWITHDEBINFO " -O2    -lineinfo -DNDEBUG")
     set(CMAKE_CUDA_FLAGS_RELEASE        " -O3              -DNDEBUG")
     # Forward C++ options
