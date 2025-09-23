@@ -42,8 +42,11 @@ struct TSPTW
         int ta;   // earliest and latest times at pos (a and b are same for exact nodes)
         int tb;
 
-        State() { memset(static_cast<void*>(this),0,sizeof(TSPTW));}
+        GFL_HOST_DEVICE
+        State() {}
+        GFL_HOST_DEVICE
         State(Set const & pos,Set const & must,Set const & may,int const hops,int const ta,int const tb) noexcept : pos(pos),must(must),may(may),hops(hops),ta(ta),tb(tb) {}
+        GFL_HOST_DEVICE
         State(Set && pos,Set && must,Set && may, int const hops, int const ta,int const tb) noexcept : pos(pos),must(must),may(may),hops(hops),ta(ta),tb(tb) {}
 
         static bool equal(State const & s1, State const & s2) noexcept
@@ -56,6 +59,7 @@ struct TSPTW
                     s1.ta   == s2.ta   and
                     s1.tb   == s2.tb;
         }
+        GFL_HOST_DEVICE
         static std::size_t hash(State const & s) noexcept
         {
             std::size_t seed = 0;
@@ -85,6 +89,7 @@ struct TSPTW
         auto s = State( Set({depot}), Set(depot+1,n-1), Set(),0, 0, 0);
         return s;
     }
+    GFL_HOST_DEVICE
     State target() const noexcept
     {
         using Set = State::Set;
@@ -98,6 +103,7 @@ struct TSPTW
         return c1 and c2;
     }
 
+    GFL_HOST_DEVICE
     Labels lgf(State const & s, DDContext ctx) const noexcept
     {
         if (s.hops >= n - 1)
@@ -122,7 +128,8 @@ struct TSPTW
             return f;
         }
     }
-    std::optional<State> stf(State const & s, int l) const noexcept
+    GFL_HOST_DEVICE
+    gfl::optional<State> stf(State const & s, int l) const noexcept
     {
         if (l == depot)
         {
@@ -130,27 +137,48 @@ struct TSPTW
         }
         else
         {
-            const int ta = std::max(s.ta + min(s.pos - l, [this,l](const int p) { return d[p][l]; }),
-                                    tw[l].a);
+            auto tmpPos = s.pos - l;
+            auto tmpMust = s.must - l;
+
+            auto tmpMin = INT_MAX;
+            auto tmpMax = INT_MIN;
+            for (auto p : tmpPos)
+            {
+                auto const v = d[p][l];
+                tmpMin = gfl::min<int>(tmpMin, v);
+                tmpMax = gfl::max<int>(tmpMax, v);
+            }
+            auto const ta = max(s.ta + tmpMin, tw[l].a);
+
+            // const int ta = gfl::max<int>(s.ta + min(s.pos - l, [this,l](const int p) { auto i = 20 * p + l; return d[p][l]; }),
+            //                         tw[l].a);
             auto newMust = s.must - l;
             if (any(newMust, [this,l,ta](int u) { return ta + d[l][u] > tw[u].b; }))
-                return std::nullopt; // at least one in the next must violates its time window ub.
+                return gfl::nullopt; // at least one in the next must violates its time window ub.
             const int tb = (s.ta == s.tb)
                                ? ta
-                               : std::min(s.tb + max(s.pos - l, [this,l](const int p) { return d[p][l]; }),
+                               : gfl::min<int>(s.tb + max(s.pos - l, [this,l](const int p) { return d[p][l]; }),
                                           tw[l].b);
             return State{State::Set{l}, newMust, s.may - l, s.hops + 1, ta, tb};
         }
     }
+    GFL_HOST_DEVICE
     double scf(State const & s, int l) const noexcept
     {
         return min(s.pos - l,[this,l](int p) { return d[p][l]; });
     }
 
+    GFL_HOST_DEVICE constexpr static
+    bool better(double const & c1, double const & c2) noexcept { return c1 < c2; }
+    constexpr static bool betterEQ(double const & c1, double const & c2)  noexcept { return c1 <= c2; }
+    constexpr static double bestValue() noexcept { return std::numeric_limits<double>::max(); }
+    constexpr static double worstValue() noexcept { return std::numeric_limits<double>::lowest(); } // lowest() instead of min() because double
+
     constexpr static bool has_merge = true;
-    std::optional<State> smf(State const & s1, State const & s2) const noexcept
+    GFL_HOST_DEVICE
+    gfl::optional<State> smf(State const & s1, State const & s2) const noexcept
     {
-        if (s1.hops != s2.hops) return std::nullopt;
+        if (s1.hops != s2.hops) return gfl::nullopt;
 
         const auto newMust = s1.must & s2.must;
         return State {
@@ -158,15 +186,16 @@ struct TSPTW
             newMust,
             (s1.must | s1.may | s2.must | s2.may) - newMust,
             s1.hops,
-            std::min(s1.ta, s2.ta),
-            std::max(s1.tb, s2.tb)
+            gfl::min<int>(s1.ta, s2.ta),
+            gfl::max<int>(s1.tb, s2.tb)
          };
     }
 
     constexpr static bool has_local = true;
+    GFL_HOST_DEVICE
     double local(State const & s, LocalContext ctx) const noexcept
     {
-        const auto inf = std::numeric_limits<int>::max();
+        const auto inf = gfl::numeric_limits<int>::max();
         const auto violatesTW = [ta=s.ta,this](int p) { return ta + dInNS[p] > tw[p].b; };
 
         if (any(s.must, violatesTW))
@@ -216,10 +245,11 @@ struct TSPTW
             //std::cout << "INF3\n";
             return inf;
         }
-        return std::max(mandatoryIn, mandatoryOut) + returnToDepot;
+        return gfl::max<double>(mandatoryIn, mandatoryOut) + returnToDepot;
     }
 
     constexpr static bool has_dom = true;
+    GFL_HOST_DEVICE
     static bool dom(State const & s1, State const & s2) noexcept
     {
         return
@@ -228,6 +258,7 @@ struct TSPTW
             s1.hops == s2.hops and
             s1.pos == s2.pos;
     }
+    GFL_HOST_DEVICE
     static std::size_t domHash(State const & s) noexcept
     {
         std::size_t seed = 0;
@@ -236,6 +267,7 @@ struct TSPTW
         hash_combine(seed, static_cast<std::size_t>(s.hops));
         return seed;
     }
+    GFL_HOST_DEVICE
     static bool domEq(State const & s1, State const & s2) noexcept
     {
         return

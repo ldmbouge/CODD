@@ -17,8 +17,15 @@
 #include "msort.hpp"
 #include "pool.hpp"
 #include <atomic>
+
+#include "LayerEngine.cuh"
 #include "RuntimeMonitor.hpp"
 #include "model.hpp"
+
+#ifdef __NVCC__
+ #include <LayerEngine.cuh>
+#endif
+
 
 class Strategy;
 class AbstractDD;
@@ -130,6 +137,15 @@ public:
    virtual unsigned nbNodes() const noexcept = 0;
    virtual ADOMClass::Ptr makeDominanceManager() = 0;
    virtual ANode::Ptr transition(Bounds& bnds,ANode::Ptr src,int label) = 0;
+#ifdef __NVCC__
+   virtual void offloadLayerExpansion(
+        std::list<ANode::Ptr> const & layer,
+        double primalBound,
+        DDContext ddCtx,
+        LocalContext localCtx) = 0;
+   virtual void retrieveNodes() = 0;
+   virtual bool getParentLabelChild(ANode::Ptr & parent, int & label, ANode::Ptr & child) = 0;
+#endif
    virtual ANode::Ptr merge(const ANode::Ptr first,const ANode::Ptr snd) = 0;
    virtual double cost(ANode::Ptr src,int label) = 0;
    virtual double local(ANode::Ptr src,enum LocalContext lc) = 0;
@@ -316,6 +332,9 @@ class WidthBounded :public Strategy {
 protected:
    unsigned _mxw;
    NDArray  _nda;
+#ifdef __NVCC__
+    static constexpr long long int offloadThreshold = 10000;
+#endif
    NDArray& pullLayer(CQueue<ANode::Ptr>& q);  
    void transferArcs(ANode::Ptr donor,ANode::Ptr receiver);
 public:
@@ -355,7 +374,6 @@ public:
    void compute(Bounds& );
    bool primal() const { return true;}
 };
-
 
 struct NDAction {
    enum Action { Delay,InFront,Noop};
@@ -399,39 +417,7 @@ public:
    void onDiscarded(PRED&& p, ACTION&& action) { _discardedSet.onArrival(p, action); }
 };
 
-template<typename T>
-concept Comparable = requires(const T& a,const T& b)
-{
-   { (a < b) && (a > b) && (a == b) && (a <= b) && (a >= b) };
-};
-
-template <Comparable T = void>
-struct Minimize {
-   constexpr bool better( const T& lhs, const T& rhs ) const { // a =better(a,b) <=> a < b
-      return lhs < rhs;
-   }
-   constexpr bool betterEQ( const T& lhs, const T& rhs ) const { // a=betterEQ(a,b) <=> a <= b
-      return lhs <= rhs;
-   }
-   constexpr T bestValue() const noexcept { return std::numeric_limits<int>::max();}
-   constexpr T worstValue() const noexcept { return - std::numeric_limits<int>::max();}
-};
-
-
-template <Comparable T = void>
-struct Maximize {
-   constexpr bool better( const T& lhs, const T& rhs ) const { // a =better(a,b) <=> a > b
-      return lhs > rhs;
-   }
-   constexpr bool betterEQ( const T& lhs, const T& rhs ) const { // a = betterEQ(a,b) <=> a >= b
-      return lhs >= rhs;
-   }
-   constexpr T bestValue() const noexcept  { return - std::numeric_limits<int>::max();}
-   constexpr T worstValue() const noexcept { return std::numeric_limits<int>::max();}
-};
-
-
-template <typename ST, class Compare> requires Printable<ST> && Hashable<ST>
+template <typename ST> requires Printable<ST> && Hashable<ST>
 class DDNodeAllocator :public AbstractNodeAllocator {
    LHashtable<ST> _nmap;
 public:
@@ -520,7 +506,7 @@ public:
 };
 
 
-template <class Model, class Compare>
+template <class Model>
 requires
     IsModel<Model> and
     Printable<typename Model::State> and
@@ -532,6 +518,9 @@ private:
    LHashtable<ST>* _nmap;
    unsigned _ndId;
    std::function<ANode::Ptr()> _initClosure;
+#ifdef __NVCC__
+    LayerEngine<Model> _layerEngine;
+#endif
    ADOMClass::Ptr makeDominanceManager() {
       return ADOMClass::Ptr(new CDOMClass<Model>());
    }
@@ -545,18 +534,18 @@ private:
       return _model->isTarget(sp->get());
    }
    bool   isBetter(double obj1,double obj2) const noexcept {
-      return Compare{}.better(obj1,obj2);
+      return Model::better(obj1,obj2);
    }
    bool   isBetterEQ(double obj1,double obj2) const noexcept {
-      return Compare{}.betterEQ(obj1,obj2); 
+      return Model::betterEQ(obj1,obj2);
    }
    double better(double obj1,double obj2) const noexcept {
-      return Compare{}.better(obj1,obj2) ? obj1 : obj2;
+      return Model::better(obj1,obj2) ? obj1 : obj2;
    }
    bool hasLocal() const noexcept       { return _model->has_local;}
    bool hasDominance() const noexcept   { return _model->has_dom;}
-   double initialBest() const noexcept  { return Compare{}.bestValue();}
-   double initialWorst() const noexcept { return Compare{}.worstValue();}
+   double initialBest() const noexcept  { return Model::bestValue();}
+   double initialWorst() const noexcept { return Model::worstValue();}
    void update(Bounds& bnds) const {
       if (_strat->primal())  {
          //std::cout << "setting primal to better(bound=" << _trg->getBound() << ", primal=" << bnds.getPrimal() << ") = " << DD::better(_trg->getBound(),bnds.getPrimal()) << std::endl;
@@ -645,6 +634,42 @@ private:
          return rv;
       } else return nullptr;
    }
+#ifdef __NVCC__
+    void offloadLayerExpansion(std::list<ANode::Ptr> const & layer, double primalBound, DDContext ddCtx, LocalContext localCtx)
+    {
+       _layerEngine.offloadComputation(layer,_model, primalBound, ddCtx, localCtx);
+    }
+
+    void retrieveNodes()
+    {
+       _layerEngine.retrieveNodes();
+    }
+
+    bool getParentLabelChild(ANode::Ptr & parent, int & label, ANode::Ptr & child)
+    {
+        GpuChild<ST> gpuChild;
+        auto const validChild = _layerEngine.getChild(gpuChild);
+        if (validChild)
+        {
+            parent = gpuChild.parentNode;
+            label = gpuChild.label;
+            child = makeNode(std::move(gpuChild.state), gpuChild.parentNode->isExact());
+            if (hasLocal())
+            {
+                if (not isBetter(gpuChild.heuristicNodeToSink, child->getBackwardBound()))
+                {
+                    child->setBackwardBound(gpuChild.heuristicNodeToSink);
+                }
+                if (not isBetter(gpuChild.heuristicNodeToSink, child->getLBound()))
+                {
+                    child->setLBound(gpuChild.heuristicNodeToSink);
+                }
+            }
+        }
+        return validChild;
+    };
+#endif
+
    double local(ANode::Ptr src,LocalContext lc) {
       if (hasLocal()) {
          auto op = static_cast<const Node<ST>*>(src.get());
@@ -719,7 +744,7 @@ public:
       return AbstractDD::Ptr(new DD(std::forward<Args>(args)...));
    }
    AbstractNodeAllocator::Ptr makeNDAllocator(std::size_t sz = 200000) const noexcept {
-      return std::shared_ptr<DDNodeAllocator<ST, Compare>>(new DDNodeAllocator<ST, Compare>(new LPool(new Pool),sz));
+      return std::shared_ptr<DDNodeAllocator<ST>>(new DDNodeAllocator<ST>(new LPool(new Pool),sz));
    }
    void printNode(std::ostream& os,ANode::Ptr n) const {
       auto sp = static_cast<const Node<ST>*>(n.get());

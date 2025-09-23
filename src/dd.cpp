@@ -669,66 +669,128 @@ void Restricted::compute(Bounds& bnds)
       discarding = false;
       //std::cout << "qn popped" << std::endl;
       auto lk = qn.pullLayer(); // We have in lk the queue content for layer cL, dk is what we discard
-      for(auto p : lk) { // loop over layer lk. p is a "parent" node.
-         if(discarding) { // pickup discarded parents
-            _discardedSet.push_back(p);
-            continue; // do not expand discarded parent
-         }         
-         auto remLabels = _dd->getLabels(p,DDRestricted);
-         while(remLabels->more()) {
-            auto l = remLabels->getAndNext();
-            auto child = _dd->transition(bnds,p,l); // we may get back a node (new or old)
-            if (child) {
-               bool newNode = child->nbParents()==0; // is this a newly created node?
-               auto theCost = _dd->cost(p,l);
-               auto ep = p->getBound() + theCost;
-               if (hasDom && newNode) {
-                  auto [dominator,dominee] = qn.checkDominance(child,ep);
-                  if (dominator) {
-                     _dd->_an.pop_back();
-                     child = dominator;
-                     newNode = false;
+#ifdef __NVCC__
+      if (lk.size() >= offloadThreshold)
+      {
+          _dd->offloadLayerExpansion(lk, bnds.getPrimal(), DDRestricted, DDCtx);
+          _dd->retrieveNodes();
+
+          ANode::Ptr parent;
+          int label;
+          ANode::Ptr child;
+          auto nChildren = 0;
+          while (_dd->getParentLabelChild(parent, label, child))
+          {
+              nChildren += 1;
+
+              double labelConst;
+              Edge::Ptr edge;
+              {
+                  labelConst = _dd->cost(parent, label);
+                  edge = new(_dd->_mem) Edge(parent, child, label);
+                  edge->_obj = labelConst;
+                  _dd->addArc(edge);
+              }
+
+              auto const boundSrcToNode = parent->getBound() + labelConst;
+              if (_dd->isBetter(boundSrcToNode, child->getBound()))
+              {
+                  child->setBound(boundSrcToNode);
+                  child->_optLabels = parent->_optLabels;
+                  child->_optLabels.push_back(edge->_lbl);
+              }
+
+              child->setLayer(std::max(child->getLayer(), parent->getLayer() + 1));
+
+              if (nChildren < _mxw)
+              {
+                  auto const isSink = _dd->eqSink(child);
+                  auto const isNewNode = child->nbParents() == 1;
+                  if ((not isSink) and isNewNode)
+                  {
+                      qn.enQueue(child);
                   }
-                  //if (dominee.size()>=1) std::cout << "DOMINEE SIZE:"<< dominee.size() << "\n";
-                  ttlDom += dominee.size();
-                  for(const auto& dominated : dominee) {
-                     transferArcs(dominated,child); // child replace all of them
-                     _dd->_an.remove(dominated);    // they are no longer in the DD
+                  else
+                  {
+                      bool isBetterValue = _dd->isBetter(_dd->currentOpt(), bnds.getPrimal());
+                      if (isBetterValue)
+                      {
+                          std::cout << "update in RO " << std::fixed << _dd->currentOpt() << "\n";
+                          _dd->update(bnds);
+                      }
                   }
-               }         
-               Edge::Ptr e = new (_dd->_mem) Edge(p,child,l);
-               e->_obj = theCost;
-               _dd->addArc(e); // connect to new node
-               if (_dd->isBetter(ep,child->getBound())) {
-                  child->setBound(ep);
-                  child->_optLabels = p->_optLabels;
-                  child->_optLabels.push_back(e->_lbl);
-               }
-               child->setLayer(std::max(child->getLayer(),p->getLayer()+1));
-               if(discarding) { // if node has additional labels, add it to discarded
+              }
+              else
+              {
                   _discardedSet.push_back(child);
-                  goto nextLabel;
-               }
-               if (!_dd->eqSink(child)) {
-                  if (newNode) {
-                     qn.enQueue(child);
-                     auto nbNode = qn.firstLayerSize();
-                     if (nbNode > _mxw - 1) {
-                        _dd->_exact = false;
-                        discarding = true;
-                     }
+              }
+          }
+          _dd->_exact = _dd->_exact and nChildren <= _mxw;
+      }
+      else
+#endif
+      {
+          for(auto p : lk) { // loop over layer lk. p is a "parent" node.
+              if(discarding) { // pickup discarded parents
+                  _discardedSet.push_back(p);
+                  continue; // do not expand discarded parent
+              }
+              auto remLabels = _dd->getLabels(p,DDRestricted);
+              while(remLabels->more()) {
+                  auto l = remLabels->getAndNext();
+                  auto child = _dd->transition(bnds,p,l); // we may get back a node (new or old)
+                  if (child) {
+                      bool newNode = child->nbParents()==0; // is this a newly created node?
+                      auto theCost = _dd->cost(p,l);
+                      auto ep = p->getBound() + theCost;
+                      if (hasDom && newNode) {
+                          auto [dominator,dominee] = qn.checkDominance(child,ep);
+                          if (dominator) {
+                              _dd->_an.pop_back();
+                              child = dominator;
+                              newNode = false;
+                          }
+                          //if (dominee.size()>=1) std::cout << "DOMINEE SIZE:"<< dominee.size() << "\n";
+                          ttlDom += dominee.size();
+                          for(const auto& dominated : dominee) {
+                              transferArcs(dominated,child); // child replace all of them
+                              _dd->_an.remove(dominated);    // they are no longer in the DD
+                          }
+                      }
+                      Edge::Ptr e = new (_dd->_mem) Edge(p,child,l);
+                      e->_obj = theCost;
+                      _dd->addArc(e); // connect to new node
+                      if (_dd->isBetter(ep,child->getBound())) {
+                          child->setBound(ep);
+                          child->_optLabels = p->_optLabels;
+                          child->_optLabels.push_back(e->_lbl);
+                      }
+                      child->setLayer(std::max(child->getLayer(),p->getLayer()+1));
+                      if(discarding) { // if node has additional labels, add it to discarded
+                          _discardedSet.push_back(child);
+                          goto nextLabel;
+                      }
+                      if (!_dd->eqSink(child)) {
+                          if (newNode) {
+                              qn.enQueue(child);
+                              auto nbNode = qn.firstLayerSize();
+                              if (nbNode > _mxw - 1) {
+                                  _dd->_exact = false;
+                                  discarding = true;
+                              }
+                          }
+                      } else {
+                          bool isBetterValue = _dd->isBetter(_dd->currentOpt(), bnds.getPrimal());
+                          if (isBetterValue) {
+                              std::cout << "update in RO " << std::fixed << _dd->currentOpt() << "\n";
+                              _dd->update(bnds);
+                          }
+                      }
                   }
-               } else {
-                  bool isBetterValue = _dd->isBetter(_dd->currentOpt(), bnds.getPrimal()); 
-                  if (isBetterValue) {
-                     std::cout << "update in RO " << std::fixed << _dd->currentOpt() << "\n";
-                     _dd->update(bnds);
-                  }
-               }
-            }  
-            nextLabel:;          
-         }
-      }         
+                  nextLabel:;
+              }
+          }
+      }
    }
    //_dd->computeBestBackward(getName()); // testing   
    //_dd->computeBest(getName());
@@ -809,7 +871,7 @@ void RestrictedDFS<Ord>::compute(Bounds& bnds)
    _dd->_exact = true;
    auto root = _dd->init();
    _dd->target();
-   FQueue qn(this->theDD());
+   FQueue qn(this->theDD(),_mxw);
    root->setLayer(0);
    qn.enQueue(root);
    bool discarding = false;

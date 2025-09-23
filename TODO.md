@@ -2,3 +2,5 @@
   - Unify logic of NatSet and GNSet
   - Change FMatrix to FTensor and alias FArray<T> = FTensor<T,1>, FMatrix<T> = FTensor<T,2>. Maybe look at the std::mdspan API?
 - Evaluate the use of https://github.com/martinus/unordered_dense for HashTables/HashSet
+- Evaluate IF use hash tables at all.
+- Integrate Compare in Model

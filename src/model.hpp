@@ -1,8 +1,7 @@
 #pragma once
 
 #include <concepts>
-#include <utility>
-#include <ranges>
+#include <Backend.hpp>
 
 enum DDContext : int;
 enum LocalContext : int;
@@ -29,8 +28,17 @@ concept IsDP = requires(M const & m, S const & s, int l, DDContext c)
     { m.isTarget(s) } -> std::same_as<bool>;
 
     { m.lgf(s,c) }   -> std::same_as<L>;
-    { m.stf(s,l) }   -> std::same_as<std::optional<S>>;
+    { m.stf(s,l) }   -> std::same_as<gfl::optional<S>>;
     { m.scf(s,l) }   -> std::same_as<double>;
+};
+
+template<typename M>
+concept HasCmp = requires(double const & d)
+{
+    { M::better(d,d) }   -> std::same_as<bool>;
+    { M::betterEQ(d,d) } -> std::same_as<bool>;
+    { M::bestValue() }   -> std::same_as<double>;
+    { M::worstValue() }  -> std::same_as<double>;
 };
 
 template<typename M, typename S>
@@ -38,7 +46,7 @@ concept HasMerge =
     (M::has_merge == false) or
     requires(M const & m, S const & s)
     {
-        { m.smf(s,s) } -> std::same_as<std::optional<S>>;
+        { m.smf(s,s) } -> std::same_as<gfl::optional<S>>;
     };
 
 template<typename M, typename S>
@@ -63,7 +71,7 @@ template<typename M>
 concept IsModel =
     IsState<typename M::State> and
     IsLabels<typename M::Labels> and
-    IsDP<M,typename M::State,typename M::Labels> and
+    IsDP<M,typename M::State,typename M::Labels> and HasCmp<M> and
     requires { { M::has_merge }; } and HasMerge<M,typename M::State> and
     requires { { M::has_local }; } and HasLocal<M,typename M::State> and
     requires { { M::has_dom }; }   and HasDom<M,typename M::State>;

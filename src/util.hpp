@@ -13,6 +13,8 @@
 #include <assert.h>
 #include <functional>
 #include <memory>
+#include <Utils.hpp>
+#include <Backend.hpp>
 
 //#if defined(__x86_64__)
 //#include <intrin.h>
@@ -160,7 +162,7 @@ public:
 // References
 // - https://softwareengineering.stackexchange.com/a/402543
 // - https://www.boost.org/doc/libs/1_55_0/doc/html/hash/reference.html#boost.hash_combine
-inline
+GFL_HOST_DEVICE inline
 void hash_combine(std::size_t& seed, std::size_t const & hash) {
     seed ^= hash + 0x9e3779b97f4a7c16ull + (seed<<6) + (seed>>2);
 }
@@ -177,16 +179,18 @@ class NatSet {
    unsigned long long _t[nbw];
 public:
    using value_type = int;
+   GFL_HOST_DEVICE
    NatSet() {
       static_assert(nbw > 0);
       for(auto i=0u;i < nbw;i++)
          _t[i]=0;
    }
+   GFL_HOST_DEVICE
    NatSet(const NatSet& s) {
       for(int i=0;i<nbw;i++)
          _t[i] = s._t[i];
    }
-
+   GFL_HOST_DEVICE
    NatSet(NatSet&& s) noexcept {
       for(int i=0;i<nbw;i++)
          _t[i] = s._t[i];      
@@ -309,6 +313,7 @@ public:
       //       abort();
       //    }      
    }
+   GFL_HOST_DEVICE
    NatSet(std::initializer_list<int> l) {
       for(auto i=0u;i < nbw;i++)
          _t[i]=0;
@@ -317,6 +322,7 @@ public:
          insert(*it);
       }
    }
+   GFL_HOST_DEVICE
    NatSet& operator=(const NatSet& s) noexcept {
       for(auto i=0u;i < nbw;i++)
          _t[i] = s._t[i];
@@ -328,6 +334,7 @@ public:
       for(short i=0;i < nbw;i++)
          _t[i] = 0;
    }
+   GFL_HOST_DEVICE
    int size() const noexcept {
       int ttl = 0;
       for(short i=0;i < nbw;++i)
@@ -354,29 +361,52 @@ public:
       const auto lv = (lw * 64) + lvinLW; // largest value in S
       return lv;
    }
+   std::tuple<int,int,int> slc() const noexcept
+   {
+       int smallest = std::numeric_limits<int>::max();
+       int largest = std::numeric_limits<int>::min();
+       int count = std::numeric_limits<int>::min();
+       for (int wIdx = 0; wIdx < nbw; wIdx += 1)
+       {
+           int const wBegin = wIdx * sizeof(_t) * 8;
+           int const sWord = _t[wIdx] != 0 ? wBegin + gfl::lsb(_t[wIdx]) : std::numeric_limits<int>::max();
+           int const lWord = _t[wIdx] != 0 ? wBegin + gfl::msb(_t[wIdx]) : std::numeric_limits<int>::min();
+           int const cWord = _t[wIdx] != 0 ? gfl::popcount(_t[wIdx]) : 0;
+           smallest = gfl::min<int>(smallest, sWord);
+           largest = gfl::max<int>(largest, lWord);
+           count = gfl::max<int>(count, cWord);
+       }
+       return std::make_tuple(smallest,largest,count);
+   }
+   GFL_HOST_DEVICE
    void insert(int p) noexcept         { _t[p >> 6] |= (1ull << (p & 63));}
+   GFL_HOST_DEVICE
    NatSet& remove(int p) noexcept {
       const int i = p >> 6;
       if (0 <= i && i < nbw) 
          _t[i] &= ~(1ull << (p & 63));
       return *this;
    }
+   GFL_HOST_DEVICE
    bool contains(int p) const noexcept { return (_t[p >> 6] &  (1ull << (p & 63))) != 0;}
    NatSet& complement() noexcept {
       for(short i=0;i < nbw;++i)
          _t[i] = ~_t[i];
       return *this;
    }
+   GFL_HOST_DEVICE
    NatSet& unionWith(const NatSet& ps) noexcept {
       for(short i=0;i < nbw;++i)
          _t[i] |= ps._t[i];
       return *this;
    }
+   GFL_HOST_DEVICE
    NatSet& interWith(const NatSet& ps) noexcept {
       for(short i=0;i < nbw;i++)
          _t[i] &= ps._t[i];
       return *this;
    }
+   GFL_HOST_DEVICE
    NatSet& diffWith(const NatSet& ps) noexcept {
       for(short i=0;i < nbw;i++)
          _t[i] = _t[i] & ~ps._t[i];
@@ -388,11 +418,13 @@ public:
       unsigned int      _cnt:31;    // rank of current bit
       unsigned int        _up:1;
       unsigned long long    _cw; // current word
+      GFL_HOST_DEVICE
       iterator(const unsigned long long* t,unsigned short at)
          : _t(t),_cwi(at),_cnt(0),_cw((at < nbw) ? t[at] : 0) {
          while (_cw == 0 && ++_cwi < nbw) _cw = _t[_cwi];
          _up = 1u;
       }
+      GFL_HOST_DEVICE
       iterator(const unsigned long long* t,const NatSet<nbw>& ns) 
          : _t(t),_cwi(nbw),_cnt(ns.size()),_up(0),_cw(0) {} // end constructor
       static constexpr auto msb(unsigned long long w) noexcept {return (0x8000000000000000u >> __builtin_clzl(w));}
@@ -415,9 +447,10 @@ public:
          _up  = i._up;
          return *this;
          }*/
+      GFL_HOST_DEVICE
       iterator& operator++()  noexcept {
          assert(_cwi >= nbw || _cw <= _t[_cwi]);      
-         _cw = clearLSB(_cw);  // clear LSB
+         _cw = gfl::flipLsb(_cw);  // clear LSB
          while (_cw == 0 && ++_cwi < nbw)  // all bits at zero-> done with this word.            
             _cw = _t[_cwi];
          _cw = (_cwi < nbw) * _cw;
@@ -447,12 +480,14 @@ public:
          return *this;
       }
       iterator operator-(unsigned d) const noexcept  { iterator r(*this);while(d-- > 0) --r;return r;}
+      GFL_HOST_DEVICE
       bool operator==(iterator other) const noexcept { return _cwi == other._cwi && _cw == other._cw;}
+      GFL_HOST_DEVICE
       bool operator!=(iterator other) const noexcept { return !(*this == other);}
-      short operator*() const  noexcept { return (_cwi<<6) + bitId(_up ? lsb(_cw) : msb(_cw));}
+      GFL_HOST_DEVICE
+      short operator*() const  noexcept { return (_cwi<<6) + (_up ? gfl::lsb(_cw) : gfl::msb(_cw));}
       friend class NatSet;
    };
-   
    typedef iterator const_iterator;
    int first() const noexcept {
       unsigned cwi = 0;
@@ -461,7 +496,9 @@ public:
       return (cwi << 6) + 63 - __builtin_clzl(cw & -cw);
       //iterator start(_t,0);return *start;
    }
+   GFL_HOST_DEVICE
    iterator begin() const { return iterator(_t,0);}
+   GFL_HOST_DEVICE
    iterator end()   const { return iterator(_t,*this);}
    const_iterator cbegin() const { return const_iterator(_t,0);}
    const_iterator cend()   const { return const_iterator(_t,*this);}
@@ -504,11 +541,16 @@ public:
       }
    }
    friend NatSet operator-(int l,const NatSet& s2) noexcept            { return NatSet(l,s2);}
+   GFL_HOST_DEVICE
    friend NatSet operator|(const NatSet& s1,const NatSet& s2) noexcept { return std::move(NatSet(s1).unionWith(s2));}
+   GFL_HOST_DEVICE
    friend NatSet operator&(const NatSet& s1,const NatSet& s2) noexcept { return std::move(NatSet(s1).interWith(s2));}
+   GFL_HOST_DEVICE
    friend NatSet operator-(const NatSet& s1,int v) noexcept { return std::move(NatSet(s1).remove(v));}
+   GFL_HOST_DEVICE
    friend NatSet operator-(const NatSet& s1,const NatSet& s2) noexcept { return std::move(NatSet(s1).diffWith(s2));}
 
+   GFL_HOST_DEVICE
    std::size_t hash() const noexcept {
       std::size_t seed = 0;
       for (auto i = 0;i < nbw;i++)
@@ -977,9 +1019,10 @@ int min(const SET& inSet,const Filter& f,const Term& t) {
    return ttl;
 }
 template <typename SET, typename Term=int(*)(int)>
+GFL_HOST_DEVICE
 int min(const SET& inSet,const Term& t)
 {
-   int cur = std::numeric_limits<int>::max();
+   int cur = gfl::numeric_limits<int>::max();
    for(auto v : inSet) {
       const auto tv = t(v);
       cur = (cur  < tv) ? cur : tv;
@@ -988,6 +1031,7 @@ int min(const SET& inSet,const Term& t)
 }
 
 template <typename SET, typename Filter=bool(*)(int)>
+GFL_HOST_DEVICE
 int count(const SET& inSet,const Filter& f) {
    int count = 0;
    for(auto v : inSet)
@@ -998,6 +1042,7 @@ int count(const SET& inSet,const Filter& f) {
 }
 
 template <typename SET, typename Pred=bool(*)(int)>
+GFL_HOST_DEVICE
 bool any(const SET& inSet,const Pred& p) {
    for(auto v : inSet)
       if (p(v))
@@ -1025,8 +1070,9 @@ std::pair<int,int> argmin(const GNSet& inSet,const Term& t) {
 }
 
 template <typename SET, typename Filter=bool(*)(int),typename Term=int(*)(int)>
+GFL_HOST_DEVICE
 int max(const SET& inSet,const Filter& f,const Term& t) {
-   int ttl = std::numeric_limits<int>::min();
+   int ttl = gfl::numeric_limits<int>::min();
    for(auto v : inSet)
       if (f(v)) {
          const auto tv = t(v);
@@ -1035,6 +1081,7 @@ int max(const SET& inSet,const Filter& f,const Term& t) {
    return ttl;
 }
 template <typename SET, typename Term=int(*)(int)>
+GFL_HOST_DEVICE
 int max(const SET& inSet,const Term& t) {
    return max(inSet, [](int x){return true;}, t);
 }
@@ -1167,9 +1214,12 @@ public:
       a._tab = nullptr;
       return *this;
    }
+   GFL_HOST_DEVICE
    T * data() const noexcept { return _tab;}
    std::size_t size() const noexcept { return _mx;}
+   GFL_HOST_DEVICE
    T& operator[](std::size_t i) noexcept { assert(i>=0 && i < _mx);return _tab[i];}
+   GFL_HOST_DEVICE
    const T& operator[](std::size_t i) const noexcept { assert(i>=0 && i < _mx);return _tab[i];}
    class iterator { 
       T* const      _data;
@@ -1230,6 +1280,7 @@ template <class FAT,int arity> class  FMatrixProxy {
    FAT&           _flat;
    const int*      _sfx;
    int             _acc;
+   GFL_HOST_DEVICE
    FMatrixProxy(FAT& flat,const int* sfx,int acc) : _flat(flat),_sfx(sfx),_acc(acc) {}
 public:
    FMatrixProxy<FAT,arity-1> operator[](const int idx) {
@@ -1243,21 +1294,24 @@ template <class FAT> class  FMatrixProxy<FAT,1> {
    FAT&            _flat;
    const int*       _sfx;
    int              _acc;
+   GFL_HOST_DEVICE
    FMatrixProxy(FAT& flat,const int* sfx,int acc) : _flat(flat),_sfx(sfx),_acc(acc) {}
 public:
+   GFL_HOST_DEVICE
    typename FAT::ValType& operator[](const int idx)  { return _flat[_acc * *_sfx + idx ];}
 };
 
 // -------------------------------------------
-
 template <class FAT,int arity> class  FMatrixProxyCst {
    friend class FMatrix<FAT,arity+1>;
    friend class FMatrixProxyCst<FAT,arity+1>;
    const FAT&      _flat;
    const int*      _sfx;
    int             _acc;
+   GFL_HOST_DEVICE
    FMatrixProxyCst(const FAT& flat,const int* sfx,int acc) : _flat(flat),_sfx(sfx),_acc(acc) {}
 public:
+   GFL_HOST_DEVICE
    FMatrixProxyCst<FAT,arity-1> operator[](const int idx) {
       return FMatrixProxyCst<FAT,arity-1>(_flat,_sfx+1,_acc * *_sfx + idx);   
    }
@@ -1269,8 +1323,10 @@ template <class FAT> class  FMatrixProxyCst<FAT,1> {
    const FAT&      _flat;
    const int*       _sfx;
    int              _acc;
+   GFL_HOST_DEVICE
    FMatrixProxyCst(const FAT& flat,const int* sfx,int acc) : _flat(flat),_sfx(sfx),_acc(acc) {}
 public:
+   GFL_HOST_DEVICE
    const typename FAT::ValType& operator[](const int idx)  { return _flat[_acc * *_sfx + idx ];}
 };
 
@@ -1296,8 +1352,11 @@ public:
    template<typename A>
    FMatrix(const int* dims, A & allocator);
    FMatrix<FAT,arity>& operator=(const FMatrix<FAT,arity>& mtx);
+   GFL_HOST_DEVICE
    FMatrixProxy<FAT,arity-1> operator[](const int idx);
+   GFL_HOST_DEVICE
    FMatrixProxyCst<FAT,arity-1> operator[](const int idx) const;
+   GFL_HOST_DEVICE
    FAT getFlat()           { return _flat;}
    int getArity() const    { return arity;}
    int getDim(int d) const { return _dims[d];}
@@ -1345,12 +1404,14 @@ FMatrix<FAT,arity>& FMatrix<FAT,arity>::operator=(const FMatrix<FAT,arity>& mtx)
 }
 
 template <class FAT,int arity>
+GFL_HOST_DEVICE
 FMatrixProxy<FAT,arity-1> FMatrix<FAT,arity>::operator[](const int idx)
 {
    return FMatrixProxy<FAT,arity-1>(_flat,_dims+1,idx);
 }
 
 template <class FAT,int arity>
+GFL_HOST_DEVICE
 FMatrixProxyCst<FAT,arity-1> FMatrix<FAT,arity>::operator[](const int idx) const
 {
    return FMatrixProxyCst<FAT,arity-1>(_flat,_dims+1,idx);

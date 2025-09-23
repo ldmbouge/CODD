@@ -1,3 +1,4 @@
+#include "tsptw_model.hpp"
 #include "codd.hpp"
 #include "searchRelaxedFirst.hpp"
 #include "searchRestrictedFirst.hpp"
@@ -5,7 +6,6 @@
 #include "searchRestrictedOnlyNoQ.hpp"
 #include "searchRestrictedFirstThreaded.hpp"
 #include <StackAllocator.hpp>
-#include "tsptw_model.hpp"
 #include <cxxopts.hpp>
 #include <Malloc.hpp>
 
@@ -61,6 +61,9 @@ constexpr auto static ReadOnlyMemSize{24 * 1024}; // Cached in shared memory
 
 int main(int argc,char* argv[])
 {
+    // Select GPU
+    cudaSetDevice(0);
+
     // Parse arguments
     int width = 0;
     int timeout = std::numeric_limits<int>::max(); // 68 years
@@ -107,7 +110,7 @@ int main(int argc,char* argv[])
     parseFile(model, instance, allocator);
 
     auto labels = TSPTW::Labels(0, model->n-1);
-    auto dd = DD<TSPTW, Minimize<double>>::makeDD(model, labels);
+    auto dd = DD<TSPTW>::makeDD(model, labels);
     Bounds bnds([](const std::vector<int>& inc)  {});
     BAndB * engine = nullptr;
 
