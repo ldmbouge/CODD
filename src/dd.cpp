@@ -681,18 +681,12 @@ void Restricted::compute(Bounds& bnds)
           auto nChildren = 0;
           while (_dd->getParentLabelChild(parent, label, child))
           {
-              nChildren += 1;
+              double labelCost = _dd->cost(parent, label);
+              Edge::Ptr edge = new(_dd->_mem) Edge(parent, child, label);
+              edge->_obj = labelCost;
+              _dd->addArc(edge);
 
-              double labelConst;
-              Edge::Ptr edge;
-              {
-                  labelConst = _dd->cost(parent, label);
-                  edge = new(_dd->_mem) Edge(parent, child, label);
-                  edge->_obj = labelConst;
-                  _dd->addArc(edge);
-              }
-
-              auto const boundSrcToNode = parent->getBound() + labelConst;
+              auto const boundSrcToNode = parent->getBound() + labelCost;
               if (_dd->isBetter(boundSrcToNode, child->getBound()))
               {
                   child->setBound(boundSrcToNode);
@@ -709,23 +703,22 @@ void Restricted::compute(Bounds& bnds)
                   if ((not isSink) and isNewNode)
                   {
                       qn.enQueue(child);
+                      nChildren += 1;
                   }
-                  else
+                  else if (_dd->isBetter(_dd->currentOpt(), bnds.getPrimal()))
                   {
-                      bool isBetterValue = _dd->isBetter(_dd->currentOpt(), bnds.getPrimal());
-                      if (isBetterValue)
-                      {
-                          std::cout << "update in RO " << std::fixed << _dd->currentOpt() << "\n";
-                          _dd->update(bnds);
-                      }
+                      std::cout << "Better primal bound: " << std::fixed << _dd->currentOpt() << "\n";
+                      _dd->update(bnds);
                   }
               }
               else
               {
-                  _discardedSet.push_back(child);
+                  //_discardedSet.push_back(child);
+                  nChildren += 1;
               }
           }
           _dd->_exact = _dd->_exact and nChildren <= _mxw;
+          //printf("Parents %d -> Children %d | Q = %d | Discard = %d | Exact = %s\n", lk.size(), nChildren, qn.size(), _discardedSet.size(), _dd->_exact ? "true" : "false");
       }
       else
 #endif

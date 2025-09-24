@@ -1341,6 +1341,8 @@ protected:
    int _dims[arity];
    void print(std::ostream& os,int* path,int dId,int ofs) const;
    void prepare(const int* dims);
+   template<typename A>
+   void prepare(const int* dims, A & allocator);
 public:
    FMatrix() {}
    FMatrix(const FMatrix<FAT,arity>& mtx);
@@ -1366,6 +1368,15 @@ template <class FAT,int arity> void FMatrix<FAT,arity>::prepare(const int* dims)
    _flat  = FAT(prodOf(dims,arity));
    for(int k=0;k<arity;k++)
       _dims[k] = dims[k];
+}
+
+template <class FAT, int arity>
+template <typename A>
+void FMatrix<FAT, arity>::prepare(const int* dims, A& allocator)
+{
+    _flat  = FAT(prodOf(dims,arity), allocator);
+    for(int k=0;k<arity;k++)
+        _dims[k] = dims[k];
 }
 
 template <class FAT,int arity> FMatrix<FAT,arity>::FMatrix(const FMatrix<FAT,arity>& mtx)
@@ -1449,7 +1460,7 @@ public:
    template<class A>
    Matrix(int nbr,int nbc, A & allocator) : FMatrix<FArray<T>,2>() {
        int rt[] = {nbr,nbc};
-       this->prepare(rt);
+       this->prepare(rt, allocator);
    }
 };
 

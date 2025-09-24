@@ -20,7 +20,7 @@ void parseFile(TSPTW * const model, std::string const & instance, gfl::StackAllo
         exit(EXIT_FAILURE);
     }
     file >> m->n;
-    m->d = Matrix<int, 2>(m->n, m->n, allocator);
+    new (&m->d) Matrix<int, 2>(m->n, m->n, allocator); // The = operator gives issues whith destruction
     for (auto i = 0; i < m->n; i++)
     {
         for (auto j = 0; j < m->n; j++)
@@ -28,7 +28,7 @@ void parseFile(TSPTW * const model, std::string const & instance, gfl::StackAllo
             file >> m->d[i][j];
         }
     }
-    m->tw = FArray<TSPTW::TimeWindow>(m->n, allocator);
+    new (&m->tw) FArray<TSPTW::TimeWindow>(m->n, allocator);
     for (auto i = 0; i < m->n; i++)
     {
         int a, b;
@@ -37,11 +37,11 @@ void parseFile(TSPTW * const model, std::string const & instance, gfl::StackAllo
     }
     file.close();
 
-    m->dInNS = FArray<int>(m->n, allocator);
-    m->dIn = FArray<int>(m->n, allocator);
-    m->dOut = FArray<int>(m->n, allocator);
-    m->permIn = FArray<int>(m->n, allocator);
-    m->permOut = FArray<int>(m->n, allocator);
+    new (&m->dInNS) FArray<int>(m->n, allocator);
+    new (&m->dIn) FArray<int>(m->n, allocator);
+    new (&m->dOut) FArray<int>(m->n, allocator);
+    new (&m->permIn) FArray<int>(m->n, allocator);
+    new (&m->permOut) FArray<int>(m->n, allocator);
 
     auto allCities = TSPTW::Labels(0, m->n - 1);
     for (auto j : allCities)

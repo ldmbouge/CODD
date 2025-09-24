@@ -2,6 +2,7 @@
 
 #include "model.hpp"
 #include "util.hpp"
+#include <Lambda.cuh>
 
 struct TSPTW
 {
@@ -131,34 +132,14 @@ struct TSPTW
     GFL_HOST_DEVICE
     gfl::optional<State> stf(State const & s, int l) const noexcept
     {
-
-        auto * flatD = d.getFlat().data();
-        auto rSize = n;
-
         if (l == depot)
         {
             return target();
         }
         else
         {
-            auto tmpPos = s.pos - l;
-            auto tmpMust = s.must - l;
-
-            auto tmpMin = INT_MAX;
-            auto tmpMax = INT_MIN;
-            for (auto p : tmpPos)
-            {
-                assert(tmpPos.size() > 0);
-                int idx = rSize*p + l;
-                auto const v = flatD + idx;
-                auto const vVal = *v;
-                tmpMin = gfl::min<int>(tmpMin, vVal);
-                tmpMax = gfl::max<int>(tmpMax, vVal);
-            }
-            auto const ta = max(s.ta + tmpMin, tw[l].a);
-
-            // const int ta = gfl::max<int>(s.ta + min(s.pos - l, [this,l](const int p) { auto i = 20 * p + l; return d[p][l]; }),
-            //                         tw[l].a);
+            const int ta = gfl::max<int>(s.ta + min(s.pos - l, [this,l](const int p) {return d[p][l]; }),
+                                    tw[l].a);
             auto newMust = s.must - l;
             if (any(newMust, [this,l,ta](int u) { return ta + d[l][u] > tw[u].b; }))
                 return gfl::nullopt; // at least one in the next must violates its time window ub.

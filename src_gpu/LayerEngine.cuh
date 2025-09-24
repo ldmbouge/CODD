@@ -38,7 +38,7 @@ public:
     LayerEngine() :
         ioAllocator(gfl::mallocManaged<void>(gpuIoMemSize), gpuIoMemSize),
         tmpAllocator(gfl::mallocDevice<void>(gpuTmpMemSize), gpuTmpMemSize),
-        layerInfo(ioAllocator.allocate<LayerInfoType>())
+        layerInfo(nullptr)
     {
         cudaGetDevice(&gpuDeviceId);
         cudaStreamCreateWithFlags(&gpuMainQueue, cudaStreamNonBlocking);
@@ -58,11 +58,12 @@ public:
         cudaMemPrefetchAsync(ioAllocator.getMem(), ioAllocator.calcUsedMemSize(), gpuDeviceId, gpuMainQueue);
 
         auto const blockSize = gfl::roundUpToMultiple<gfl::i32>(layerInfo->nLabels,32);
+        assert(blockSize > 0 and blockSize <= 128); // We assume up to 128 children per parent
         auto const shrMemSize =
+            sizeof(GpuParent) + gfl::StackAllocator::DefaultAlign +
             sizeof(GpuChild) * layerInfo->nLabels + gfl::StackAllocator::DefaultAlign +
             sizeof(ChildInfo) * layerInfo->nLabels;
-        assert(blockSize > 0 and blockSize <= 128); // We assume up to 128 children per parent
-        assert(shrMemSize > 0 and shrMemSize < 48 * 1024); // We assume that all the children fits in default Shared memory size (48KB)
+        assert(shrMemSize > 0 and shrMemSize < 48 * 1024); // We assume that all the children fits in default shared memory size
         calcChildrenKernel<Model><<<layerInfo->nParents, blockSize, shrMemSize, gpuMainQueue>>>(model,layerInfo,primalBound,localCtx);
         cudaEventRecord(childrenOk, gpuMainQueue);
 
@@ -100,6 +101,10 @@ public:
 protected:
     void init(std::list<ANode::Ptr> const & layer, Model const * const model, DDContext const ctx) noexcept
     {
+        ioAllocator.clear();
+        tmpAllocator.clear();
+        layerInfo = ioAllocator.allocate<LayerInfoType>();
+
         layerInfo->nParents = layer.size();
         layerInfo->parents = ioAllocator.allocateArray<GpuParent>(layerInfo->nParents);
 
@@ -116,6 +121,7 @@ protected:
             gParent.state = pNode->get();
             gParent.labels = model->lgf(pNode->get(), ctx);
             gParent.boundSrcToNode = pNode->getBound();
+            assert( gParent.boundSrcToNode <= 100000);
             gParent.node = p.operator->(); // Retrieve non-const pointer
             pIdx += 1;
 

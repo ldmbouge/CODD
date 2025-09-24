@@ -8,6 +8,7 @@
 
 enum LocalContext : int;
 
+
 template<typename Model>
 __global__
 void calcChildrenKernel(
@@ -32,7 +33,7 @@ void calcChildrenKernel(
 
     __shared__ i32 nChildrenInShared_s;
     __shared__ i32 nChildrenInGlobal_s;
-    __shared__ GpuParent parent_s;
+    __shared__ GpuParent * parent_s;
     __shared__ GpuChild * children_s;
     __shared__ ChildInfo * childrenInfo_s;
     extern __shared__ u32 shrMem[]; // 16-byte aligned
@@ -43,9 +44,10 @@ void calcChildrenKernel(
     {
         nChildrenInShared_s = 0;
         StackAllocator allocator(shrMem, getSharedMemSize());
+        parent_s = allocator.allocate<GpuParent>();
         children_s = allocator.allocateArray<GpuChild>(layerInfo->nLabels);
         childrenInfo_s = allocator.allocateArray<ChildInfo>(layerInfo->nLabels);
-        parent_s = layerInfo->parents[pIdx];
+        *parent_s = layerInfo->parents[pIdx];
     }
     __syncthreads();
 
@@ -53,18 +55,18 @@ void calcChildrenKernel(
     ChildInfo childInfo_r;
     i32 const minLabel = layerInfo->minLabel;
     i32 const maxLabel = layerInfo->maxLabel;
-    auto const labels_r = parent_s.labels;
+    auto const labels_r = parent_s->labels;
     for(i32 label = minLabel + threadIdx.x; label <= maxLabel; label += blockDim.x)
     {
         if (labels_r.contains(label))
         {
             // Transition
-            child_r.parentNode = parent_s.node;
+            child_r.parentNode = parent_s->node;
             child_r.label = label;
-            auto state_r = model->stf(parent_s.state, label);
+            auto state_r = model->stf(parent_s->state, label);
             if (state_r.has_value())
             {
-                childInfo_r.boundSrcToNode = parent_s.boundSrcToNode + model->scf(state_r.value(), label);
+                childInfo_r.boundSrcToNode = parent_s->boundSrcToNode + model->scf(parent_s->state, label);
                 if (model->has_local)
                 {
                     child_r.heuristicNodeToSink = model->local(state_r.value(), localCtx);

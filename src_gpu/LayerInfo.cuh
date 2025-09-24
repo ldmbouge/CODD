@@ -79,3 +79,12 @@ struct IdDecomposer
         return {childInfo.id};
     }
 };
+
+struct CostDecomposer
+{
+    GFL_DEVICE
+    gfl::tuple<gfl::f64&> operator()(ChildInfo & childInfo) const
+    {
+        return {childInfo.cost};
+    }
+};
