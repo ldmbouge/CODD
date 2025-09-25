@@ -505,12 +505,14 @@ public:
          os << *i << ((cnt==ps.size()-1) ? "" : ",");
       return os << "}";
    }
+   GFL_HOST_DEVICE
    friend bool operator<=(const NatSet& s1,const NatSet& s2) noexcept {
       unsigned short nw = 0;
       for(auto i = 0;i < nbw;i++)
          nw += (s1._t[i] & s2._t[i]) == s1._t[i];
       return nw == nbw;      
    }
+   GFL_HOST_DEVICE
    friend bool operator==(const NatSet& s1,const NatSet& s2) noexcept {
       // using u128 = unsigned __int128;
       switch(nbw) {

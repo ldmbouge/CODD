@@ -36,7 +36,7 @@ template<typename M>
 concept HasCmp = requires(double const & d)
 {
     { M::better(d,d) }   -> std::same_as<bool>;
-    { M::betterEQ(d,d) } -> std::same_as<bool>;
+    { M::betterEq(d, d) } -> std::same_as<bool>;
     { M::bestValue() }   -> std::same_as<double>;
     { M::worstValue() }  -> std::same_as<double>;
 };

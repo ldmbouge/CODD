@@ -669,6 +669,13 @@ void Restricted::compute(Bounds& bnds)
       discarding = false;
       //std::cout << "qn popped" << std::endl;
       auto lk = qn.pullLayer(); // We have in lk the queue content for layer cL, dk is what we discard
+//      printf("---\n");
+//      for (auto p : lk)
+//      {
+//          _dd->printNode(std::cout, p);
+//          printf("\n");
+//      }
+//      std::cout.flush();
 #ifdef __NVCC__
       if (lk.size() >= offloadThreshold)
       {
@@ -713,12 +720,12 @@ void Restricted::compute(Bounds& bnds)
               }
               else
               {
-                  //_discardedSet.push_back(child);
+                  _discardedSet.push_back(child);
                   nChildren += 1;
               }
           }
           _dd->_exact = _dd->_exact and nChildren <= _mxw;
-          //printf("Parents %d -> Children %d | Q = %d | Discard = %d | Exact = %s\n", lk.size(), nChildren, qn.size(), _discardedSet.size(), _dd->_exact ? "true" : "false");
+          printf("Parents %d | Q = %d | Discard = %d | Exact = %s\n", lk.size(), qn.size(), _discardedSet.size(), _dd->_exact ? "true" : "false");
       }
       else
 #endif
@@ -783,6 +790,7 @@ void Restricted::compute(Bounds& bnds)
                   nextLabel:;
               }
           }
+          printf("Parents %d | Q = %d | Discard = %d | Exact = %s\n", lk.size(), qn.size(), _discardedSet.size(), _dd->_exact ? "true" : "false");
       }
    }
    //_dd->computeBestBackward(getName()); // testing   

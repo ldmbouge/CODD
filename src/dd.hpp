@@ -333,7 +333,7 @@ protected:
    unsigned _mxw;
    NDArray  _nda;
 #ifdef __NVCC__
-    static constexpr long long int offloadThreshold = 0;
+    static constexpr long long int offloadThreshold = 10000000;
 #endif
    NDArray& pullLayer(CQueue<ANode::Ptr>& q);  
    void transferArcs(ANode::Ptr donor,ANode::Ptr receiver);
@@ -537,7 +537,7 @@ private:
       return Model::better(obj1,obj2);
    }
    bool   isBetterEQ(double obj1,double obj2) const noexcept {
-      return Model::betterEQ(obj1,obj2);
+      return Model::betterEq(obj1, obj2);
    }
    double better(double obj1,double obj2) const noexcept {
       return Model::better(obj1,obj2) ? obj1 : obj2;

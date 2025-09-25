@@ -57,29 +57,64 @@ public:
         init(layer, model, ddCtx);
         cudaMemPrefetchAsync(ioAllocator.getMem(), ioAllocator.calcUsedMemSize(), gpuDeviceId, gpuMainQueue);
 
-        auto const blockSize = gfl::roundUpToMultiple<gfl::i32>(layerInfo->nLabels,32);
+        auto blockSize = gfl::roundUpToMultiple<gfl::i32>(layerInfo->nLabels,32);
         assert(blockSize > 0 and blockSize <= 128); // We assume up to 128 children per parent
         auto const shrMemSize =
             sizeof(GpuParent) + gfl::StackAllocator::DefaultAlign +
             sizeof(GpuChild) * layerInfo->nLabels + gfl::StackAllocator::DefaultAlign +
             sizeof(ChildInfo) * layerInfo->nLabels;
         assert(shrMemSize > 0 and shrMemSize < 48 * 1024); // We assume that all the children fits in default shared memory size
-        calcChildrenKernel<Model><<<layerInfo->nParents, blockSize, shrMemSize, gpuMainQueue>>>(model,layerInfo,primalBound,localCtx);
+        calcChildrenKernel<Model><<<layerInfo->nParents, blockSize, shrMemSize, gpuMainQueue>>>(
+                model,
+                layerInfo,
+                layerInfo->childrenInfo,
+                primalBound,
+                localCtx);
         cudaEventRecord(childrenOk, gpuMainQueue);
 
-        // Lexicographic sort
-        sortKernel<ChildInfo,IdDecomposer><<<1,1,0,gpuMainQueue>>>(layerInfo->cubTmpMem, layerInfo->cubTmpMemSize, layerInfo->tmpChildrenInfo, layerInfo->childrenInfo, &layerInfo->nChildren);
+        using HashDecomposer = std::conditional_t<Model::has_dom, DomHashDecomposer, EqHashDecomposer>;
+        sortKernel<ChildInfo,HashDecomposer><<<1, 1, 0, gpuMainQueue>>>(
+                layerInfo->cubTmpMem,
+                layerInfo->cubTmpMemSize,
+                layerInfo->childrenInfo,
+                layerInfo->tmpChildrenInfo,
+                &layerInfo->nChildren);
+
+//
+//        printChildInfo<Model><<<1,1,0,gpuMainQueue>>>(layerInfo, layerInfo->tmpChildrenInfo);
+//
+        calcClassesBeginKernel<Model><<<1,1,0,gpuMainQueue>>>(layerInfo, layerInfo->tmpChildrenInfo);
+//
+//        //printClasses<Model><<<1,1,0,gpuMainQueue>>>(layerInfo);
+//
+        blockSize = 128;
+        auto gridSize = gfl::roundUpDivPosInt<gfl::i32>(layerInfo->nParents * layerInfo->nLabels, blockSize);
+        calcRepresentatives<Model><<<gridSize, blockSize,0,gpuMainQueue>>>(layerInfo, layerInfo->tmpChildrenInfo);
+
+        sortKernel<ChildInfo,RIDecomposer><<<1,1,0,gpuMainQueue>>>(
+                layerInfo->cubTmpMem,
+                layerInfo->cubTmpMemSize,
+                layerInfo->tmpChildrenInfo,
+                layerInfo->childrenInfo,
+                &layerInfo->nChildren);
+
+//        printChildInfo<Model><<<1,1,0,gpuMainQueue>>>(layerInfo, layerInfo->childrenInfo);
         cudaEventRecord(infoOk, gpuMainQueue);
     }
 
     void retrieveNodes()
     {
-        cudaStreamWaitEvent(gpuAuxQueue, childrenOk);
+        cudaEventSynchronize(childrenOk);
         cudaMemPrefetchAsync(&layerInfo->nChildren, sizeof(layerInfo->nChildren), cudaCpuDeviceId, gpuAuxQueue);
-        cudaMemPrefetchAsync(layerInfo->children, sizeof(GpuChild) * layerInfo->nChildren, cudaCpuDeviceId, gpuAuxQueue);
-        cudaStreamWaitEvent(gpuAuxQueue, infoOk);
-        cudaMemPrefetchAsync(layerInfo->childrenInfo, sizeof(ChildInfo) * layerInfo->nChildren, cudaCpuDeviceId, gpuAuxQueue);
-        cudaDeviceSynchronize();
+        cudaStreamSynchronize(gpuAuxQueue);
+        //printf("Retrieved %d nodes\n",layerInfo->nChildren);
+        if (layerInfo->nChildren > 0)
+        {
+            cudaMemPrefetchAsync(layerInfo->children, sizeof(GpuChild) * layerInfo->nChildren, cudaCpuDeviceId, gpuAuxQueue);
+            cudaEventSynchronize(infoOk);
+            cudaMemPrefetchAsync(layerInfo->childrenInfo, sizeof(ChildInfo) * layerInfo->nChildren, cudaCpuDeviceId, gpuAuxQueue);
+            cudaDeviceSynchronize();
+        }
         nChildProcessed = 0;
     }
 
@@ -88,9 +123,16 @@ public:
         if (nChildProcessed < layerInfo->nChildren)
         {
             auto const & childInfo = layerInfo->childrenInfo[nChildProcessed];
-            child = layerInfo->children[childInfo.idx];
-            nChildProcessed += 1;
-            return true;
+            if (not childInfo.isRepresented)
+            {
+                child = layerInfo->children[childInfo.idx];
+                nChildProcessed += 1;
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
         else
         {
@@ -121,7 +163,6 @@ protected:
             gParent.state = pNode->get();
             gParent.labels = model->lgf(pNode->get(), ctx);
             gParent.boundSrcToNode = pNode->getBound();
-            assert( gParent.boundSrcToNode <= 100000);
             gParent.node = p.operator->(); // Retrieve non-const pointer
             pIdx += 1;
 
@@ -141,7 +182,7 @@ protected:
 
         // Auxiliary Information
         layerInfo->nClasses = 0;
-        layerInfo->classesBegin = tmpAllocator.allocateArray<gfl::i32>(maxChildren);
+        layerInfo->classesBegin = tmpAllocator.allocateArray<gfl::i32>(maxChildren + 1); // The + 1 is for loops in case nClasses == nChildren
 
         // CUB
         layerInfo->tmpChildrenInfo = tmpAllocator.allocateArray<ChildInfo>(maxChildren);

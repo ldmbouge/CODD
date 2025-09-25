@@ -52,6 +52,7 @@ struct LayerInfo
     ChildInfo * childrenInfo;
 
     // Auxiliary Information
+    gfl::i32 isBlockTurn;
     gfl::i32 nClasses;
     gfl::i32 * classesBegin;
 
@@ -64,10 +65,10 @@ struct LayerInfo
 struct dummyDecomposer
 {
     GFL_HOST_DEVICE
-    gfl::tuple<gfl::u64&, gfl::u64&> operator()(ChildInfo &) const
+    gfl::tuple<gfl::u64&, gfl::u64&, gfl::u64&> operator()(ChildInfo &) const
     {
         gfl::u64 tmp = 0;
-        return{tmp,tmp};
+        return{tmp,tmp,tmp};
     }
 };
 
@@ -88,3 +89,50 @@ struct CostDecomposer
         return {childInfo.cost};
     }
 };
+
+struct EqHashDecomposer
+{
+    GFL_DEVICE
+    gfl::tuple<gfl::u64&> operator()(ChildInfo & childInfo) const
+    {
+        return {childInfo.eqHash};
+    }
+};
+
+struct DomHashDecomposer
+{
+    GFL_DEVICE
+    gfl::tuple<gfl::u64&> operator()(ChildInfo & childInfo) const
+    {
+        return {childInfo.domHash};
+    }
+};
+
+struct DomHashCostDecomposer
+{
+    GFL_DEVICE
+    gfl::tuple<gfl::u64&, gfl::f64&> operator()(ChildInfo & childInfo) const
+    {
+        return {childInfo.domHash, childInfo.cost};
+    }
+};
+
+struct RIDecomposer
+{
+    GFL_DEVICE
+    gfl::tuple<gfl::u32&,gfl::i64&> operator()(ChildInfo & childInfo) const
+    {
+        return {childInfo.isRepresented,childInfo.id};
+    }
+};
+
+struct RBDecomposer
+{
+    GFL_DEVICE
+    gfl::tuple<gfl::u32&,gfl::f64&> operator()(ChildInfo & childInfo) const
+    {
+        return {childInfo.isRepresented, childInfo.boundSrcToNode};
+    }
+};
+
+

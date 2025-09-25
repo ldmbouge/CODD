@@ -2,7 +2,6 @@
 
 #include "model.hpp"
 #include "util.hpp"
-#include <Lambda.cuh>
 
 struct TSPTW
 {
@@ -50,6 +49,7 @@ struct TSPTW
         GFL_HOST_DEVICE
         State(Set && pos,Set && must,Set && may, int const hops, int const ta,int const tb) noexcept : pos(pos),must(must),may(may),hops(hops),ta(ta),tb(tb) {}
 
+        GFL_HOST_DEVICE
         static bool equal(State const & s1, State const & s2) noexcept
         {
             return
@@ -158,7 +158,8 @@ struct TSPTW
 
     GFL_HOST_DEVICE constexpr static
     bool better(double const & c1, double const & c2) noexcept { return c1 < c2; }
-    constexpr static bool betterEQ(double const & c1, double const & c2)  noexcept { return c1 <= c2; }
+    GFL_HOST_DEVICE
+    constexpr static bool betterEq(double const & c1, double const & c2)  noexcept { return c1 <= c2; }
     constexpr static double bestValue() noexcept { return std::numeric_limits<double>::max(); }
     constexpr static double worstValue() noexcept { return std::numeric_limits<double>::lowest(); } // lowest() instead of min() because double
 
