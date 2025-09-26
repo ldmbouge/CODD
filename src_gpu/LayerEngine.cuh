@@ -57,16 +57,23 @@ public:
     {
         using namespace gfl;
 
-        init(layer, model, ddCtx);
+        initParents(layer);
         auto const ioMem = ioAllocator.getMem();
         cudaMemcpyAsync(ioMem.d, ioMem.h, ioAllocator.calcUsedMemSize(), cudaMemcpyHostToDevice, gpuMainQueue);
 
-        auto gridSize = layerInfo->nParents;
-        auto blockSize = gfl::roundUpToMultiple<gfl::i32>(layerInfo->nLabels,32);
-        auto shrMemSize =
-            sizeof(GpuParent) + gfl::StackAllocator::DefaultAlign +
-            sizeof(GpuChild) * layerInfo->nLabels + gfl::StackAllocator::DefaultAlign +
-            sizeof(ChildInfo) * layerInfo->nLabels;
+        auto blockSize = 128;
+        auto gridSize = roundUpDivPosInt<i32>(layerInfo->nParents, blockSize);
+        calcLabelsKernel<Model><<<gridSize, blockSize, 0, gpuMainQueue>>>(model,layerInfo.d,ddCtx);
+        cudaMemcpyAsync(layerInfo.h, layerInfo.d, sizeof(LayerInfoType), cudaMemcpyDeviceToHost,gpuMainQueue);
+        cudaStreamSynchronize(gpuMainQueue);
+        initChildren();
+        cudaMemcpyAsync(layerInfo.d, layerInfo.h, sizeof(LayerInfoType), cudaMemcpyHostToDevice,gpuMainQueue);
+
+        gridSize = layerInfo->nParents;
+        blockSize = roundUpToMultiple<i32>(layerInfo->nLabels,32);
+        auto shrMemSize = sizeof(GpuParent) + StackAllocator::DefaultAlign +
+                          sizeof(GpuChild) * layerInfo->nLabels + StackAllocator::DefaultAlign +
+                          sizeof(ChildInfo) * layerInfo->nLabels;
         assert(blockSize > 0 and blockSize <= 128); // We assume up to 128 children per parent
         assert(shrMemSize > 0 and shrMemSize < 48 * 1024); // We assume that all the children fits in default shared memory size
         calcChildrenKernel<Model><<<gridSize, blockSize, shrMemSize, gpuMainQueue>>>(
@@ -87,7 +94,7 @@ public:
         //printChildInfo<Model><<<1,1,0,gpuMainQueue>>>(layerInfo.d, layerInfo->tmpChildrenInfo);
 
         blockSize = 128;
-        gridSize = roundUpDivPosInt<i32>(layerInfo->nParents * layerInfo->nLabels + 1, blockSize);
+        gridSize = roundUpDivPosInt<i32>(layerInfo->nParents * layerInfo->nLabels, blockSize);
         shrMemSize = sizeof(i32) * blockSize + gfl::StackAllocator::DefaultAlign;
         calcClassesKernel<Model><<<gridSize,blockSize,shrMemSize,gpuMainQueue>>>(
                 layerInfo.d,
@@ -154,7 +161,7 @@ public:
     }
 
 protected:
-    void init(std::list<ANode::Ptr> const & layer, Model const * const model, DDContext const ctx) noexcept
+    void initParents(std::list<ANode::Ptr> const & layer) noexcept
     {
         ioAllocator.clear();
         tmpAllocator.clear();
@@ -168,24 +175,20 @@ protected:
         layerInfo->nLabels = std::numeric_limits<gfl::i32>::min();
 
         auto pIdx = 0;
-        for (auto const & p : layer)
+        for (auto const &p: layer)
         {
             // Parents
-            auto * const pNode = static_cast<Node<State>*>(p.operator->()); // Retrieve non-const pointer
-            GpuParent & gParent = layerInfo->parents[pIdx];
+            auto *const pNode = static_cast<Node<State> *>(p.operator->()); // Retrieve non-const pointer
+            GpuParent &gParent = layerInfo->parents[pIdx];
             gParent.state = pNode->get();
-            gParent.labels = model->lgf(pNode->get(), ctx);
             gParent.boundSrcToNode = pNode->getBound();
             gParent.node = p.operator->(); // Retrieve non-const pointer
             pIdx += 1;
-
-            // Labels
-            auto [smallest,largest,count] = gParent.labels.slc();
-            layerInfo->minLabel = std::min(layerInfo->minLabel,smallest);
-            layerInfo->maxLabel = std::max(layerInfo->maxLabel,largest);
-            layerInfo->nLabels = std::max(layerInfo->nLabels,count);
         }
+    }
 
+    void initChildren() noexcept
+    {
         // Children
         auto const maxChildren = layerInfo->nParents * layerInfo->nLabels;
         layerInfo->nChildren = 0;

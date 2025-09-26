@@ -362,22 +362,25 @@ public:
       const auto lv = (lw * 64) + lvinLW; // largest value in S
       return lv;
    }
-   std::tuple<int,int,int> slc() const noexcept
+   GFL_HOST_DEVICE
+   gfl::tuple<int,int,int> slc() const noexcept
    {
-       int smallest = std::numeric_limits<int>::max();
-       int largest = std::numeric_limits<int>::min();
-       int count = std::numeric_limits<int>::min();
+       using namespace gfl;
+
+       int smallest = numeric_limits<int>::max();
+       int largest = numeric_limits<int>::min();
+       int count = numeric_limits<int>::min();
        for (int wIdx = 0; wIdx < nbw; wIdx += 1)
        {
            int const wBegin = wIdx * sizeof(_t) * 8;
-           int const sWord = _t[wIdx] != 0 ? wBegin + gfl::lsb(_t[wIdx]) : std::numeric_limits<int>::max();
-           int const lWord = _t[wIdx] != 0 ? wBegin + gfl::msb(_t[wIdx]) : std::numeric_limits<int>::min();
-           int const cWord = _t[wIdx] != 0 ? gfl::popcount(_t[wIdx]) : 0;
-           smallest = gfl::min<int>(smallest, sWord);
-           largest = gfl::max<int>(largest, lWord);
-           count = gfl::max<int>(count, cWord);
+           int const sWord = _t[wIdx] != 0 ? wBegin + lsb(_t[wIdx]) : numeric_limits<int>::max();
+           int const lWord = _t[wIdx] != 0 ? wBegin + msb(_t[wIdx]) : numeric_limits<int>::min();
+           int const cWord = _t[wIdx] != 0 ? popcount(_t[wIdx]) : 0;
+           smallest = min<int>(smallest, sWord);
+           largest = max<int>(largest, lWord);
+           count = max<int>(count, cWord);
        }
-       return std::make_tuple(smallest,largest,count);
+       return {smallest,largest,count};
    }
    GFL_HOST_DEVICE
    void insert(int p) noexcept         { _t[p >> 6] |= (1ull << (p & 63));}
@@ -955,6 +958,7 @@ inline int max(const GNSet& s) {
 //    return outSet;
 // }
 template <typename SET, typename Pred>
+GFL_HOST_DEVICE
 SET filter(const SET& inSet,Pred p) {
    SET outSet = {};
    for(const auto& v : inSet)

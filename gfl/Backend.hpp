@@ -33,13 +33,6 @@ namespace gfl
     template <typename... Types>
     using tuple = backend::tuple<Types...>;
 
-    template <typename... Types>
-    GFL_HOST_DEVICE
-    backend::tuple<Types...> make_tuple(Types&&... args)
-    {
-        return backend::make_tuple(backend::forward<Types>(args)...);
-    }
-
     // Bit
     template <typename T>
     GFL_HOST_DEVICE

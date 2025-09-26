@@ -6,7 +6,48 @@
 #include "LayerInfo.cuh"
 #include "StackAllocator.hpp"
 
+enum DDContext : int;
 enum LocalContext : int;
+
+template<typename Model>
+__global__
+void calcLabelsKernel(Model const * const model, LayerInfo<typename Model::State, typename Model::Labels> * const layerInfo, DDContext const ctx)
+{
+    using namespace gfl;
+
+    __shared__ i32 minLabel_s;
+    __shared__ i32 maxLabel_s;
+    __shared__ i32 nLabels_s;
+
+    if (threadIdx.x == 0)
+    {
+        minLabel_s = numeric_limits<i32>::max();
+        maxLabel_s = numeric_limits<i32>::min();
+        nLabels_s  = numeric_limits<i32>::min();
+    }
+    __syncthreads();
+
+    int const pIdx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (pIdx < layerInfo->nParents)
+    {
+        //printf("Working on parent %d\n", pIdx);
+        auto & parent = layerInfo->parents[pIdx];
+        auto labels = model->lgf(parent.state, ctx);
+        auto [smallest,largest,count] = labels.slc();
+        atomicMin_block(&minLabel_s, smallest);
+        atomicMax_block(&maxLabel_s, largest);
+        atomicMax_block(&nLabels_s, count);
+        parent.labels = labels;
+    }
+    __syncthreads();
+
+    if (threadIdx.x == 0)
+    {
+        atomicMin(&layerInfo->minLabel,minLabel_s);
+        atomicMax(&layerInfo->maxLabel,maxLabel_s);
+        atomicMax(&layerInfo->nLabels,nLabels_s);
+    }
+}
 
 template<typename Model>
 __global__
