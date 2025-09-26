@@ -1,6 +1,7 @@
 #pragma once
 
 #include "node.hpp"
+#include "MirrorAllocator.hpp"
 
 #include <Types.hpp>
 
@@ -36,9 +37,12 @@ struct alignas(16) ChildInfo
 template<typename State, typename Labels>
 struct LayerInfo
 {
+    using GpuParent = GpuParent<State, Labels>;
+    using GpuChild = GpuChild<State>;
+
     // Parents
     gfl::i32 nParents;
-    GpuParent<State,Labels> * parents;
+    gfl::MirrorPtr<GpuParent> parents;
 
     // Labels
     gfl::i32 minLabel;
@@ -47,8 +51,8 @@ struct LayerInfo
 
     // Children
     gfl::i32 nChildren;
-    GpuChild<State> * children;
-    ChildInfo * childrenInfo;
+    gfl::MirrorPtr<GpuChild> children;
+    gfl::MirrorPtr<ChildInfo> childrenInfo;
 
     // Auxiliary Information
     gfl::i32 nClasses;
@@ -61,7 +65,7 @@ struct LayerInfo
     void * cubTmpMem;
 };
 
-struct dummyDecomposer
+struct DummyDecomposer
 {
     GFL_HOST_DEVICE
     gfl::tuple<gfl::u64&, gfl::u64&, gfl::u64&> operator()(ChildInfo &) const

@@ -725,7 +725,6 @@ void Restricted::compute(Bounds& bnds)
               }
           }
           _dd->_exact = _dd->_exact and nChildren <= _mxw;
-          printf("Parents %d | Q = %d | Discard = %d | Exact = %s\n", lk.size(), qn.size(), _discardedSet.size(), _dd->_exact ? "true" : "false");
       }
       else
 #endif
@@ -790,8 +789,8 @@ void Restricted::compute(Bounds& bnds)
                   nextLabel:;
               }
           }
-          printf("Parents %d | Q = %d | Discard = %d | Exact = %s\n", lk.size(), qn.size(), _discardedSet.size(), _dd->_exact ? "true" : "false");
       }
+       printf("Parents %lu | Kepts = %lu | Discard = %lu | Exact = %c\n", lk.size(), qn.size(), _discardedSet.size(), _dd->_exact ? 'T' : 'F');
    }
    //_dd->computeBestBackward(getName()); // testing   
    //_dd->computeBest(getName());

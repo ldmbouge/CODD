@@ -5,6 +5,7 @@
 #include "LayerInfo.cuh"
 #include <Malloc.hpp>
 #include <StackAllocator.hpp>
+#include <MirrorAllocator.hpp>
 
 #include "kernels.cuh"
 
@@ -21,9 +22,9 @@ class LayerEngine
     using GpuChild = GpuChild<State>;
 
 protected:
-    gfl::StackAllocator ioAllocator;
+    gfl::MirrorAllocator ioAllocator;
     gfl::StackAllocator tmpAllocator;
-    LayerInfoType * layerInfo;
+    gfl::MirrorPtr<LayerInfoType> layerInfo;
     gfl::i32 gpuDeviceId;
     cudaStream_t gpuMainQueue;
     cudaStream_t gpuAuxQueue;
@@ -36,7 +37,7 @@ protected:
 
 public:
     LayerEngine() :
-        ioAllocator(gfl::mallocManaged<void>(gpuIoMemSize), gpuIoMemSize),
+        ioAllocator(gpuIoMemSize),
         tmpAllocator(gfl::mallocDevice<void>(gpuTmpMemSize), gpuTmpMemSize),
         layerInfo(nullptr)
     {
@@ -57,7 +58,8 @@ public:
         using namespace gfl;
 
         init(layer, model, ddCtx);
-        cudaMemPrefetchAsync(ioAllocator.getMem(), ioAllocator.calcUsedMemSize(), gpuDeviceId, gpuMainQueue);
+        auto const ioMem = ioAllocator.getMem();
+        cudaMemcpyAsync(ioMem.d, ioMem.h, ioAllocator.calcUsedMemSize(), cudaMemcpyHostToDevice, gpuMainQueue);
 
         auto gridSize = layerInfo->nParents;
         auto blockSize = gfl::roundUpToMultiple<gfl::i32>(layerInfo->nLabels,32);
@@ -69,8 +71,8 @@ public:
         assert(shrMemSize > 0 and shrMemSize < 48 * 1024); // We assume that all the children fits in default shared memory size
         calcChildrenKernel<Model><<<gridSize, blockSize, shrMemSize, gpuMainQueue>>>(
                 model,
-                layerInfo,
-                layerInfo->childrenInfo,
+                layerInfo.d,
+                layerInfo->childrenInfo.d,
                 primalBound,
                 localCtx);
         cudaEventRecord(childrenOk, gpuMainQueue);
@@ -79,51 +81,52 @@ public:
         sortKernel<ChildInfo,HashDecomposer><<<1, 1, 0, gpuMainQueue>>>(
                 layerInfo->cubTmpMem,
                 layerInfo->cubTmpMemSize,
-                layerInfo->childrenInfo,
+                layerInfo->childrenInfo.d,
                 layerInfo->tmpChildrenInfo,
-                &layerInfo->nChildren);
-
-        //printChildInfo<Model><<<1,1,0,gpuMainQueue>>>(layerInfo, layerInfo->tmpChildrenInfo);
+                &layerInfo.d->nChildren);
+        //printChildInfo<Model><<<1,1,0,gpuMainQueue>>>(layerInfo.d, layerInfo->tmpChildrenInfo);
 
         blockSize = 128;
         gridSize = roundUpDivPosInt<i32>(layerInfo->nParents * layerInfo->nLabels + 1, blockSize);
         shrMemSize = sizeof(i32) * blockSize + gfl::StackAllocator::DefaultAlign;
-        calcClassesKernel<Model><<<gridSize,blockSize,shrMemSize,gpuMainQueue>>>(layerInfo, layerInfo->tmpChildrenInfo, layerInfo->tmpClassesBegin);
+        calcClassesKernel<Model><<<gridSize,blockSize,shrMemSize,gpuMainQueue>>>(
+                layerInfo.d,
+                layerInfo->tmpChildrenInfo,
+                layerInfo->tmpClassesBegin);
         sortKernel<<<1,1,0,gpuMainQueue>>>(
                 layerInfo->cubTmpMem,
                 layerInfo->cubTmpMemSize,
                 layerInfo->tmpClassesBegin,
                 layerInfo->classesBegin,
-                &layerInfo->nChildren);
-        calcClassesFinalizeKernel<Model><<<1,1,0,gpuMainQueue>>>(layerInfo, layerInfo->classesBegin);
+                &layerInfo.d->nChildren);
+        calcClassesFinalizeKernel<Model><<<1,1,0,gpuMainQueue>>>(layerInfo.d, layerInfo->classesBegin);
         //calcClassesSeqKernel<Model><<<1,1,0,gpuMainQueue>>>(layerInfo, layerInfo->tmpChildrenInfo);
+        //printClasses<Model><<<1,1,0,gpuMainQueue>>>(layerInfo, layerInfo->classesBegin);
 
-       // printClasses<Model><<<1,1,0,gpuMainQueue>>>(layerInfo, layerInfo->classesBegin);
-
-        calcRepresentatives<Model><<<gridSize, blockSize,0,gpuMainQueue>>>(layerInfo, layerInfo->tmpChildrenInfo);
+        calcRepresentatives<Model><<<gridSize, blockSize,0,gpuMainQueue>>>(layerInfo.d, layerInfo->tmpChildrenInfo);
 
         sortKernel<ChildInfo,RepIdDecomposer><<<1,1,0,gpuMainQueue>>>(
                 layerInfo->cubTmpMem,
                 layerInfo->cubTmpMemSize,
                 layerInfo->tmpChildrenInfo,
-                layerInfo->childrenInfo,
-                &layerInfo->nChildren);
+                layerInfo->childrenInfo.d,
+                &layerInfo.d->nChildren);
 
-//        printChildInfo<Model><<<1,1,0,gpuMainQueue>>>(layerInfo, layerInfo->childrenInfo);
-        cudaEventRecord(infoOk, gpuMainQueue);
+        //printChildInfo<Model><<<1,1,0,gpuMainQueue>>>(layerInfo.d, layerInfo->childrenInfo.d);
     }
 
     void retrieveNodes()
     {
+        using namespace gfl;
+
         cudaEventSynchronize(childrenOk);
-        cudaMemPrefetchAsync(&layerInfo->nChildren, sizeof(layerInfo->nChildren), cudaCpuDeviceId, gpuAuxQueue);
+        cudaMemcpyAsync(&layerInfo.h->nChildren, &layerInfo.d->nChildren, sizeof(i32), cudaMemcpyDeviceToHost, gpuAuxQueue);
         cudaStreamSynchronize(gpuAuxQueue);
-        //printf("Retrieved %d nodes\n",layerInfo->nChildren);
+        //printf("Nodes to retrieve %d\n",layerInfo->nChildren);
         if (layerInfo->nChildren > 0)
         {
-            cudaMemPrefetchAsync(layerInfo->children, sizeof(GpuChild) * layerInfo->nChildren, cudaCpuDeviceId, gpuAuxQueue);
-            cudaEventSynchronize(infoOk);
-            cudaMemPrefetchAsync(layerInfo->childrenInfo, sizeof(ChildInfo) * layerInfo->nChildren, cudaCpuDeviceId, gpuAuxQueue);
+            cudaMemcpyAsync(layerInfo->children.h, layerInfo->children.d, sizeof(GpuChild) * layerInfo->nChildren, cudaMemcpyDeviceToHost, gpuAuxQueue);
+            cudaMemcpyAsync(layerInfo->childrenInfo.h, layerInfo->childrenInfo.d, sizeof(ChildInfo) * layerInfo->nChildren, cudaMemcpyDeviceToHost, gpuMainQueue);
             cudaDeviceSynchronize();
         }
         nChildProcessed = 0;
@@ -200,12 +203,12 @@ protected:
         layerInfo->cubTmpMem = nullptr;
         layerInfo->cubTmpMemSize = 0;
         cub::DeviceRadixSort::SortKeys(
-            layerInfo->cubTmpMem,
+            layerInfo.h->cubTmpMem,
             layerInfo->cubTmpMemSize,
             layerInfo->tmpChildrenInfo,
-            layerInfo->childrenInfo,
+            layerInfo->childrenInfo.h,
             maxChildren,
-            dummyDecomposer{}); // Determine temporary memory size
+            DummyDecomposer{}); // Determine temporary memory size
         layerInfo->cubTmpMem = tmpAllocator.allocate<gfl::u8>(layerInfo->cubTmpMemSize, 16);
     }
 };

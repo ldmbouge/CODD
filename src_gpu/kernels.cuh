@@ -108,6 +108,7 @@ __global__
 void sortKernel(void * tmpMem, std::size_t tmpMemSize, KeyType const * keysIn, KeyType * keysOut, gfl::i32 const * const nKeys)
 {
     //printf("Sorting %d keys\n",*nKeys);
+    //printf("TMP = %p (%ul) | K_IN = %p | K_OUT = %p | N_KEYS = %p (%d)\n",tmpMem, tmpMemSize, keysIn, keysOut, nKeys, *nKeys);
     if (*nKeys > 1)
     {
         cudaStream_t gpuSortQueue;
@@ -121,6 +122,7 @@ __global__
 void sortKernel(void * tmpMem, std::size_t tmpMemSize, KeyType const * keysIn, KeyType * keysOut, gfl::i32 const * const nKeys)
 {
     //printf("Sorting %d keys\n",*nKeys);
+    //printf("TMP = %p (%ul) | K_IN = %p | K_OUT = %p | N_KEYS = %p (%d)\n",tmpMem, tmpMemSize, keysIn, keysOut, nKeys, *nKeys);
     if (*nKeys > 1)
     {
         cudaStream_t gpuSortQueue;
