@@ -108,14 +108,30 @@ __global__
 void sortKernel(void * tmpMem, std::size_t tmpMemSize, KeyType const * keysIn, KeyType * keysOut, gfl::i32 const * const nKeys)
 {
     //printf("Sorting %d keys\n",*nKeys);
-    cudaStream_t gpuSortQueue;
-    cudaStreamCreateWithFlags(&gpuSortQueue, cudaStreamNonBlocking);
-    cub::DeviceRadixSort::SortKeys(tmpMem, tmpMemSize, keysIn, keysOut, *nKeys, KeyDecomposer{}, gpuSortQueue);
+    if (*nKeys > 1)
+    {
+        cudaStream_t gpuSortQueue;
+        cudaStreamCreateWithFlags(&gpuSortQueue, cudaStreamNonBlocking);
+        cub::DeviceRadixSort::SortKeys(tmpMem, tmpMemSize, keysIn, keysOut, *nKeys, KeyDecomposer{}, gpuSortQueue);
+    }
+}
+
+template<typename KeyType>
+__global__
+void sortKernel(void * tmpMem, std::size_t tmpMemSize, KeyType const * keysIn, KeyType * keysOut, gfl::i32 const * const nKeys)
+{
+    //printf("Sorting %d keys\n",*nKeys);
+    if (*nKeys > 1)
+    {
+        cudaStream_t gpuSortQueue;
+        cudaStreamCreateWithFlags(&gpuSortQueue, cudaStreamNonBlocking);
+        cub::DeviceRadixSort::SortKeys(tmpMem, tmpMemSize, keysIn, keysOut, *nKeys, 0, sizeof(KeyType) * 8, gpuSortQueue);
+    }
 }
 
 template<typename Model>
 __global__
-void calcClassesBeginKernel(LayerInfo<typename Model::State, typename Model::Labels> * const layerInfo, ChildInfo const * const childrenInfo)
+void calcClassesSeqKernel(LayerInfo<typename Model::State, typename Model::Labels> * const layerInfo, ChildInfo const * const childrenInfo)
 {
     /* TO OPTIMIZE
      * - Rework to parallelize
@@ -141,9 +157,70 @@ void calcClassesBeginKernel(LayerInfo<typename Model::State, typename Model::Lab
 
 template<typename Model>
 __global__
+void calcClassesKernel(LayerInfo<typename Model::State, typename Model::Labels> * const layerInfo, ChildInfo const * const childrenInfo, gfl::i32 * const classesBegin)
+{
+    using namespace gfl;
+
+    __shared__ i32 nClassesInShared_s;
+    __shared__ i32 * classesBegin_s;
+    extern __shared__ u32 shrMem[]; // 16-byte aligned
+
+    int chBegin = blockDim.x * blockIdx.x;
+    int chEnd = min<int>(chBegin + blockDim.x, layerInfo->nChildren);
+    if (chEnd - chBegin > 0)
+    {
+        if (threadIdx.x == 0)
+        {
+            nClassesInShared_s = 0;
+            StackAllocator allocator(shrMem, getSharedMemSize());
+            classesBegin_s = allocator.allocateArray<i32>(blockDim.x);
+        }
+        __syncthreads();
+
+        auto getHash = [childrenInfo](const int i){ return Model::has_dom ? childrenInfo[i].domHash : childrenInfo[i].eqHash; };
+        for (auto i = threadIdx.x; i < blockDim.x; i += blockDim.x)
+        {
+            int currIdx = chBegin + i;
+            int prevIdx = currIdx-1;
+            auto prevHash = 0 <= prevIdx and prevIdx < chEnd ? getHash(prevIdx) : 0;
+            auto currHash =                  currIdx < chEnd ? getHash(currIdx) : 0;
+            if (prevHash != currHash)
+            {
+                classesBegin_s[i] = currIdx;
+                atomicAdd_block(&nClassesInShared_s,currIdx < chEnd);
+            }
+            else
+            {
+                classesBegin_s[i] = layerInfo->nChildren;
+            }
+        }
+        __syncthreads();
+
+        if (threadIdx.x == 0)
+        {
+            atomicAdd(&layerInfo->nClasses,nClassesInShared_s);
+        }
+        for (auto i = threadIdx.x; i < blockDim.x; i += blockDim.x)
+        {
+            classesBegin[chBegin + i] = classesBegin_s[i];
+        }
+    }
+}
+template<typename Model>
+__global__
+void calcClassesFinalizeKernel(LayerInfo<typename Model::State, typename Model::Labels> * const layerInfo, gfl::i32 * const classesBegin)
+{
+    using namespace gfl;
+    classesBegin[layerInfo->nClasses] = layerInfo->nChildren;
+}
+
+template<typename Model>
+__global__
 void calcRepresentatives(LayerInfo<typename Model::State, typename Model::Labels> * const layerInfo, ChildInfo * const childrenInfo)
 {
     using namespace gfl;
+
+    assert(layerInfo->nClasses <= layerInfo->nChildren);
 
     auto const clIdx = blockIdx.x * blockDim.x + threadIdx.x;
     if (clIdx < layerInfo->nClasses)
@@ -160,12 +237,19 @@ void calcRepresentatives(LayerInfo<typename Model::State, typename Model::Labels
             {
                 auto & jInfo = childrenInfo[j];
                 assert(jInfo.idx >= 0);
-                assert(jInfo.idx < layerInfo->nChildren);
+                assert(jInfo.idx <= layerInfo->nChildren);
                 auto const & jChild = layerInfo->children[jInfo.idx].state;
                 auto const ijEqual = Model::State::equal(iChild, jChild);
                 if (ijEqual)
                 {
-                   jInfo.isRepresented = static_cast<i32>(true);
+                    if (iInfo.id < jInfo.id)
+                    {
+                        jInfo.isRepresented = static_cast<i32>(true);
+                    }
+                    else
+                    {
+                        iInfo.isRepresented = static_cast<i32>(true);
+                    }
                 }
                 if (Model::has_dom)
                 {
@@ -210,12 +294,13 @@ void printChildInfo(LayerInfo<typename Model::State, typename Model::Labels> * l
 
 template<typename Model>
 __global__
-void printClasses(LayerInfo<typename Model::State, typename Model::Labels> * layerInfo)
+void printClasses(LayerInfo<typename Model::State, typename Model::Labels> * layerInfo, gfl::i32 const * const classesBegin)
 {
     printf("---\n");
-    for(auto clIdx = 0; clIdx < layerInfo->nClasses; clIdx += 1)
+    printf("CH = %d | CL = %d\n", layerInfo->nChildren, layerInfo->nClasses);
+    for(auto clIdx = 0; clIdx < layerInfo->nChildren; clIdx += 1)
     {
-        printf("(%d,%d) ", layerInfo->classesBegin[clIdx], layerInfo->classesBegin[clIdx + 1]);
+        printf("%d ", classesBegin[clIdx]);
     }
-    printf("\n");
+    printf("| %d\n",classesBegin[layerInfo->nChildren]);
 }

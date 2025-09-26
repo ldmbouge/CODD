@@ -362,9 +362,17 @@ namespace gfl
 #endif
     }
 
+    template<typename T>
+    GFL_HOST_DEVICE
+    void getBeginEnd(T & begin, T & end, i32 index, i32 workers, i32 jobs)
+    {
+        auto const jobsPerWorker = roundUpDivPosInt<T>(jobs, workers);
+        begin = jobsPerWorker * index;
+        end = min<T>(jobs, begin + jobsPerWorker);
+    }
+
 #ifdef __CUDACC__
 #define CHECK_CUDA_ERROR(err) gfl::checkCudaError(err, __FILE__, __LINE__)
-
 inline
 void checkCudaError(cudaError_t err, const char *file, const int line)
 {

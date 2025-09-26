@@ -48,16 +48,15 @@ struct LayerInfo
     // Children
     gfl::i32 nChildren;
     GpuChild<State> * children;
-    gfl::i32 nRepresentatives;
     ChildInfo * childrenInfo;
 
     // Auxiliary Information
-    gfl::i32 isBlockTurn;
     gfl::i32 nClasses;
     gfl::i32 * classesBegin;
 
     // CUB
     ChildInfo * tmpChildrenInfo;
+    gfl::i32 * tmpClassesBegin;
     std::size_t cubTmpMemSize;
     void * cubTmpMem;
 };
@@ -69,15 +68,6 @@ struct dummyDecomposer
     {
         gfl::u64 tmp = 0;
         return{tmp,tmp,tmp};
-    }
-};
-
-struct IdDecomposer
-{
-    GFL_DEVICE
-    gfl::tuple<gfl::i64&> operator()(ChildInfo & childInfo) const
-    {
-        return {childInfo.id};
     }
 };
 
@@ -108,16 +98,7 @@ struct DomHashDecomposer
     }
 };
 
-struct DomHashCostDecomposer
-{
-    GFL_DEVICE
-    gfl::tuple<gfl::u64&, gfl::f64&> operator()(ChildInfo & childInfo) const
-    {
-        return {childInfo.domHash, childInfo.cost};
-    }
-};
-
-struct RIDecomposer
+struct RepIdDecomposer
 {
     GFL_DEVICE
     gfl::tuple<gfl::u32&,gfl::i64&> operator()(ChildInfo & childInfo) const
@@ -126,13 +107,13 @@ struct RIDecomposer
     }
 };
 
-struct RBDecomposer
+template<typename T>
+struct NoDecomposer
 {
     GFL_DEVICE
-    gfl::tuple<gfl::u32&,gfl::f64&> operator()(ChildInfo & childInfo) const
+    gfl::tuple<T&> operator()(T & t) const
     {
-        return {childInfo.isRepresented, childInfo.boundSrcToNode};
+        return {t};
     }
 };
-
 

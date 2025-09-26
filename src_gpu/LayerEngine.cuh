@@ -54,17 +54,20 @@ public:
         DDContext const ddCtx,
         LocalContext const localCtx)
     {
+        using namespace gfl;
+
         init(layer, model, ddCtx);
         cudaMemPrefetchAsync(ioAllocator.getMem(), ioAllocator.calcUsedMemSize(), gpuDeviceId, gpuMainQueue);
 
+        auto gridSize = layerInfo->nParents;
         auto blockSize = gfl::roundUpToMultiple<gfl::i32>(layerInfo->nLabels,32);
-        assert(blockSize > 0 and blockSize <= 128); // We assume up to 128 children per parent
-        auto const shrMemSize =
+        auto shrMemSize =
             sizeof(GpuParent) + gfl::StackAllocator::DefaultAlign +
             sizeof(GpuChild) * layerInfo->nLabels + gfl::StackAllocator::DefaultAlign +
             sizeof(ChildInfo) * layerInfo->nLabels;
+        assert(blockSize > 0 and blockSize <= 128); // We assume up to 128 children per parent
         assert(shrMemSize > 0 and shrMemSize < 48 * 1024); // We assume that all the children fits in default shared memory size
-        calcChildrenKernel<Model><<<layerInfo->nParents, blockSize, shrMemSize, gpuMainQueue>>>(
+        calcChildrenKernel<Model><<<gridSize, blockSize, shrMemSize, gpuMainQueue>>>(
                 model,
                 layerInfo,
                 layerInfo->childrenInfo,
@@ -80,18 +83,26 @@ public:
                 layerInfo->tmpChildrenInfo,
                 &layerInfo->nChildren);
 
-//
-//        printChildInfo<Model><<<1,1,0,gpuMainQueue>>>(layerInfo, layerInfo->tmpChildrenInfo);
-//
-        calcClassesBeginKernel<Model><<<1,1,0,gpuMainQueue>>>(layerInfo, layerInfo->tmpChildrenInfo);
-//
-//        //printClasses<Model><<<1,1,0,gpuMainQueue>>>(layerInfo);
-//
+        //printChildInfo<Model><<<1,1,0,gpuMainQueue>>>(layerInfo, layerInfo->tmpChildrenInfo);
+
         blockSize = 128;
-        auto gridSize = gfl::roundUpDivPosInt<gfl::i32>(layerInfo->nParents * layerInfo->nLabels, blockSize);
+        gridSize = roundUpDivPosInt<i32>(layerInfo->nParents * layerInfo->nLabels + 1, blockSize);
+        shrMemSize = sizeof(i32) * blockSize + gfl::StackAllocator::DefaultAlign;
+        calcClassesKernel<Model><<<gridSize,blockSize,shrMemSize,gpuMainQueue>>>(layerInfo, layerInfo->tmpChildrenInfo, layerInfo->tmpClassesBegin);
+        sortKernel<<<1,1,0,gpuMainQueue>>>(
+                layerInfo->cubTmpMem,
+                layerInfo->cubTmpMemSize,
+                layerInfo->tmpClassesBegin,
+                layerInfo->classesBegin,
+                &layerInfo->nChildren);
+        calcClassesFinalizeKernel<Model><<<1,1,0,gpuMainQueue>>>(layerInfo, layerInfo->classesBegin);
+        //calcClassesSeqKernel<Model><<<1,1,0,gpuMainQueue>>>(layerInfo, layerInfo->tmpChildrenInfo);
+
+       // printClasses<Model><<<1,1,0,gpuMainQueue>>>(layerInfo, layerInfo->classesBegin);
+
         calcRepresentatives<Model><<<gridSize, blockSize,0,gpuMainQueue>>>(layerInfo, layerInfo->tmpChildrenInfo);
 
-        sortKernel<ChildInfo,RIDecomposer><<<1,1,0,gpuMainQueue>>>(
+        sortKernel<ChildInfo,RepIdDecomposer><<<1,1,0,gpuMainQueue>>>(
                 layerInfo->cubTmpMem,
                 layerInfo->cubTmpMemSize,
                 layerInfo->tmpChildrenInfo,
@@ -177,7 +188,6 @@ protected:
         auto const maxChildren = layerInfo->nParents * layerInfo->nLabels;
         layerInfo->nChildren = 0;
         layerInfo->children = ioAllocator.allocateArray<GpuChild>(maxChildren);
-        layerInfo->nRepresentatives = 0;
         layerInfo->childrenInfo = ioAllocator.allocateArray<ChildInfo>(maxChildren);
 
         // Auxiliary Information
@@ -186,6 +196,7 @@ protected:
 
         // CUB
         layerInfo->tmpChildrenInfo = tmpAllocator.allocateArray<ChildInfo>(maxChildren);
+        layerInfo->tmpClassesBegin = tmpAllocator.allocateArray<gfl::i32>(maxChildren + 1); // The + 1 is for loops in case nClasses == nChildren
         layerInfo->cubTmpMem = nullptr;
         layerInfo->cubTmpMemSize = 0;
         cub::DeviceRadixSort::SortKeys(

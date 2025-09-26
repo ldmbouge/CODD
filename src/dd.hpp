@@ -333,7 +333,7 @@ protected:
    unsigned _mxw;
    NDArray  _nda;
 #ifdef __NVCC__
-    static constexpr long long int offloadThreshold = 10000000;
+    static constexpr long long int offloadThreshold = 0;
 #endif
    NDArray& pullLayer(CQueue<ANode::Ptr>& q);  
    void transferArcs(ANode::Ptr donor,ANode::Ptr receiver);
