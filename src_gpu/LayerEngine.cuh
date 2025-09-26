@@ -61,20 +61,19 @@ public:
         auto const ioMem = ioAllocator.getMem();
         cudaMemcpyAsync(ioMem.d, ioMem.h, ioAllocator.calcUsedMemSize(), cudaMemcpyHostToDevice, gpuMainQueue);
 
-        auto blockSize = 128;
-        auto gridSize = roundUpDivPosInt<i32>(layerInfo->nParents, blockSize);
+        i32 blockSize = 128;
+        dim3 gridSize = roundUpDivPosInt<i32>(layerInfo->nParents, blockSize);
         calcLabelsKernel<Model><<<gridSize, blockSize, 0, gpuMainQueue>>>(model,layerInfo.d,ddCtx);
         cudaMemcpyAsync(layerInfo.h, layerInfo.d, sizeof(LayerInfoType), cudaMemcpyDeviceToHost,gpuMainQueue);
         cudaStreamSynchronize(gpuMainQueue);
         initChildren();
         cudaMemcpyAsync(layerInfo.d, layerInfo.h, sizeof(LayerInfoType), cudaMemcpyHostToDevice,gpuMainQueue);
 
-        gridSize = layerInfo->nParents;
-        blockSize = roundUpToMultiple<i32>(layerInfo->nLabels,32);
-        auto shrMemSize = sizeof(GpuParent) + StackAllocator::DefaultAlign +
-                          sizeof(GpuChild) * layerInfo->nLabels + StackAllocator::DefaultAlign +
-                          sizeof(ChildInfo) * layerInfo->nLabels;
-        assert(blockSize > 0 and blockSize <= 128); // We assume up to 128 children per parent
+        blockSize = 32;
+        i32 const blocksPerParent = roundUpDivPosInt<i32>(layerInfo->maxLabel - layerInfo->minLabel + 1, blockSize);
+        gridSize = dim3(layerInfo->nParents, blocksPerParent, 1);
+        i32 shrMemSize = sizeof(GpuChild) * blockSize + StackAllocator::DefaultAlign +
+                         sizeof(ChildInfo) * blockSize;
         assert(shrMemSize > 0 and shrMemSize < 48 * 1024); // We assume that all the children fits in default shared memory size
         calcChildrenKernel<Model><<<gridSize, blockSize, shrMemSize, gpuMainQueue>>>(
                 model,
@@ -83,6 +82,8 @@ public:
                 primalBound,
                 localCtx);
         cudaEventRecord(childrenOk, gpuMainQueue);
+
+        //printChildInfo<Model><<<1,1,0,gpuMainQueue>>>(layerInfo.d, layerInfo->tmpChildrenInfo);
 
         using HashDecomposer = std::conditional_t<Model::has_dom, DomHashDecomposer, EqHashDecomposer>;
         sortKernel<ChildInfo,HashDecomposer><<<1, 1, 0, gpuMainQueue>>>(

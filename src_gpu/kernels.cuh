@@ -74,56 +74,47 @@ void calcChildrenKernel(
 
     __shared__ i32 nChildrenInShared_s;
     __shared__ i32 nChildrenInGlobal_s;
-    __shared__ GpuParent * parent_s;
     __shared__ GpuChild * children_s;
     __shared__ ChildInfo * childrenInfo_s;
     extern __shared__ u32 shrMem[]; // 16-byte aligned
-
-    auto const pIdx = blockIdx.x;
-
     if (threadIdx.x == 0)
     {
         nChildrenInShared_s = 0;
         StackAllocator allocator(shrMem, getSharedMemSize());
-        parent_s = allocator.allocate<GpuParent>();
         children_s = allocator.allocateArray<GpuChild>(layerInfo->nLabels);
         childrenInfo_s = allocator.allocateArray<ChildInfo>(layerInfo->nLabels);
-        *parent_s = layerInfo->parents[pIdx];
     }
     __syncthreads();
 
     GpuChild child_r;
     ChildInfo childInfo_r;
-    i32 const minLabel = layerInfo->minLabel;
-    i32 const maxLabel = layerInfo->maxLabel;
-    auto const labels_r = parent_s->labels;
-    for(i32 label = minLabel + threadIdx.x; label <= maxLabel; label += blockDim.x)
+    i32 const pIdx = blockIdx.x;
+    GpuParent const parent_r = layerInfo->parents[pIdx];
+    int const label = layerInfo->minLabel + blockIdx.y * blockDim.x + threadIdx.x;
+    if (parent_r.labels.contains(label))
     {
-        if (labels_r.contains(label))
+        // Transition
+        child_r.parentNode = parent_r.node;
+        child_r.label = label;
+        auto state_r = model->stf(parent_r.state, label);
+        if (state_r.has_value())
         {
-            // Transition
-            child_r.parentNode = parent_s->node;
-            child_r.label = label;
-            auto state_r = model->stf(parent_s->state, label);
-            if (state_r.has_value())
+            childInfo_r.boundSrcToNode = parent_r.boundSrcToNode + model->scf(parent_r.state, label);
+            child_r.heuristicNodeToSink = model->has_local ? model->local(state_r.value(), localCtx) : 0;
+            childInfo_r.cost = childInfo_r.boundSrcToNode + child_r.heuristicNodeToSink;
+
+            if (Model::better(childInfo_r.cost, primalBound))
             {
-                childInfo_r.boundSrcToNode = parent_s->boundSrcToNode + model->scf(parent_s->state, label);
-                child_r.heuristicNodeToSink = model->has_local ? model->local(state_r.value(), localCtx) : 0;
-                childInfo_r.cost = childInfo_r.boundSrcToNode + child_r.heuristicNodeToSink;
+                child_r.state = state_r.value();
+                childInfo_r.id = pIdx * layerInfo->maxLabel + label;
+                childInfo_r.isRepresented = static_cast<i32>(false);
+                childInfo_r.eqHash = State::hash(child_r.state);
+                childInfo_r.domHash = Model::has_dom ? Model::domHash(child_r.state) : 0;
 
-                if (Model::better(childInfo_r.cost, primalBound))
-                {
-                    child_r.state = state_r.value();
-                    childInfo_r.id = pIdx * maxLabel + label;
-                    childInfo_r.isRepresented = static_cast<i32>(false);
-                    childInfo_r.eqHash = State::hash(child_r.state);
-                    childInfo_r.domHash = Model::has_dom ? Model::domHash(child_r.state) : 0;
-
-                    // Write children and info in shared.
-                    auto const idxInShared = atomicAdd_block(&nChildrenInShared_s,1);
-                    children_s[idxInShared] = child_r;
-                    childrenInfo_s[idxInShared] = childInfo_r;
-                }
+                // Write children and info in shared.
+                auto const idxInShared = atomicAdd_block(&nChildrenInShared_s,1);
+                children_s[idxInShared] = child_r;
+                childrenInfo_s[idxInShared] = childInfo_r;
             }
         }
     }
@@ -135,12 +126,13 @@ void calcChildrenKernel(
         nChildrenInGlobal_s = atomicAdd(&layerInfo->nChildren,nChildrenInShared_s);
     }
     __syncthreads();
-    for (auto idxInShared = threadIdx.x; idxInShared < nChildrenInShared_s; idxInShared += blockDim.x)
+
+    if (threadIdx.x < nChildrenInShared_s)
     {
-        auto const idxInGlobal = nChildrenInGlobal_s + idxInShared;
-        childrenInfo_s[idxInShared].idx = idxInGlobal;
-        layerInfo->children[idxInGlobal] = children_s[idxInShared];
-        childrenInfo[idxInGlobal] = childrenInfo_s[idxInShared];
+        i32 const idxInGlobal = nChildrenInGlobal_s + threadIdx.x;
+        childrenInfo_s[threadIdx.x].idx = idxInGlobal;
+        layerInfo->children[idxInGlobal] = children_s[threadIdx.x];
+        childrenInfo[idxInGlobal] = childrenInfo_s[threadIdx.x];
     }
 }
 
