@@ -99,7 +99,6 @@ public:
                 layerInfo->tmpClassesBegin,
                 layerInfo->classesBegin,
                 &layerInfo.d->nChildren);
-        calcClassesFinalizeKernel<Model><<<1,1,0,gpuMainQueue>>>(layerInfo.d, layerInfo->classesBegin);
         //calcClassesSeqKernel<Model><<<1,1,0,gpuMainQueue>>>(layerInfo, layerInfo->tmpChildrenInfo);
         //printClasses<Model><<<1,1,0,gpuMainQueue>>>(layerInfo, layerInfo->classesBegin);
 
@@ -195,11 +194,11 @@ protected:
 
         // Auxiliary Information
         layerInfo->nClasses = 0;
-        layerInfo->classesBegin = tmpAllocator.allocateArray<gfl::i32>(maxChildren + 1); // The + 1 is for loops in case nClasses == nChildren
+        layerInfo->classesBegin = tmpAllocator.allocateArray<gfl::i32>(maxChildren);
 
         // CUB
         layerInfo->tmpChildrenInfo = tmpAllocator.allocateArray<ChildInfo>(maxChildren);
-        layerInfo->tmpClassesBegin = tmpAllocator.allocateArray<gfl::i32>(maxChildren + 1); // The + 1 is for loops in case nClasses == nChildren
+        layerInfo->tmpClassesBegin = tmpAllocator.allocateArray<gfl::i32>(maxChildren + 1);
         layerInfo->cubTmpMem = nullptr;
         layerInfo->cubTmpMemSize = 0;
         cub::DeviceRadixSort::SortKeys(

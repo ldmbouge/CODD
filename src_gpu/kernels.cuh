@@ -210,14 +210,6 @@ void calcClassesKernel(LayerInfo<typename Model::State, typename Model::Labels> 
 }
 template<typename Model>
 __global__
-void calcClassesFinalizeKernel(LayerInfo<typename Model::State, typename Model::Labels> * const layerInfo, gfl::i32 * const classesBegin)
-{
-    using namespace gfl;
-    classesBegin[layerInfo->nClasses] = layerInfo->nChildren;
-}
-
-template<typename Model>
-__global__
 void calcRepresentatives(LayerInfo<typename Model::State, typename Model::Labels> * const layerInfo, ChildInfo * const childrenInfo)
 {
     using namespace gfl;
@@ -228,7 +220,7 @@ void calcRepresentatives(LayerInfo<typename Model::State, typename Model::Labels
     if (clIdx < layerInfo->nClasses)
     {
         auto const clBegin = layerInfo->classesBegin[clIdx];
-        auto const clEnd = layerInfo->classesBegin[clIdx + 1];
+        auto const clEnd = clIdx < layerInfo->nClasses - 1 ? layerInfo->classesBegin[clIdx + 1] : layerInfo->nChildren;
         for (auto i = clBegin; i < clEnd - 1; i += 1)
         {
             auto & iInfo = childrenInfo[i];
