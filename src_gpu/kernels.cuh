@@ -173,7 +173,7 @@ void calcClassesSeqKernel(LayerInfo<typename Model::State, typename Model::Label
      * - Parallel load
     */
 
-    layerInfo->classesBegin[0] = 0;
+    layerInfo->classesRange[0] = 0;
     layerInfo->nClasses = 1;
     for (auto cIdx = 1; cIdx < layerInfo->nChildren; cIdx += 1)
     {
@@ -181,69 +181,96 @@ void calcClassesSeqKernel(LayerInfo<typename Model::State, typename Model::Label
         auto const hash2 = Model::has_dom ? childrenInfo[cIdx-1].domHash : childrenInfo[cIdx-1].eqHash;
         if (hash1 != hash2)
         {
-            layerInfo->classesBegin[layerInfo->nClasses] = cIdx;
+            layerInfo->classesRange[layerInfo->nClasses] = cIdx;
             layerInfo->nClasses += 1;
         }
     }
-    layerInfo->classesBegin[layerInfo->nClasses] = layerInfo->nChildren;
+    layerInfo->classesRange[layerInfo->nClasses] = layerInfo->nChildren;
     //printf("CL = %d | CH = %d\n", layerInfo->nClasses, layerInfo->nChildren);
 }
 
-
 template<typename Model>
 __global__
-void calcClassesKernel(LayerInfo<typename Model::State, typename Model::Labels> * const layerInfo, ChildInfo const * const childrenInfo, gfl::i32 * const classesBegin)
+void calcClassesKernel(LayerInfo<typename Model::State, typename Model::Labels> * const layerInfo, ChildInfo const * const childrenInfo, ClassRange * const classesRange)
 {
     using namespace gfl;
 
     __shared__ i32 nClassesInShared_s;
-    __shared__ i32 * classesBegin_s;
+    __shared__ i32 nClassesInGlobal_s;
+    __shared__ ClassRange *classesRage_s;
     extern __shared__ u32 shrMem[]; // 16-byte aligned
 
-    int chBegin = blockDim.x * blockIdx.x;
-    int chEnd = min<int>(chBegin + blockDim.x, layerInfo->nChildren);
-    if (chEnd - chBegin > 0)
+    if (threadIdx.x == 0)
     {
-        if (threadIdx.x == 0)
-        {
-            nClassesInShared_s = 0;
-            StackAllocator allocator(shrMem, getSharedMemSize());
-            classesBegin_s = allocator.allocateArray<i32>(blockDim.x);
-        }
-        __syncthreads();
+        nClassesInShared_s = 0;
+        StackAllocator allocator(shrMem, getSharedMemSize());
+        classesRage_s = allocator.allocateArray<ClassRange>(blockDim.x);
+    }
+    __syncthreads();
 
-        auto getHash = [childrenInfo](const int i){ return Model::has_dom ? childrenInfo[i].domHash : childrenInfo[i].eqHash; };
-        for (auto i = threadIdx.x; i < blockDim.x; i += blockDim.x)
-        {
-            int currIdx = chBegin + i;
-            int prevIdx = currIdx-1;
-            auto prevHash = 0 <= prevIdx and prevIdx < chEnd ? getHash(prevIdx) : 0;
-            auto currHash =                  currIdx < chEnd ? getHash(currIdx) : 0;
-            if (prevHash != currHash)
-            {
-                classesBegin_s[i] = currIdx;
-                atomicAdd_block(&nClassesInShared_s,currIdx < chEnd);
-            }
-            else
-            {
-                classesBegin_s[i] = layerInfo->nChildren;
-            }
-        }
-        __syncthreads();
 
-        if (threadIdx.x == 0)
+    auto getHash = [childrenInfo](const int i) { return Model::has_dom ? childrenInfo[i].domHash : childrenInfo[i].eqHash; };
+    u64 prevHash = 0;
+    u64 currHash = 0;
+    u64 nextHash = 0;
+    i32 const currIdx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (1 <= currIdx and currIdx <= layerInfo->nChildren - 1)
+    {
+        prevHash = getHash(currIdx-1);
+    }
+    currHash = getHash(currIdx);
+    if (0 <= currIdx and currIdx <= layerInfo->nChildren - 2)
+    {
+        nextHash = getHash(currIdx+1);
+    }
+    //printf("Considering %d/%d = (%lu,%lu,%lu)\n",currIdx,layerInfo->nChildren,prevHash,currHash,nextHash);
+    if (prevHash != currHash and currHash == nextHash) // First of an untrivial class
+    {
+        i32 endIdx = currIdx + 2;
+        for (; endIdx < layerInfo->nChildren; endIdx += 1)
         {
-            atomicAdd(&layerInfo->nClasses,nClassesInShared_s);
+            if (currHash != getHash(endIdx))
+            {
+                break;
+            }
         }
-        for (auto i = threadIdx.x; i < blockDim.x; i += blockDim.x)
-        {
-            classesBegin[chBegin + i] = classesBegin_s[i];
-        }
+        auto const idxInShared = atomicAdd_block(&nClassesInShared_s, 1);
+        classesRage_s[idxInShared] = {currIdx, endIdx};
+    }
+    __syncthreads();
+
+    // Write classes in global
+    if (threadIdx.x == 0)
+    {
+        nClassesInGlobal_s = atomicAdd(&layerInfo->nClasses, nClassesInShared_s);
+    }
+    __syncthreads();
+
+    if (threadIdx.x < nClassesInShared_s)
+    {
+        i32 const idxInGlobal = nClassesInGlobal_s + threadIdx.x;
+        classesRange[idxInGlobal] = classesRage_s[threadIdx.x];
     }
 }
+
 template<typename Model>
 __global__
-void calcRepresentatives(LayerInfo<typename Model::State, typename Model::Labels> * const layerInfo, ChildInfo * const childrenInfo)
+void calcClassesKernelLauncher(LayerInfo<typename Model::State, typename Model::Labels> * const layerInfo, ChildInfo const * const childrenInfo, ClassRange * const classesRange)
+{
+    using namespace gfl;
+
+    cudaStream_t gpuTmpQueue;
+    cudaStreamCreateWithFlags(&gpuTmpQueue, cudaStreamNonBlocking);
+    i32 const blockSize = 128;
+    auto const gridSize = roundUpDivPosInt<i32>(layerInfo->nChildren, blockSize);
+    i32 const shrMemSize = sizeof(ClassRange) * blockSize + StackAllocator::DefaultAlign;
+    calcClassesKernel<Model><<<gridSize,blockSize,shrMemSize,gpuTmpQueue>>>(layerInfo, childrenInfo,classesRange);
+}
+
+
+template<typename Model>
+__global__
+void calcReprKernel(LayerInfo<typename Model::State, typename Model::Labels> * const layerInfo, ChildInfo * const childrenInfo)
 {
     using namespace gfl;
 
@@ -252,20 +279,19 @@ void calcRepresentatives(LayerInfo<typename Model::State, typename Model::Labels
     auto const clIdx = blockIdx.x * blockDim.x + threadIdx.x;
     if (clIdx < layerInfo->nClasses)
     {
-        auto const clBegin = layerInfo->classesBegin[clIdx];
-        auto const clEnd = clIdx < layerInfo->nClasses - 1 ? layerInfo->classesBegin[clIdx + 1] : layerInfo->nChildren;
-        for (auto i = clBegin; i < clEnd - 1; i += 1)
+        ClassRange const clr = layerInfo->classesRange[clIdx];
+        for (auto i = clr.begin; i < clr.end - 1; i += 1)
         {
             auto & iInfo = childrenInfo[i];
             assert(iInfo.idx >= 0);
             assert(iInfo.idx < layerInfo->nChildren);
-            auto const & iChild = layerInfo->children[iInfo.idx].state;
-            for (auto j = i + 1; j < clEnd; j += 1)
+            auto const iChild = layerInfo->children[iInfo.idx].state;
+            for (auto j = i + 1; j < clr.end; j += 1)
             {
                 auto & jInfo = childrenInfo[j];
                 assert(jInfo.idx >= 0);
                 assert(jInfo.idx <= layerInfo->nChildren);
-                auto const & jChild = layerInfo->children[jInfo.idx].state;
+                auto const jChild = layerInfo->children[jInfo.idx].state;
                 auto const ijEqual = Model::State::equal(iChild, jChild);
                 if (ijEqual)
                 {
@@ -302,6 +328,20 @@ void calcRepresentatives(LayerInfo<typename Model::State, typename Model::Labels
     }
 }
 
+
+template<typename Model>
+__global__
+void calcReprKernelLauncher(LayerInfo<typename Model::State, typename Model::Labels> * const layerInfo, ChildInfo * const childrenInfo)
+{
+    using namespace gfl;
+
+    cudaStream_t gpuTmpQueue;
+    cudaStreamCreateWithFlags(&gpuTmpQueue, cudaStreamNonBlocking);
+    i32 const blockSize = 128;
+    auto const gridSize = roundUpDivPosInt<i32>(layerInfo->nClasses, blockSize);
+    calcReprKernel<Model><<<gridSize,blockSize,0,gpuTmpQueue>>>(layerInfo, childrenInfo);
+}
+
 template<typename Model>
 __global__
 void printChildInfo(LayerInfo<typename Model::State, typename Model::Labels> * layerInfo, ChildInfo * childrenInfo)
@@ -321,13 +361,14 @@ void printChildInfo(LayerInfo<typename Model::State, typename Model::Labels> * l
 
 template<typename Model>
 __global__
-void printClasses(LayerInfo<typename Model::State, typename Model::Labels> * layerInfo, gfl::i32 const * const classesBegin)
+void printClasses(LayerInfo<typename Model::State, typename Model::Labels> * layerInfo, ClassRange const * const classesRange)
 {
     printf("---\n");
     printf("CH = %d | CL = %d\n", layerInfo->nChildren, layerInfo->nClasses);
-    for(auto clIdx = 0; clIdx < layerInfo->nChildren; clIdx += 1)
+    for(auto clIdx = 0; clIdx < layerInfo->nClasses; clIdx += 1)
     {
-        printf("%d ", classesBegin[clIdx]);
+        ClassRange const clr = classesRange[clIdx];
+        printf("(%d,%d) ", clr.begin, clr.end);
     }
-    printf("| %d\n",classesBegin[layerInfo->nChildren]);
+    printf("\n");
 }

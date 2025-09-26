@@ -34,6 +34,12 @@ struct alignas(16) ChildInfo
     gfl::u32 isRepresented; // No atomic operations on bools in CUDA
 };
 
+struct alignas(8) ClassRange
+{
+    gfl::i32 begin;
+    gfl::i32 end;
+};
+
 template<typename State, typename Labels>
 struct LayerInfo
 {
@@ -56,11 +62,10 @@ struct LayerInfo
 
     // Auxiliary Information
     gfl::i32 nClasses;
-    gfl::i32 * classesBegin;
+    ClassRange * classesRange;
 
     // CUB
     ChildInfo * tmpChildrenInfo;
-    gfl::i32 * tmpClassesBegin;
     std::size_t cubTmpMemSize;
     void * cubTmpMem;
 };
@@ -111,13 +116,12 @@ struct RepIdDecomposer
     }
 };
 
-template<typename T>
-struct NoDecomposer
+struct BeginDecomposer
 {
     GFL_DEVICE
-    gfl::tuple<T&> operator()(T & t) const
+    gfl::tuple<gfl::i32&> operator()(ClassRange & clr) const
     {
-        return {t};
+        return {clr.begin};
     }
 };
 
