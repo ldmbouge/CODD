@@ -25,8 +25,7 @@ struct alignas(16) GpuChild
 
 struct alignas(16) ChildInfo
 {
-    gfl::u64 eqHash;
-    gfl::u64 domHash;
+    gfl::u64 hash;
     gfl::f64 boundSrcToNode;
     gfl::f64 cost;
     gfl::i64 id;
@@ -68,42 +67,40 @@ struct LayerInfo
     ChildInfo * tmpChildrenInfo;
     std::size_t cubTmpMemSize;
     void * cubTmpMem;
+
+    LayerInfo() :
+      nParents(0),
+      parents(nullptr, nullptr),
+      minLabel(gfl::numeric_limits<gfl::i32>::max()),
+      maxLabel(gfl::numeric_limits<gfl::i32>::min()),
+      nLabels(gfl::numeric_limits<gfl::i32>::min()),
+      nChildren(0),
+      children(nullptr, nullptr),
+      childrenInfo(nullptr, nullptr),
+      nClasses(0),
+      classesRange(nullptr),
+      tmpChildrenInfo(nullptr),
+      cubTmpMemSize(0),
+      cubTmpMem(nullptr)
+    {}
 };
 
-struct DummyDecomposer
+struct DummyDecomposer128
 {
     GFL_HOST_DEVICE
-    gfl::tuple<gfl::u64&, gfl::u64&, gfl::u64&> operator()(ChildInfo &) const
+    gfl::tuple<gfl::u64&, gfl::u64&> operator()(ChildInfo &) const
     {
         gfl::u64 tmp = 0;
-        return{tmp,tmp,tmp};
+        return{tmp,tmp};
     }
 };
 
-struct CostDecomposer
-{
-    GFL_DEVICE
-    gfl::tuple<gfl::f64&> operator()(ChildInfo & childInfo) const
-    {
-        return {childInfo.cost};
-    }
-};
-
-struct EqHashDecomposer
+struct HashDecomposer
 {
     GFL_DEVICE
     gfl::tuple<gfl::u64&> operator()(ChildInfo & childInfo) const
     {
-        return {childInfo.eqHash};
-    }
-};
-
-struct DomHashDecomposer
-{
-    GFL_DEVICE
-    gfl::tuple<gfl::u64&> operator()(ChildInfo & childInfo) const
-    {
-        return {childInfo.domHash};
+        return {childInfo.hash};
     }
 };
 
@@ -116,12 +113,12 @@ struct RepIdDecomposer
     }
 };
 
-struct BeginDecomposer
+struct RepCostDecomposer
 {
     GFL_DEVICE
-    gfl::tuple<gfl::i32&> operator()(ClassRange & clr) const
+    gfl::tuple<gfl::u32&,gfl::f64&> operator()(ChildInfo & childInfo) const
     {
-        return {clr.begin};
+        return {childInfo.isRepresented,childInfo.cost};
     }
 };
 

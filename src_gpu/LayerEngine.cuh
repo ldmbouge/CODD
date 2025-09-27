@@ -17,7 +17,7 @@ class LayerEngine
 {
     using State = Model::State;
     using Labels = Model::Labels;
-    using LayerInfoType =  LayerInfo<State,Labels>;
+    using LayerInfoType = LayerInfo<State,Labels>;
     using GpuParent = GpuParent<State,Labels>;
     using GpuChild = GpuChild<State>;
 
@@ -58,6 +58,7 @@ public:
         using namespace gfl;
 
         // Parents
+        clear();
         initParents(layer);
         auto const ioMem = ioAllocator.getMem();
         cudaMemcpyAsync(ioMem.d, ioMem.h, ioAllocator.calcUsedMemSize(), cudaMemcpyHostToDevice, gpuMainQueue);
@@ -71,6 +72,7 @@ public:
         // Children
         cudaStreamSynchronize(gpuMainQueue);
         initChildren();
+        initAux();
         cudaMemcpyAsync(layerInfo.d, layerInfo.h, sizeof(LayerInfoType), cudaMemcpyHostToDevice,gpuMainQueue);
         blockSize = 128;
         i32 const blocksPerParent = roundUpDivPosInt<i32>(layerInfo->maxLabel - layerInfo->minLabel + 1, blockSize);
@@ -86,21 +88,22 @@ public:
         cudaEventRecord(childrenOk, gpuMainQueue);
 
         // Classes
-        using HashDecomposer = std::conditional_t<Model::has_dom, DomHashDecomposer, EqHashDecomposer>;
         sortKernel<ChildInfo,HashDecomposer><<<1,1,0,gpuMainQueue>>>(
                 layerInfo->cubTmpMem,
                 layerInfo->cubTmpMemSize,
                 layerInfo->childrenInfo.d,
                 layerInfo->tmpChildrenInfo,
                 &layerInfo.d->nChildren);
-        calcClassesKernelLauncher<Model><<<1,1,0,gpuMainQueue>>>(
-                layerInfo.d,
-                layerInfo->tmpChildrenInfo,
-                layerInfo->classesRange);
+        blockSize = 128;
+        gridSize = roundUpDivPosInt<i32>(layerInfo->nParents * layerInfo->nLabels, blockSize);
+        shrMemSize = sizeof(ClassRange) * blockSize + StackAllocator::DefaultAlign;
+        calcClassesKernel<Model><<<gridSize,blockSize,shrMemSize,gpuMainQueue>>>(layerInfo.d,layerInfo->tmpChildrenInfo);
 
         // Representatives
-        calcReprKernelLauncher<Model><<<1,1,0,gpuMainQueue>>>(layerInfo.d, layerInfo->tmpChildrenInfo);
-        sortKernel<ChildInfo,RepIdDecomposer><<<1,1,0,gpuMainQueue>>>(
+        blockSize = 128;
+        gridSize = roundUpDivPosInt<i32>(layerInfo->nParents * layerInfo->nLabels, blockSize);
+        calcReprKernel<Model><<<gridSize,blockSize,0,gpuMainQueue>>>(layerInfo.d, layerInfo->tmpChildrenInfo);
+        sortKernel<ChildInfo,RepCostDecomposer><<<1,1,0,gpuMainQueue>>>(
                 layerInfo->cubTmpMem,
                 layerInfo->cubTmpMemSize,
                 layerInfo->tmpChildrenInfo,
@@ -148,28 +151,29 @@ public:
     }
 
 protected:
-    void initParents(std::list<ANode::Ptr> const & layer) noexcept
+    void clear() noexcept
     {
+        using namespace gfl;
         ioAllocator.clear();
         tmpAllocator.clear();
         layerInfo = ioAllocator.allocate<LayerInfoType>();
+        new (layerInfo.h) LayerInfoType();
+    }
 
+    void initParents(std::list<ANode::Ptr> const & layer) noexcept
+    {
         layerInfo->nParents = layer.size();
         layerInfo->parents = ioAllocator.allocateArray<GpuParent>(layerInfo->nParents);
 
-        layerInfo->minLabel = std::numeric_limits<gfl::i32>::max();
-        layerInfo->maxLabel = std::numeric_limits<gfl::i32>::min();
-        layerInfo->nLabels = std::numeric_limits<gfl::i32>::min();
-
         auto pIdx = 0;
-        for (auto const &p: layer)
+        for (auto const & pANode: layer)
         {
             // Parents
-            auto *const pNode = static_cast<Node<State> *>(p.operator->()); // Retrieve non-const pointer
-            GpuParent &gParent = layerInfo->parents[pIdx];
+            auto * const pNode = static_cast<Node<State>*>(pANode.operator->()); // Retrieve non-const pointer
+            GpuParent & gParent = layerInfo->parents[pIdx];
             gParent.state = pNode->get();
             gParent.boundSrcToNode = pNode->getBound();
-            gParent.node = p.operator->(); // Retrieve non-const pointer
+            gParent.node = pANode.operator->(); // Retrieve non-const pointer
             pIdx += 1;
         }
     }
@@ -177,26 +181,26 @@ protected:
     void initChildren() noexcept
     {
         // Children
-        auto const maxChildren = layerInfo->nParents * layerInfo->nLabels;
-        layerInfo->nChildren = 0;
-        layerInfo->children = ioAllocator.allocateArray<GpuChild>(maxChildren);
-        layerInfo->childrenInfo = ioAllocator.allocateArray<ChildInfo>(maxChildren);
+        auto const nMaxChildren = layerInfo->nParents * layerInfo->nLabels;
+        layerInfo->children = ioAllocator.allocateArray<GpuChild>(nMaxChildren);
+        layerInfo->childrenInfo = ioAllocator.allocateArray<ChildInfo>(nMaxChildren);
+    }
 
+    void initAux() noexcept
+    {
         // Auxiliary Information
-        layerInfo->nClasses = 0;
-        layerInfo->classesRange = tmpAllocator.allocateArray<ClassRange>(maxChildren);
+        auto const nMaxChildren = layerInfo->nParents * layerInfo->nLabels;
+        layerInfo->classesRange = tmpAllocator.allocateArray<ClassRange>(nMaxChildren);
 
         // CUB
-        layerInfo->tmpChildrenInfo = tmpAllocator.allocateArray<ChildInfo>(maxChildren);
-        layerInfo->cubTmpMem = nullptr;
-        layerInfo->cubTmpMemSize = 0;
-        cub::DeviceRadixSort::SortKeys(
+        layerInfo->tmpChildrenInfo = tmpAllocator.allocateArray<ChildInfo>(nMaxChildren);
+        cub::DeviceRadixSort::SortKeys( // Initialize cubTmpMemSize
             layerInfo.h->cubTmpMem,
             layerInfo->cubTmpMemSize,
             layerInfo->tmpChildrenInfo,
             layerInfo->childrenInfo.h,
-            maxChildren,
-            DummyDecomposer{}); // Determine temporary memory size
+            nMaxChildren,
+            DummyDecomposer128{});
         layerInfo->cubTmpMem = tmpAllocator.allocate<gfl::u8>(layerInfo->cubTmpMemSize, 16);
     }
 };
