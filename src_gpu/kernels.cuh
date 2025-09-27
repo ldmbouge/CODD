@@ -72,6 +72,7 @@ void calcChildrenKernel(
     __shared__ GpuChild * children_s;
     __shared__ ChildInfo * childrenInfo_s;
     extern __shared__ u32 shrMem[]; // 16-byte aligned
+
     if (threadIdx.x == 0)
     {
         nChildrenInShared_s = 0;
@@ -85,30 +86,32 @@ void calcChildrenKernel(
     ChildInfo childInfo_r;
     i32 const pIdx = blockIdx.x;
     GpuParent const parent_r = layerInfo->parents[pIdx];
-    int const label = layerInfo->minLabel + blockIdx.y * blockDim.x + threadIdx.x;
-    if (parent_r.labels.contains(label))
+    for(i32 label = layerInfo->minLabel + threadIdx.x; label <= layerInfo->maxLabel; label += blockDim.x)
     {
-        // Transition
-        child_r.parentNode = parent_r.node;
-        child_r.label = label;
-        auto state_r = model->stf(parent_r.state, label);
-        if (state_r.has_value())
+        if (parent_r.labels.contains(label))
         {
-            childInfo_r.boundSrcToNode = parent_r.boundSrcToNode + model->scf(parent_r.state, label);
-            child_r.heuristicNodeToSink = model->has_local ? model->local(state_r.value(), localCtx) : 0;
-            childInfo_r.cost = childInfo_r.boundSrcToNode + child_r.heuristicNodeToSink;
+            // Transition
+            child_r.parentNode = parent_r.node;
+            child_r.label = label;
+            auto state_r = model->stf(parent_r.state, label);
+            if (state_r.has_value())
+            {
+                childInfo_r.boundSrcToNode = parent_r.boundSrcToNode + model->scf(parent_r.state, label);
+                child_r.heuristicNodeToSink = model->has_local ? model->local(state_r.value(), localCtx) : 0;
+                childInfo_r.cost = childInfo_r.boundSrcToNode + child_r.heuristicNodeToSink;
 
                 if (Model::better(childInfo_r.cost, primalBound))
                 {
                     child_r.state = state_r.value();
-                    childInfo_r.id = pIdx * layerInfo->maxLabel + label;
+                    childInfo_r.id = pIdx * (layerInfo->maxLabel + 1) + label;
                     childInfo_r.isRepresented = static_cast<i32>(false);
                     childInfo_r.hash = Model::has_dom ? Model::domHash(child_r.state) : State::hash(child_r.state);
 
-                // Write children and info in shared.
-                auto const idxInShared = atomicAdd_block(&nChildrenInShared_s,1);
-                children_s[idxInShared] = child_r;
-                childrenInfo_s[idxInShared] = childInfo_r;
+                    // Write children and info in shared.
+                    auto const idxInShared = atomicAdd_block(&nChildrenInShared_s, 1);
+                    children_s[idxInShared] = child_r;
+                    childrenInfo_s[idxInShared] = childInfo_r;
+                }
             }
         }
     }
@@ -226,7 +229,6 @@ void calcClassesKernel(LayerInfo<typename Model::State, typename Model::Labels> 
     }
 }
 
-
 template<typename Model>
 __global__
 void calcReprKernel(LayerInfo<typename Model::State, typename Model::Labels> * const layerInfo, ChildInfo * const childrenInfo)
@@ -236,10 +238,10 @@ void calcReprKernel(LayerInfo<typename Model::State, typename Model::Labels> * c
     assert(layerInfo->nClasses <= layerInfo->nChildren);
 
     auto const clIdx = blockIdx.x * blockDim.x + threadIdx.x;
-    if (clIdx == 0)
-    {
-        printf("CH = %d | NTC = %d (%.2f)\n", layerInfo->nChildren, layerInfo->nClasses, gfl::div(layerInfo->nClasses, layerInfo->nChildren+1));
-    }
+//    if (clIdx == 0)
+//    {
+//        printf("CH = %d | NTC = %d (%.2f)\n", layerInfo->nChildren, layerInfo->nClasses, gfl::div(layerInfo->nClasses, layerInfo->nChildren+1));
+//    }
     if (clIdx < layerInfo->nClasses)
     {
         ClassRange const clr = layerInfo->classesRange[clIdx];

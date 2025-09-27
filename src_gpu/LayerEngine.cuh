@@ -74,12 +74,12 @@ public:
         initChildren();
         initAux();
         cudaMemcpyAsync(layerInfo.d, layerInfo.h, sizeof(LayerInfoType), cudaMemcpyHostToDevice,gpuMainQueue);
-        blockSize = 128;
-        i32 const blocksPerParent = roundUpDivPosInt<i32>(layerInfo->maxLabel - layerInfo->minLabel + 1, blockSize);
-        gridSize = dim3(layerInfo->nParents, blocksPerParent, 1);
-        i32 shrMemSize = sizeof(GpuChild) * blockSize + StackAllocator::DefaultAlign + sizeof(ChildInfo) * blockSize;
-        assert(shrMemSize > 0 and shrMemSize < 48 * 1024); // We assume that all the children fits in default shared memory size
-        calcChildrenKernel<Model><<<gridSize,blockSize,shrMemSize,gpuMainQueue>>>(
+        blockSize = 64;
+        i32 shrMemSize = sizeof(GpuChild) * layerInfo->nLabels + StackAllocator::DefaultAlign +
+                         sizeof(ChildInfo) * layerInfo->nLabels;
+        assert(blockSize < 1024);       // We assume that all the children fits in a block
+        assert(shrMemSize < 48 * 1024); // We assume that all the children fits in shared
+        calcChildrenKernel<Model><<<layerInfo->nParents,blockSize,shrMemSize,gpuMainQueue>>>(
                 model,
                 layerInfo.d,
                 layerInfo->childrenInfo.d,
