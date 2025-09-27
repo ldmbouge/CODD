@@ -47,7 +47,7 @@ struct LayerInfo
 
     // Parents
     gfl::i32 nParents;
-    gfl::MirrorPtr<GpuParent> parents;
+    GpuParent * parents;
 
     // Labels
     gfl::i32 minLabel;
@@ -56,8 +56,8 @@ struct LayerInfo
 
     // Children
     gfl::i32 nChildren;
-    gfl::MirrorPtr<GpuChild> children;
-    gfl::MirrorPtr<ChildInfo> childrenInfo;
+    GpuChild * children;
+    ChildInfo * childrenInfo;
 
     // Auxiliary Information
     gfl::i32 nClasses;
@@ -70,13 +70,13 @@ struct LayerInfo
 
     LayerInfo() :
             nParents(0),
-            parents(nullptr, nullptr),
+            parents(nullptr),
             minLabel(gfl::numeric_limits<gfl::i32>::max()),
             maxLabel(gfl::numeric_limits<gfl::i32>::min()),
             nLabels(gfl::numeric_limits<gfl::i32>::min()),
             nChildren(0),
-            children(nullptr, nullptr),
-            childrenInfo(nullptr, nullptr),
+            children(nullptr),
+            childrenInfo(nullptr),
             nClasses(0),
             classes(nullptr),
             tmpChildrenInfo(nullptr),
