@@ -61,7 +61,7 @@ struct LayerInfo
 
     // Auxiliary Information
     gfl::i32 nClasses;
-    ClassRange * classesRange;
+    ClassRange * classes;
 
     // CUB
     ChildInfo * tmpChildrenInfo;
@@ -69,19 +69,19 @@ struct LayerInfo
     void * cubTmpMem;
 
     LayerInfo() :
-      nParents(0),
-      parents(nullptr, nullptr),
-      minLabel(gfl::numeric_limits<gfl::i32>::max()),
-      maxLabel(gfl::numeric_limits<gfl::i32>::min()),
-      nLabels(gfl::numeric_limits<gfl::i32>::min()),
-      nChildren(0),
-      children(nullptr, nullptr),
-      childrenInfo(nullptr, nullptr),
-      nClasses(0),
-      classesRange(nullptr),
-      tmpChildrenInfo(nullptr),
-      cubTmpMemSize(0),
-      cubTmpMem(nullptr)
+            nParents(0),
+            parents(nullptr, nullptr),
+            minLabel(gfl::numeric_limits<gfl::i32>::max()),
+            maxLabel(gfl::numeric_limits<gfl::i32>::min()),
+            nLabels(gfl::numeric_limits<gfl::i32>::min()),
+            nChildren(0),
+            children(nullptr, nullptr),
+            childrenInfo(nullptr, nullptr),
+            nClasses(0),
+            classes(nullptr),
+            tmpChildrenInfo(nullptr),
+            cubTmpMemSize(0),
+            cubTmpMem(nullptr)
     {}
 };
 

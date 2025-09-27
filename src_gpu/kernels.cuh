@@ -169,7 +169,7 @@ void calcClassesKernel(LayerInfo<typename Model::State, typename Model::Labels> 
 
     __shared__ i32 nClassesInShared_s;
     __shared__ i32 nClassesInGlobal_s;
-    __shared__ ClassRange *classesRage_s;
+    __shared__ ClassRange * classes_s;
     extern __shared__ u32 shrMem[]; // 16-byte aligned
 
     i32 const currIdx = blockIdx.x * blockDim.x + threadIdx.x;
@@ -179,7 +179,7 @@ void calcClassesKernel(LayerInfo<typename Model::State, typename Model::Labels> 
         {
             nClassesInShared_s = 0;
             StackAllocator allocator(shrMem, getSharedMemSize());
-            classesRage_s = allocator.allocateArray<ClassRange>(blockDim.x);
+            classes_s = allocator.allocateArray<ClassRange>(blockDim.x);
         }
         __syncthreads();
 
@@ -210,7 +210,7 @@ void calcClassesKernel(LayerInfo<typename Model::State, typename Model::Labels> 
                 }
             }
             auto const idxInShared = atomicAdd_block(&nClassesInShared_s, 1);
-            classesRage_s[idxInShared] = {currIdx, endIdx};
+            classes_s[idxInShared] = {currIdx, endIdx};
         }
         __syncthreads();
 
@@ -224,7 +224,7 @@ void calcClassesKernel(LayerInfo<typename Model::State, typename Model::Labels> 
         if (threadIdx.x < nClassesInShared_s)
         {
             i32 const idxInGlobal = nClassesInGlobal_s + threadIdx.x;
-            layerInfo->classesRange[idxInGlobal] = classesRage_s[threadIdx.x];
+            layerInfo->classes[idxInGlobal] = classes_s[threadIdx.x];
         }
     }
 }
@@ -235,27 +235,18 @@ void calcReprKernel(LayerInfo<typename Model::State, typename Model::Labels> * c
 {
     using namespace gfl;
 
-    assert(layerInfo->nClasses <= layerInfo->nChildren);
-
-    auto const clIdx = blockIdx.x * blockDim.x + threadIdx.x;
-//    if (clIdx == 0)
-//    {
-//        printf("CH = %d | NTC = %d (%.2f)\n", layerInfo->nChildren, layerInfo->nClasses, gfl::div(layerInfo->nClasses, layerInfo->nChildren+1));
-//    }
-    if (clIdx < layerInfo->nClasses)
+    int clBegin,clEnd;
+    getBeginEnd(clBegin,clEnd,blockIdx.x,gridDim.x,layerInfo->nClasses);
+    for (int clIdx = clBegin + threadIdx.x; clIdx < clEnd; clIdx += blockDim.x)
     {
-        ClassRange const clr = layerInfo->classesRange[clIdx];
+        ClassRange const clr = layerInfo->classes[clIdx];
         for (auto i = clr.begin; i < clr.end - 1; i += 1)
         {
             auto & iInfo = childrenInfo[i];
-            assert(iInfo.idx >= 0);
-            assert(iInfo.idx < layerInfo->nChildren);
             auto const iChild = layerInfo->children[iInfo.idx].state;
             for (auto j = i + 1; j < clr.end; j += 1)
             {
                 auto & jInfo = childrenInfo[j];
-                assert(jInfo.idx >= 0);
-                assert(jInfo.idx <= layerInfo->nChildren);
                 auto const jChild = layerInfo->children[jInfo.idx].state;
                 auto const ijEqual = Model::State::equal(iChild, jChild);
                 if (ijEqual)
@@ -293,6 +284,20 @@ void calcReprKernel(LayerInfo<typename Model::State, typename Model::Labels> * c
     }
 }
 
+
+template<typename Model>
+__global__
+void calcReprKernelLauncher(LayerInfo<typename Model::State, typename Model::Labels> * const layerInfo, ChildInfo * const childrenInfo)
+{
+    using namespace gfl;
+
+    cudaStream_t gpuTmpQueue;
+    cudaStreamCreateWithFlags(&gpuTmpQueue, cudaStreamNonBlocking);
+    i32 const blockSize = 128;
+    i32 const nBlocks = 128;
+    auto const gridSize = roundUpDivPosInt<i32>(layerInfo->nClasses, nBlocks);
+    calcReprKernel<Model><<<gridSize,blockSize,0,gpuTmpQueue>>>(layerInfo, childrenInfo);
+}
 
 template<typename Model>
 __global__

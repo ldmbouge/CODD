@@ -48,7 +48,6 @@ namespace gfl
     GFL_HOST_DEVICE
     T* StackAllocator::allocate(i64 const size, i32 const align) noexcept
     {
-        assert(size > 0);
         assert(size % sizeof(T) == 0);
         assert(align >= alignof(T));
         auto memory = current;

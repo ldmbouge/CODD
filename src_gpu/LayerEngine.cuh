@@ -57,8 +57,9 @@ public:
     {
         using namespace gfl;
 
-        // Parents
         clear();
+
+        // Parents
         initParents(layer);
         auto const ioMem = ioAllocator.getMem();
         cudaMemcpyAsync(ioMem.d, ioMem.h, ioAllocator.calcUsedMemSize(), cudaMemcpyHostToDevice, gpuMainQueue);
@@ -101,8 +102,8 @@ public:
 
         // Representatives
         blockSize = 128;
-        gridSize = roundUpDivPosInt<i32>(layerInfo->nParents * layerInfo->nLabels, blockSize);
-        calcReprKernel<Model><<<gridSize,blockSize,0,gpuMainQueue>>>(layerInfo.d, layerInfo->tmpChildrenInfo);
+        gridSize = 1024;
+        calcReprKernel<Model><<<gridSize,blockSize,0,gpuMainQueue>>>(layerInfo.d,layerInfo->tmpChildrenInfo);
         sortKernel<ChildInfo,RepCostDecomposer><<<1,1,0,gpuMainQueue>>>(
                 layerInfo->cubTmpMem,
                 layerInfo->cubTmpMemSize,
@@ -190,7 +191,7 @@ protected:
     {
         // Auxiliary Information
         auto const nMaxChildren = layerInfo->nParents * layerInfo->nLabels;
-        layerInfo->classesRange = tmpAllocator.allocateArray<ClassRange>(nMaxChildren);
+        layerInfo->classes = tmpAllocator.allocateArray<ClassRange>(nMaxChildren);
 
         // CUB
         layerInfo->tmpChildrenInfo = tmpAllocator.allocateArray<ChildInfo>(nMaxChildren);
