@@ -22,9 +22,9 @@ class LayerEngine
     using GpuChild = GpuChild<State>;
 
 protected:
-    gfl::StackAllocator ioAllocator;
+    gfl::MirrorAllocator ioAllocator;
     gfl::StackAllocator tmpAllocator;
-    LayerInfoType* layerInfo;
+    gfl::MirrorPtr<LayerInfoType> layerInfo;
     gfl::i32 gpuDeviceId;
     cudaStream_t gpuMainQueue;
     cudaStream_t gpuAuxQueue;
@@ -37,7 +37,7 @@ protected:
 
 public:
     LayerEngine() :
-        ioAllocator(gfl::mallocManaged<void>(gpuIoMemSize), gpuIoMemSize),
+        ioAllocator(gpuIoMemSize),
         tmpAllocator(gfl::mallocDevice<void>(gpuTmpMemSize), gpuTmpMemSize),
         layerInfo(nullptr)
     {
@@ -62,18 +62,19 @@ public:
         // Parents
         initParents(layer);
         auto const ioMem = ioAllocator.getMem();
-        cudaMemPrefetchAsync(ioAllocator.getMem(), ioAllocator.calcUsedMemSize(), gpuDeviceId, gpuMainQueue);
+        cudaMemcpyAsync(ioMem.d, ioMem.h, ioAllocator.calcUsedMemSize(), cudaMemcpyHostToDevice, gpuMainQueue);
+
         // Labels
         i32 blockSize = 128;
         dim3 gridSize = roundUpDivPosInt<i32>(layerInfo->nParents, blockSize);
-        calcLabelsKernel<Model><<<gridSize, blockSize, 0, gpuMainQueue>>>(model,layerInfo,ddCtx);
-        cudaMemPrefetchAsync(layerInfo, sizeof(LayerInfoType), cudaCpuDeviceId, gpuMainQueue);
+        calcLabelsKernel<Model><<<gridSize, blockSize, 0, gpuMainQueue>>>(model,layerInfo.d,ddCtx);
+        cudaMemcpyAsync(layerInfo.h, layerInfo.d, sizeof(LayerInfoType), cudaMemcpyDeviceToHost,gpuMainQueue);
 
         // Children
         cudaStreamSynchronize(gpuMainQueue);
         initChildren();
         initAux();
-        cudaMemPrefetchAsync(layerInfo, sizeof(LayerInfoType), gpuDeviceId, gpuMainQueue);
+        cudaMemcpyAsync(layerInfo.d, layerInfo.h, sizeof(LayerInfoType), cudaMemcpyHostToDevice,gpuMainQueue);
         blockSize = 64;
         i32 shrMemSize = sizeof(GpuChild) * layerInfo->nLabels + StackAllocator::DefaultAlign +
                          sizeof(ChildInfo) * layerInfo->nLabels;
@@ -81,8 +82,8 @@ public:
         assert(shrMemSize < 48 * 1024); // We assume that all the children fits in shared
         calcChildrenKernel<Model><<<layerInfo->nParents,blockSize,shrMemSize,gpuMainQueue>>>(
                 model,
-                layerInfo,
-                layerInfo->childrenInfo,
+                layerInfo.d,
+                layerInfo->childrenInfo.d,
                 primalBound,
                 localCtx);
         cudaEventRecord(childrenOk, gpuMainQueue);
@@ -91,24 +92,24 @@ public:
         sortKernel<ChildInfo,HashDecomposer><<<1,1,0,gpuMainQueue>>>(
                 layerInfo->cubTmpMem,
                 layerInfo->cubTmpMemSize,
-                layerInfo->childrenInfo,
+                layerInfo->childrenInfo.d,
                 layerInfo->tmpChildrenInfo,
-                &layerInfo->nChildren);
+                &layerInfo.d->nChildren);
         blockSize = 128;
         gridSize = roundUpDivPosInt<i32>(layerInfo->nParents * layerInfo->nLabels, blockSize);
         shrMemSize = sizeof(ClassRange) * blockSize + StackAllocator::DefaultAlign;
-        calcClassesKernel<Model><<<gridSize,blockSize,shrMemSize,gpuMainQueue>>>(layerInfo,layerInfo->tmpChildrenInfo);
+        calcClassesKernel<Model><<<gridSize,blockSize,shrMemSize,gpuMainQueue>>>(layerInfo.d,layerInfo->tmpChildrenInfo);
 
         // Representatives
         blockSize = 128;
         gridSize = 1024;
-        calcReprKernel<Model><<<gridSize,blockSize,0,gpuMainQueue>>>(layerInfo,layerInfo->tmpChildrenInfo);
+        calcReprKernel<Model><<<gridSize,blockSize,0,gpuMainQueue>>>(layerInfo.d,layerInfo->tmpChildrenInfo);
         sortKernel<ChildInfo,RepCostDecomposer><<<1,1,0,gpuMainQueue>>>(
                 layerInfo->cubTmpMem,
                 layerInfo->cubTmpMemSize,
                 layerInfo->tmpChildrenInfo,
-                layerInfo->childrenInfo,
-                &layerInfo->nChildren);
+                layerInfo->childrenInfo.d,
+                &layerInfo.d->nChildren);
     }
 
     void retrieveNodes()
@@ -116,13 +117,13 @@ public:
         using namespace gfl;
 
         cudaEventSynchronize(childrenOk);
-        cudaMemPrefetchAsync(&layerInfo->nChildren, sizeof(i32), cudaCpuDeviceId, gpuAuxQueue);
+        cudaMemcpyAsync(&layerInfo.h->nChildren, &layerInfo.d->nChildren, sizeof(i32), cudaMemcpyDeviceToHost, gpuAuxQueue);
         cudaStreamSynchronize(gpuAuxQueue);
         //printf("Nodes to retrieve %d\n",layerInfo->nChildren);
         if (layerInfo->nChildren > 0)
         {
-            cudaMemPrefetchAsync(layerInfo->children, sizeof(GpuChild) * layerInfo->nChildren, cudaCpuDeviceId, gpuAuxQueue);
-            cudaMemPrefetchAsync(layerInfo->childrenInfo, sizeof(ChildInfo) * layerInfo->nChildren, cudaCpuDeviceId, gpuMainQueue);
+            cudaMemcpyAsync(layerInfo->children.h, layerInfo->children.d, sizeof(GpuChild) * layerInfo->nChildren, cudaMemcpyDeviceToHost, gpuAuxQueue);
+            cudaMemcpyAsync(layerInfo->childrenInfo.h, layerInfo->childrenInfo.d, sizeof(ChildInfo) * layerInfo->nChildren, cudaMemcpyDeviceToHost, gpuMainQueue);
             cudaDeviceSynchronize();
         }
         nChildProcessed = 0;
@@ -157,7 +158,7 @@ protected:
         ioAllocator.clear();
         tmpAllocator.clear();
         layerInfo = ioAllocator.allocate<LayerInfoType>();
-        new (layerInfo) LayerInfoType();
+        new (layerInfo.h) LayerInfoType();
     }
 
     void initParents(std::list<ANode::Ptr> const & layer) noexcept
@@ -195,10 +196,10 @@ protected:
         // CUB
         layerInfo->tmpChildrenInfo = tmpAllocator.allocateArray<ChildInfo>(nMaxChildren);
         cub::DeviceRadixSort::SortKeys( // Initialize cubTmpMemSize
-            layerInfo->cubTmpMem,
+            layerInfo.h->cubTmpMem,
             layerInfo->cubTmpMemSize,
             layerInfo->tmpChildrenInfo,
-            layerInfo->childrenInfo,
+            layerInfo->childrenInfo.h,
             nMaxChildren,
             DummyDecomposer128{});
         layerInfo->cubTmpMem = tmpAllocator.allocate<gfl::u8>(layerInfo->cubTmpMemSize, 16);
