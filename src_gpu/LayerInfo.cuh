@@ -30,7 +30,7 @@ struct alignas(16) ChildInfo
     gfl::f64 cost;
     gfl::i64 id;
     gfl::i32 idx;
-    gfl::u32 isRepresented; // No atomic operations on bools in CUDA
+    gfl::u32 isRepresented;
 };
 
 struct alignas(8) ClassRange
@@ -85,13 +85,14 @@ struct LayerInfo
     {}
 };
 
-struct DummyDecomposer128
+struct DummyDecomposer96
 {
     GFL_HOST_DEVICE
-    gfl::tuple<gfl::u64&, gfl::u64&> operator()(ChildInfo &) const
+    gfl::tuple<gfl::u32&, gfl::u64&> operator()(ChildInfo &) const
     {
-        gfl::u64 tmp = 0;
-        return{tmp,tmp};
+        gfl::u32 tmp32 = 0;
+        gfl::u64 tmp64 = 0;
+        return{tmp32,tmp64};
     }
 };
 
@@ -101,15 +102,6 @@ struct HashDecomposer
     gfl::tuple<gfl::u64&> operator()(ChildInfo & childInfo) const
     {
         return {childInfo.hash};
-    }
-};
-
-struct RepIdDecomposer
-{
-    GFL_DEVICE
-    gfl::tuple<gfl::u32&,gfl::i64&> operator()(ChildInfo & childInfo) const
-    {
-        return {childInfo.isRepresented,childInfo.id};
     }
 };
 

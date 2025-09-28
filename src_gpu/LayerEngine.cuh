@@ -88,7 +88,7 @@ public:
                 localCtx);
         cudaEventRecord(childrenOk, gpuMainQueue);
 
-        // Classes
+        // Representatives
         sortKernel<ChildInfo,HashDecomposer><<<1,1,0,gpuMainQueue>>>(
                 layerInfo->cubTmpMem,
                 layerInfo->cubTmpMemSize,
@@ -97,12 +97,6 @@ public:
                 &layerInfo.d->nChildren);
         blockSize = 128;
         gridSize = roundUpDivPosInt<i32>(layerInfo->nParents * layerInfo->nLabels, blockSize);
-        shrMemSize = sizeof(ClassRange) * blockSize + StackAllocator::DefaultAlign;
-        calcClassesKernel<Model><<<gridSize,blockSize,shrMemSize,gpuMainQueue>>>(layerInfo.d,layerInfo->tmpChildrenInfo);
-
-        // Representatives
-        blockSize = 128;
-        gridSize = 1024;
         calcReprKernel<Model><<<gridSize,blockSize,0,gpuMainQueue>>>(layerInfo.d,layerInfo->tmpChildrenInfo);
         sortKernel<ChildInfo,RepCostDecomposer><<<1,1,0,gpuMainQueue>>>(
                 layerInfo->cubTmpMem,
@@ -201,7 +195,7 @@ protected:
             layerInfo->tmpChildrenInfo,
             layerInfo->childrenInfo.h,
             nMaxChildren,
-            DummyDecomposer128{});
+            DummyDecomposer96{}); // Bigger key used
         layerInfo->cubTmpMem = tmpAllocator.allocate<gfl::u8>(layerInfo->cubTmpMemSize, 16);
     }
 };

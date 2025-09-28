@@ -10,7 +10,7 @@ enum DDContext : int;
 enum LocalContext : int;
 
 template<typename Model>
-__global__
+GFL_GLOBAL
 void calcLabelsKernel(Model const * const model, LayerInfo<typename Model::State, typename Model::Labels> * const layerInfo, DDContext const ctx)
 {
     using namespace gfl;
@@ -50,7 +50,7 @@ void calcLabelsKernel(Model const * const model, LayerInfo<typename Model::State
 }
 
 template<typename Model>
-__global__
+GFL_GLOBAL
 void calcChildrenKernel(
         Model const * const model,
         LayerInfo<typename Model::State, typename Model::Labels> * const layerInfo,
@@ -134,7 +134,7 @@ void calcChildrenKernel(
 }
 
 template<typename KeyType, typename  KeyDecomposer>
-__global__
+GFL_GLOBAL
 void sortKernel(void * tmpMem, std::size_t tmpMemSize, KeyType const * keysIn, KeyType * keysOut, gfl::i32 const * const nKeys)
 {
     //printf("Sorting %d keys\n",*nKeys);
@@ -147,163 +147,78 @@ void sortKernel(void * tmpMem, std::size_t tmpMemSize, KeyType const * keysIn, K
     }
 }
 
-template<typename KeyType>
-__global__
-void sortKernel(void * tmpMem, std::size_t tmpMemSize, KeyType const * keysIn, KeyType * keysOut, gfl::i32 const * const nKeys)
-{
-    //printf("Sorting %d keys\n",*nKeys);
-    //printf("TMP = %p (%ul) | K_IN = %p | K_OUT = %p | N_KEYS = %p (%d)\n",tmpMem, tmpMemSize, keysIn, keysOut, nKeys, *nKeys);
-    if (*nKeys > 1)
-    {
-        cudaStream_t gpuSortQueue;
-        cudaStreamCreateWithFlags(&gpuSortQueue, cudaStreamNonBlocking);
-        cub::DeviceRadixSort::SortKeys(tmpMem, tmpMemSize, keysIn, keysOut, *nKeys, 0, sizeof(KeyType) * 8, gpuSortQueue);
-    }
-}
-
 template<typename Model>
-__global__
-void calcClassesKernel(LayerInfo<typename Model::State, typename Model::Labels> * const layerInfo, ChildInfo const * const childrenInfo)
+GFL_DEVICE
+void checkStatePair(ChildInfo & iInfo, typename Model::State const & iState, ChildInfo & jInfo, typename Model::State const & jState)
 {
     using namespace gfl;
 
-    __shared__ i32 nClassesInShared_s;
-    __shared__ i32 nClassesInGlobal_s;
-    __shared__ ClassRange * classes_s;
-    extern __shared__ u32 shrMem[]; // 16-byte aligned
-
-    i32 const currIdx = blockIdx.x * blockDim.x + threadIdx.x;
-    if (currIdx < layerInfo->nChildren)
+    auto const ijEqual =
+            iInfo.boundSrcToNode == jInfo.boundSrcToNode and
+            Model::State::equal(iState, jState);
+    if (ijEqual)
     {
-        if (threadIdx.x == 0)
+        jInfo.isRepresented = static_cast<i32>(true);
+    }
+    else if (Model::has_dom)
+    {
+        auto const ijDomEqual = Model::domEq(iState, jState);
+        if (ijDomEqual)
         {
-            nClassesInShared_s = 0;
-            StackAllocator allocator(shrMem, getSharedMemSize());
-            classes_s = allocator.allocateArray<ClassRange>(blockDim.x);
-        }
-        __syncthreads();
-
-        u64 prevHash = 0;  // Must be different
-        u64 currHash = 1;
-        u64 nextHash = 2;
-        i32 const currIdx = blockIdx.x * blockDim.x + threadIdx.x;
-        if (1 <= currIdx and currIdx <= layerInfo->nChildren - 1)
-        {
-            prevHash = childrenInfo[currIdx - 1].hash;
-        }
-        assert(0 <= currIdx);
-        assert(currIdx <= layerInfo->nChildren - 1);
-        currHash = childrenInfo[currIdx].hash;
-        if (0 <= currIdx and currIdx <= layerInfo->nChildren - 2)
-        {
-            nextHash = childrenInfo[currIdx + 1].hash;
-        }
-        //printf("Considering %d/%d = (%lu,%lu,%lu)\n",currIdx,layerInfo->nChildren,prevHash,currHash,nextHash);
-        if (prevHash != currHash and currHash == nextHash) // First of an untrivial class
-        {
-            i32 endIdx = currIdx + 2;
-            for (; endIdx < layerInfo->nChildren; endIdx += 1)
+            auto const iIsDominated =
+                    Model::betterEq(jInfo.boundSrcToNode, iInfo.boundSrcToNode) and
+                    Model::dom(jState, iState);
+            if (iIsDominated)
             {
-                if (currHash != childrenInfo[endIdx].hash)
+                iInfo.isRepresented = static_cast<i32>(true);
+            }
+            else
+            {
+                auto const jIsDominated =
+                        Model::betterEq(iInfo.boundSrcToNode, jInfo.boundSrcToNode) and
+                        Model::dom(iState, jState);
+                if (jIsDominated)
                 {
-                    break;
+                    jInfo.isRepresented = static_cast<i32>(true);
                 }
             }
-            auto const idxInShared = atomicAdd_block(&nClassesInShared_s, 1);
-            classes_s[idxInShared] = {currIdx, endIdx};
-        }
-        __syncthreads();
-
-        // Write classes in global
-        if (threadIdx.x == 0)
-        {
-            nClassesInGlobal_s = atomicAdd(&layerInfo->nClasses, nClassesInShared_s);
-        }
-        __syncthreads();
-
-        if (threadIdx.x < nClassesInShared_s)
-        {
-            i32 const idxInGlobal = nClassesInGlobal_s + threadIdx.x;
-            layerInfo->classes[idxInGlobal] = classes_s[threadIdx.x];
         }
     }
 }
 
 template<typename Model>
-__global__
+GFL_GLOBAL
 void calcReprKernel(LayerInfo<typename Model::State, typename Model::Labels> * const layerInfo, ChildInfo * const childrenInfo)
 {
     using namespace gfl;
 
-    int clBegin,clEnd;
-    getBeginEnd(clBegin,clEnd,blockIdx.x,gridDim.x,layerInfo->nClasses);
-    for (int clIdx = clBegin + threadIdx.x; clIdx < clEnd; clIdx += blockDim.x)
+    i32 cBegin,cEnd;
+    getBeginEnd(cBegin,cEnd,blockIdx.x,gridDim.x,layerInfo->nChildren);
+    for (i32 i = cBegin + threadIdx.x; i < cEnd; i += blockDim.x)
     {
-        ClassRange const clr = layerInfo->classes[clIdx];
-        for (auto i = clr.begin; i < clr.end - 1; i += 1)
+        auto & iInfo = childrenInfo[i];
+        auto const iChild = layerInfo->children[iInfo.idx].state;
+        for (auto j = i + 1; j < layerInfo->nChildren; j += 1)
         {
-            auto & iInfo = childrenInfo[i];
-            auto const iChild = layerInfo->children[iInfo.idx].state;
-            for (auto j = i + 1; j < clr.end; j += 1)
+            auto & jInfo = childrenInfo[j];
+            auto const jChild = layerInfo->children[jInfo.idx].state;
+            if (iInfo.hash == jInfo.hash)
             {
-                auto & jInfo = childrenInfo[j];
-                auto const jChild = layerInfo->children[jInfo.idx].state;
-                auto const ijEqual = Model::State::equal(iChild, jChild);
-                if (ijEqual)
-                {
-                    if (iInfo.id < jInfo.id)
-                    {
-                        jInfo.isRepresented = static_cast<i32>(true);
-                    }
-                    else
-                    {
-                        iInfo.isRepresented = static_cast<i32>(true);
-                    }
-                }
-                if (Model::has_dom)
-                {
-                    auto const ijDomEqual = Model::domEq(iChild, jChild);
-                    if (ijDomEqual)
-                    {
-                        auto const iIsDominated = Model::betterEq(jInfo.boundSrcToNode, iInfo.boundSrcToNode) and
-                                                  Model::dom(jChild, iChild);
-                        auto const jIsDominated = Model::betterEq(iInfo.boundSrcToNode, jInfo.boundSrcToNode) and
-                                                  Model::dom(iChild, jChild);
-                        if (iIsDominated)
-                        {
-                            iInfo.isRepresented = static_cast<i32>(true);
-                        }
-                        if (jIsDominated)
-                        {
-                            jInfo.isRepresented = static_cast<i32>(true);
-                        }
-                    }
-                }
+                checkStatePair<Model>(iInfo, iChild, jInfo, jChild);
+            }
+            else
+            {
+                break;
             }
         }
     }
 }
 
-
 template<typename Model>
-__global__
-void calcReprKernelLauncher(LayerInfo<typename Model::State, typename Model::Labels> * const layerInfo, ChildInfo * const childrenInfo)
-{
-    using namespace gfl;
-
-    cudaStream_t gpuTmpQueue;
-    cudaStreamCreateWithFlags(&gpuTmpQueue, cudaStreamNonBlocking);
-    i32 const blockSize = 128;
-    i32 const nBlocks = 128;
-    auto const gridSize = roundUpDivPosInt<i32>(layerInfo->nClasses, nBlocks);
-    calcReprKernel<Model><<<gridSize,blockSize,0,gpuTmpQueue>>>(layerInfo, childrenInfo);
-}
-
-template<typename Model>
-__global__
+GFL_GLOBAL
 void printChildInfo(LayerInfo<typename Model::State, typename Model::Labels> * layerInfo, ChildInfo * childrenInfo)
 {
-    printf("+++\n");
+    printf("---\n");
     for(auto cIdx = 0; cIdx < layerInfo->nChildren; cIdx += 1)
     {
         auto const & childInfo = childrenInfo[cIdx];
@@ -314,18 +229,4 @@ void printChildInfo(LayerInfo<typename Model::State, typename Model::Labels> * l
                childInfo.idx,
                childInfo.isRepresented);
     }
-}
-
-template<typename Model>
-__global__
-void printClasses(LayerInfo<typename Model::State, typename Model::Labels> * layerInfo, ClassRange const * const classesRange)
-{
-    printf("---\n");
-    printf("CH = %d | CL = %d\n", layerInfo->nChildren, layerInfo->nClasses);
-    for(auto clIdx = 0; clIdx < layerInfo->nClasses; clIdx += 1)
-    {
-        ClassRange const clr = classesRange[clIdx];
-        printf("(%d,%d) ", clr.begin, clr.end);
-    }
-    printf("\n");
 }
