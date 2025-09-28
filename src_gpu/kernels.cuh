@@ -153,35 +153,25 @@ void checkStatePair(ChildInfo & iInfo, typename Model::State const & iState, Chi
 {
     using namespace gfl;
 
-    auto const ijEqual =
-            iInfo.boundSrcToNode == jInfo.boundSrcToNode and
-            Model::State::equal(iState, jState);
-    if (ijEqual)
+    if (iInfo.boundSrcToNode == jInfo.boundSrcToNode)
     {
-        jInfo.isRepresented = static_cast<i32>(true);
-    }
-    else if (Model::has_dom)
-    {
-        auto const ijDomEqual = Model::domEq(iState, jState);
-        if (ijDomEqual)
+        if (Model::State::equal(iState, jState))
         {
-            auto const iIsDominated =
-                    Model::betterEq(jInfo.boundSrcToNode, iInfo.boundSrcToNode) and
-                    Model::dom(jState, iState);
-            if (iIsDominated)
-            {
-                iInfo.isRepresented = static_cast<i32>(true);
-            }
-            else
-            {
-                auto const jIsDominated =
-                        Model::betterEq(iInfo.boundSrcToNode, jInfo.boundSrcToNode) and
-                        Model::dom(iState, jState);
-                if (jIsDominated)
-                {
-                    jInfo.isRepresented = static_cast<i32>(true);
-                }
-            }
+            jInfo.isRepresented = static_cast<i32>(true);
+        }
+    }
+    if (Model::has_dom and Model::betterEq(jInfo.boundSrcToNode, iInfo.boundSrcToNode))
+    {
+        if (Model::dom(jState, iState))
+        {
+            iInfo.isRepresented = static_cast<i32>(true);
+        }
+    }
+    if (Model::has_dom and Model::betterEq(iInfo.boundSrcToNode, jInfo.boundSrcToNode))
+    {
+        if (Model::dom(iState, jState))
+        {
+            jInfo.isRepresented = static_cast<i32>(true);
         }
     }
 }
