@@ -15,16 +15,26 @@ namespace gfl
     T * mallocStd(i64 const size) noexcept
     {
         void * memory = std::malloc(size);
-        assert(memory != nullptr);
+        if (memory == nullptr)
+        {
+           std::cerr << "malloc failed" << std::endl;
+           abort();
+        }
         return static_cast<T *>(memory);
     }
 
     inline
     void freeStd(void * memory) noexcept
     {
-        assert(memory != nullptr);
-        free(memory);
-        memory = nullptr;
+        if (memory != nullptr)
+        {
+            free(memory);
+        }
+        else
+        {
+            std::cerr << "free called on nullptr" << std::endl;
+            abort();
+        }
     }
 
 #ifdef __CUDACC__
@@ -33,8 +43,11 @@ namespace gfl
     {
         void * memory = nullptr;
         cudaError_t status = cudaMallocHost(&memory, size);
-        assert(status == cudaSuccess);
-        assert(memory != nullptr);
+        if (status != cudaSuccess or memory == nullptr)
+        {
+            std::cerr << "cudaMallocHost failed" << std::endl;
+            abort();
+        }
         return static_cast<T *>(memory);
     }
 
@@ -43,8 +56,11 @@ namespace gfl
     {
         void * memory = nullptr;
         cudaError_t status = cudaMalloc(&memory, size);
-        assert(status == cudaSuccess);
-        assert(memory != nullptr);
+        if (status != cudaSuccess or memory == nullptr)
+        {
+            std::cerr << "cudaMalloc failed" << std::endl;
+            abort();
+        }
         return static_cast<T *>(memory);
     }
 
@@ -53,36 +69,70 @@ namespace gfl
     {
         void * memory = nullptr;
         cudaError_t status = cudaMallocManaged(&memory, size);
-        assert(status == cudaSuccess);
-        assert(memory != nullptr);
+        if (status != cudaSuccess or memory == nullptr)
+        {
+            std::cerr << "cudaMallocManaged failed" << std::endl;
+            abort();
+        }
         return static_cast<T *>(memory);
     }
 
     inline
     void freeHost(void * memory) noexcept
     {
-        assert(memory != nullptr);
-        cudaError_t status = cudaFreeHost(memory);
-        assert(status == cudaSuccess);
-        memory = nullptr;
+        if (memory != nullptr)
+        {
+            cudaError_t status = cudaFreeHost(memory);
+            if (status != cudaSuccess)
+            {
+                std::cerr << "cudaFreeHost failed" << std::endl;
+                abort();
+            }
+        }
+        else
+        {
+            std::cerr << "cudaFreeHost called on nullptr" << std::endl;
+            abort();
+        }
+
     }
 
     inline
     void freeDevice(void * memory) noexcept
     {
-        assert(memory != nullptr);
-        cudaError_t status = cudaFree(memory);
-        assert(status == cudaSuccess);
-        memory = nullptr;
+        if (memory != nullptr)
+        {
+            cudaError_t status = cudaFree(memory);
+            if (status != cudaSuccess)
+            {
+                std::cerr << "cudaFree failed" << std::endl;
+                abort();
+            }
+        }
+        else
+        {
+            std::cerr << "cudaFree called on nullptr" << std::endl;
+            abort();
+        }
     }
 
     inline
     void freeManaged(void * memory) noexcept
     {
-        assert(memory != nullptr);
-        cudaError_t status = cudaFree(memory);
-        assert(status == cudaSuccess);
-        memory = nullptr;
+        if (memory != nullptr)
+        {
+            cudaError_t status = cudaFree(memory);
+            if (status != cudaSuccess)
+            {
+                std::cerr << "cudaFree failed" << std::endl;
+                abort();
+            }
+        }
+        else
+        {
+            std::cerr << "cudaFree called on nullptr" << std::endl;
+            abort();
+        }
     }
 #endif
 }

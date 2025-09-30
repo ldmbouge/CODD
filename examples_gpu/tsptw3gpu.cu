@@ -67,12 +67,14 @@ int main(int argc,char* argv[])
     // Parse arguments
     int width = 0;
     int timeout = std::numeric_limits<int>::max(); // 68 years
+    long long int gpu_width = std::numeric_limits<long long int>::max();
     std::string strategy;
     std::string instance;
     cxxopts::Options options("tsptw3gpu", "A C++ solver for the TSPTW");
     options.add_options("Available")
         ("w,width"   , "Non-negative integer specifying the maximum width", cxxopts::value(width))
         ("s,strategy", "Search strategy to use among XF,RF,RO,RONQ", cxxopts::value(strategy))
+        ("g,gpu-width", "Minimum width to offload computation to GPU", cxxopts::value(gpu_width))
         ("h,help"    , "Show this help message and exit")
         ("i,instance", "Path to the instance file", cxxopts::value(instance))
         ("t,timeout", "Timeout in seconds", cxxopts::value(timeout));
@@ -110,7 +112,13 @@ int main(int argc,char* argv[])
     parseFile(model, instance, allocator);
 
     auto labels = TSPTW::Labels(0, model->n-1);
+
+#ifdef __CUDACC__
+    auto dd = DD<TSPTW>::makeDD(model, labels ,gpu_width);
+#else
     auto dd = DD<TSPTW>::makeDD(model, labels);
+#endif
+
     Bounds bnds([](const std::vector<int>& inc)  {});
     BAndB * engine = nullptr;
 

@@ -665,6 +665,9 @@ void Restricted::compute(Bounds& bnds)
    bool discarding = false;
    _discardedSet.clear();
    [[maybe_unused]] int ttlDom = 0;
+#ifdef __NVCC__
+   _dd->initLayerEngine();
+#endif
    while (!qn.empty()) {
       discarding = false;
       //std::cout << "qn popped" << std::endl;
@@ -677,7 +680,7 @@ void Restricted::compute(Bounds& bnds)
 //      }
 //      std::cout.flush();
 #ifdef __NVCC__
-      if (lk.size() >= offloadThreshold)
+      if (_dd->toOffload(lk.size()))
       {
           _dd->offloadLayerExpansion(lk, bnds.getPrimal(), DDRestricted, DDCtx);
           _dd->retrieveNodes();
@@ -714,7 +717,7 @@ void Restricted::compute(Bounds& bnds)
                   }
                   else if (_dd->isBetter(_dd->currentOpt(), bnds.getPrimal()))
                   {
-                      std::cout << "Better primal bound: " << std::fixed << _dd->currentOpt() << "\n";
+                      //std::cout << "Better primal bound: " << std::fixed << _dd->currentOpt() << "\n";
                       _dd->update(bnds);
                   }
               }
@@ -781,7 +784,7 @@ void Restricted::compute(Bounds& bnds)
                       } else {
                           bool isBetterValue = _dd->isBetter(_dd->currentOpt(), bnds.getPrimal());
                           if (isBetterValue) {
-                              std::cout << "update in RO " << std::fixed << _dd->currentOpt() << "\n";
+                              //std::cout << "Better primal bound: " << std::fixed << _dd->currentOpt() << "\n";
                               _dd->update(bnds);
                           }
                       }
@@ -790,7 +793,7 @@ void Restricted::compute(Bounds& bnds)
               }
           }
       }
-       printf("Parents %lu | Kepts = %lu | Discard = %lu | Exact = %c\n", lk.size(), qn.size(), _discardedSet.size(), _dd->_exact ? 'T' : 'F');
+      //printf("Parents %lu | Kepts = %lu | Discard = %lu | Exact = %c\n", lk.size(), qn.size(), _discardedSet.size(), _dd->_exact ? 'T' : 'F');
    }
    //_dd->computeBestBackward(getName()); // testing   
    //_dd->computeBest(getName());

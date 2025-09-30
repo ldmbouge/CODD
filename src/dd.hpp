@@ -138,6 +138,8 @@ public:
    virtual ADOMClass::Ptr makeDominanceManager() = 0;
    virtual ANode::Ptr transition(Bounds& bnds,ANode::Ptr src,int label) = 0;
 #ifdef __NVCC__
+   virtual bool toOffload(std::size_t layerSize) = 0;
+   virtual void initLayerEngine() = 0;
    virtual void offloadLayerExpansion(
         std::list<ANode::Ptr> const & layer,
         double primalBound,
@@ -332,9 +334,6 @@ class WidthBounded :public Strategy {
 protected:
    unsigned _mxw;
    NDArray  _nda;
-#ifdef __NVCC__
-    static constexpr long long int offloadThreshold = 0;
-#endif
    NDArray& pullLayer(CQueue<ANode::Ptr>& q);  
    void transferArcs(ANode::Ptr donor,ANode::Ptr receiver);
 public:
@@ -519,7 +518,8 @@ private:
    unsigned _ndId;
    std::function<ANode::Ptr()> _initClosure;
 #ifdef __NVCC__
-    LayerEngine<Model> _layerEngine;
+    long long int const gpu_width;
+    LayerEngine<Model> * layerEngine;
 #endif
    ADOMClass::Ptr makeDominanceManager() {
       return ADOMClass::Ptr(new CDOMClass<Model>());
@@ -635,20 +635,33 @@ private:
       } else return nullptr;
    }
 #ifdef __NVCC__
+    bool toOffload(std::size_t layerSize)
+    {
+       return layerSize >= gpu_width;
+    }
+
+    virtual void initLayerEngine()
+    {
+       if (layerEngine == nullptr)
+       {
+           layerEngine = new LayerEngine<Model>();
+       }
+    }
+
     void offloadLayerExpansion(std::list<ANode::Ptr> const & layer, double primalBound, DDContext ddCtx, LocalContext localCtx)
     {
-       _layerEngine.offloadComputation(layer,_model, primalBound, ddCtx, localCtx);
+       layerEngine->offloadComputation(layer,_model, primalBound, ddCtx, localCtx);
     }
 
     void retrieveNodes()
     {
-       _layerEngine.retrieveNodes();
+       layerEngine->retrieveNodes();
     }
 
     bool getParentLabelChild(ANode::Ptr & parent, int & label, ANode::Ptr & child)
     {
         GpuChild<ST> gpuChild;
-        auto const validChild = _layerEngine.getChild(gpuChild);
+        auto const validChild = layerEngine->getChild(gpuChild);
         if (validChild)
         {
             parent = gpuChild.parentNode;
@@ -656,11 +669,11 @@ private:
             child = makeNode(std::move(gpuChild.state), gpuChild.parentNode->isExact());
             if (hasLocal())
             {
-                if (not isBetter(gpuChild.heuristicNodeToSink, child->getBackwardBound()))
+                if (not Model::better(gpuChild.heuristicNodeToSink, child->getBackwardBound()))
                 {
                     child->setBackwardBound(gpuChild.heuristicNodeToSink);
                 }
-                if (not isBetter(gpuChild.heuristicNodeToSink, child->getLBound()))
+                if (not Model::better(gpuChild.heuristicNodeToSink, child->getLBound()))
                 {
                     child->setLBound(gpuChild.heuristicNodeToSink);
                 }
@@ -724,20 +737,24 @@ private:
          return _model->dom(fp->get(),sp->get());
       else return false;
    }
-public:   
-   DD(Model const * model, GNSet const & labels)
-      : AbstractDD(labels),
-        _model(model),
-        _ndId(0)
-   {
-      _baseline = _mem->mark();
-      _nmap = new (_mem) LHashtable<ST>(_mem,200000);
-      _initClosure = [this]() {
-         ANode::Ptr retVal = makeNode(_model->initial());
-         retVal->setBound(0);
-         return retVal;
-      };
-   }
+public:
+
+    DD(Model const * model, GNSet const & labels, long long int gpu_width)
+            : AbstractDD(labels),
+              _model(model),
+              _ndId(0)
+#ifdef __NVCC__
+              ,gpu_width(gpu_width), layerEngine(nullptr)
+#endif
+    {
+        _baseline = _mem->mark();
+        _nmap = new (_mem) LHashtable<ST>(_mem,200000);
+        _initClosure = [this]() {
+            ANode::Ptr retVal = makeNode(_model->initial());
+            retVal->setBound(0);
+            return retVal;
+        };
+    }
    ~DD() { DD::reset();}
    template <class... Args>
    static AbstractDD::Ptr makeDD(Args&&... args) {
@@ -751,7 +768,11 @@ public:
       sp->print(os);
    }
    AbstractDD::Ptr duplicate() { // must update this one each time we *add* an argument to constructor.
-      auto theDD = new DD(_model,_labels);
+#ifdef __NVCC__
+       auto theDD = new DD(_model,_labels,gpu_width);
+#else
+       auto theDD = new DD(_model,_labels);
+#endif
       return AbstractDD::Ptr(theDD);
    }
    ANode::Ptr duplicate(const ANode::Ptr src) {
