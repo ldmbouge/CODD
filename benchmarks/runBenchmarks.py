@@ -23,7 +23,7 @@ exe = "../cmake-build-release-ding/tsptw3gpu"
 resultsDir  = "./results"
 
 # Run
-useGpu = True
+useGpu = False
 for benchmark in benchmarkSet:
     logfile = resultsDir + "/" + benchmark.removesuffix(".txt") + "_" + ("g" if useGpu else "c") + "_" + str(timeout) + "_" + datetime.now().strftime("%Y%m%d%H%M") + ".txt"
     instances = readLines(benchmark)
