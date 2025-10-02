@@ -33,7 +33,7 @@ for benchmark in benchmarkSet:
                    "-w", str(2),
                    "-s", "RONQ",
                    "-t", str(timeout),
-                   "-g", str(0 if useGpu else 32 * 1024 * 1024),
+                   "-g", str(0 if useGpu else 1 * 1024 * 1024 * 1024),
                    "-i", instance
                   ]
             cmdStr = " ".join(str(c) for c in cmd);
