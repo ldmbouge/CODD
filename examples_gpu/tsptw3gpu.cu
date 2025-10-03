@@ -57,7 +57,7 @@ void parseFile(TSPTW * const model, std::string const & instance, gfl::StackAllo
     mergeSortPerm(m->dOut.data(), m->permOut.data(), m->n, [](double a, double b) { return a < b; }); // From smallest to largest
 }
 
-constexpr auto static ReadOnlyMemSize{24 * 1024}; // Cached in shared memory
+constexpr auto static ReadOnlyMemSize{48 * 1024}; // Cached in shared memory
 
 int main(int argc,char* argv[])
 {

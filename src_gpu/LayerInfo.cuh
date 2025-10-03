@@ -52,7 +52,8 @@ struct LayerInfo
     // Labels
     gfl::i32 minLabel;
     gfl::i32 maxLabel;
-    gfl::i32 nLabels;
+    gfl::i32 labelsPerParents;
+    gfl::i32 nLables;
 
     // Children
     gfl::i32 nChildren;
@@ -73,7 +74,8 @@ struct LayerInfo
             parents(nullptr, nullptr),
             minLabel(gfl::numeric_limits<gfl::i32>::max()),
             maxLabel(gfl::numeric_limits<gfl::i32>::min()),
-            nLabels(gfl::numeric_limits<gfl::i32>::min()),
+            labelsPerParents(0),
+            nLables(0),
             nChildren(0),
             children(nullptr, nullptr),
             childrenInfo(nullptr, nullptr),

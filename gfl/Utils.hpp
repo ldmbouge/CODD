@@ -54,7 +54,7 @@ namespace gfl
             dSize /= 1024.0;
             uIdx += 1;
         }
-        printf("%.2f %s", dSize, units[uIdx]);
+        printf("%6.2f %s", dSize, units[uIdx]);
     }
 
     // Math

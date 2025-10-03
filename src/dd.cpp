@@ -679,6 +679,8 @@ void Restricted::compute(Bounds& bnds)
 #ifdef __NVCC__
       if (_dd->toOffload(lk.size()))
       {
+
+
           _dd->initLayerEngine();
 
           _dd->offloadLayerExpansion(lk, bnds.getPrimal(), DDRestricted, DDCtx);

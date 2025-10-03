@@ -26,12 +26,13 @@ namespace gfl
 
     class MirrorAllocator
     {
-        protected:
-            StackAllocator hostAllocator;
-            StackAllocator deviceAllocator;
+        public:
+            StackAllocator h;
+            StackAllocator d;
 
         public:
-            inline MirrorAllocator(i64 size) noexcept;
+            inline MirrorAllocator(i64 hSize, i64 dSize) noexcept;
+            inline MirrorAllocator(i64 size) noexcept : MirrorAllocator(size, size) {};
             inline ~MirrorAllocator() noexcept;
             template <typename T>
             MirrorPtr<T> allocate(i64 size = sizeof(T), i32 align = alignof(T)) noexcept;
@@ -40,9 +41,6 @@ namespace gfl
             inline void clear() noexcept;
             inline MirrorPtr<void> getMem() const noexcept;
             inline MirrorPtr<void> getFreeMem() const noexcept;
-            i64 calcFreeMemSize() const noexcept {return hostAllocator.calcFreeMemSize();}
-            i64 calcUsedMemSize() const noexcept {return hostAllocator.calcUsedMemSize();}
-            i64 calcTotalMemSize() const noexcept {return hostAllocator.calcTotalMemSize();}
     };
 
     template<typename T>
@@ -66,56 +64,55 @@ namespace gfl
     {
         return operator->()[idx];
     }
-
     inline
-    MirrorAllocator::MirrorAllocator(i64 const size) noexcept:
-        hostAllocator(mallocHost<void>(size), size),
-        deviceAllocator(mallocDevice<void>(size), size)
+    MirrorAllocator::MirrorAllocator(i64 const hSize, i64 const dSize) noexcept:
+            h(mallocHost<void>(hSize), hSize),
+            d(mallocDevice<void>(dSize), dSize)
     {}
 
     inline
     MirrorAllocator::~MirrorAllocator() noexcept
     {
-        freeHost(hostAllocator.getMem());
-        freeDevice(deviceAllocator.getMem());
+        freeHost(h.getMem());
+        freeDevice(d.getMem());
     }
 
     template<typename T>
     MirrorPtr<T> MirrorAllocator::allocate(i64 const size, i32 const align) noexcept
     {
-        T * const hostPtr = hostAllocator.allocate<T>(size, align);
-        T * const devicePtr = deviceAllocator.allocate<T>(size, align);
+        T * const hostPtr = h.allocate<T>(size, align);
+        T * const devicePtr = d.allocate<T>(size, align);
         return MirrorPtr<T>(hostPtr, devicePtr);
     }
 
     template<typename T>
     MirrorPtr<T> MirrorAllocator::allocateArray(i64 const size, i32 const align) noexcept
     {
-        T * const hostPtr = hostAllocator.allocateArray<T>(size, align);
-        T * const devicePtr = deviceAllocator.allocateArray<T>(size, align);
+        T * const hostPtr = h.allocateArray<T>(size, align);
+        T * const devicePtr = d.allocateArray<T>(size, align);
         return MirrorPtr<T>(hostPtr, devicePtr);
     }
 
     inline
     void MirrorAllocator::clear() noexcept
     {
-        hostAllocator.clear();
-        deviceAllocator.clear();
+        h.clear();
+        d.clear();
     }
 
     inline
     MirrorPtr<void> MirrorAllocator::getMem() const noexcept
     {
-        void * hostPtr = hostAllocator.getMem();
-        void * devicePtr = deviceAllocator.getMem();
+        void * hostPtr = h.getMem();
+        void * devicePtr = d.getMem();
         return MirrorPtr<void>(hostPtr, devicePtr);
     }
 
     inline
     MirrorPtr<void> MirrorAllocator::getFreeMem() const noexcept
     {
-        void * hostPtr = hostAllocator.getFreeMem();
-        void * devicePtr = deviceAllocator.getFreeMem();
+        void * hostPtr = h.getFreeMem();
+        void * devicePtr = d.getFreeMem();
         return MirrorPtr<void>(hostPtr, devicePtr);
     }
 }

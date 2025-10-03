@@ -54,7 +54,14 @@ namespace gfl
         auto const offset = memory % align;
         memory += offset != 0 ? align - offset : 0;
         current = memory + size;
-        assert(current <= end);
+        if (current > end)
+        {
+#ifndef __CUDA_ARCH__
+            printf("Out of memory\n");
+            fflush(stdout);
+#endif
+            abort();
+        }
         return reinterpret_cast<T*>(memory);
     }
 

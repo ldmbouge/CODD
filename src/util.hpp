@@ -369,16 +369,16 @@ public:
 
        int smallest = numeric_limits<int>::max();
        int largest = numeric_limits<int>::min();
-       int count = numeric_limits<int>::min();
+       int count = 0;
        for (int wIdx = 0; wIdx < nbw; wIdx += 1)
        {
-           int const wBegin = wIdx * sizeof(_t) * 8;
+           int const wBegin = wIdx * sizeof(unsigned long long) * 8;
            int const sWord = _t[wIdx] != 0 ? wBegin + lsb(_t[wIdx]) : numeric_limits<int>::max();
            int const lWord = _t[wIdx] != 0 ? wBegin + msb(_t[wIdx]) : numeric_limits<int>::min();
            int const cWord = _t[wIdx] != 0 ? popcount(_t[wIdx]) : 0;
            smallest = min<int>(smallest, sWord);
            largest = max<int>(largest, lWord);
-           count = max<int>(count, cWord);
+           count += cWord;
        }
        return {smallest,largest,count};
    }

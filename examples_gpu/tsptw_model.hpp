@@ -30,10 +30,10 @@ struct TSPTW
     FArray<int> permOut;
 
     // Model
-    using Labels = NatSet<4>;
+    using Labels = NatSet<2>;
     struct State
     {
-        using Set = NatSet<4>;
+        using Set = NatSet<2>;
 
         Set pos;  // current city (set for merged nodes, singleton otherwise)
         Set must; // cities that are unvisited in all nodes in the prefix of this state
