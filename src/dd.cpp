@@ -669,6 +669,7 @@ void Restricted::compute(Bounds& bnds)
       discarding = false;
       //std::cout << "qn popped" << std::endl;
       auto lk = qn.pullLayer(); // We have in lk the queue content for layer cL, dk is what we discard
+      auto nParents = lk.size();
 //      printf("---\n");
 //      for (auto p : lk)
 //      {
@@ -680,55 +681,66 @@ void Restricted::compute(Bounds& bnds)
       if (_dd->toOffload(lk.size()))
       {
 
-
-          _dd->initLayerEngine();
-
-          _dd->offloadLayerExpansion(lk, bnds.getPrimal(), DDRestricted, DDCtx);
-          _dd->retrieveNodes();
-
-          ANode::Ptr parent;
-          int label;
-          ANode::Ptr child;
+          int const nodesPerbatch = _dd->getNodesPerBatch(lk.front(), DDRestricted);
+          std::list<ANode::Ptr> batchBuffer;
           auto nChildren = 0;
-          while (_dd->getParentLabelChild(parent, label, child))
-          {
-              double labelCost = _dd->cost(parent, label);
-              Edge::Ptr edge = new(_dd->_mem) Edge(parent, child, label);
-              edge->_obj = labelCost;
-              _dd->addArc(edge);
 
-              auto const boundSrcToNode = parent->getBound() + labelCost;
-              if (_dd->isBetter(boundSrcToNode, child->getBound()))
+          while (not lk.empty())
+          {
+              batchBuffer.clear();
+              int const batchSize = gfl::min<int>(lk.size(), nodesPerbatch);
+              for (int i = 0; i < batchSize; i += 1)
               {
-                  child->setBound(boundSrcToNode);
-                  child->_optLabels = parent->_optLabels;
-                  child->_optLabels.push_back(edge->_lbl);
+                  batchBuffer.push_back(lk.front());
+                  lk.pop_front();
               }
 
-              child->setLayer(std::max(child->getLayer(), parent->getLayer() + 1));
+              _dd->initLayerEngine();et
 
-              if (nChildren < _mxw)
+              _dd->offloadLayerExpansion(batchBuffer, bnds.getPrimal(), DDRestricted, DDCtx);
+              _dd->retrieveNodes();
+
+              ANode::Ptr parent;
+              int label;
+              ANode::Ptr child;
+              while (_dd->getParentLabelChild(parent, label, child))
               {
-                  auto const isSink = _dd->eqSink(child);
-                  auto const isNewNode = child->nbParents() == 1;
-                  if ((not isSink) and isNewNode)
+                  double labelCost = _dd->cost(parent, label);
+                  Edge::Ptr edge = new(_dd->_mem) Edge(parent, child, label);
+                  edge->_obj = labelCost;
+                  _dd->addArc(edge);
+
+                  auto const boundSrcToNode = parent->getBound() + labelCost;
+                  if (_dd->isBetter(boundSrcToNode, child->getBound()))
                   {
-                      qn.enQueue(child);
+                      child->setBound(boundSrcToNode);
+                      child->_optLabels = parent->_optLabels;
+                      child->_optLabels.push_back(edge->_lbl);
+                  }
+
+                  child->setLayer(std::max(child->getLayer(), parent->getLayer() + 1));
+
+                  if (nChildren < _mxw)
+                  {
+                      auto const isSink = _dd->eqSink(child);
+                      auto const isNewNode = child->nbParents() == 1;
+                      if ((not isSink) and isNewNode)
+                      {
+                          qn.enQueue(child);
+                          nChildren += 1;
+                      } else if (_dd->isBetter(_dd->currentOpt(), bnds.getPrimal()))
+                      {
+                          //std::cout << "Better primal bound: " << std::fixed << _dd->currentOpt() << "\n";
+                          _dd->update(bnds);
+                      }
+                  } else
+                  {
+                      _discardedSet.push_back(child);
                       nChildren += 1;
                   }
-                  else if (_dd->isBetter(_dd->currentOpt(), bnds.getPrimal()))
-                  {
-                      //std::cout << "Better primal bound: " << std::fixed << _dd->currentOpt() << "\n";
-                      _dd->update(bnds);
-                  }
               }
-              else
-              {
-                  _discardedSet.push_back(child);
-                  nChildren += 1;
-              }
+              _dd->_exact = _dd->_exact and nChildren <= _mxw;
           }
-          _dd->_exact = _dd->_exact and nChildren <= _mxw;
       }
       else
 #endif
@@ -794,7 +806,7 @@ void Restricted::compute(Bounds& bnds)
               }
           }
       }
-      //printf("Parents %lu | Kepts = %lu | Discard = %lu | Exact = %c\n", lk.size(), qn.size(), _discardedSet.size(), _dd->_exact ? 'T' : 'F');
+      //printf("P = %lu | K = %lu | D = %lu | E = %c\n", nParents, qn.size(), _discardedSet.size(), _dd->_exact ? 'T' : 'F');
    }
    //_dd->computeBestBackward(getName()); // testing   
    //_dd->computeBest(getName());

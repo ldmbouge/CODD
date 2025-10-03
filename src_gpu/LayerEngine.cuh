@@ -70,24 +70,24 @@ public:
         cudaStreamSynchronize(gpuMainQueue);
 
         // Children
-        printf("P = %d | ", layerInfo->nParents);
-        printf("C = %d | ", layerInfo->nLables);
-        fflush(stdout);
+//        printf("P = %d | ", layerInfo->nParents);
+//        printf("C = %d | ", layerInfo->nLables);
+//        fflush(stdout);
 
         initChildren();
         initAux();
 
-        printf("IO = ");
-        gfl::printMemSize(mirrAllocator.h.calcUsedMemSize());
-        printf(" /");
-        gfl::printMemSize(mirrAllocator.h.calcTotalMemSize());
-        printf(" (%4.1f%%) | ", gfl::div(100 * mirrAllocator.h.calcUsedMemSize(), mirrAllocator.h.calcTotalMemSize()));
-        printf("IO + TMP = ");
-        gfl::printMemSize(mirrAllocator.d.calcUsedMemSize());
-        printf(" /");
-        gfl::printMemSize(mirrAllocator.d.calcTotalMemSize());
-        printf(" (%4.1f%%)\n", gfl::div(100 * mirrAllocator.d.calcUsedMemSize(), mirrAllocator.d.calcTotalMemSize()));
-        fflush(stdout);
+//        printf("IO = ");
+//        gfl::printMemSize(mirrAllocator.h.calcUsedMemSize());
+//        printf(" /");
+//        gfl::printMemSize(mirrAllocator.h.calcTotalMemSize());
+//        printf(" (%4.1f%%) | ", gfl::div(100 * mirrAllocator.h.calcUsedMemSize(), mirrAllocator.h.calcTotalMemSize()));
+//        printf("IO + TMP = ");
+//        gfl::printMemSize(mirrAllocator.d.calcUsedMemSize());
+//        printf(" /");
+//        gfl::printMemSize(mirrAllocator.d.calcTotalMemSize());
+//        printf(" (%4.1f%%)\n", gfl::div(100 * mirrAllocator.d.calcUsedMemSize(), mirrAllocator.d.calcTotalMemSize()));
+//        fflush(stdout);
 
         cudaMemcpyAsync(layerInfo.d, layerInfo.h, sizeof(LayerInfoType), cudaMemcpyHostToDevice,gpuMainQueue);
         blockSize = roundUpToMultiple<i32>(layerInfo->labelsPerParents, 32);

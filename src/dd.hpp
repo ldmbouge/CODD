@@ -140,6 +140,7 @@ public:
 #ifdef __NVCC__
    virtual bool toOffload(std::size_t layerSize) = 0;
    virtual void initLayerEngine() = 0;
+   virtual int  getNodesPerBatch(ANode::Ptr node, DDContext ctx) = 0;
    virtual void offloadLayerExpansion(
         std::list<ANode::Ptr> const & layer,
         double primalBound,
@@ -519,6 +520,7 @@ private:
    std::function<ANode::Ptr()> _initClosure;
 #ifdef __NVCC__
     long long int const gpu_width;
+    static constexpr long int gpu_batch = 128l * 1024 * 1024;
     LayerEngine<Model> * layerEngine;
 #endif
    ADOMClass::Ptr makeDominanceManager() {
@@ -646,6 +648,14 @@ private:
        {
            layerEngine = new LayerEngine<Model>();
        }
+    }
+
+    int getNodesPerBatch(ANode::Ptr node, DDContext ctx)
+    {
+       auto const state = static_cast<Node<ST> const *>(node.get())->get();
+       auto const labels = _model->lgf(state, ctx);
+       auto const branchingFactor = labels.size();
+       return gpu_batch / branchingFactor;
     }
 
     void offloadLayerExpansion(std::list<ANode::Ptr> const & layer, double primalBound, DDContext ddCtx, LocalContext localCtx)
