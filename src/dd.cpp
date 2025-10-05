@@ -74,13 +74,13 @@ public:
             dominee.push_back(o);
          } else it++;
       }
-      return {dominator,dominee};      
+      return {dominator,dominee};
    }
    bool empty() const noexcept {
       return _mmap.size() + _rest.size() ==0;
    }
    std::size_t size() const noexcept {
-      return _mmap.size() + _rest.size(); 
+      return _mmap.size() + _rest.size();
    }
    std::size_t firstLayerSize() const noexcept {
       return _mmap.size();
@@ -97,11 +97,11 @@ public:
             break;
          //std::cout << "adding: " << (*i)->getId() << "\n" << std::flush;
          _mmap.insert({n->getBound(),n});
-         i = _rest.erase(i);        
+         i = _rest.erase(i);
       }
       // Only thing left in _rest are guys with layer > _cLayer
       return retVal;
-   } 
+   }
 };
 
 class FQueue { // flat queue
@@ -130,8 +130,8 @@ public:
    bool hasDominator(ANode::Ptr n,double nObj) {
       for(const auto& o : _main) {
          if (_theDD->isBetterEQ(o->getBound(),nObj)) { // key is better. Could DOMINATE nObj
-            if (_theDD->dominates(o,n)) 
-               return true;            
+            if (_theDD->dominates(o,n))
+               return true;
          }
       }
       return false;
@@ -143,7 +143,7 @@ public:
             if (_theDD->dominates(n,o)) {
                it = _main.erase(it);
             } else it = std::next(it);
-         } else it = std::next(it);         
+         } else it = std::next(it);
       }
    }
    std::pair<ANode::Ptr,std::list<ANode::Ptr>> checkDominance(ANode::Ptr n,double nObj) {
@@ -161,7 +161,7 @@ public:
          std::cout << std::endl;
       }
       */
-      
+
       for(auto it = main.begin();it != main.end();) {
          const auto at = *it;
          const auto o  = *at;
@@ -177,19 +177,19 @@ public:
          } else { // key is worse. Could be dominated by nObj
             if (_theDD->dominates(n,o)) { // new guy dominates iterate (o)
                dominee.push_back(o);
-               //std::cout << "\t\t dominee removed:" << o << "\n"; 
+               //std::cout << "\t\t dominee removed:" << o << "\n";
                _main.erase(at);      // erase from the main list
                it = main.erase(it);  // erase from the list in the CLManager.
             } else it = std::next(it);
          }
       }
-      return {dominator,dominee};      
+      return {dominator,dominee};
    }
    bool empty() const noexcept {
       return _main.size() + _rest.size() ==0;
    }
    std::size_t size() const noexcept {
-      return _main.size() + _rest.size(); 
+      return _main.size() + _rest.size();
    }
    std::size_t firstLayerSize() const noexcept {
       return _main.size();
@@ -225,12 +225,12 @@ public:
             break;
          //std::cout << "adding: " << (*i)->getId() << "\n" << std::flush;
          _main.push_back(n);
-         i = _rest.erase(i);        
+         i = _rest.erase(i);
       }
       // Only thing left in _rest are guys with layer > _cLayer
       _mgr = _theDD->makeDominanceManager(); // reset for next round.
       return retVal;
-   } 
+   }
 };
 
 Bounds::Bounds(std::shared_ptr<AbstractDD> dd)
@@ -282,10 +282,10 @@ bool AbstractDD::apply(ANode::Ptr from,Bounds& bnds)
    makeInitFrom(from);
    compute(bnds);
    bool isBetterValue = isBetter(currentOpt(), bnds.getPrimal()); //currentOpt isBetter than bnds.getPrimal
-   
+
    //std::cout << "isBetter: " << isBetterValue << "   currOpt: " << currentOpt() << "   bnds.primal: " << bnds.getPrimal() << std::endl;
-   
-   if (isBetterValue) 
+
+   if (isBetterValue)
       update(bnds);
    return isBetterValue;
 }
@@ -323,8 +323,8 @@ struct DNode {
    friend std::ostream& operator<<(std::ostream& os,const DNode& n) {
       os << "<K=" << n.degree << ",N=";
       n.node->print(os);
-      return os << ">";      
-   }  
+      return os << ">";
+   }
 };
 
 
@@ -360,16 +360,16 @@ void AbstractDD::saveGraph(std::ostream& os,std::string gLabel)
       printNode(std::cout,n);
       std::cout << "\n";
    }
-   for(auto n : _an) 
+   for(auto n : _an)
       h.insert({n,n->nbParents()});
-   
+
    h.buildHeap();
    std::string colors[2] = {"red","green"};
    std::string edgeColors[2] = {"black","blue"};
    std::string arrowHeads[2] = {"normal","tee"};
    os << "digraph MDD {" << std::endl;
-   os << "label=\"" << gLabel << "\";\n"; 
-   os << " node [style=filled gradientangle=270];\n"; 
+   os << "label=\"" << gLabel << "\";\n";
+   os << " node [style=filled gradientangle=270];\n";
    while (h.size() > 0) {
       auto cur = h.extractMax();
       os << "\"";
@@ -377,7 +377,7 @@ void AbstractDD::saveGraph(std::ostream& os,std::string gLabel)
       os << "\" [fillcolor=\"" << colors[cur.node->isExact()] << "\"";
       if (eq(cur.node,_trg))
          os << ",shape=box,color=black";
-      os << "];\n";      
+      os << "];\n";
       for(auto ki = cur.node->beginKids(); ki != cur.node->endKids();ki++) {
          Edge::Ptr k = *ki;
          auto at = h.find({k->_to,0});
@@ -393,7 +393,7 @@ void AbstractDD::saveGraph(std::ostream& os,std::string gLabel)
          auto ds = this->theDiscardedSet();
          bool isDiscarded = std::find(ds.begin(),ds.end(),to)!=ds.end();
 
-         os << " [ label=\"" << k->_obj << "(" << k->_lbl << ")\"" 
+         os << " [ label=\"" << k->_obj << "(" << k->_lbl << ")\""
             << ", color=\"" << edgeColors[isDiscarded] << "\""
             << ", arrowhead=\"" << arrowHeads[isDiscarded] << "\""
             << " ];\n";
@@ -435,7 +435,7 @@ void AbstractDD::computeBest(const std::string m)
    //std::cout << "ANSZ:" << _an.size() << "\n";
    DegHeap h(_mem,1000,[](const DNode& a,const DNode& b) { return a.degree < b.degree;});
    unsigned mxId = 0;
-   for(auto n : _an) 
+   for(auto n : _an)
       mxId = std::max(n->getId(),mxId);
    auto nl = new (_mem) DegHeap::Location*[mxId+1];
    memset(nl,0,sizeof(DegHeap::Location*)*(mxId+1));
@@ -469,19 +469,19 @@ void AbstractDD::computeBest(const std::string m)
          h.decrease(at);
       }
    }
-#ifndef _NDEBUG     
+#ifndef _NDEBUG
    std::cout << '\t' << m << " B@SINK:" << _trg->getBound() << "\tLBL:[";
    for(auto l : _trg->_optLabels)
-      std::cout << l << " "; 
+      std::cout << l << " ";
    std::cout << "]" << std::endl;
-#endif   
+#endif
 }
 
 void AbstractDD::computeBestBackward(const std::string m)
 {
    DegHeap h(_mem,1000,[](const DNode& a,const DNode& b) { return a.degree < b.degree;});
    unsigned mxId = 0;
-   for(auto n : _an) 
+   for(auto n : _an)
       mxId = std::max(n->getId(),mxId);
    auto nl = new (_mem) DegHeap::Location*[mxId+1];
    memset(nl,0,sizeof(DegHeap::Location*)*(mxId+1));
@@ -511,7 +511,7 @@ void AbstractDD::computeBestBackward(const std::string m)
       // }
    }
    h.buildHeap();
-   
+
    while (h.size() > 0) {
       auto n = h.extractMax();
       double cur = (n.node->nbChildren() == 0) ? n.node->getBackwardBound() : initialBest();
@@ -519,7 +519,7 @@ void AbstractDD::computeBestBackward(const std::string m)
       // std::cout << "\tCOMPUTE START: ";
       // printNode(std::cout,n.node);
       // std::cout << " cur = " << cur << "\n";
-      
+
       Edge::Ptr best = nullptr;
       for(auto ci = n.node->beginKids();ci != n.node->endKids();ci++) {
          Edge::Ptr e = *ci;
@@ -535,7 +535,7 @@ void AbstractDD::computeBestBackward(const std::string m)
       //    if(best) {
       //       std::cout << "bwd path: " << *best << "\n";
       //    } else std::cout << "no best path from: " << n.node << ". Using: " << cur << "\n";
-      
+
       if (hasLocal()) {
          auto dualBound = local(n.node,DDCtx);
          if (isBetter(cur,dualBound)) {
@@ -547,7 +547,7 @@ void AbstractDD::computeBestBackward(const std::string m)
       // std::cout << "\tCOMPUTED:" << cur << " for ";
       // printNode(std::cout,n.node);
       // std::cout << "\n";
-      
+
       n.node->setBackwardBound(cur);
       for(auto pi = n.node->beginPar(); pi != n.node->endPar();pi++) {
          Edge::Ptr k = *pi;
@@ -556,9 +556,9 @@ void AbstractDD::computeBestBackward(const std::string m)
          h.decrease(at);
       }
    }
-#ifndef _NDEBUG     
+#ifndef _NDEBUG
    std::cout << '\t' << m << " BB@ROOT:" << std::fixed << std::setw(7) << _root->getBackwardBound() << " B@SINK:" << _trg->getBound() << std::endl;
-#endif   
+#endif
 }
 
 
@@ -575,8 +575,8 @@ void Exact::compute(Bounds& bnds)
    while (!qn.empty()) {
       auto p = qn.deQueue();
       auto remLabels = _dd->getLabels(p,DDExact);
-      while(remLabels->more()) {  
-         auto l = remLabels->getAndNext();  
+      while(remLabels->more()) {
+         auto l = remLabels->getAndNext();
          auto child = _dd->transition(bnds,p,l); // we get back a new node, or an already existing one.
          if (child) {
             const bool newNode = child->nbParents()==0; // is this a newly created node?
@@ -594,7 +594,7 @@ void Exact::compute(Bounds& bnds)
                if (newNode)
                   qn.enQueue(child);
             } else {
-               bool isBetterValue = _dd->isBetter(_dd->currentOpt(), bnds.getPrimal()); 
+               bool isBetterValue = _dd->isBetter(_dd->currentOpt(), bnds.getPrimal());
                if (isBetterValue) {
                   std::cout << "update in EX " << std::fixed << _dd->currentOpt() << "\n";
                   _dd->update(bnds);
@@ -603,7 +603,7 @@ void Exact::compute(Bounds& bnds)
          }
       }
    }
-   _dd->computeBest(getName());   
+   _dd->computeBest(getName());
    //_dd->display();
 }
 
@@ -617,7 +617,7 @@ NDArray& WidthBounded::pullLayer(CQueue<ANode::Ptr>& qn)
       if (qn.peek()->getLayer() != cL)
          break;
       n = qn.deQueue();
-      _nda.push_back(n);         
+      _nda.push_back(n);
    }
    // _nda.sort([dd = _dd](const ANode::Ptr& a,const ANode::Ptr& b) { // sort better to worse
    //    return dd->isBetter(a->getBound(),b->getBound());
@@ -646,7 +646,7 @@ void WidthBounded::tighten(ANode::Ptr nd) noexcept
          nd->_optLabels = e->_from->_optLabels;
          nd->_optLabels.push_back(e->_lbl);
       }
-   }  
+   }
    nd->setBound(cur);
 }
 
@@ -665,6 +665,9 @@ void Restricted::compute(Bounds& bnds)
    bool discarding = false;
    _discardedSet.clear();
    [[maybe_unused]] int ttlDom = 0;
+#ifdef __NVCC__
+    _dd->initLayerEngine();
+#endif
    while (!qn.empty()) {
       discarding = false;
       //std::cout << "qn popped" << std::endl;
@@ -681,7 +684,7 @@ void Restricted::compute(Bounds& bnds)
       if (_dd->toOffload(lk.size()))
       {
 
-          int const nodesPerbatch = _dd->getNodesPerBatch(lk.front(), DDRestricted);
+          int const nodesPerbatch = _dd->getNodesPerBatch(lk.front(), lk.size(), DDRestricted);
           std::list<ANode::Ptr> batchBuffer;
           auto nChildren = 0;
 
@@ -695,7 +698,7 @@ void Restricted::compute(Bounds& bnds)
                   lk.pop_front();
               }
 
-              _dd->initLayerEngine();et
+              _dd->initLayerEngine();
 
               _dd->offloadLayerExpansion(batchBuffer, bnds.getPrimal(), DDRestricted, DDCtx);
               _dd->retrieveNodes();
@@ -806,9 +809,10 @@ void Restricted::compute(Bounds& bnds)
               }
           }
       }
-      //printf("P = %lu | K = %lu | D = %lu | E = %c\n", nParents, qn.size(), _discardedSet.size(), _dd->_exact ? 'T' : 'F');
+      printf("P = %lu | K = %lu | D = %lu | E = %c\n", nParents, qn.size(), _discardedSet.size(), _dd->_exact ? 'T' : 'F');
+      fflush(stdout);
    }
-   //_dd->computeBestBackward(getName()); // testing   
+   //_dd->computeBestBackward(getName()); // testing
    //_dd->computeBest(getName());
    tighten(_dd->_trg);
    //_dd->display();
@@ -828,7 +832,7 @@ void RestrictedND::compute(Bounds& bnds)
       //std::cout << "qn popped" << std::endl;
       _dd->_exact &= qn.firstLayerSize() <= _mxw;
       auto lk = qn.pullLayer(); // We have in lk the queue content for layer cL, dk is what we discard
-      for(auto p : lk) { // loop over layer lk. p is a "parent" node.         
+      for(auto p : lk) { // loop over layer lk. p is a "parent" node.
          auto remLabels = _dd->getLabels(p,DDRestricted);
          while(remLabels->more()) {
             auto l = remLabels->getAndNext();
@@ -839,7 +843,7 @@ void RestrictedND::compute(Bounds& bnds)
                auto ep = p->getBound() + theCost;
                if (hasDom && newNode) {
                   if (!qn.hasDominator(child,ep)) {
-                     //std::cout << "No dominator...\n"; 
+                     //std::cout << "No dominator...\n";
                      if (_dd->isBetter(ep + child->getLBound(),bnds.getPrimal())) {
                         qn.spliceDominee(child,ep);
                         Edge::Ptr e = new (_dd->_mem) Edge(p,child,l);
@@ -853,22 +857,22 @@ void RestrictedND::compute(Bounds& bnds)
                         child->setLayer(std::max(child->getLayer(),p->getLayer()+1));
                         if (!_dd->eqSink(child)) {
                            if (newNode)
-                              qn.enQueue(child);                           
+                              qn.enQueue(child);
                         } else {
-                           bool isBetterValue = _dd->isBetter(_dd->currentOpt(), bnds.getPrimal()); 
-                           if (isBetterValue) 
-                              _dd->update(bnds);                  
+                           bool isBetterValue = _dd->isBetter(_dd->currentOpt(), bnds.getPrimal());
+                           if (isBetterValue)
+                              _dd->update(bnds);
                            goto done;
                         }
                      }
                   }
-               }         
-            }  
+               }
+            }
          }
-      }         
+      }
    }
  done:
-   //_dd->computeBestBackward(getName()); // testing   
+   //_dd->computeBestBackward(getName()); // testing
    //_dd->computeBest(getName());
    tighten(_dd->_trg);
    //_dd->display();
@@ -876,10 +880,10 @@ void RestrictedND::compute(Bounds& bnds)
 
 
 // doesn't create a discard set in a "batched" way
-// every time a node is discarded it is added to the 
+// every time a node is discarded it is added to the
 // discard set, which is a threaded heap
 // the client can listen for updates on the heap and
-// process in parallel 
+// process in parallel
 template<typename Ord>
 void RestrictedDFS<Ord>::compute(Bounds& bnds)
 {
@@ -896,11 +900,11 @@ void RestrictedDFS<Ord>::compute(Bounds& bnds)
       discarding = false;
       //std::cout << "qn popped" << std::endl;
       auto lk = qn.pullLayer(); // We have in lk the queue content for layer cL, dk is what we discard
-      for(auto p : lk) { // loop over layer lk. p is a "parent" node.         
+      for(auto p : lk) { // loop over layer lk. p is a "parent" node.
          if(discarding) { // pickup discarded parents
             _discardedSet.push_back(p);
             continue; // do not expand discarded parent
-         }         
+         }
          auto remLabels = _dd->getLabels(p,DDRestricted);
          while(remLabels->more()) {
             auto l = remLabels->getAndNext();
@@ -920,7 +924,7 @@ void RestrictedDFS<Ord>::compute(Bounds& bnds)
                      transferArcs(dominated,child); // child replace all of them
                      _dd->_an.remove(dominated);    // they are no longer in the DD
                   }
-               }         
+               }
                Edge::Ptr e = new (_dd->_mem) Edge(p,child,l);
                e->_obj = theCost;
                _dd->addArc(e); // connect to new node
@@ -944,12 +948,12 @@ void RestrictedDFS<Ord>::compute(Bounds& bnds)
                      }
                   }
                }
-            }  
-            nextLabel:;          
+            }
+            nextLabel:;
          }
-      }         
+      }
    }
-   //_dd->computeBestBackward(getName()); // testing   
+   //_dd->computeBestBackward(getName()); // testing
    //_dd->computeBest(getName());
    tighten(_dd->_trg);
    //_dd->display();
@@ -981,16 +985,16 @@ NDAction Relaxed::mergePair(ANode::Ptr mNode,ANode::Ptr toMerge[2])
    // mNode could be
    // 1. A brand new node NOT in the layer
    // 2. A node already in the layer but not in toMerge
-   // 3. A node already in the layer that is one of toMerge[i] 
+   // 3. A node already in the layer that is one of toMerge[i]
    const bool newNode = mNode->nbParents()==0; // is this a brand new node
    if (newNode) mNode->setLayer(toMerge[0]->getLayer()); // give it a layer
    const bool sameLayer = mNode->getLayer() == toMerge[0]->getLayer(); // layer not changing?
    mNode->setLayer(std::max(mNode->getLayer(),toMerge[0]->getLayer()));// possibly set layer
-   mNode->setExact(false); // surely inexact now 
+   mNode->setExact(false); // surely inexact now
    _dd->_exact = false;    // DD inexact as well
    bool addIt = false;
    for(auto i = 0; i < 2;i++) {
-      auto d = toMerge[i];            
+      auto d = toMerge[i];
       if (d != mNode) { // skip in case the node itself is the merged one
          transferArcs(d,mNode);
          _dd->_an.remove(d);
@@ -1002,7 +1006,7 @@ NDAction Relaxed::mergePair(ANode::Ptr mNode,ANode::Ptr toMerge[2])
 }
 
 ANode::Ptr Relaxed::mergeOne(auto& layer,auto& skip)
-{   
+{
    auto i = layer.begin();
    auto n1 = *i;
    if (n1->nbChildren() > 0) {
@@ -1021,7 +1025,7 @@ ANode::Ptr Relaxed::mergeOne(auto& layer,auto& skip)
          // std::cout << "layers? "  << n1->getLayer() << " " << n2->getLayer() << "\n";
          continue;
       }
-      assert(n2->nbChildren()==0);         
+      assert(n2->nbChildren()==0);
       assert(n1->getLayer() == n2->getLayer());
       mNode = _dd->merge(n1,n2);
       if (mNode) {
@@ -1035,7 +1039,7 @@ ANode::Ptr Relaxed::mergeOne(auto& layer,auto& skip)
             //mNode = nullptr;
             //continue;
          }
-         //assert(mNode->nbChildren()==0);         
+         //assert(mNode->nbChildren()==0);
          toMerge[1] = n2;
          break;
       }
@@ -1085,11 +1089,11 @@ template <typename Fun> void Relaxed::mergeLayer(auto& layer,Fun f)
    //    //_dd->printNode(std::cout,n);
    //    std::cout << n->getId() << " " << n->getBound() << " " << n->getBackwardBound();
    //    std::cout << " LAYER:" << n->getLayer() << "\n";
-   // }   
+   // }
 }
 
 void Relaxed::adjustBounds(ANode::Ptr nd)
-{   
+{
    for(auto ki = nd->beginKids();ki != nd->endKids();ki++) {
       Edge::Ptr e = *ki; // edge
       auto end = e->_to;
@@ -1101,7 +1105,7 @@ void Relaxed::adjustBounds(ANode::Ptr nd)
          adjustBounds(end);
       }
    }
-} 
+}
 
 
 struct MMKey {
@@ -1131,9 +1135,9 @@ public:
    std::pair<ANode::Ptr,std::list<ANode::Ptr>> checkDominance(ANode::Ptr n,double nObj) {
       ANode::Ptr dominator = nullptr;
       std::list<ANode::Ptr> dominee;
-      std::list<std::multimap<double,ANode::Ptr,MMKey>::iterator> toDel;      
+      std::list<std::multimap<double,ANode::Ptr,MMKey>::iterator> toDel;
       AbstractDD* theDD = _dd.theDD();
-      
+
       for(auto it = _mmap.begin();it != _mmap.end();it++) {
          const auto& o = it->second;
          //for(const auto& [key,o] : _mmap) {
@@ -1142,37 +1146,37 @@ public:
             if (dominator==nullptr && theDD->dominates(o,n))  {
                dominator = o;
                break;
-            }            
+            }
          } else { // kkey is worse. Could be dominated.
             if (theDD->dominates(n,o)) { // new guy dominates this one (o)
                dominee.push_back(o);
-               toDel.push_back(it); 
-            } 
+               toDel.push_back(it);
+            }
          }
       }
-      for(const auto& md : toDel) 
-         _mmap.erase(md);      
-      return {dominator,dominee};      
-   }   
+      for(const auto& md : toDel)
+         _mmap.erase(md);
+      return {dominator,dominee};
+   }
    bool empty() const noexcept {
       return _mmap.size() + _rest.size() ==0;
    }
    std::size_t size() const noexcept {
-      return _mmap.size() + _rest.size(); 
+      return _mmap.size() + _rest.size();
    }
    std::list<ANode::Ptr> pullLayer() noexcept {
       std::list<ANode::Ptr> retVal;
       for(const auto& [key,val] : _mmap)
          retVal.push_front(val);
-      // that effectively inversed the list. Should be the same as 
+      // that effectively inversed the list. Should be the same as
       // a call to sort with !isBetter (since the map is sorted by isBetter)
       _dd.mergeLayer(retVal,[this](ANode::Ptr dn)  {
-         _dd.adjustBounds(dn);         
+         _dd.adjustBounds(dn);
       });
       _mmap.clear(); // empties the map.
       _cLayer = (_rest.size() > 0) ? _rest.front()->getLayer() : -1;
       for(auto i = _rest.begin(); i != _rest.end();) {
-         if ((*i)->getLayer() != _cLayer)            
+         if ((*i)->getLayer() != _cLayer)
             break;
          //std::cout << "adding: " << (*i)->getId() << "\n" << std::flush;
          _mmap.insert({(*i)->getBound(),*i});
@@ -1180,7 +1184,7 @@ public:
       }
       // Only thing left in _rest are guys with layer > _cLayer
       return retVal;
-   } 
+   }
 };
 
 
@@ -1199,10 +1203,10 @@ public:
          auto loc = _next.insert(_next.end(),n);
          _mgr->classFor(n).emplace_back(loc);
       } else {
-         if (_cLayer == n->getLayer()) {            
+         if (_cLayer == n->getLayer()) {
             auto loc = _next.insert(_next.begin(),n);
             _mgr->classFor(n).emplace_back(loc);
-         } else _rest.push_back(n);         
+         } else _rest.push_back(n);
       }
    }
    std::pair<ANode::Ptr,std::list<ANode::Ptr>> checkDominance(ANode::Ptr n,double nObj) {
@@ -1216,18 +1220,18 @@ public:
       // theDD->printNode(std::cout,n);
       // std::cout << "\n";
 
-      // std::cout << "n: "; 
+      // std::cout << "n: ";
       // _dd.theDD()->printNode(std::cout, n);
-      // std::cout << "\n"; 
+      // std::cout << "\n";
 
       [[maybe_unused]] int nbBetter = 0;
       for(auto it = main.begin();it != main.end();it++) {
          //for(auto it = _next.begin();it != _next.end();it++) {
          auto at= *it;
          auto o = *at;
-         // std::cout << "\tat: "; 
+         // std::cout << "\tat: ";
          // _dd.theDD()->printNode(std::cout, at->get());
-         // std::cout << "\n"; 
+         // std::cout << "\n";
          //for(const auto& o : _next) {
          const bool objDom = theDD->isBetterEQ(o->getBound(),nObj);
          nbBetter += objDom;
@@ -1266,12 +1270,12 @@ public:
          });
       }
       _dd.mergeLayer(retVal,[this](ANode::Ptr dn)  {
-         _dd.adjustBounds(dn);         
+         _dd.adjustBounds(dn);
       });
 
       _cLayer = (_rest.size() > 0) ? _rest.front()->getLayer() : -1;
       for(auto i = _rest.begin(); i != _rest.end();) {
-         if ((*i)->getLayer() != _cLayer)            
+         if ((*i)->getLayer() != _cLayer)
             break;
          //std::cout << "adding: " << (*i)->getId() << "\n" << std::flush;
          _next.push_back(*i);
@@ -1298,8 +1302,8 @@ void Relaxed::compute(Bounds& bnds)
       for(auto p : lk) { // loop over layer lk. p is a "parent" node.
          auto remLabels = _dd->getLabels(p,DDRelaxed);
          //std::cout << "new layer: " << std::endl;
-         while(remLabels->more()) {  
-            auto l = remLabels->getAndNext();  
+         while(remLabels->more()) {
+            auto l = remLabels->getAndNext();
             //std::cout << "l: " << l << std::endl;
             auto child = _dd->transition(bnds,p,l); // we may get back a node (new or old)
             if (child) {
@@ -1311,7 +1315,7 @@ void Relaxed::compute(Bounds& bnds)
                   if (dominator) {
                      //[[maybe_unused]] ANode::Ptr justAdded = _dd->_an.back();
                      //assert(justAdded == child);
-                     //std::cout << "relaxed -> dominated!\n"; 
+                     //std::cout << "relaxed -> dominated!\n";
                      _dd->_an.pop_back();
                      child = dominator;
                      newNode = false;
@@ -1319,8 +1323,8 @@ void Relaxed::compute(Bounds& bnds)
                   for(const auto& dominated : dominee) {
                      transferArcs(dominated,child); // child replace all of them
                      _dd->_an.remove(dominated);    // they are no longer in the DD
-                  }                  
-               }               
+                  }
+               }
                Edge::Ptr e = new (_dd->_mem) Edge(p,child,l);
                e->_obj = theCost;
                _dd->addArc(e); // connect to new node
@@ -1329,19 +1333,19 @@ void Relaxed::compute(Bounds& bnds)
                   child->_optLabels = p->_optLabels;
                   child->_optLabels.push_back(e->_lbl);
                }
-               child->setLayer(std::max(child->getLayer(),p->getLayer()+1));               
+               child->setLayer(std::max(child->getLayer(),p->getLayer()+1));
                if (!_dd->eqSink(child)) {
                   if (newNode)
                      qn->enQueue(child);
                } else {
-                  bool isBetterValue = _dd->isBetter(_dd->currentOpt(), bnds.getPrimal()); 
+                  bool isBetterValue = _dd->isBetter(_dd->currentOpt(), bnds.getPrimal());
                   if (isBetterValue && _dd->_exact) { // sol to RELAX : Only tighten if exact
                      std::cout << "update in RX " << std::fixed << _dd->currentOpt() << " "
                                << bnds << "\n";
                      _dd->update(bnds);
-                  }                  
+                  }
                }
-            }            
+            }
          }
       }
    }
@@ -1383,7 +1387,7 @@ std::vector<ANode::Ptr> Relaxed::computeCutSet()
             //    _dd->printNode(std::cout,(*ki)->_to);
             //    std::cout << "\n";
             //    std::cout << "Will add:";
-            //    _dd->printNode(std::cout,cur);              
+            //    _dd->printNode(std::cout,cur);
             //    std::cout << "\n";
             //    std::cout << ((*ki)->_to->getId()) << " "  << _dd->_trg->getId() << "\n";
             //    std::cout << "KID is sink? " << _dd->eqSink((*ki)->_to) << "\n";

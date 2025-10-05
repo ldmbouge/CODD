@@ -16,7 +16,9 @@ namespace gfl
         public:
             constexpr MirrorPtr(T * const hostPtr = nullptr, T * const devicePtr = nullptr) noexcept : h(hostPtr), d(devicePtr) {}
             GFL_HOST_DEVICE
-            constexpr T * operator->() const noexcept;
+            constexpr T * get() const noexcept;
+            GFL_HOST_DEVICE
+            constexpr T * operator->() const noexcept {return get();};
             template<typename U = T>
             GFL_HOST_DEVICE
             typename std::enable_if<not std::is_same<U,void>::value, U&>::type
@@ -45,7 +47,7 @@ namespace gfl
 
     template<typename T>
     GFL_HOST_DEVICE constexpr
-    T *  MirrorPtr<T>::operator->() const noexcept
+    T *  MirrorPtr<T>::get() const noexcept
     {
         T * result;
 #ifdef __CUDA_ARCH__

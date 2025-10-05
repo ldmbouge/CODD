@@ -19,13 +19,13 @@ void calcLabelsKernel(Model const * const model, LayerInfo<typename Model::State
 
     __shared__ i32 minLabel_s;
     __shared__ i32 maxLabel_s;
-    __shared__ i32 nLabels_s;
+    __shared__ i32 labelsPerParent_s;
 
     if (threadIdx.x == 0)
     {
         minLabel_s = numeric_limits<i32>::max();
         maxLabel_s = numeric_limits<i32>::min();
-        nLabels_s  = 0;
+        labelsPerParent_s  = 0;
     }
     __syncthreads();
 
@@ -38,7 +38,7 @@ void calcLabelsKernel(Model const * const model, LayerInfo<typename Model::State
         auto [smallest,largest,count] = parent.labels.slc();
         atomicMin_block(&minLabel_s, smallest);
         atomicMax_block(&maxLabel_s, largest);
-        atomicMax_block(&nLabels_s, count);
+        atomicMax_block(&labelsPerParent_s, count);
     }
     __syncthreads();
 
@@ -47,8 +47,7 @@ void calcLabelsKernel(Model const * const model, LayerInfo<typename Model::State
         //printf("Parent %d has %d labels\n", pIdx, nLabels_s);
         atomicMin(&layerInfo->minLabel,minLabel_s);
         atomicMax(&layerInfo->maxLabel,maxLabel_s);
-        atomicMax(&layerInfo->labelsPerParents, nLabels_s);
-        atomicAdd(&layerInfo->nLables, nLabels_s);
+        atomicMax(&layerInfo->labelsPerParents, labelsPerParent_s);
     }
 }
 
@@ -143,8 +142,8 @@ template<typename KeyType, typename  KeyDecomposer>
 GFL_GLOBAL
 void sortKernel(void * tmpMem, std::size_t tmpMemSize, KeyType const * keysIn, KeyType * keysOut, gfl::i32 const * const nKeys)
 {
-    //printf("Sorting %d keys\n",*nKeys);
-    //printf("TMP = %p (%ul) | K_IN = %p | K_OUT = %p | N_KEYS = %p (%d)\n",tmpMem, tmpMemSize, keysIn, keysOut, nKeys, *nKeys);
+//    printf("Sorting %d keys\n",*nKeys);
+//    printf("TMP = %p (%lu) | K_IN = %p | K_OUT = %p | N_KEYS = %p (%d)\n", tmpMem, tmpMemSize, keysIn, keysOut, nKeys, *nKeys);
     cudaStream_t gpuSortQueue;
     cudaStreamCreateWithFlags(&gpuSortQueue, cudaStreamNonBlocking);
     cub::DeviceRadixSort::SortKeys(tmpMem, tmpMemSize, keysIn, keysOut, *nKeys, KeyDecomposer{}, gpuSortQueue);
@@ -193,7 +192,7 @@ void calcReprKernel(LayerInfo<typename Model::State, typename Model::Labels> * c
         assert(0 <= iInfo.idx);
         assert(iInfo.idx < layerInfo->nChildren);
         auto const iChild = layerInfo->children[iInfo.idx].state;
-        for (auto j = i + 1; j < layerInfo->nChildren; j += 1)
+        for (i32 j = i + 1; j < layerInfo->nChildren; j += 1)
         {
             auto & jInfo = childrenInfo[j];
             assert(0 <= jInfo.idx);
@@ -241,7 +240,7 @@ template<typename Model>
 GFL_GLOBAL
 void printChildrenInfo(LayerInfo<typename Model::State, typename Model::Labels> * layerInfo, ChildInfo * childrenInfo)
 {
-    printf("---\n");
+    printf("--- (%d)\n", layerInfo->nChildren);
     for(auto cIdx = 0; cIdx < layerInfo->nChildren; cIdx += 1)
     {
         auto const & childInfo = childrenInfo[cIdx];

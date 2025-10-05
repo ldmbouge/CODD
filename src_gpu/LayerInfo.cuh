@@ -33,12 +33,6 @@ struct alignas(16) ChildInfo
     gfl::u32 isRepresented;
 };
 
-struct alignas(8) ClassRange
-{
-    gfl::i32 begin;
-    gfl::i32 end;
-};
-
 template<typename State, typename Labels>
 struct LayerInfo
 {
@@ -53,16 +47,11 @@ struct LayerInfo
     gfl::i32 minLabel;
     gfl::i32 maxLabel;
     gfl::i32 labelsPerParents;
-    gfl::i32 nLables;
 
     // Children
     gfl::i32 nChildren;
     gfl::MirrorPtr<GpuChild> children;
     gfl::MirrorPtr<ChildInfo> childrenInfo;
-
-    // Auxiliary Information
-    gfl::i32 nClasses;
-    ClassRange * classes;
 
     // CUB
     ChildInfo * tmpChildrenInfo;
@@ -75,12 +64,9 @@ struct LayerInfo
             minLabel(gfl::numeric_limits<gfl::i32>::max()),
             maxLabel(gfl::numeric_limits<gfl::i32>::min()),
             labelsPerParents(0),
-            nLables(0),
             nChildren(0),
             children(nullptr, nullptr),
             childrenInfo(nullptr, nullptr),
-            nClasses(0),
-            classes(nullptr),
             tmpChildrenInfo(nullptr),
             cubTmpMemSize(0),
             cubTmpMem(nullptr)
