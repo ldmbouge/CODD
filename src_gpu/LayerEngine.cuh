@@ -244,7 +244,7 @@ public:
 //        cudaStreamSynchronize(gpuMainQueue);
 //        CHECK_LAST_CUDA_ERROR();
 
-            sortKernel<ChildInfo, RepCostDecomposer><<<1, 1, 0, gpuMainQueue>>>(
+            sortKernel<ChildInfo, RepLexDecomposer><<<1, 1, 0, gpuMainQueue>>>(
                     layerInfo->cubTmpMem,
                     layerInfo->cubTmpMemSize,
                     layerInfo->tmpChildrenInfo,

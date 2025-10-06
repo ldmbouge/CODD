@@ -93,12 +93,30 @@ struct HashDecomposer
     }
 };
 
+struct RepLexDecomposer
+{
+    GFL_DEVICE
+    gfl::tuple<gfl::u32&,gfl::i64&> operator()(ChildInfo & childInfo) const
+    {
+        return {childInfo.isRepresented,childInfo.id};
+    }
+};
+
 struct RepCostDecomposer
 {
     GFL_DEVICE
     gfl::tuple<gfl::u32&,gfl::f64&> operator()(ChildInfo & childInfo) const
     {
         return {childInfo.isRepresented,childInfo.cost};
+    }
+};
+
+struct RepBoundDecomposer
+{
+    GFL_DEVICE
+    gfl::tuple<gfl::u32&,gfl::f64&> operator()(ChildInfo & childInfo) const
+    {
+        return {childInfo.isRepresented,childInfo.boundSrcToNode};
     }
 };
 

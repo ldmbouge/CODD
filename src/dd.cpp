@@ -691,8 +691,7 @@ void Restricted::compute(Bounds& bnds)
           while (not lk.empty())
           {
               batchBuffer.clear();
-              int const batchSize = gfl::min<int>(lk.size(), nodesPerbatch);
-              for (int i = 0; i < batchSize; i += 1)
+              for (int i = 0; i < nodesPerbatch; i += 1)
               {
                   batchBuffer.push_back(lk.front());
                   lk.pop_front();
