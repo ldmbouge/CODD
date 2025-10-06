@@ -809,8 +809,8 @@ void Restricted::compute(Bounds& bnds)
               }
           }
       }
-      printf("P = %lu | K = %lu | D = %lu | E = %c\n", nParents, qn.size(), _discardedSet.size(), _dd->_exact ? 'T' : 'F');
-      fflush(stdout);
+      //printf("P = %lu | K = %lu | D = %lu | E = %c\n", nParents, qn.size(), _discardedSet.size(), _dd->_exact ? 'T' : 'F');
+      //fflush(stdout);
    }
    //_dd->computeBestBackward(getName()); // testing
    //_dd->computeBest(getName());
