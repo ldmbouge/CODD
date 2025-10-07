@@ -1,34 +1,11 @@
 #pragma once
 
+#include "tsptw_model_base.hpp"
 #include "model.hpp"
 #include "util.hpp"
 
-struct TSPTW
+struct TSPTW3 : TSPTWBase
 {
-   // Instance data
-    struct TimeWindow
-    {
-        int a,b;
-
-        TimeWindow() noexcept : a(std::numeric_limits<int>::max()), b(std::numeric_limits<int>::min()) {}
-        TimeWindow(int const a,int const b) noexcept : a(a),b(b) {}
-        friend std::ostream & operator<<(std::ostream & os, TimeWindow const & t)
-        {
-            return os << "[" << t.a << "," << t.b << "]";
-        }
-
-    };
-
-    constexpr static int depot = 0;
-    int n;
-    Matrix<int,2> d;
-    FArray<TimeWindow> tw;
-    FArray<int> dInNS;
-    FArray<int> dIn;
-    FArray<int> dOut;
-    FArray<int> permIn;
-    FArray<int> permOut;
-
     // Model
     using Labels = NatSet<2>;
     struct State
@@ -242,10 +219,10 @@ struct TSPTW
     static bool dom(State const & s1, State const & s2) noexcept
     {
         return
+            s1.pos == s2.pos and
             s1.must <= s2.must and
-            s1.ta < s2.ta and
             s1.hops == s2.hops and
-            s1.pos == s2.pos;
+            s1.ta < s2.ta;
     }
     GFL_HOST_DEVICE
     static std::size_t domHash(State const & s) noexcept
@@ -267,22 +244,22 @@ struct TSPTW
     }
 };
 
-static_assert(IsModel<TSPTW>);
+static_assert(IsModel<TSPTW3>);
 
 namespace std
 {
 
     template <>
-    struct hash<TSPTW::State> {
-        std::size_t operator()(const TSPTW::State& s) const noexcept {
-            return TSPTW::State::hash(s);
+    struct hash<TSPTW3::State> {
+        std::size_t operator()(const TSPTW3::State& s) const noexcept {
+            return TSPTW3::State::hash(s);
         }
     };
 
     template <>
-    struct equal_to<TSPTW::State> {
-        bool operator()(const TSPTW::State& a, const TSPTW::State& b) const noexcept {
-            return TSPTW::State::equal(a, b);
+    struct equal_to<TSPTW3::State> {
+        bool operator()(const TSPTW3::State& a, const TSPTW3::State& b) const noexcept {
+            return TSPTW3::State::equal(a, b);
         }
     };
 }

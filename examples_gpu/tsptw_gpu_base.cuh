@@ -1,4 +1,3 @@
-#include "tsptw_model.hpp"
 #include "codd.hpp"
 #include "searchRelaxedFirst.hpp"
 #include "searchRestrictedFirst.hpp"
@@ -9,57 +8,10 @@
 #include <cxxopts.hpp>
 #include <Malloc.hpp>
 
-void parseFile(TSPTW * const model, std::string const & instance, gfl::StackAllocator & allocator)
-{
-    auto m = model;
-
-    std::ifstream file(instance);
-    if (not file.good())
-    {
-        std::cerr << "File does not exist or could not be opened: " << instance << std::endl;
-        exit(EXIT_FAILURE);
-    }
-    file >> m->n;
-    new (&m->d) Matrix<int, 2>(m->n, m->n, allocator); // The = operator gives issues whith destruction
-    for (auto i = 0; i < m->n; i++)
-    {
-        for (auto j = 0; j < m->n; j++)
-        {
-            file >> m->d[i][j];
-        }
-    }
-    new (&m->tw) FArray<TSPTW::TimeWindow>(m->n, allocator);
-    for (auto i = 0; i < m->n; i++)
-    {
-        int a, b;
-        file >> a >> b;
-        m->tw[i] = TSPTW::TimeWindow(a, b);
-    }
-    file.close();
-
-    new (&m->dInNS) FArray<int>(m->n, allocator);
-    new (&m->dIn) FArray<int>(m->n, allocator);
-    new (&m->dOut) FArray<int>(m->n, allocator);
-    new (&m->permIn) FArray<int>(m->n, allocator);
-    new (&m->permOut) FArray<int>(m->n, allocator);
-
-    auto allCities = TSPTW::Labels(0, m->n - 1);
-    for (auto j : allCities)
-    {
-        auto [e1, minIn] = argmin(allCities - j, [m,j](int k) { return m->d[k][j]; });
-        auto [e2, minOut] = argmin(allCities - j, [m,j](int k) { return m->d[j][k]; });
-        m->dIn[j] = m->dInNS[j] = minIn;
-        m->dOut[j] = minOut;
-        m->permIn[j] = j;
-        m->permOut[j] = j;
-    }
-    mergeSortPerm(m->dIn.data(), m->permIn.data(), m->n, [](double a, double b) { return a < b; });   // From smallest to largest
-    mergeSortPerm(m->dOut.data(), m->permOut.data(), m->n, [](double a, double b) { return a < b; }); // From smallest to largest
-}
-
 constexpr auto static ReadOnlyMemSize{48 * 1024}; // Cached in shared memory
 
-int main(int argc,char* argv[])
+template<typename TSPTWModel>
+int exec(int argc,char* argv[])
 {
     // Select GPU
     cudaSetDevice(0);
@@ -108,13 +60,13 @@ int main(int argc,char* argv[])
 #endif
 
     gfl::StackAllocator allocator(readOnlyMem, ReadOnlyMemSize);
-    auto * const model = new (allocator) TSPTW();
-    parseFile(model, instance, allocator);
+    auto * const model = new (allocator) TSPTWModel();
+    TSPTWModel::parseFile(model, instance, allocator);
 
-    auto labels = TSPTW::Labels(0, model->n-1);
+    auto labels = typename TSPTWModel::Labels(0, model->n-1);
 
 #ifdef __CUDACC__
-    auto dd = DD<TSPTW>::makeDD(model, labels ,gpu_width);
+    auto dd = DD<TSPTWModel>::makeDD(model, labels ,gpu_width);
 #else
     auto dd = DD<TSPTW>::makeDD(model, labels);
 #endif
