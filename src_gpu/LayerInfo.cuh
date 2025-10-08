@@ -13,6 +13,9 @@ struct LightNode
     gfl::f64 boundSrcToNode;
     gfl::u8 nEdgesSrcToNode;
     gfl::u8 labelsSrcToNode[128];
+
+    GFL_HOST_DEVICE
+    LightNode() noexcept {};
 };
 
 struct NodeInfo
@@ -23,6 +26,9 @@ struct NodeInfo
     gfl::i64 id;
     gfl::i32 idx;
     gfl::u32 isRepresented;
+
+    GFL_HOST_DEVICE
+    NodeInfo() noexcept {};
 };
 
 template<typename State, typename Labels>
