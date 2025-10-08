@@ -32,19 +32,18 @@ void calcLabelsKernel(Model const * const model, LayerInfo<typename Model::State
     int const pIdx = blockIdx.x * blockDim.x + threadIdx.x;
     if (pIdx < layerInfo->nParents)
     {
-        //printf("Working on parent %d\n", pIdx);
-        auto & parent = layerInfo->parents[pIdx];
-        parent.labels = model->lgf(parent.state, ctx);
-        auto [smallest,largest,count] = parent.labels.slc();
+        auto & pNode = layerInfo->parents[pIdx];
+        pNode.labels = model->lgf(pNode.state, ctx);
+        auto [smallest,largest,count] = pNode.labels.slc();
         atomicMin_block(&minLabel_s, smallest);
         atomicMax_block(&maxLabel_s, largest);
         atomicMax_block(&labelsPerParent_s, count);
+        //printf("Parent %d has %d labels\n", pIdx, count);
     }
     __syncthreads();
 
-    if (pIdx < layerInfo->nParents)
+    if (threadIdx.x == 0)
     {
-        //printf("Parent %d has %d labels\n", pIdx, nLabels_s);
         atomicMin(&layerInfo->minLabel,minLabel_s);
         atomicMax(&layerInfo->maxLabel,maxLabel_s);
         atomicMax(&layerInfo->labelsPerParents, labelsPerParent_s);
@@ -56,22 +55,21 @@ GFL_GLOBAL
 void calcChildrenKernel(
         Model const * const model,
         LayerInfo<typename Model::State, typename Model::Labels> * const layerInfo,
-        ChildInfo * const childrenInfo,
+        NodeInfo * const childrenInfo,
         gfl::f64 primalBound,
         LocalContext localCtx)
 {
     using State = typename Model::State;
     using Labels = typename Model::Labels;
-    using GpuParent = GpuParent<State, Labels>;
-    using GpuChild = GpuChild<State>;
+    using LNode = LightNode<State, Labels>;
     using namespace gfl;
 
     assert(gridDim.x >= layerInfo->nParents);
 
     __shared__ i32 nChildrenInShared_s;
     __shared__ i32 nChildrenInGlobal_s;
-    __shared__ GpuChild * children_s;
-    __shared__ ChildInfo * childrenInfo_s;
+    __shared__ LNode * children_s;
+    __shared__ NodeInfo * childrenInfo_s;
     extern __shared__ u32 shrMem[]; // 16-byte aligned
 
     i32 const pIdx = blockIdx.x;
@@ -81,40 +79,48 @@ void calcChildrenKernel(
         {
             nChildrenInShared_s = 0;
             StackAllocator allocator(shrMem, getSharedMemSize());
-            children_s = allocator.allocateArray<GpuChild>(layerInfo->labelsPerParents);
-            childrenInfo_s = allocator.allocateArray<ChildInfo>(layerInfo->labelsPerParents);
+            children_s = allocator.allocateArray<LNode>(layerInfo->labelsPerParents);
+            childrenInfo_s = allocator.allocateArray<NodeInfo>(layerInfo->labelsPerParents);
         }
         __syncthreads();
 
-        GpuChild child_r;
-        ChildInfo childInfo_r;
+        LNode cNode_r;
+        NodeInfo cInfo_r;
 
-        GpuParent const parent_r = layerInfo->parents[pIdx];
+        LNode const pNode_r = layerInfo->parents[pIdx];
         for (i32 label = layerInfo->minLabel + threadIdx.x; label <= layerInfo->maxLabel; label += blockDim.x)
         {
-            if (parent_r.labels.contains(label))
+            if (pNode_r.labels.contains(label))
             {
                 // Transition
-                child_r.parentNode = parent_r.node;
-                child_r.label = label;
-                auto state_r = model->stf(parent_r.state, label);
-                if (state_r.has_value())
+                auto cState_r = model->stf(pNode_r.state, label);
+                if (cState_r.has_value())
                 {
-                    childInfo_r.boundSrcToNode = parent_r.boundSrcToNode + model->scf(parent_r.state, label);
-                    child_r.heuristicNodeToSink = Model::has_local ? model->local(state_r.value(), localCtx) : 0;
-                    childInfo_r.cost = childInfo_r.boundSrcToNode + child_r.heuristicNodeToSink;
-
-                    if (Model::better(childInfo_r.cost, primalBound))
+                    f64 cBoundSrcToNode = pNode_r.boundSrcToNode + model->scf(pNode_r.state, label);
+                    f64 cHeuristicNodeToSink = Model::has_local ? model->local(cState_r.value(), localCtx) : 0;
+                    f64 cCost = cBoundSrcToNode + cHeuristicNodeToSink;
+                    if (Model::better(cCost, primalBound))
                     {
-                        child_r.state = state_r.value();
-                        childInfo_r.id = pIdx * (layerInfo->maxLabel + 1) + label;
-                        childInfo_r.isRepresented = static_cast<i32>(false);
-                        childInfo_r.hash = Model::has_dom ? Model::domHash(child_r.state) : State::hash(child_r.state);
+                        // Node
+                        cNode_r.state = cState_r.value();
+                        cNode_r.boundSrcToNode = cBoundSrcToNode;
+                        memcpy(cNode_r.labelsSrcToNode, pNode_r.labelsSrcToNode, sizeof(cNode_r.labelsSrcToNode));
+                        cNode_r.labelsSrcToNode[pNode_r.nEdgesSrcToNode] = label;
+                        cNode_r.nEdgesSrcToNode = pNode_r.nEdgesSrcToNode + 1;
+
+                        // NodeInfo
+                        cInfo_r.hash = Model::has_dom ? Model::domHash(cNode_r.state) : State::hash(cNode_r.state);
+                        cInfo_r.boundSrcToNode = cBoundSrcToNode;
+                        cInfo_r.cost = cCost;
+                        cInfo_r.id = pIdx * (layerInfo->maxLabel + 1) + label;
+                        cInfo_r.idx = -1;
+                        cInfo_r.isRepresented = false;
+
                         // Write children and info in shared.
                         auto const idxInShared = atomicAdd_block(&nChildrenInShared_s, 1);
                         assert(idxInShared < layerInfo->labelsPerParents);
-                        children_s[idxInShared] = child_r;
-                        childrenInfo_s[idxInShared] = childInfo_r;
+                        children_s[idxInShared] = cNode_r;
+                        childrenInfo_s[idxInShared] = cInfo_r;
                     }
                 }
             }
@@ -150,12 +156,12 @@ void sortKernel(void * tmpMem, std::size_t tmpMemSize, KeyType const * keysIn, K
 }
 
 template<typename Model>
-GFL_DEVICE
-void checkStatePair(ChildInfo & iInfo, typename Model::State const & iState, ChildInfo & jInfo, typename Model::State const & jState)
+GFL_HOST_DEVICE
+void checkStatePair(NodeInfo & iInfo, typename Model::State const & iState, NodeInfo & jInfo, typename Model::State const & jState)
 {
     using namespace gfl;
 
-    if (Model::betterEq(jInfo.boundSrcToNode, iInfo.boundSrcToNode))
+    if (Model::betterEq(iInfo.boundSrcToNode, jInfo.boundSrcToNode))
     {
         if (Model::State::equal(iState, jState))
         {
@@ -180,7 +186,7 @@ void checkStatePair(ChildInfo & iInfo, typename Model::State const & iState, Chi
 
 template<typename Model>
 GFL_GLOBAL
-void calcReprKernel(LayerInfo<typename Model::State, typename Model::Labels> * const layerInfo, ChildInfo * const childrenInfo)
+void calcReprKernel(LayerInfo<typename Model::State, typename Model::Labels> * const layerInfo, NodeInfo * const childrenInfo)
 {
     using namespace gfl;
 
@@ -214,19 +220,19 @@ template<typename Model>
 GFL_GLOBAL
 void printParents(LayerInfo<typename Model::State, typename Model::Labels> * layerInfo)
 {
-    using State = typename Model::State;
-    using Labels = typename Model::Labels;
-    using GpuParent = GpuParent<State, Labels>;
-    printf("+++\n");
-    for(auto pIdx = 0; pIdx < layerInfo->nParents; pIdx += 1)
-    {
-        GpuParent const & p = layerInfo->parents[pIdx];
-        printf("AN %p\n", p.node);
-    }
+//    using State = typename Model::State;
+//    using Labels = typename Model::Labels;
+//    using GpuParent = GpuParent<State, Labels>;
+//    printf("+++\n");
+//    for(auto pIdx = 0; pIdx < layerInfo->nParents; pIdx += 1)
+//    {
+//        GpuParent const & p = layerInfo->parents[pIdx];
+//        printf("AN %p\n", p.node);
+//    }
 }
 
 GFL_DEVICE inline
-void printChildInfo(ChildInfo const & childInfo)
+void printNodeInfo(NodeInfo const & childInfo)
 {
     printf("HASH = %lu, COST = %.1f, ID = %ld, IDX = %d, IS_REP = %d\n",
            childInfo.hash,
@@ -238,13 +244,13 @@ void printChildInfo(ChildInfo const & childInfo)
 
 template<typename Model>
 GFL_GLOBAL
-void printChildrenInfo(LayerInfo<typename Model::State, typename Model::Labels> * layerInfo, ChildInfo * childrenInfo)
+void printChildrenInfo(LayerInfo<typename Model::State, typename Model::Labels> * layerInfo, NodeInfo * childrenInfo)
 {
     printf("--- (%d)\n", layerInfo->nChildren);
     for(auto cIdx = 0; cIdx < layerInfo->nChildren; cIdx += 1)
     {
         auto const & childInfo = childrenInfo[cIdx];
-        printChildInfo(childInfo);
+        printNodeInfo(childInfo);
     }
 }
 

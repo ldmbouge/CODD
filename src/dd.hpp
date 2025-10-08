@@ -659,36 +659,37 @@ private:
 
     void offloadLayerExpansion(std::list<ANode::Ptr> const & layer, double primalBound, DDContext ddCtx, LocalContext localCtx)
     {
-       layerEngine->offloadComputation(layer,_model, primalBound, ddCtx, localCtx);
+       //layerEngine->offloadComputation(layer,_model, primalBound, ddCtx, localCtx);
     }
 
     void retrieveNodes()
     {
-       layerEngine->retrieveNodes();
+       //layerEngine->retrieveNodes();
     }
 
     bool getParentLabelChild(ANode::Ptr & parent, int & label, ANode::Ptr & child)
     {
-        GpuChild<ST> gpuChild;
-        auto const validChild = layerEngine->getChild(gpuChild);
-        if (validChild)
-        {
-            parent = gpuChild.parentNode;
-            label = gpuChild.label;
-            child = makeNode(std::move(gpuChild.state), gpuChild.parentNode->isExact());
-            if (hasLocal())
-            {
-                if (not Model::better(gpuChild.heuristicNodeToSink, child->getBackwardBound()))
-                {
-                    child->setBackwardBound(gpuChild.heuristicNodeToSink);
-                }
-                if (not Model::better(gpuChild.heuristicNodeToSink, child->getLBound()))
-                {
-                    child->setLBound(gpuChild.heuristicNodeToSink);
-                }
-            }
-        }
-        return validChild;
+       return false;
+//        GpuChild<ST> gpuChild;
+//        auto const validChild = layerEngine->getChild(gpuChild);
+//        if (validChild)
+//        {
+//            parent = gpuChild.parentNode;
+//            label = gpuChild.label;
+//            child = makeNode(std::move(gpuChild.state), gpuChild.parentNode->isExact());
+//            if (hasLocal())
+//            {
+//                if (not Model::better(gpuChild.heuristicNodeToSink, child->getBackwardBound()))
+//                {
+//                    child->setBackwardBound(gpuChild.heuristicNodeToSink);
+//                }
+//                if (not Model::better(gpuChild.heuristicNodeToSink, child->getLBound()))
+//                {
+//                    child->setLBound(gpuChild.heuristicNodeToSink);
+//                }
+//            }
+//        }
+//        return validChild;
     };
 #endif
 

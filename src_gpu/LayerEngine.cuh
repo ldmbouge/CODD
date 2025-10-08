@@ -18,8 +18,7 @@ class LayerEngine
     using State = Model::State;
     using Labels = Model::Labels;
     using LayerInfoType = LayerInfo<State, Labels>;
-    using GpuParent = GpuParent<State, Labels>;
-    using GpuChild = GpuChild<State>;
+    using LNode = LightNode<State, Labels>;
 
 protected:
     gfl::MirrorAllocator * mirrAllocator;
@@ -33,45 +32,41 @@ protected:
     gfl::i64 cpuMemSize;
     gfl::i64 gpuMemSize;
 
+public:
     void clear() noexcept
     {
         using namespace gfl;
+
         mirrAllocator->clear();
         layerInfo = mirrAllocator->allocate<LayerInfoType>();
-        new(layerInfo.h) LayerInfoType();
+        new (layerInfo.h) LayerInfoType();
     }
 
-    void initParents(std::list<ANode::Ptr> const &layer) noexcept
+    void initParents(std::vector<LNode> const & layer) noexcept
     {
-        layerInfo->nParents = layer.size();
-        layerInfo->parents = mirrAllocator->allocateArray<GpuParent>(layerInfo->nParents);
+        using namespace gfl;
 
-        auto pIdx = 0;
-        for (auto const &pANode: layer)
-        {
-            // Parents
-            auto *const pNode = static_cast<Node<State> *>(pANode.operator->()); // Retrieve non-const pointer
-            GpuParent &gParent = layerInfo->parents[pIdx];
-            gParent.state = pNode->get();
-            gParent.boundSrcToNode = pNode->getBound();
-            gParent.node = pANode.operator->(); // Retrieve non-const pointer
-            pIdx += 1;
-        }
+        layerInfo->nParents = layer.size();
+        layerInfo->parents = mirrAllocator->allocateArray<LNode>(layerInfo->nParents);
+        memcpy(layerInfo->parents.h, layer.data(), sizeof(LNode) * layerInfo->nParents);
     }
 
     void initChildren() noexcept
     {
-        // Children
-        auto const nChildren = layerInfo->nParents * layerInfo->labelsPerParents;
-        layerInfo->children = mirrAllocator->allocateArray<GpuChild>(nChildren);
-        layerInfo->childrenInfo = mirrAllocator->allocateArray<ChildInfo>(nChildren);
+        using namespace gfl;
+
+        i32 const nChildren = layerInfo->nParents * layerInfo->labelsPerParents;
+        layerInfo->children = mirrAllocator->allocateArray<LNode>(nChildren);
+        layerInfo->childrenInfo = mirrAllocator->allocateArray<NodeInfo>(nChildren);
     }
 
     void initAux() noexcept
     {
+        using namespace gfl;
+
         // CUB
         auto const nChildren = layerInfo->nParents * layerInfo->labelsPerParents;
-        layerInfo->tmpChildrenInfo = mirrAllocator->d.allocateArray<ChildInfo>(nChildren);
+        layerInfo->tmpChildrenInfo = mirrAllocator->d.allocateArray<NodeInfo>(nChildren);
         cub::DeviceRadixSort::SortKeys( // Initialize cubTmpMemSize
                 layerInfo.h->cubTmpMem,
                 layerInfo->cubTmpMemSize,
@@ -96,22 +91,22 @@ protected:
         dMemSize += memSize;
 
         // initParents()
-        memSize = sizeof(GpuParent) * nParents + StackAllocator::DefaultAlign;
+        memSize = sizeof(LNode) * nParents + StackAllocator::DefaultAlign;
         hMemSize += memSize;
         dMemSize += memSize;
 
         // initChildren()
         auto const nChildren = nParents * branchingFactor;
-        memSize = sizeof(GpuChild) * nChildren + StackAllocator::DefaultAlign;
-        memSize += sizeof(ChildInfo) * nChildren + StackAllocator::DefaultAlign;
+        memSize = sizeof(LNode) * nChildren + StackAllocator::DefaultAlign;
+        memSize += sizeof(NodeInfo) * nChildren + StackAllocator::DefaultAlign;
         hMemSize += memSize;
         dMemSize += memSize;
 
         // initAux()
-        memSize = sizeof(ChildInfo) * nChildren + StackAllocator::DefaultAlign;
+        memSize = sizeof(NodeInfo) * nChildren + StackAllocator::DefaultAlign;
         dMemSize += memSize;
         void * dummyTmpMem = nullptr;
-        ChildInfo dummyChildInfo[2];
+        NodeInfo dummyChildInfo[2];
         cub::DeviceRadixSort::SortKeys( // Initialize cubTmpMemSize
                 dummyTmpMem,
                 memSize,
@@ -124,7 +119,7 @@ protected:
         return {hMemSize, dMemSize};
     }
 
-public:
+
     LayerEngine() :
             mirrAllocator(nullptr),
             layerInfo(nullptr)
@@ -147,8 +142,8 @@ public:
     }
 
     void offloadComputation(
-            std::list<ANode::Ptr> const &layer,
-            Model const *const model,
+            std::vector<LNode> const & layer,
+            Model const * const model,
             double const primalBound,
             DDContext const ddCtx,
             LocalContext const localCtx)
@@ -175,33 +170,16 @@ public:
 
         if (layerInfo->labelsPerParents > 0)
         {
-
-            // Children
-//        printf("P = %d | ", layerInfo->nParents);
-//        fflush(stdout);
-
             initChildren();
             initAux();
-
-//        printf("IO = ");
-//        gfl::printMemSize(mirrAllocator.h.calcUsedMemSize());
-//        printf(" /");
-//        gfl::printMemSize(mirrAllocator.h.calcTotalMemSize());
-//        printf(" (%4.1f%%) | ", gfl::div(100 * mirrAllocator.h.calcUsedMemSize(), mirrAllocator.h.calcTotalMemSize()));
-//        printf("IO + TMP = ");
-//        gfl::printMemSize(mirrAllocator.d.calcUsedMemSize());
-//        printf(" /");
-//        gfl::printMemSize(mirrAllocator.d.calcTotalMemSize());
-//        printf(" (%4.1f%%)\n", gfl::div(100 * mirrAllocator.d.calcUsedMemSize(), mirrAllocator.d.calcTotalMemSize()));
-//        fflush(stdout);
 
             cudaMemcpyAsync(layerInfo.d, layerInfo.h, sizeof(LayerInfoType), cudaMemcpyHostToDevice, gpuMainQueue);
             CHECK_LAST_CUDA_ERROR();
 
             blockSize = roundUpToMultiple<i32>(layerInfo->labelsPerParents, 32);
             gridSize = layerInfo->nParents;
-            i32 shrMemSize = sizeof(GpuChild) * layerInfo->labelsPerParents + StackAllocator::DefaultAlign +
-                             sizeof(ChildInfo) * layerInfo->labelsPerParents;
+            i32 shrMemSize = sizeof(LNode) * layerInfo->labelsPerParents + StackAllocator::DefaultAlign +
+                             sizeof(NodeInfo) * layerInfo->labelsPerParents;
             calcChildrenKernel<Model><<<gridSize, blockSize, shrMemSize, gpuMainQueue>>>(
                     model,
                     layerInfo.d,
@@ -212,14 +190,14 @@ public:
             cudaEventRecord(childrenOk, gpuMainQueue);
             CHECK_LAST_CUDA_ERROR();
 
-//        printf("After calcChildrenKernel\n");
-//        printChildrenInfo<Model><<<1,1,0,gpuMainQueue>>>(layerInfo.d, layerInfo->childrenInfo.d);
-//        CHECK_LAST_CUDA_ERROR();
-//        cudaStreamSynchronize(gpuMainQueue);
-//        CHECK_LAST_CUDA_ERROR();
+//            printf("After calcChildrenKernel\n");
+//            printChildrenInfo<Model><<<1,1,0,gpuMainQueue>>>(layerInfo.d, layerInfo->childrenInfo.d);
+//            CHECK_LAST_CUDA_ERROR();
+//            cudaStreamSynchronize(gpuMainQueue);
+//            CHECK_LAST_CUDA_ERROR();
 
             // Representatives
-            sortKernel<ChildInfo, HashDecomposer><<<1, 1, 0, gpuMainQueue>>>(
+            sortKernel<NodeInfo, HashDecomposer><<<1, 1, 0, gpuMainQueue>>>(
                     layerInfo->cubTmpMem,
                     layerInfo->cubTmpMemSize,
                     layerInfo->childrenInfo.d,
@@ -238,29 +216,17 @@ public:
             calcReprKernel<Model><<<gridSize, blockSize, 0, gpuMainQueue>>>(layerInfo.d, layerInfo->tmpChildrenInfo);
             CHECK_LAST_CUDA_ERROR();
 
-//        printf("After calcReprKernel\n");
-//        printChildrenInfo<Model><<<1, 1, 0, gpuMainQueue>>>(layerInfo.d, layerInfo->tmpChildrenInfo);
-//        CHECK_LAST_CUDA_ERROR();
-//        cudaStreamSynchronize(gpuMainQueue);
-//        CHECK_LAST_CUDA_ERROR();
-
-            sortKernel<ChildInfo, RepLexDecomposer><<<1, 1, 0, gpuMainQueue>>>(
+            sortKernel<NodeInfo, RepBoundDecomposer><<<1, 1, 0, gpuMainQueue>>>(
                     layerInfo->cubTmpMem,
                     layerInfo->cubTmpMemSize,
                     layerInfo->tmpChildrenInfo,
                     layerInfo->childrenInfo.d,
                     &layerInfo.d->nChildren);
             CHECK_LAST_CUDA_ERROR();
-
-//        printf("After sortByRepCost\n");
-//        printChildrenInfo<Model><<<1, 1, 0, gpuMainQueue>>>(layerInfo.d, layerInfo->childrenInfo.d);
-//        CHECK_LAST_CUDA_ERROR();
-//        cudaStreamSynchronize(gpuMainQueue);
         }
-
     }
 
-    void retrieveNodes()
+    void retrieveNodes(std::vector<LNode> & tmpLayer,  std::vector<NodeInfo> & nodeInfoNext)
     {
         using namespace gfl;
 
@@ -270,38 +236,41 @@ public:
         CHECK_LAST_CUDA_ERROR();
         cudaStreamSynchronize(gpuAuxQueue);
         CHECK_LAST_CUDA_ERROR();
-        //printf("Nodes to retrieve %d\n",layerInfo->nChildren);
+
+        tmpLayer.clear();
+        nodeInfoNext.clear();
+        tmpLayer.resize(layerInfo.h->nChildren);
+        nodeInfoNext.resize(layerInfo.h->nChildren);
         if (layerInfo->nChildren > 0)
         {
-            cudaMemcpyAsync(layerInfo->children.h, layerInfo->children.d, sizeof(GpuChild) * layerInfo->nChildren, cudaMemcpyDeviceToHost, gpuAuxQueue);
+            cudaMemcpyAsync(tmpLayer.data(), layerInfo->children.d, sizeof(LNode) * layerInfo->nChildren, cudaMemcpyDeviceToHost, gpuAuxQueue);
             CHECK_LAST_CUDA_ERROR();
-            cudaMemcpyAsync(layerInfo->childrenInfo.h, layerInfo->childrenInfo.d, sizeof(ChildInfo) * layerInfo->nChildren, cudaMemcpyDeviceToHost, gpuMainQueue);
+            cudaMemcpyAsync(nodeInfoNext.data(), layerInfo->childrenInfo.d, sizeof(NodeInfo) * layerInfo->nChildren, cudaMemcpyDeviceToHost, gpuMainQueue);
             CHECK_LAST_CUDA_ERROR();
             cudaDeviceSynchronize();
             CHECK_LAST_CUDA_ERROR();
         }
-        nChildProcessed = 0;
     }
 
-    bool getChild(GpuChild &child)
-    {
-        if (nChildProcessed < layerInfo->nChildren)
-        {
-            auto const &childInfo = layerInfo->childrenInfo[nChildProcessed];
-            if (not childInfo.isRepresented)
-            {
-                child = layerInfo->children[childInfo.idx];
-                nChildProcessed += 1;
-                return true;
-            } else
-            {
-                return false;
-            }
-        } else
-        {
-            return false;
-        }
-    }
+//    bool getChild(GpuChild &child)
+//    {
+//        if (nChildProcessed < layerInfo->nChildren)
+//        {
+//            auto const &childInfo = layerInfo->childrenInfo[nChildProcessed];
+//            if (not childInfo.isRepresented)
+//            {
+//                child = layerInfo->children[childInfo.idx];
+//                nChildProcessed += 1;
+//                return true;
+//            } else
+//            {
+//                return false;
+//            }
+//        } else
+//        {
+//            return false;
+//        }
+//    }
 
     gfl::i64 getNodesPerBatch(gfl::i64 const nParents, gfl::i32 const branchingFactor)
     {

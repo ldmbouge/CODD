@@ -6,28 +6,20 @@
 #include <Types.hpp>
 
 template<typename State, typename Labels>
-struct alignas(16) GpuParent
+struct LightNode
 {
     State state;
     Labels labels;
     gfl::f64 boundSrcToNode;
-    ANode * node;
+    gfl::u8 nEdgesSrcToNode;
+    gfl::u8 labelsSrcToNode[128];
 };
 
-template<typename State>
-struct alignas(16) GpuChild
-{
-    State state;
-    gfl::i32 label;
-    gfl::f64 heuristicNodeToSink;
-    ANode * parentNode;
-};
-
-struct alignas(16) ChildInfo
+struct NodeInfo
 {
     gfl::u64 hash;
-    gfl::f64 boundSrcToNode;
     gfl::f64 cost;
+    gfl::f64 boundSrcToNode;
     gfl::i64 id;
     gfl::i32 idx;
     gfl::u32 isRepresented;
@@ -36,12 +28,11 @@ struct alignas(16) ChildInfo
 template<typename State, typename Labels>
 struct LayerInfo
 {
-    using GpuParent = GpuParent<State, Labels>;
-    using GpuChild = GpuChild<State>;
+    using LNode = LightNode<State, Labels>;
 
     // Parents
     gfl::i32 nParents;
-    gfl::MirrorPtr<GpuParent> parents;
+    gfl::MirrorPtr<LNode> parents;
 
     // Labels
     gfl::i32 minLabel;
@@ -50,11 +41,11 @@ struct LayerInfo
 
     // Children
     gfl::i32 nChildren;
-    gfl::MirrorPtr<GpuChild> children;
-    gfl::MirrorPtr<ChildInfo> childrenInfo;
+    gfl::MirrorPtr<LNode> children;
+    gfl::MirrorPtr<NodeInfo> childrenInfo;
 
     // CUB
-    ChildInfo * tmpChildrenInfo;
+    NodeInfo * tmpChildrenInfo;
     std::size_t cubTmpMemSize;
     void * cubTmpMem;
 
@@ -76,7 +67,7 @@ struct LayerInfo
 struct DummyDecomposer96
 {
     GFL_HOST_DEVICE
-    gfl::tuple<gfl::u32&, gfl::u64&> operator()(ChildInfo &) const
+    gfl::tuple<gfl::u32&, gfl::u64&> operator()(NodeInfo &) const
     {
         gfl::u32 tmp32 = 0;
         gfl::u64 tmp64 = 0;
@@ -87,36 +78,18 @@ struct DummyDecomposer96
 struct HashDecomposer
 {
     GFL_DEVICE
-    gfl::tuple<gfl::u64&> operator()(ChildInfo & childInfo) const
+    gfl::tuple<gfl::u64&> operator()(NodeInfo & nodeInfo) const
     {
-        return {childInfo.hash};
-    }
-};
-
-struct RepLexDecomposer
-{
-    GFL_DEVICE
-    gfl::tuple<gfl::u32&,gfl::i64&> operator()(ChildInfo & childInfo) const
-    {
-        return {childInfo.isRepresented,childInfo.id};
-    }
-};
-
-struct RepCostDecomposer
-{
-    GFL_DEVICE
-    gfl::tuple<gfl::u32&,gfl::f64&> operator()(ChildInfo & childInfo) const
-    {
-        return {childInfo.isRepresented,childInfo.cost};
+        return {nodeInfo.hash};
     }
 };
 
 struct RepBoundDecomposer
 {
     GFL_DEVICE
-    gfl::tuple<gfl::u32&,gfl::f64&> operator()(ChildInfo & childInfo) const
+    gfl::tuple<gfl::u32&,gfl::f64&> operator()(NodeInfo & nodeInfo) const
     {
-        return {childInfo.isRepresented,childInfo.boundSrcToNode};
+        return {nodeInfo.isRepresented,nodeInfo.boundSrcToNode};
     }
 };
 

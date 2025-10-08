@@ -68,7 +68,7 @@ namespace gfl
     }
     inline
     MirrorAllocator::MirrorAllocator(i64 const hSize, i64 const dSize) noexcept:
-            h(mallocHost<void>(hSize), hSize),
+            h(mallocStd<void>(hSize), hSize),
             d(mallocDevice<void>(dSize), dSize)
     {}
 
