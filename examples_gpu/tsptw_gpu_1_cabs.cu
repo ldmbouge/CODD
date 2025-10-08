@@ -7,6 +7,7 @@
 #include <Array.hpp>
 
 constexpr auto static ReadOnlyMemSize{48 * 1024}; // Cached in shared memory
+constexpr auto static InitCpuBufferSize{64lu * 1024lu * 1024lu}; // Cached in shared memory
 
 void printNodeInfo(std::vector<NodeInfo> const * const nodesInfo)
 {
@@ -83,6 +84,10 @@ int main(int argc,char* argv[])
     std::vector<Node> * nextLayer = new std::vector<Node>();
     std::vector<Node> tmpLayer;
     std::vector<NodeInfo> nextInfo;
+    currentLayer->reserve(InitCpuBufferSize);
+    nextLayer->reserve(InitCpuBufferSize);
+    tmpLayer.reserve(InitCpuBufferSize);
+    nextInfo.reserve(InitCpuBufferSize);
 
     // GPU
     LayerHelperType * lh = gpu ? new LayerHelperType() : nullptr;
