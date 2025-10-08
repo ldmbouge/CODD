@@ -218,15 +218,15 @@ int main(int argc,char* argv[])
             }
         }
 
-        printf("[%7.2f] Layer = %2d | Nodes = %9lu -> %9lu ", elapsed / 1000, layerIdx, currentLayer->size(), nextLayer->size());
         if (not nextLayer->empty())
         {
+            printf("[%7.2f] Layer = %2d | Nodes = %9lu -> %9lu ", elapsed / 1000, layerIdx, currentLayer->size(), nextLayer->size());
             LNode const & best = nextLayer->front();
             printf(" | Cost = %7.2f | Value = ", best.boundSrcToNode);
             gfl::Array<u8>::print(best.labelsSrcToNode, best.labelsSrcToNode + best.nEdgesSrcToNode);
             printf("\n");
+            fflush(stdout);
         }
-        fflush(stdout);
 
         currentLayer = nextLayer;
         layerIdx += 1;
