@@ -40,13 +40,12 @@ struct LayerHelper
     }
 
     static
-    void clear(LayerInfoType ** layerInfo, gfl::StackAllocator * allocator) noexcept
+    void clear(LayerInfoType * layerInfo, gfl::StackAllocator * allocator) noexcept
     {
         using namespace gfl;
 
         allocator->clear();
-        *layerInfo = allocator->allocate<LayerInfoType>();
-        new (*layerInfo) LayerInfoType();
+        layerInfo->clear();
     }
 
     static
@@ -56,7 +55,6 @@ struct LayerHelper
 
         layerInfo->nParents = layer.size();
         layerInfo->parents = allocator->allocateArray<Node>(layerInfo->nParents);
-        memcpy(layerInfo->parents, layer.data(), sizeof(Node) * layerInfo->nParents);
     }
 
     static

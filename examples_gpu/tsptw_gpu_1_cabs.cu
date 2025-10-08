@@ -10,7 +10,7 @@ constexpr auto static ReadOnlyMemSize{48 * 1024}; // Cached in shared memory
 
 void printNodeInfo(std::vector<NodeInfo> const * const nodesInfo)
 {
-    for(auto const & ni : *nodesInfo)
+    for (auto const & ni : *nodesInfo)
     {
         printf("HASH = %lu, BOUND = %.1f, COST = %.1f, ID = %ld, IDX = %d, IS_REP = %d\n",
                ni.hash,
@@ -86,8 +86,8 @@ int main(int argc,char* argv[])
 
     // GPU
     LayerHelperType * lh = gpu ? new LayerHelperType() : nullptr;
-    LayerInfoType * layerInfo = nullptr;
-    StackAllocator * gAllocator = gpu ? new StackAllocator(mallocManaged(lh->gpuMemSize), lh->gpuMemSize) : nullptr;
+    LayerInfoType * layerInfo = gpu ? mallocManaged<LayerInfoType>(sizeof(LayerInfoType)) : nullptr;
+    StackAllocator * gAllocator = gpu ? new StackAllocator(mallocDevice(lh->gpuMemSize), lh->gpuMemSize) : nullptr;
 
     // Initialize first layer
     Node root;
@@ -99,25 +99,36 @@ int main(int argc,char* argv[])
     // Top-down construction
     i32 layerIdx = 0;
     auto start = RuntimeMonitor::cputime();
+    bool interrupted = false;
     while (not currentLayer->empty())
     {
-        auto elapsed = RuntimeMonitor::elapsedSince(start);
-        if (elapsed / 1000 > timeout) break;
+        auto elapsed = RuntimeMonitor::elapsedSince(start) / 1000;
+        if (elapsed > timeout)
+        {
+            interrupted = true;
+            break;
+        }
+
+        tmpLayer.clear();
+        nextInfo.clear();
+        nextLayer->clear();
 
         if (gpu)
         {
+            nextLayer->reserve(layerInfo->nParents * layerInfo->labelsPerParents);
+
             // Offload computation
             {
                 // Clear
-                LayerHelperType::clear(&layerInfo, gAllocator);
+                LayerHelperType::clear(layerInfo, gAllocator);
 
                 // Parents
                 LayerHelperType::initParents(*currentLayer, layerInfo, gAllocator);
-                cudaMemPrefetchAsync(
-                        gAllocator->getMem(),
-                        gAllocator->calcUsedMemSize(),
-                        lh->memLocGpu,
-                        0,
+                cudaMemcpyAsync(
+                        layerInfo->parents,
+                        currentLayer->data(),
+                        sizeof(Node) * layerInfo->nParents,
+                        cudaMemcpyHostToDevice,
                         lh->gpuMainQueue);
                 CHECK_LAST_CUDA_ERROR();
 
@@ -126,13 +137,6 @@ int main(int argc,char* argv[])
                 dim3 gridSize = roundUpDivPosInt<i32>(layerInfo->nParents, blockSize);
                 calcLabelsKernel<Model><<<gridSize, blockSize, 0, lh->gpuMainQueue>>>(model, layerInfo, DDExact);
                 CHECK_LAST_CUDA_ERROR();
-                cudaMemPrefetchAsync(
-                        layerInfo,
-                        sizeof(LayerInfoType),
-                        lh->memLocCpu,
-                        0,
-                        lh->gpuMainQueue);
-                CHECK_LAST_CUDA_ERROR();
                 cudaStreamSynchronize(lh->gpuMainQueue);
                 CHECK_LAST_CUDA_ERROR();
 
@@ -140,14 +144,6 @@ int main(int argc,char* argv[])
                 {
                     LayerHelperType::initChildren(layerInfo, gAllocator);
                     LayerHelperType::initAux(layerInfo, gAllocator);
-                    cudaMemPrefetchAsync(
-                            layerInfo,
-                            sizeof(LayerInfoType),
-                            lh->memLocGpu,
-                            0,
-                            lh->gpuMainQueue);
-                    CHECK_LAST_CUDA_ERROR();
-
                     blockSize = roundUpToMultiple<i32>(layerInfo->labelsPerParents, 32);
                     gridSize = layerInfo->nParents;
                     i32 shrMemSize = sizeof(Node) * layerInfo->labelsPerParents + StackAllocator::DefaultAlign +
@@ -190,49 +186,29 @@ int main(int argc,char* argv[])
             {
                 cudaEventSynchronize(lh->childrenOk);
                 CHECK_LAST_CUDA_ERROR();
-                cudaMemPrefetchAsync(
-                        layerInfo,
-                        sizeof(LayerInfoType),
-                        lh->memLocCpu,
-                        0,
-                        lh->gpuAuxQueue);
-                CHECK_LAST_CUDA_ERROR();
-                cudaStreamSynchronize(lh->gpuAuxQueue);
                 if (layerInfo->nChildren > 0)
                 {
+                    tmpLayer.resize(layerInfo->nChildren);
                     CHECK_LAST_CUDA_ERROR();
-                    cudaMemPrefetchAsync(
+                    cudaMemcpyAsync(
+                            tmpLayer.data(),
                             layerInfo->children,
                             sizeof(Node) * layerInfo->nChildren,
-                            lh->memLocCpu,
-                            0,
+                            cudaMemcpyDeviceToHost,
                             lh->gpuAuxQueue);
                     CHECK_LAST_CUDA_ERROR();
-                    cudaMemPrefetchAsync(
+
+                    nextInfo.resize(layerInfo->nChildren);
+                    cudaMemcpyAsync(
+                            nextInfo.data(),
                             layerInfo->childrenInfo,
                             sizeof(NodeInfo) * layerInfo->nChildren,
-                            lh->memLocCpu,
-                            0,
+                            cudaMemcpyDeviceToHost,
                             lh->gpuMainQueue);
                     CHECK_LAST_CUDA_ERROR();
+
                     cudaDeviceSynchronize();
                     CHECK_LAST_CUDA_ERROR();
-                }
-
-            }
-
-            nextLayer->clear();
-            nextLayer->reserve(layerInfo->nChildren);
-            for (i32 niIdx = 0; niIdx < layerInfo->nChildren; niIdx += 1)
-            {
-                if (not layerInfo->childrenInfo[niIdx].isRepresented)
-                {
-                    i32 const nIdx = layerInfo->childrenInfo[niIdx].idx;
-                    nextLayer->push_back(layerInfo->children[nIdx]);
-                }
-                else
-                {
-                    break;
                 }
             }
         }
@@ -253,8 +229,6 @@ int main(int argc,char* argv[])
 
             // Initialize aux
             i32 const nextLayerMaxSize = currentLayer->size() * labelsPerParent;
-            tmpLayer.clear();
-            nextInfo.clear();
             tmpLayer.reserve(nextLayerMaxSize);
             nextInfo.reserve(nextLayerMaxSize);
 
@@ -332,27 +306,27 @@ int main(int argc,char* argv[])
                 return key1 < key2;
             };
             std::sort(nextInfo.begin(), nextInfo.end(), cmpByRepBound);
+        }
 
-            nextLayer->clear();
-            nextLayer->reserve(tmpLayerSize);
-            for (i32 niIdx = 0; niIdx < tmpLayerSize; niIdx += 1)
+        i32 const tmpLayerSize = tmpLayer.size();
+        nextLayer->reserve(tmpLayerSize);
+        for (i32 niIdx = 0; niIdx < tmpLayerSize; niIdx += 1)
+        {
+            if (not nextInfo[niIdx].isRepresented)
             {
-                if (not nextInfo[niIdx].isRepresented)
-                {
-                    i32 const nIdx = nextInfo[niIdx].idx;
-                    nextLayer->resize(nextLayer->size()+1);
-                    nextLayer->back() = tmpLayer[nIdx];
-                }
-                else
-                {
-                    break;
-                }
+                i32 const nIdx = nextInfo[niIdx].idx;
+                nextLayer->resize(nextLayer->size()+1);
+                nextLayer->back() = tmpLayer[nIdx];
+            }
+            else
+            {
+                break;
             }
         }
 
         if (not nextLayer->empty())
         {
-            printf("[%7.2fs] Layer = %3d | Nodes = %9lu -> %9lu ", elapsed / 1000, layerIdx, currentLayer->size(), nextLayer->size());
+            printf("[%7.2fs] Layer = %3d | Nodes = %9lu -> %9lu ", elapsed, layerIdx, currentLayer->size(), nextLayer->size());
             Node const & best = nextLayer->front();
             printf(" | Cost = %7.2f | Value = ", best.boundSrcToNode);
             gfl::Array<u8>::print(best.labelsSrcToNode, best.labelsSrcToNode + best.nEdgesSrcToNode);
@@ -363,6 +337,10 @@ int main(int argc,char* argv[])
         std::swap(currentLayer,nextLayer);
         layerIdx += 1;
     }
+
+    auto elapsed = RuntimeMonitor::elapsedSince(start) / 1000;
+    printf("[%7.2fs] %s\n", elapsed, interrupted ? "TIMEOUT" : "COMPLETED");
+    fflush(stdout);
 
     return EXIT_SUCCESS;
 }

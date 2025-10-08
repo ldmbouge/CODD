@@ -49,19 +49,20 @@ struct LayerInfo
     std::size_t cubTmpMemSize;
     void * cubTmpMem;
 
-    LayerInfo() :
-            nParents(0),
-            parents(nullptr),
-            minLabel(gfl::numeric_limits<gfl::i32>::max()),
-            maxLabel(gfl::numeric_limits<gfl::i32>::min()),
-            labelsPerParents(0),
-            nChildren(0),
-            children(nullptr),
-            childrenInfo(nullptr),
-            tmpChildrenInfo(nullptr),
-            cubTmpMemSize(0),
-            cubTmpMem(nullptr)
-    {}
+    void clear()
+    {
+        nParents = 0;
+        parents = nullptr;
+        minLabel = gfl::numeric_limits<gfl::i32>::max();
+        maxLabel = gfl::numeric_limits<gfl::i32>::min();
+        labelsPerParents = 0;
+        nChildren = 0;
+        children = nullptr;
+        childrenInfo = nullptr;
+        tmpChildrenInfo = nullptr;
+        cubTmpMemSize = 0;
+        cubTmpMem = nullptr;
+    }
 };
 
 struct DummyDecomposer96

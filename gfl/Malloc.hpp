@@ -38,7 +38,7 @@ namespace gfl
     }
 
 #ifdef __CUDACC__
-    template<typename T>
+    template<typename T = void>
     T * mallocHost(i64 const size) noexcept
     {
         void * memory = nullptr;
@@ -51,8 +51,8 @@ namespace gfl
         return static_cast<T *>(memory);
     }
 
-    template<typename T>
-    T * mallocDevice(i64 const size) noexcept
+    template<typename T = void>
+    T * mallocDevice(const i64 size) noexcept
     {
         void * memory = nullptr;
         cudaError_t status = cudaMalloc(&memory, size);
