@@ -161,6 +161,27 @@ void checkStatePair(NodeInfo & iInfo, typename Model::State const & iState, Node
 {
     using namespace gfl;
 
+    if (iInfo.boundSrcToNode ==  jInfo.boundSrcToNode)
+    {
+        if (Model::State::equal(iState, jState))
+        {
+            jInfo.isRepresented = static_cast<i32>(true);
+        }
+    }
+    if (Model::better(iInfo.boundSrcToNode, jInfo.boundSrcToNode))
+    {
+        if (Model::State::equal(iState, jState))
+        {
+            jInfo.isRepresented = static_cast<i32>(true);
+        }
+    }
+    if (Model::better(jInfo.boundSrcToNode, iInfo.boundSrcToNode))
+    {
+        if (Model::State::equal(iState, jState))
+        {
+            iInfo.isRepresented = static_cast<i32>(true);
+        }
+    }
     if (Model::betterEq(iInfo.boundSrcToNode, jInfo.boundSrcToNode))
     {
         if (Model::State::equal(iState, jState))
