@@ -28,11 +28,11 @@ struct NodeInfo
 template<typename State, typename Labels>
 struct LayerInfo
 {
-    using LNode = LightNode<State, Labels>;
+    using Node = LightNode<State, Labels>;
 
     // Parents
     gfl::i32 nParents;
-    gfl::MirrorPtr<LNode> parents;
+    Node * parents;
 
     // Labels
     gfl::i32 minLabel;
@@ -41,8 +41,8 @@ struct LayerInfo
 
     // Children
     gfl::i32 nChildren;
-    gfl::MirrorPtr<LNode> children;
-    gfl::MirrorPtr<NodeInfo> childrenInfo;
+    Node * children;
+    NodeInfo * childrenInfo;
 
     // CUB
     NodeInfo * tmpChildrenInfo;
@@ -51,13 +51,13 @@ struct LayerInfo
 
     LayerInfo() :
             nParents(0),
-            parents(nullptr, nullptr),
+            parents(nullptr),
             minLabel(gfl::numeric_limits<gfl::i32>::max()),
             maxLabel(gfl::numeric_limits<gfl::i32>::min()),
             labelsPerParents(0),
             nChildren(0),
-            children(nullptr, nullptr),
-            childrenInfo(nullptr, nullptr),
+            children(nullptr),
+            childrenInfo(nullptr),
             tmpChildrenInfo(nullptr),
             cubTmpMemSize(0),
             cubTmpMem(nullptr)

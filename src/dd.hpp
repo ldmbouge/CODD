@@ -520,7 +520,7 @@ private:
    std::function<ANode::Ptr()> _initClosure;
 #ifdef __NVCC__
     long long int const gpu_width;
-    LayerEngine<Model> * layerEngine;
+    //LayerEngine<Model> * layerEngine;
 #endif
    ADOMClass::Ptr makeDominanceManager() {
       return ADOMClass::Ptr(new CDOMClass<Model>());
@@ -643,18 +643,18 @@ private:
 
     virtual void initLayerEngine()
     {
-       if (layerEngine == nullptr)
-       {
-           layerEngine = new LayerEngine<Model>();
-       }
+//       if (layerEngine == nullptr)
+//       {
+//           layerEngine = new LayerEngine<Model>();
+//       }
     }
 
     int getNodesPerBatch(ANode::Ptr node, std::size_t nNodes, DDContext ctx)
     {
-       auto const state = static_cast<Node<ST> const *>(node.get())->get();
-       auto const labels = _model->lgf(state, ctx);
-       auto const branchingFactor = gfl::max<int>(1,labels.size()); // Avoid division by 0
-       return layerEngine->getNodesPerBatch(nNodes, branchingFactor);
+//       auto const state = static_cast<Node<ST> const *>(node.get())->get();
+//       auto const labels = _model->lgf(state, ctx);
+//       auto const branchingFactor = gfl::max<int>(1,labels.size()); // Avoid division by 0
+//       return layerEngine->getNodesPerBatch(nNodes, branchingFactor);
     }
 
     void offloadLayerExpansion(std::list<ANode::Ptr> const & layer, double primalBound, DDContext ddCtx, LocalContext localCtx)
@@ -754,7 +754,7 @@ public:
               _model(model),
               _ndId(0)
 #ifdef __NVCC__
-              ,gpu_width(gpu_width), layerEngine(nullptr)
+              ,gpu_width(gpu_width)//, //layerEngine(nullptr)
 #endif
     {
         _baseline = _mem->mark();

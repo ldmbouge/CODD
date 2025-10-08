@@ -9,29 +9,88 @@
 
 #include "kernels.cuh"
 
-enum DDContext : int;
-enum LocalContext : int;
-
-template<typename Model>
-class LayerEngine
+template<typename State, typename Labels>
+struct LayerHelper
 {
-    using State = Model::State;
-    using Labels = Model::Labels;
+    using Node = LightNode<State, Labels>;
     using LayerInfoType = LayerInfo<State, Labels>;
-    using LNode = LightNode<State, Labels>;
 
-protected:
-    gfl::MirrorAllocator * mirrAllocator;
-    gfl::MirrorPtr<LayerInfoType> layerInfo;
-    gfl::i32 gpuDeviceId;
+    cudaMemLocation memLocCpu;
+    cudaMemLocation memLocGpu;
     cudaStream_t gpuMainQueue;
     cudaStream_t gpuAuxQueue;
     cudaEvent_t childrenOk;
     cudaEvent_t infoOk;
-    gfl::i64 nChildProcessed;
-    gfl::i64 cpuMemSize;
     gfl::i64 gpuMemSize;
 
+    LayerHelper()
+    {
+        memLocCpu.type = cudaMemLocationTypeHost;
+        memLocGpu.type = cudaMemLocationTypeDevice;
+        cudaGetDevice(&memLocGpu.id);
+        cudaStreamCreateWithFlags(&gpuMainQueue, cudaStreamNonBlocking);
+        cudaStreamCreateWithFlags(&gpuAuxQueue, cudaStreamNonBlocking);
+        cudaEventCreate(&childrenOk);
+        cudaEventCreate(&infoOk);
+
+        std::size_t gpuFreeMemSize = 0;
+        std::size_t gpuTotMemSize = 0;
+        cudaMemGetInfo(&gpuFreeMemSize, &gpuTotMemSize);
+        gpuMemSize = gpuFreeMemSize - 4lu * 1024lu * 1024lu * 1024lu; // Give 4GB to CUDA runtime
+    }
+
+    static
+    void clear(LayerInfoType ** layerInfo, gfl::StackAllocator * allocator) noexcept
+    {
+        using namespace gfl;
+
+        allocator->clear();
+        *layerInfo = allocator->allocate<LayerInfoType>();
+        new (*layerInfo) LayerInfoType();
+    }
+
+    static
+    void initParents(std::vector<Node> const & layer, LayerInfoType * layerInfo, gfl::StackAllocator * allocator) noexcept
+    {
+        using namespace gfl;
+
+        layerInfo->nParents = layer.size();
+        layerInfo->parents = allocator->allocateArray<Node>(layerInfo->nParents);
+        memcpy(layerInfo->parents, layer.data(), sizeof(Node) * layerInfo->nParents);
+    }
+
+    static
+    void initChildren(LayerInfoType * layerInfo, gfl::StackAllocator * allocator) noexcept
+    {
+        using namespace gfl;
+
+        i32 const nChildren = layerInfo->nParents * layerInfo->labelsPerParents;
+        layerInfo->children = allocator->allocateArray<Node>(nChildren);
+        layerInfo->childrenInfo = allocator->allocateArray<NodeInfo>(nChildren);
+    }
+
+    static
+    void initAux(LayerInfoType * layerInfo, gfl::StackAllocator * allocator) noexcept
+    {
+        using namespace gfl;
+
+        // CUB
+        auto const nChildren = layerInfo->nParents * layerInfo->labelsPerParents;
+        layerInfo->tmpChildrenInfo = allocator->allocateArray<NodeInfo>(nChildren);
+        cub::DeviceRadixSort::SortKeys( // Initialize cubTmpMemSize
+                layerInfo->cubTmpMem,
+                layerInfo->cubTmpMemSize,
+                layerInfo->tmpChildrenInfo,
+                layerInfo->childrenInfo,
+                nChildren,
+                DummyDecomposer96{}); // Bigger key used
+        layerInfo->cubTmpMem = allocator->allocate<gfl::u8>(layerInfo->cubTmpMemSize, 16);
+    }
+};
+
+
+
+/*
 public:
     void clear() noexcept
     {
@@ -51,31 +110,6 @@ public:
         memcpy(layerInfo->parents.h, layer.data(), sizeof(LNode) * layerInfo->nParents);
     }
 
-    void initChildren() noexcept
-    {
-        using namespace gfl;
-
-        i32 const nChildren = layerInfo->nParents * layerInfo->labelsPerParents;
-        layerInfo->children = mirrAllocator->allocateArray<LNode>(nChildren);
-        layerInfo->childrenInfo = mirrAllocator->allocateArray<NodeInfo>(nChildren);
-    }
-
-    void initAux() noexcept
-    {
-        using namespace gfl;
-
-        // CUB
-        auto const nChildren = layerInfo->nParents * layerInfo->labelsPerParents;
-        layerInfo->tmpChildrenInfo = mirrAllocator->d.allocateArray<NodeInfo>(nChildren);
-        cub::DeviceRadixSort::SortKeys( // Initialize cubTmpMemSize
-                layerInfo.h->cubTmpMem,
-                layerInfo->cubTmpMemSize,
-                layerInfo->tmpChildrenInfo,
-                layerInfo->childrenInfo.h,
-                nChildren,
-                DummyDecomposer96{}); // Bigger key used
-        layerInfo->cubTmpMem = mirrAllocator->d.allocate<gfl::u8>(layerInfo->cubTmpMemSize, 16);
-    }
 
     gfl::tuple<gfl::i64, gfl::i64> calcMemSize(gfl::i32 const nParents, gfl::i32 const branchingFactor)
     {
@@ -120,26 +154,6 @@ public:
     }
 
 
-    LayerEngine() :
-            mirrAllocator(nullptr),
-            layerInfo(nullptr)
-    {
-        using namespace gfl;
-
-        cudaGetDevice(&gpuDeviceId);
-        cudaStreamCreateWithFlags(&gpuMainQueue, cudaStreamNonBlocking);
-        cudaStreamCreateWithFlags(&gpuAuxQueue, cudaStreamNonBlocking);
-        cudaEventCreate(&childrenOk);
-        cudaEventCreate(&infoOk);
-
-        // Automatic batch size
-        std::size_t gpuFreeMemSize = 0;
-        std::size_t gpuTotMemSize = 0;
-        cudaMemGetInfo(&gpuFreeMemSize, &gpuTotMemSize);
-        gpuMemSize = gpuFreeMemSize - 4lu * 1024lu * 1024lu * 1024lu; // Give 4GB to CUDA runtime
-        cpuMemSize = gpuMemSize / 2; // Rough estimation
-        mirrAllocator = new MirrorAllocator(cpuMemSize, gpuMemSize);
-    }
 
     void offloadComputation(
             std::vector<LNode> const & layer,
@@ -290,3 +304,4 @@ public:
     }
 
 };
+ */

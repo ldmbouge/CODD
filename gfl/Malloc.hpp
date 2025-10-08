@@ -64,7 +64,7 @@ namespace gfl
         return static_cast<T *>(memory);
     }
 
-    template<typename T>
+    template<typename T = void>
     T * mallocManaged(i64 const size) noexcept
     {
         void * memory = nullptr;
