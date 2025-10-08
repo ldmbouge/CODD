@@ -155,7 +155,7 @@ void checkStatePair(ChildInfo & iInfo, typename Model::State const & iState, Chi
 {
     using namespace gfl;
 
-    if (iInfo.boundSrcToNode == jInfo.boundSrcToNode)
+    if (Model::betterEq(jInfo.boundSrcToNode, iInfo.boundSrcToNode))
     {
         if (Model::State::equal(iState, jState))
         {

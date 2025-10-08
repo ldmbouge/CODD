@@ -1,5 +1,6 @@
 #pragma once
 
+#include "model.hpp"
 #include "tsptw_model_base.hpp"
 #include "util.hpp"
 #include <Common.hpp>
@@ -66,7 +67,7 @@ struct TSPTW1 : TSPTWBase
     Labels lgf(State const & s, DDContext ctx) const noexcept
     {
         if (s.hops >= n-1)
-            return (s.t + d[s.e][depot] <= tw[depot].b) ? Set{depot} : Set{}; // that's the only way to return the depot
+            return (s.t + d[s.e][depot] <= tw[depot].b) and s.e != depot ? Set{depot} : Set{}; // that's the only way to return the depot
         else
             return filter(s.U, [this,s](auto& u){ return s.t + d[s.e][u] <= tw[u].b; }); // neither s.e nor depot IN s.U
     }
