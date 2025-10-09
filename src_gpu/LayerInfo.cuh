@@ -100,3 +100,12 @@ struct RepBoundDecomposer
     }
 };
 
+struct RepIdDecomposer
+{
+    GFL_DEVICE
+    gfl::tuple<gfl::u32&,gfl::i64&> operator()(NodeInfo & nodeInfo) const
+    {
+        return {nodeInfo.isRepresented,nodeInfo.id};
+    }
+};
+

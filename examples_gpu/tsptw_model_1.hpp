@@ -96,8 +96,8 @@ struct TSPTW1 : TSPTWBase
     bool better(double const & c1, double const & c2) noexcept { return c1 < c2; }
     GFL_HOST_DEVICE
     constexpr static bool betterEq(double const & c1, double const & c2)  noexcept { return c1 <= c2; }
-    constexpr static double bestValue() noexcept { return std::numeric_limits<double>::max(); }
-    constexpr static double worstValue() noexcept { return std::numeric_limits<double>::lowest(); } // lowest() instead of min() because double
+    constexpr static double bestValue() noexcept { return std::numeric_limits<double>::lowest(); }
+    constexpr static double worstValue() noexcept { return std::numeric_limits<double>::max(); } // lowest() instead of min() because double
 
     constexpr static bool has_merge = true;
     GFL_HOST_DEVICE

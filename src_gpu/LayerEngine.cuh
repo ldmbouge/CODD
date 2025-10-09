@@ -15,8 +15,6 @@ struct LayerHelper
     using Node = LightNode<State, Labels>;
     using LayerInfoType = LayerInfo<State, Labels>;
 
-    cudaMemLocation memLocCpu;
-    cudaMemLocation memLocGpu;
     cudaStream_t gpuMainQueue;
     cudaStream_t gpuAuxQueue;
     cudaEvent_t childrenOk;
@@ -25,9 +23,6 @@ struct LayerHelper
 
     LayerHelper()
     {
-        memLocCpu.type = cudaMemLocationTypeHost;
-        memLocGpu.type = cudaMemLocationTypeDevice;
-        cudaGetDevice(&memLocGpu.id);
         cudaStreamCreateWithFlags(&gpuMainQueue, cudaStreamNonBlocking);
         cudaStreamCreateWithFlags(&gpuAuxQueue, cudaStreamNonBlocking);
         cudaEventCreate(&childrenOk);
@@ -49,12 +44,12 @@ struct LayerHelper
     }
 
     static
-    void initParents(std::vector<Node> const & layer, LayerInfoType * layerInfo, gfl::StackAllocator * allocator) noexcept
+    void initParents(gfl::i32 nParents, LayerInfoType * layerInfo, gfl::StackAllocator * allocator) noexcept
     {
         using namespace gfl;
 
-        layerInfo->nParents = layer.size();
-        layerInfo->parents = allocator->allocateArray<Node>(layerInfo->nParents);
+        layerInfo->nParents = nParents;
+        layerInfo->parents = allocator->allocateArray<Node>(nParents);
     }
 
     static
@@ -84,6 +79,58 @@ struct LayerHelper
                 DummyDecomposer96{}); // Bigger key used
         layerInfo->cubTmpMem = allocator->allocate<gfl::u8>(layerInfo->cubTmpMemSize, 16);
     }
+
+    static
+    gfl::i64 calcGpuMemSize(gfl::i32 const nParents, gfl::i32 const fanout)
+    {
+        using namespace gfl;
+
+        i64 gpuMemSize = 0;
+        std::size_t memSize = 0;
+
+        // initParents()
+        memSize = sizeof(Node) * nParents + StackAllocator::DefaultAlign;
+        gpuMemSize += memSize;
+
+        // initChildren()
+        auto const nChildren = nParents * fanout;
+        memSize = sizeof(Node) * nChildren + StackAllocator::DefaultAlign;
+        memSize += sizeof(NodeInfo) * nChildren + StackAllocator::DefaultAlign;
+        gpuMemSize += memSize;
+
+        // initAux()
+        memSize = sizeof(NodeInfo) * nChildren + StackAllocator::DefaultAlign;
+        gpuMemSize += memSize;
+        void * dummyTmpMem = nullptr;
+        NodeInfo dummyChildInfo[2];
+        cub::DeviceRadixSort::SortKeys( // Initialize cubTmpMemSize
+                dummyTmpMem,
+                memSize,
+                &dummyChildInfo[0],
+                &dummyChildInfo[1],
+                nChildren,
+                DummyDecomposer96{}); // Bigger key used
+        gpuMemSize += memSize;
+
+        return gpuMemSize;
+    }
+
+    gfl::i64 getMaxParents(gfl::i64 const nParents, gfl::i32 const fanout)
+    {
+        using namespace gfl;
+
+        // Binary search on the number of parents
+        i64 lbParents = 0;
+        i64 upParents = nParents;
+        while (lbParents < upParents)
+        {
+            i64 mid = lbParents + (upParents - lbParents + 1) / 2;
+            if (calcGpuMemSize(mid, fanout) <= gpuMemSize) lbParents = mid;  // still fits
+            else upParents = mid - 1; // too big
+        }
+        return lbParents;
+    }
+
 };
 
 
@@ -107,50 +154,6 @@ public:
         layerInfo->parents = mirrAllocator->allocateArray<LNode>(layerInfo->nParents);
         memcpy(layerInfo->parents.h, layer.data(), sizeof(LNode) * layerInfo->nParents);
     }
-
-
-    gfl::tuple<gfl::i64, gfl::i64> calcMemSize(gfl::i32 const nParents, gfl::i32 const branchingFactor)
-    {
-        using namespace gfl;
-
-        i64 hMemSize = 0;
-        i64 dMemSize = 0;
-        std::size_t memSize = 0;
-
-        // clear()
-        memSize = sizeof(LayerInfoType) + StackAllocator::DefaultAlign;
-        hMemSize += memSize;
-        dMemSize += memSize;
-
-        // initParents()
-        memSize = sizeof(LNode) * nParents + StackAllocator::DefaultAlign;
-        hMemSize += memSize;
-        dMemSize += memSize;
-
-        // initChildren()
-        auto const nChildren = nParents * branchingFactor;
-        memSize = sizeof(LNode) * nChildren + StackAllocator::DefaultAlign;
-        memSize += sizeof(NodeInfo) * nChildren + StackAllocator::DefaultAlign;
-        hMemSize += memSize;
-        dMemSize += memSize;
-
-        // initAux()
-        memSize = sizeof(NodeInfo) * nChildren + StackAllocator::DefaultAlign;
-        dMemSize += memSize;
-        void * dummyTmpMem = nullptr;
-        NodeInfo dummyChildInfo[2];
-        cub::DeviceRadixSort::SortKeys( // Initialize cubTmpMemSize
-                dummyTmpMem,
-                memSize,
-                &dummyChildInfo[0],
-                &dummyChildInfo[1],
-                nChildren,
-                DummyDecomposer96{}); // Bigger key used
-        dMemSize += memSize;
-
-        return {hMemSize, dMemSize};
-    }
-
 
 
     void offloadComputation(
