@@ -132,7 +132,7 @@ int main(int argc,char* argv[])
 
         if (gpu)
         {
-            i32 const nParents = currentLayer->size();
+            i64 const nParents = currentLayer->size();
             i32 const maxParentsPerBatch = lh->getMaxParents(nParents, nodesFanOut) ;
             i32 const nBatches = roundUpDivPosInt<i32>(nParents,maxParentsPerBatch);
             for(i32 bIdx = 0; bIdx < nBatches; bIdx += 1)
@@ -163,6 +163,9 @@ int main(int argc,char* argv[])
                     CHECK_LAST_CUDA_ERROR();
                     cudaStreamSynchronize(lh->gpuMainQueue);
                     CHECK_LAST_CUDA_ERROR();
+
+                    if(nodesFanOut < layerInfo->labelsPerParents)
+                        printf("KABOOM! %d vs %d\n",nodesFanOut, layerInfo->labelsPerParents);
 
                     if (layerInfo->labelsPerParents > 0)
                     {
@@ -204,20 +207,18 @@ int main(int argc,char* argv[])
                     CHECK_LAST_CUDA_ERROR();
                     if (layerInfo->nChildren > 0)
                     {
-                        i32 const oldSize = tmpLayer.size();
-
-                        tmpLayer.resize(oldSize+layerInfo->nChildren);
+                        tmpLayer.resize(layerInfo->nChildren);
                         cudaMemcpyAsync(
-                                tmpLayer.data() + oldSize,
+                                tmpLayer.data(),
                                 layerInfo->children,
                                 sizeof(Node) * layerInfo->nChildren,
                                 cudaMemcpyDeviceToHost,
                                 lh->gpuAuxQueue);
                         CHECK_LAST_CUDA_ERROR();
 
-                        nextInfo.resize(oldSize+layerInfo->nChildren);
+                        nextInfo.resize(layerInfo->nChildren);
                         cudaMemcpyAsync(
-                                nextInfo.data() + oldSize,
+                                nextInfo.data(),
                                 layerInfo->tmpChildrenInfo,
                                 sizeof(NodeInfo) * layerInfo->nChildren,
                                 cudaMemcpyDeviceToHost,
@@ -227,10 +228,22 @@ int main(int argc,char* argv[])
                         cudaDeviceSynchronize();
                         CHECK_LAST_CUDA_ERROR();
 
-                        if(nBatches > 1)
+                        i32 const oldSize = nextLayer->size();
+                        i32 const tmpLayerSize = tmpLayer.size();
+                        for (i32 i = 0; i < tmpLayerSize; i += 1)
+                        {
+                            if (not nextInfo[i].isRepresented)
+                            {
+                                i32 const nIdx = nextInfo[i].idx;
+                                nextLayer->resize(nextLayer->size() + 1);
+                                nextLayer->back() = tmpLayer[nIdx];
+                            }
+                        }
+
+                        if (nBatches > 1)
                         {
                             auto const firstNode = tmpLayer[nextInfo[oldSize].idx];
-                            printf("           Batch = %3d | Nodes = %9d -> %9d | Cost = %7.2f\n", bIdx, currentBatchSize, layerInfo->nChildren, firstNode.boundSrcToNode);
+                            printf("           Batch = %3d | Nodes = %9d -> %9lu \n", bIdx, currentBatchSize, nextLayer->size() - oldSize);
                             fflush(stdout);
                         }
                     }
@@ -317,33 +330,31 @@ int main(int argc,char* argv[])
                     }
                 }
             }
-        }
 
-        i32 const tmpLayerSize = tmpLayer.size();
-        if (tmpLayerSize > 0)
-        {
-            for (i32 niIdx = 0; niIdx < tmpLayerSize; niIdx += 1)
+            for (i32 i = 0; i < tmpLayerSize; i += 1)
             {
-                if (not nextInfo[niIdx].isRepresented)
+                if (not nextInfo[i].isRepresented)
                 {
-                    i32 const nIdx = nextInfo[niIdx].idx;
+                    i32 const nIdx = nextInfo[i].idx;
                     nextLayer->resize(nextLayer->size() + 1);
-                    Node const &n = tmpLayer[nIdx];
-                    nextLayer->back() = n;
-                    if (Model::better(n.boundSrcToNode, bestNodeInlayer.boundSrcToNode))
-                    {
-                        bestNodeInlayer = n;
-                    }
+                    nextLayer->back() = tmpLayer[nIdx];
                 }
             }
-        }
-        if (model->isTarget(bestNodeInlayer.state) and Model::better(bestNodeInlayer.boundSrcToNode, bestNode.boundSrcToNode))
-        {
-            bestNode = bestNodeInlayer;
         }
 
         if (not nextLayer->empty())
         {
+            for (auto const & n : *nextLayer)
+            {
+                if (Model::better(n.boundSrcToNode, bestNodeInlayer.boundSrcToNode))
+                {
+                    bestNodeInlayer = n;
+                }
+            }
+            if (model->isTarget(bestNodeInlayer.state) and Model::better(bestNodeInlayer.boundSrcToNode, bestNode.boundSrcToNode))
+            {
+                bestNode = bestNodeInlayer;
+            }
             printf("[%7.2fs] Layer = %3d | Nodes = %9lu -> %9lu | Cost = %7.2f\n", elapsed, layerIdx, currentLayer->size(), nextLayer->size(), bestNodeInlayer.boundSrcToNode);
             fflush(stdout);
         }
