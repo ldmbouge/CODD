@@ -61,14 +61,14 @@ void calcChildrenKernel(
 {
     using State = typename Model::State;
     using Labels = typename Model::Labels;
-    using LNode = LightNode<State, Labels>;
+    using Node = LightNode<State, Labels>;
     using namespace gfl;
 
-    assert(gridDim.x >= layerInfo->nParents);
+    //assert(gridDim.x >= layerInfo->nParents);
 
     __shared__ i32 nChildrenInShared_s;
     __shared__ i32 nChildrenInGlobal_s;
-    __shared__ LNode * children_s;
+    __shared__ Node * children_s;
     __shared__ NodeInfo * childrenInfo_s;
     extern __shared__ u32 shrMem[]; // 16-byte aligned
 
@@ -79,15 +79,15 @@ void calcChildrenKernel(
         {
             nChildrenInShared_s = 0;
             StackAllocator allocator(shrMem, getSharedMemSize());
-            children_s = allocator.allocateArray<LNode>(layerInfo->labelsPerParents);
+            children_s = allocator.allocateArray<Node>(layerInfo->labelsPerParents);
             childrenInfo_s = allocator.allocateArray<NodeInfo>(layerInfo->labelsPerParents);
         }
         __syncthreads();
 
-        LNode cNode_r;
+        Node cNode_r;
         NodeInfo cInfo_r;
 
-        LNode const pNode_r = layerInfo->parents[pIdx];
+        Node const pNode_r = layerInfo->parents[pIdx];
         for (i32 label = layerInfo->minLabel + threadIdx.x; label <= layerInfo->maxLabel; label += blockDim.x)
         {
             if (pNode_r.labels.contains(label))
@@ -111,8 +111,6 @@ void calcChildrenKernel(
                         // NodeInfo
                         cInfo_r.hash = Model::has_dom ? Model::domHash(cNode_r.state) : State::hash(cNode_r.state);
                         cInfo_r.boundSrcToNode = cBoundSrcToNode;
-                        cInfo_r.cost = cCost;
-                        cInfo_r.id = pIdx * (layerInfo->maxLabel + 1) + label;
                         cInfo_r.idx = -1;
                         cInfo_r.isRepresented = false;
 
@@ -255,10 +253,8 @@ void printParents(LayerInfo<typename Model::State, typename Model::Labels> * lay
 GFL_DEVICE inline
 void printNodeInfo(NodeInfo const & childInfo)
 {
-    printf("HASH = %lu, COST = %.1f, ID = %ld, IDX = %d, IS_REP = %d\n",
+    printf("HASH = %lu, IDX = %d, IS_REP = %d\n",
            childInfo.hash,
-           childInfo.cost,
-           childInfo.id,
            childInfo.idx,
            childInfo.isRepresented);
 }

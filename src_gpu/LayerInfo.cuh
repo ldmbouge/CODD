@@ -21,9 +21,7 @@ struct LightNode
 struct NodeInfo
 {
     gfl::u64 hash;
-    gfl::f64 cost;
     gfl::f64 boundSrcToNode;
-    gfl::i64 id;
     gfl::i32 idx;
     gfl::u32 isRepresented;
 
@@ -71,14 +69,13 @@ struct LayerInfo
     }
 };
 
-struct DummyDecomposer96
+struct DummyDecomposer64
 {
     GFL_HOST_DEVICE
-    gfl::tuple<gfl::u32&, gfl::u64&> operator()(NodeInfo &) const
+    gfl::tuple<gfl::u32&, gfl::u32&> operator()(NodeInfo &) const
     {
         gfl::u32 tmp32 = 0;
-        gfl::u64 tmp64 = 0;
-        return{tmp32,tmp64};
+        return {tmp32,tmp32};
     }
 };
 
@@ -90,22 +87,3 @@ struct HashDecomposer
         return {nodeInfo.hash};
     }
 };
-
-struct RepBoundDecomposer
-{
-    GFL_DEVICE
-    gfl::tuple<gfl::u32&,gfl::f64&> operator()(NodeInfo & nodeInfo) const
-    {
-        return {nodeInfo.isRepresented,nodeInfo.boundSrcToNode};
-    }
-};
-
-struct RepIdDecomposer
-{
-    GFL_DEVICE
-    gfl::tuple<gfl::u32&,gfl::i64&> operator()(NodeInfo & nodeInfo) const
-    {
-        return {nodeInfo.isRepresented,nodeInfo.id};
-    }
-};
-

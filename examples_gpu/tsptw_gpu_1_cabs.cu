@@ -12,11 +12,9 @@ void printNodeInfo(std::vector<NodeInfo> const * const nodesInfo)
 {
     for (auto const & ni : *nodesInfo)
     {
-        printf("HASH = %lu, BOUND = %.1f, COST = %.1f, ID = %ld, IDX = %d, IS_REP = %d\n",
+        printf("HASH = %lu, BOUND = %.1f, IDX = %d, IS_REP = %d\n",
                ni.hash,
                ni.boundSrcToNode,
-               ni.cost,
-               ni.id,
                ni.idx,
                ni.isRepresented);
     }
@@ -111,8 +109,7 @@ int main(int argc,char* argv[])
     bestNode.boundSrcToNode = Model::worstValue();
     while (not currentLayer->empty())
     {
-        auto elapsed = RuntimeMonitor::elapsedSeconds(start);
-        if (elapsed > timeout)
+        if (RuntimeMonitor::elapsedSeconds(start) > timeout)
         {
             interrupted = true;
             break;
@@ -163,9 +160,6 @@ int main(int argc,char* argv[])
                     CHECK_LAST_CUDA_ERROR();
                     cudaStreamSynchronize(lh->gpuMainQueue);
                     CHECK_LAST_CUDA_ERROR();
-
-                    if(nodesFanOut < layerInfo->labelsPerParents)
-                        printf("KABOOM! %d vs %d\n",nodesFanOut, layerInfo->labelsPerParents);
 
                     if (layerInfo->labelsPerParents > 0)
                     {
@@ -242,7 +236,6 @@ int main(int argc,char* argv[])
 
                         if (nBatches > 1)
                         {
-                            auto const firstNode = tmpLayer[nextInfo[oldSize].idx];
                             printf("           Batch = %3d | Nodes = %9d -> %9lu \n", bIdx, currentBatchSize, nextLayer->size() - oldSize);
                             fflush(stdout);
                         }
@@ -293,8 +286,6 @@ int main(int argc,char* argv[])
                             auto & cInfo = nextInfo.back();
                             cInfo.hash = Model::has_dom ? Model::domHash(cNode.state) : State::hash(cNode.state);
                             cInfo.boundSrcToNode = cBoundSrcToNode;
-                            cInfo.cost = cCost;
-                            cInfo.id = pIdx * (maxLabel + 1) + label;
                             cInfo.idx = nextInfo.size() - 1;
                             cInfo.isRepresented = false;
                         }
@@ -355,7 +346,7 @@ int main(int argc,char* argv[])
             {
                 bestNode = bestNodeInlayer;
             }
-            printf("[%7.2fs] Layer = %3d | Nodes = %9lu -> %9lu | Cost = %7.2f\n", elapsed, layerIdx, currentLayer->size(), nextLayer->size(), bestNodeInlayer.boundSrcToNode);
+            printf("[%7.2fs] Layer = %3d | Nodes = %9lu -> %9lu | Cost = %7.2f\n", RuntimeMonitor::elapsedSeconds(start), layerIdx, currentLayer->size(), nextLayer->size(), bestNodeInlayer.boundSrcToNode);
             fflush(stdout);
         }
 

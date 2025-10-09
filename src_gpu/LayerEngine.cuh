@@ -15,6 +15,8 @@ struct LayerHelper
     using Node = LightNode<State, Labels>;
     using LayerInfoType = LayerInfo<State, Labels>;
 
+    gfl::i32 gpuIdx;
+    cudaDeviceProp gpuProp;
     cudaStream_t gpuMainQueue;
     cudaStream_t gpuAuxQueue;
     cudaEvent_t childrenOk;
@@ -23,6 +25,8 @@ struct LayerHelper
 
     LayerHelper()
     {
+        cudaGetDevice(&gpuIdx);
+        cudaGetDeviceProperties(&gpuProp,gpuIdx);
         cudaStreamCreateWithFlags(&gpuMainQueue, cudaStreamNonBlocking);
         cudaStreamCreateWithFlags(&gpuAuxQueue, cudaStreamNonBlocking);
         cudaEventCreate(&childrenOk);
@@ -76,7 +80,8 @@ struct LayerHelper
                 layerInfo->tmpChildrenInfo,
                 layerInfo->childrenInfo,
                 nChildren,
-                DummyDecomposer96{}); // Bigger key used
+                DummyDecomposer64{}); // Bigger key used
+        CHECK_LAST_CUDA_ERROR();
         layerInfo->cubTmpMem = allocator->allocate<gfl::u8>(layerInfo->cubTmpMemSize, 16);
     }
 
@@ -109,7 +114,8 @@ struct LayerHelper
                 &dummyChildInfo[0],
                 &dummyChildInfo[1],
                 nChildren,
-                DummyDecomposer96{}); // Bigger key used
+                DummyDecomposer64{}); // Bigger key used
+        CHECK_LAST_CUDA_ERROR();
         gpuMemSize += memSize;
 
         return gpuMemSize;
