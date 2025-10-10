@@ -20,6 +20,10 @@ pairs_start = matrix_end
 pairs_end = pairs_start + 2 * n
 pairs = numbers[pairs_start:pairs_end]
 
+# print(f"n = {n}")
+# print(f"d = ({len(matrix)}) {matrix}")
+# print(f"tw = ({len(pairs)}) {pairs}")
+
 # Find scale
 scale = 10 ** maxFracLen(matrix)
 
@@ -36,7 +40,8 @@ with open(output_path, "w") as f:
             f.write("" if j == 0 else " ")
             f.write(str(matrix[i*n+j]))
         f.write("\n")
-    for i in range(0,n,2):
-        f.write(f"{pairs[i]} {pairs[i+1]}\n")
+    for i in range(0,n):
+        f.write(f"{pairs[i*2]} {pairs[i*2+1]}\n")
+    f.write(f"# scale factor = {scale}\n")
 
 print(f"Scaling {input_path} -> {output_path} with scale factor {scale}")
