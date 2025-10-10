@@ -38,6 +38,5 @@ with open(output_path, "w") as f:
         f.write("\n")
     for i in range(0,n,2):
         f.write(f"{pairs[i]} {pairs[i+1]}\n")
-    f.write(f"# scale factor = {scale}\n")
 
 print(f"Scaling {input_path} -> {output_path} with scale factor {scale}")
