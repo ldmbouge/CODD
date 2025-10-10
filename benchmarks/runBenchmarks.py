@@ -1,4 +1,5 @@
 import subprocess
+import os
 from datetime import datetime
 
 # Auxiliary functions
@@ -8,35 +9,35 @@ def readLines(filepath):
 
 # Data
 benchmarkSet = [
-    "AFG.txt",
-    "Dumas.txt",
-    "GendreauDumasExtended.txt",
-    "Langevin.txt",
-    "OhlmannThomas.txt",
-    "Solnon25_feasible.txt",
-    "Solnon25_infeasible.txt",
-    "SolomonPesant.txt",
-    "SolomonPotvinBengio.txt"
+    # "AFG.txt",
+    # "Dumas.txt",
+    # "GendreauDumasExtended.txt",
+    "Langevin.txt"
+    # "OhlmannThomas.txt",
+    # "Solnon25_feasible.txt",
+    # "Solnon25_infeasible.txt",
+    # "SolomonPesant.txt",
+    # "SolomonPotvinBengio.txt"
 ]
 timeout = 20 * 60 
-exe = "../cmake-build-release-ding/tsptw3gpu"
+exe = "../cmake-build-release-ilyin/tsptw_gpu_1_cabs"
 resultsDir  = "./results"
 
 # Run
-useGpu = False
+exeName = os.path.basename(exe)
+useGpu = True
 for benchmark in benchmarkSet:
-    logfile = resultsDir + "/" + benchmark.removesuffix(".txt") + "_" + ("g" if useGpu else "c") + "_" + str(timeout) + "_" + datetime.now().strftime("%Y%m%d%H%M") + ".txt"
+    logfile = resultsDir + "/" + exeName + "_"  + ("g" if useGpu else "c") + "_" + str(timeout) + "_" + benchmark.removesuffix(".txt") + "_" + datetime.now().strftime("%Y%m%d%H%M") + ".txt"
     instances = readLines(benchmark)
     with open(logfile, "w") as f:
         for instance in instances:
-            cmd = [exe, 
-                   "-w", str(2),
-                   "-s", "RONQ",
+            cmd = [exe,
                    "-t", str(timeout),
-                   "-g", str(0 if useGpu else 1 * 1024 * 1024 * 1024),
+                   "-g" if useGpu else "",
                    "-i", instance
                   ]
-            cmdStr = " ".join(str(c) for c in cmd);
+            cmd = [c for c in cmd if c]
+            cmdStr = " ".join(str(c) for c in cmd)
             print(cmdStr)
             f.write(cmdStr + "\n")
             subprocess.run(cmd, stdout=f, stderr=f)
