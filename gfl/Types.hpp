@@ -13,6 +13,8 @@ namespace gfl
     using i64 = int64_t;
     using u64 = uint64_t;
 
+    using ull = unsigned long long;
+
     // Reference: https://developer.nvidia.com/blog/implementing-high-precision-decimal-arithmetic-with-cuda-int128
     using i128 = __int128;
     using u128 = unsigned __int128;

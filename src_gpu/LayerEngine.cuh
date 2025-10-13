@@ -86,7 +86,7 @@ struct LayerHelper
     }
 
     static
-    gfl::i64 calcGpuMemSize(gfl::i32 const nParents, gfl::i32 const fanout)
+    gfl::i64 calcGpuMemSize(gfl::i64 const nParents, gfl::i32 const fanout)
     {
         using namespace gfl;
 

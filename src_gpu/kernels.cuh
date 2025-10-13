@@ -29,7 +29,7 @@ void calcLabelsKernel(Model const * const model, LayerInfo<typename Model::State
     }
     __syncthreads();
 
-    int const pIdx = blockIdx.x * blockDim.x + threadIdx.x;
+    i64 const pIdx = blockIdx.x * blockDim.x + threadIdx.x;
     if (pIdx < layerInfo->nParents)
     {
         auto & pNode = layerInfo->parents[pIdx];
@@ -53,6 +53,85 @@ void calcLabelsKernel(Model const * const model, LayerInfo<typename Model::State
 template<typename Model>
 GFL_GLOBAL
 void calcChildrenKernel(
+        Model const * const model,
+        LayerInfo<typename Model::State, typename Model::Labels> * const layerInfo,
+        NodeInfo * const childrenInfo,
+        gfl::f64 primalBound,
+        LocalContext localCtx)
+{
+    using State = typename Model::State;
+    using Labels = typename Model::Labels;
+    using Node = LightNode<State, Labels>;
+    using namespace gfl;
+
+    assert(blockDim.x == warpSize);
+
+    i64 const pIdx = blockIdx.x; //calcBlockIdx();
+    if (pIdx < layerInfo->nParents)
+    {
+        Node cNode;
+        NodeInfo cInfo;
+        Node const pNode = layerInfo->parents[pIdx];
+        for (i32 label = layerInfo->minLabel + laneIdx(); label <= layerInfo->maxLabel; label += warpSize)
+        {
+            u32 const maskActiveThreads = __activemask();
+            i32 haveChild = 0;
+            if (pNode.labels.contains(label))
+            {
+                // Transition
+                auto cState = model->stf(pNode.state, label);
+                if (cState.has_value())
+                {
+                    f64 cBoundSrcToNode = pNode.boundSrcToNode + model->scf(pNode.state, label);
+                    f64 cHeuristicNodeToSink = Model::has_local ? model->local(cState.value(), localCtx) : 0;
+                    f64 cCost = cBoundSrcToNode + cHeuristicNodeToSink;
+                    if (Model::better(cCost, primalBound))
+                    {
+                        haveChild = 1;
+
+                        // Node
+                        cNode.state = cState.value();
+                        cNode.boundSrcToNode = cBoundSrcToNode;
+                        memcpy(cNode.labelsSrcToNode, pNode.labelsSrcToNode, sizeof(cNode.labelsSrcToNode));
+                        cNode.labelsSrcToNode[pNode.nEdgesSrcToNode] = label;
+                        cNode.nEdgesSrcToNode = pNode.nEdgesSrcToNode + 1;
+
+                        // NodeInfo
+                        cInfo.hash = Model::has_dom ? Model::domHash(cNode.state) : State::hash(cNode.state);
+                        cInfo.boundSrcToNode = cBoundSrcToNode;
+                        cInfo.isRepresented = false;
+                    }
+                }
+            }
+
+            u32 const maskThreadsWithChild = __ballot_sync(maskActiveThreads, haveChild);
+            i32 const nThreadsWithChild = popcount(maskThreadsWithChild);
+            if (nThreadsWithChild > 0)
+            {
+                i64 nChildrenInGlobal = laneIdx() == 0 ? atomicAdd((ull *) &layerInfo->nChildren, (ull) nThreadsWithChild) : 0;
+                nChildrenInGlobal = __shfl_sync(maskActiveThreads, nChildrenInGlobal, 0);
+                if (haveChild)
+                {
+                    u32 const maskThreadsBefore = maskFilledThrough<u32>(laneIdx());
+                    i64 const offset = popcount(maskThreadsWithChild & maskThreadsBefore);
+                    cInfo.idx = nChildrenInGlobal + offset;
+                    layerInfo->children[cInfo.idx] = cNode;
+                    childrenInfo[cInfo.idx] = cInfo;
+                }
+
+                if (laneIdx() == 1)
+                {
+                    // printf("P %ld has %d children. I see %ld (%ld) children in global\n", pIdx, nThreadsWithChild, layerInfo->nChildren,nChildrenInGlobal);
+                }
+            }
+        }
+    }
+}
+
+
+template<typename Model>
+GFL_GLOBAL
+void calcChildrenBlockKernel(
         Model const * const model,
         LayerInfo<typename Model::State, typename Model::Labels> * const layerInfo,
         NodeInfo * const childrenInfo,
@@ -128,7 +207,7 @@ void calcChildrenKernel(
         // Write children in global
         if (threadIdx.x == 0)
         {
-            nChildrenInGlobal_s = atomicAdd(&layerInfo->nChildren, nChildrenInShared_s);
+            nChildrenInGlobal_s = atomicAdd((ull*)&layerInfo->nChildren, (ull)nChildrenInShared_s);
         }
         __syncthreads();
 
@@ -144,7 +223,7 @@ void calcChildrenKernel(
 
 template<typename KeyType, typename  KeyDecomposer>
 GFL_GLOBAL
-void sortKernel(void * tmpMem, std::size_t tmpMemSize, KeyType const * keysIn, KeyType * keysOut, gfl::i32 const * const nKeys)
+void sortKernel(void * tmpMem, std::size_t tmpMemSize, KeyType const * keysIn, KeyType * keysOut, gfl::i64 const * const nKeys)
 {
 //    printf("Sorting %d keys\n",*nKeys);
 //    printf("TMP = %p (%lu) | K_IN = %p | K_OUT = %p | N_KEYS = %p (%d)\n", tmpMem, tmpMemSize, keysIn, keysOut, nKeys, *nKeys);

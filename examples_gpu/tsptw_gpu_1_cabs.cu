@@ -169,7 +169,8 @@ int main(int argc,char* argv[])
                         gridSize = layerInfo->nParents;
                         i32 shrMemSize = sizeof(Node) * layerInfo->labelsPerParents + StackAllocator::DefaultAlign +
                                          sizeof(NodeInfo) * layerInfo->labelsPerParents;
-                        calcChildrenKernel<Model><<<gridSize, blockSize, shrMemSize, lh->gpuMainQueue>>>(
+                        calcChildrenBlockKernel<Model><<<gridSize, blockSize, shrMemSize, lh->gpuMainQueue>>>(
+                        //calcChildrenKernel<Model><<<gridSize, blockSize, 0, lh->gpuMainQueue>>>(
                                 model,
                                 layerInfo,
                                 layerInfo->childrenInfo,

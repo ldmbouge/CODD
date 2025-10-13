@@ -6,6 +6,7 @@
 
 #include "Types.hpp"
 #include "Common.hpp"
+#include "Backend.hpp"
 
 #ifdef __CUDACC__
 #include <cuda_runtime.h>
@@ -54,7 +55,7 @@ namespace gfl
             dSize /= 1024.0;
             uIdx += 1;
         }
-        printf("%6.2f %s", dSize, units[uIdx]);
+        printf("%7.2f %s", dSize, units[uIdx]);
     }
 
     // Math
@@ -339,6 +340,47 @@ namespace gfl
         return result;
     }
 
+    template <typename T>
+    GFL_HOST_DEVICE constexpr
+    T maskFilledFrom(i32 const bIdx) noexcept
+    {
+        static_assert(std::is_unsigned_v<T>);
+        T constexpr fullMask = numeric_limits<T>::max();
+        i32 constexpr maskBitSize = sizeof(T) * 8;
+
+        T const c0 = bIdx < 0 ? fullMask : 0;
+        T const r0 = fullMask;
+
+        T const c1 = 0 <= bIdx and bIdx < maskBitSize ? fullMask : 0;
+        T const r1 = fullMask << bIdx;
+
+        T const c2 = maskBitSize <= bIdx ? fullMask : 0;
+        T const r2 = 0;
+
+        return (c0 & r0) | (c1 & r1) | (c2 & r2);
+    }
+
+    template <typename T>
+    GFL_HOST_DEVICE constexpr
+    T maskFilledThrough(i32 const bIdx) noexcept
+    {
+        static_assert(std::is_unsigned_v<T>);
+
+        T constexpr fullMask = numeric_limits<T>::max();
+        i32 constexpr maskBitSize = sizeof(T) * 8;
+
+        T const c0 = bIdx < 0 ? fullMask : 0;
+        T const r0 = 0;
+
+        T const c1 = 0 <= bIdx and bIdx < maskBitSize ? fullMask : 0;
+        T const r1 = fullMask >> maskBitSize - bIdx;
+
+        T const c2 = maskBitSize <= bIdx ? fullMask : 0;
+        T const r2 = fullMask;
+
+        return (c0 & r0) | (c1 & r1) | (c2 & r2);
+    }
+
     // Kernels
 #ifdef __CUDACC__
     GFL_DEVICE inline
@@ -351,8 +393,7 @@ namespace gfl
 #endif
 
     // Misc
-    GFL_HOST_DEVICE
-    inline
+    GFL_HOST_DEVICE inline
     void abort()
     {
 #ifdef __CUDA_ARCH__
@@ -363,17 +404,52 @@ namespace gfl
     }
 
     template<typename T>
-    GFL_HOST_DEVICE
-    void getBeginEnd(T & begin, T & end, i32 index, i32 workers, i32 jobs)
+    GFL_HOST_DEVICE inline
+    void getBeginEnd(T & begin, T & end, i64 index, i64 workers, i64 jobs) noexcept
     {
         auto const jobsPerWorker = roundUpDivPosInt<T>(jobs, workers);
         begin = jobsPerWorker * index;
         end = min<T>(jobs, begin + jobsPerWorker);
     }
 
+    inline
+    std::tuple<i32,i32,i32> calcGridSize(i64 const jobs) noexcept
+    {
+        i32 constexpr xMax = 2147483647;
+        i32 constexpr yMax = 65535;
+        i32 constexpr zMax = 65535;
+
+        i64 xDim = min<i64>(jobs, xMax);
+        i64 remain = roundUpDivPosInt<i64>(jobs, xMax);
+        i64 yDim = min<i64>(remain, yMax);
+        remain = roundUpDivPosInt<i64>(remain, yMax);
+        i64 zDim = min<i64>(remain, zMax);
+        remain = roundUpDivPosInt<i64>(remain, zMax);
+
+        assert(remain == 1);
+
+        return {xDim,yDim,zDim};
+    }
+
 #ifdef __CUDACC__
-    #define CHECK_CUDA_ERROR(err) gfl::checkCudaError(err, __FILE__, __LINE__)
-    #define CHECK_LAST_CUDA_ERROR() CHECK_CUDA_ERROR(cudaGetLastError())
+    GFL_DEVICE inline
+    i64 calcBlockIdx() noexcept
+    {
+        i64 const xDim = gridDim.x;
+        i64 const yDim = gridDim.y;
+
+        return blockIdx.x +
+               xDim * blockIdx.y +
+               xDim * yDim * blockIdx.z;
+    }
+
+    GFL_DEVICE inline
+    i32 laneIdx() noexcept
+    {
+        unsigned int lIdx;
+        asm volatile("mov.u32 %0, %laneid;" : "=r"(lIdx));
+        return lIdx;
+    }
 
     inline
     void checkCudaError(cudaError_t err, const char *file, const int line)
@@ -386,5 +462,8 @@ namespace gfl
             exit(EXIT_FAILURE);
         }
     }
+
+#define CHECK_CUDA_ERROR(err) gfl::checkCudaError(err, __FILE__, __LINE__)
+#define CHECK_LAST_CUDA_ERROR() CHECK_CUDA_ERROR(cudaGetLastError())
 #endif
 }

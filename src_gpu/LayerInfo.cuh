@@ -35,7 +35,7 @@ struct LayerInfo
     using Node = LightNode<State, Labels>;
 
     // Parents
-    gfl::i32 nParents;
+    gfl::i64 nParents;
     Node * parents;
 
     // Labels
@@ -44,7 +44,7 @@ struct LayerInfo
     gfl::i32 labelsPerParents;
 
     // Children
-    gfl::i32 nChildren;
+    gfl::i64 nChildren;
     Node * children;
     NodeInfo * childrenInfo;
 
