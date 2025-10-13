@@ -66,7 +66,7 @@ void calcChildrenKernel(
 
     assert(blockDim.x == warpSize);
 
-    i64 const pIdx = blockIdx.x; //calcBlockIdx();
+    i64 const pIdx = calcBlockIdx();
     if (pIdx < layerInfo->nParents)
     {
         Node cNode;

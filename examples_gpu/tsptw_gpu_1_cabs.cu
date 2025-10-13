@@ -80,10 +80,12 @@ int main(int argc,char* argv[])
     Model::parseFile(model, instance, roAllocator);
 
     std::cout << "Instance: " << instance << std::endl;
+    std::cout << "Cities: " << model->n << std::endl;
+    //std::cout << "Node: "; printMemSize(sizeof(Node)); std::cout << std::endl;
     std::cout << "GPU: " << (gpu ? "True" : "False") << std::endl;
 
     // Search
-    f64 primalBound = numeric_limits<f64>::max();
+    f64 primalBound = Model::worstValue();
     std::vector<Node> * currentLayer = new std::vector<Node>();
     std::vector<Node> * nextLayer = new std::vector<Node>();
     std::vector<Node> tmpLayer;
@@ -126,6 +128,11 @@ int main(int argc,char* argv[])
         nextLayer->reserve(maxNextLayerSize);
         Node bestNodeInlayer;
         bestNodeInlayer.boundSrcToNode = Model::worstValue();
+
+        printf("[%7.2fs] LAYER %3d | Nodes %10lu | MemSize ", RuntimeMonitor::elapsedSeconds(start), layerIdx, currentLayer->size());
+        printMemSize(sizeof(Node) * currentLayer->size());
+        printf("\n");
+        fflush(stdout);
 
         if (gpu)
         {
