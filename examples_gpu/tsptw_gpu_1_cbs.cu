@@ -47,7 +47,7 @@ int main(int argc,char* argv[])
     cudaSetDevice(0);
 
     // Parse arguments
-    i64 width = 2 * 1024 * 1024;
+    i64 width = -1;
     int timeout = std::numeric_limits<int>::max(); // 68 years
     bool gpu = false;
     std::string instance;
@@ -141,8 +141,8 @@ int main(int argc,char* argv[])
         {
             //Batching
             i32 const fanOut = model->lgf(currentLayer.front().state, DDExact).size(); // Big assumption
-            i64 const nParents = gfl::min<i64>(currentLayer.size(), width);
-            i32 const maxNodeToExpand = lh->getMaxParents(nParents, fanOut);
+            i32 const maxNodeToExpand = lh->getMaxParents(currentLayer.size(), fanOut);
+            i64 const nParents = width <= 0 ? maxNodeToExpand : gfl::min<i64>(currentLayer.size(), width);
             i32 const nBatches = roundUpDivPosInt<i32>(nParents, maxNodeToExpand);
             i64 expandedNodes = 0;
             for (i32 bIdx = 0; bIdx < nBatches; bIdx += 1)
