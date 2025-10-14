@@ -6,16 +6,19 @@
 #include <Types.hpp>
 
 template<typename State, typename Labels>
-struct LightNode
+struct alignas(16) LightNode
 {
     State state;
     Labels labels;
     gfl::f64 boundSrcToNode;
     gfl::u8 nEdgesSrcToNode;
-    gfl::u8 labelsSrcToNode[128];
+    gfl::u8 labelsSrcToNode[256];
 
     GFL_HOST_DEVICE
     LightNode() noexcept {};
+
+    GFL_HOST_DEVICE
+    LightNode(LightNode const & other) noexcept {memcpy(this,&other,sizeof(LightNode));};
 };
 
 struct NodeInfo

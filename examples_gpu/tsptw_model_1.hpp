@@ -9,7 +9,7 @@
 struct TSPTW1 : TSPTWBase
 {
     // Model
-    using Set = NatSet<2>;
+    using Set = NatSet<4>;
     using Labels = Set;
     struct State
     {
