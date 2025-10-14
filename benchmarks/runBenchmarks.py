@@ -9,29 +9,36 @@ def readLines(filepath):
 
 # Data
 benchmarkSet = [
-    # "AFG.txt",
-    # "Dumas.txt",
-    # "GendreauDumasExtended.txt",
-    "Langevin.txt"
-    # "OhlmannThomas.txt",
-    # "Solnon25_feasible.txt",
-    # "Solnon25_infeasible.txt",
-    # "SolomonPesant.txt",
-    # "SolomonPotvinBengio.txt"
+     "AFG.txt",
+     "Dumas.txt",
+     "GendreauDumasExtended.txt",
+     "Langevin.txt",
+     "OhlmannThomas.txt",
+     "Solnon25_feasible.txt",
+     "Solnon25_infeasible.txt",
+     "SolomonPesant.txt"
+     #"SolomonPotvinBengio.txt"
 ]
 timeout = 20 * 60 
-exe = "../cmake-build-release-ilyin/tsptw_gpu_1_cabs"
+exe = "../cmake-build-release-ilyin/tsptw_gpu_1_cbs"
 resultsDir  = "./results"
 
 # Run
 exeName = os.path.basename(exe)
 useGpu = True
 for benchmark in benchmarkSet:
-    logfile = resultsDir + "/" + exeName + "_"  + ("g" if useGpu else "c") + "_" + str(timeout) + "_" + benchmark.removesuffix(".txt") + "_" + datetime.now().strftime("%Y%m%d%H%M") + ".txt"
+    logfile = (f"{resultsDir}/{exeName}_" +
+               f"{"g" if useGpu else "c"}_" +
+               f"{timeout}_" +
+               f"{benchmark.removesuffix(".txt")}_" +
+               f"{datetime.now().strftime("%Y%m%d%H%M")}" +
+               f".txt")
     instances = readLines(benchmark)
     with open(logfile, "w") as f:
         for instance in instances:
-            cmd = [exe,
+            cmd = ["/usr/bin/time",
+                   "-v",
+                   exe,
                    "-t", str(timeout),
                    "-g" if useGpu else "",
                    "-i", instance
@@ -39,7 +46,8 @@ for benchmark in benchmarkSet:
             cmd = [c for c in cmd if c]
             cmdStr = " ".join(str(c) for c in cmd)
             print(cmdStr)
-            f.write(cmdStr + "\n")
+            f.write(f"COMMAND: {cmdStr}\n")
+            f.flush()
             subprocess.run(cmd, stdout=f, stderr=f)
             f.write("\n")
             f.flush()
