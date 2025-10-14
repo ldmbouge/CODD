@@ -44,7 +44,7 @@ int main(int argc,char* argv[])
     using LayerBufferType =  std::vector<Node>;
 
     // Select GPU
-    cudaSetDevice(0);
+    cudaSetDevice(1);
 
     // Parse arguments
     i64 width = -1;
@@ -89,6 +89,11 @@ int main(int argc,char* argv[])
     std::cout << "Instance: " << instance << std::endl;
     std::cout << "Cities: " << model->n << std::endl;
     std::cout << "GPU: " << (gpu ? "True" : "False") << std::endl;
+    std::cout << "Beam Width: ";
+    if (width <= 0)
+        std::cout << "Auto" << std::endl;
+    else
+        std::cout << width << std::endl;
     //std::cout << "Node: "; printMemSize(sizeof(Node)); std::cout << std::endl;
 
     // Search
@@ -133,7 +138,11 @@ int main(int argc,char* argv[])
         // Input
         i32 const nLayers = layers.size();
         i32 const layerIdx = std::distance(layers.begin(), --lastNotEmpty().base()); // It is correct, do not ask.
-        if (layers.size() < layerIdx + 2) layers.resize(layerIdx + 2); // Do it now so thw references are valid for the iteration
+        if (layerIdx == layers.size()-1)
+        {
+            layers.emplace_back();
+            layers.back().reserve(layers[layerIdx].size());
+        }
         auto & currentLayer = layers[layerIdx];
         auto & nextLayer = layers[layerIdx + 1];
 
@@ -160,7 +169,18 @@ int main(int argc,char* argv[])
                        currentLayer.size(),
                        currentLayer.size()-currentBatchSize);
                 printMemSize(sizeof(Node) * currentLayer.size());
+                printf( " | Cost = ");
+                if(bestNode.boundSrcToNode != Model::worstValue())
+                {
+
+                    printf("%7.2f", bestNode.boundSrcToNode);
+                }
+                else
+                {
+                    printf("?");
+                }
                 printf(" | Batch %3d/%3d\n", bIdx+1, nBatches);
+
                 fflush(stdout);
 
                 // Offload computation
@@ -270,6 +290,8 @@ int main(int argc,char* argv[])
             }
 
             currentLayer.resize(currentLayer.size() - expandedNodes);
+//            auto cmpByBnd = [](Node const & n1, Node const & n2) {return n1.boundSrcToNode > n2.boundSrcToNode;};
+//            std::sort(currentLayer.begin(), currentLayer.end(), cmpByBnd);
 
             if (newSolution)
             {

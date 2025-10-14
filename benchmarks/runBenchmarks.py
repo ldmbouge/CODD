@@ -17,10 +17,10 @@ benchmarkSet = [
      "Solnon25_feasible.txt",
      "Solnon25_infeasible.txt",
      "SolomonPesant.txt"
-     #"SolomonPotvinBengio.txt"
+     "SolomonPotvinBengio.txt"
 ]
-timeout = 20 * 60 
-exe = "../cmake-build-release-ilyin/tsptw_gpu_1_cbs"
+timeout = 10 * 60
+exe = "../cmake-build-release-ding/tsptw_gpu_1_cbs"
 resultsDir  = "./results"
 
 # Run
@@ -28,10 +28,10 @@ exeName = os.path.basename(exe)
 useGpu = True
 for benchmark in benchmarkSet:
     logfile = (f"{resultsDir}/{exeName}_" +
-               f"{"g" if useGpu else "c"}_" +
+               f"{'g' if useGpu else 'c'}_" +
                f"{timeout}_" +
-               f"{benchmark.removesuffix(".txt")}_" +
-               f"{datetime.now().strftime("%Y%m%d%H%M")}" +
+               f"{benchmark.removesuffix('.txt')}_" +
+               f"{datetime.now().strftime('%Y%m%d%H%M')}" +
                f".txt")
     instances = readLines(benchmark)
     with open(logfile, "w") as f:
