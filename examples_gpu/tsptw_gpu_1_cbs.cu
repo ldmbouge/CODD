@@ -154,11 +154,11 @@ int main(int argc,char* argv[])
                 expandedNodes += currentBatchSize;
                 Node const * const currentBatch = currentLayer.data() + currentLayer.size() - expandedNodes;
 
-                printf("[%7.2fs] Layer %3d | Nodes = %10ld (%10ld) | MemSize = ",
+                printf("[%7.2fs] Layer %3d | Nodes = %10ld  -> %10ld | MemSize = ",
                        RuntimeMonitor::elapsedSeconds(start),
                        layerIdx,
                        currentLayer.size(),
-                       -currentBatchSize);
+                       currentLayer.size()-currentBatchSize);
                 printMemSize(sizeof(Node) * currentLayer.size());
                 printf(" | Batch %3d/%3d\n", bIdx+1, nBatches);
                 fflush(stdout);
