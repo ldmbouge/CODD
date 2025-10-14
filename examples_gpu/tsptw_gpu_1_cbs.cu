@@ -151,8 +151,8 @@ int main(int argc,char* argv[])
                 i32 pBegin, pEnd;
                 getBeginEnd(pBegin, pEnd, bIdx, nBatches, nParents);
                 i64 const currentBatchSize = pEnd - pBegin; // No + 1!
-                Node const * const currentBatch = currentLayer.data() + currentLayer.size() - currentBatchSize;
                 expandedNodes += currentBatchSize;
+                Node const * const currentBatch = currentLayer.data() + currentLayer.size() - expandedNodes;
 
                 printf("[%7.2fs] Layer %3d | Nodes = %10ld (%10ld) | MemSize = ",
                        RuntimeMonitor::elapsedSeconds(start),
