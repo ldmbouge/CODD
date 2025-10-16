@@ -91,7 +91,7 @@ struct LayerHelper
         using namespace gfl;
 
         i64 gpuMemSize = 0;
-        std::size_t memSize = 0;
+        i64 memSize = 0;
 
         // initParents()
         memSize = sizeof(Node) * nParents + StackAllocator::DefaultAlign;
@@ -106,18 +106,29 @@ struct LayerHelper
         // initAux()
         memSize = sizeof(NodeInfo) * nChildren + StackAllocator::DefaultAlign;
         gpuMemSize += memSize;
+        std::size_t memSizeSort;
         void * dummyTmpMem = nullptr;
         NodeInfo dummyChildInfo[2];
         cub::DeviceRadixSort::SortKeys( // Initialize cubTmpMemSize
                 dummyTmpMem,
-                memSize,
+                memSizeSort,
                 &dummyChildInfo[0],
                 &dummyChildInfo[1],
                 nChildren,
                 DummyDecomposer64{}); // Bigger key used
         CHECK_LAST_CUDA_ERROR();
-        gpuMemSize += memSize;
-
+        std::size_t memSizeSelect;
+        Node dummyNode;
+        std::size_t dummySize;
+        cub::DeviceSelect::FlaggedIf(
+                dummyTmpMem,
+                memSizeSelect,
+                &dummyNode,
+                &dummyChildInfo[0],
+                &dummySize,
+                nChildren,
+                SelectNotRep{});
+        gpuMemSize += max<i64>(memSizeSort, memSizeSelect);
         return gpuMemSize;
     }
 

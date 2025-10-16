@@ -226,12 +226,14 @@ int main(int argc,char* argv[])
                         if (layerInfo->nChildren > 0)
                         {
                             // Representatives
-                            sortKernel<NodeInfo, HashDecomposer><<<1, 1, 0, lh->gpuMainQueue>>>(
+                            cub::DeviceRadixSort::SortKeys(
                                     layerInfo->cubTmpMem,
                                     layerInfo->cubTmpMemSize,
                                     layerInfo->childrenInfo,
                                     layerInfo->tmpChildrenInfo,
-                                    &layerInfo->nChildren);
+                                    layerInfo->nChildren,
+                                    HashDecomposer{},
+                                    lh->gpuMainQueue);
                             CHECK_LAST_CUDA_ERROR();
 
                             blockSize = 128;
@@ -239,13 +241,15 @@ int main(int argc,char* argv[])
                             calcReprKernel<Model><<<gridSize, blockSize, 0, lh->gpuMainQueue>>>(layerInfo, layerInfo->tmpChildrenInfo);
                             CHECK_LAST_CUDA_ERROR();
 
-                            sortKernel<NodeInfo, IdxDecomposer><<<1, 1, 0, lh->gpuMainQueue>>>(
+                            cub::DeviceRadixSort::SortKeys(
                                     layerInfo->cubTmpMem,
                                     layerInfo->cubTmpMemSize,
                                     layerInfo->tmpChildrenInfo,
                                     layerInfo->childrenInfo,
-                                    &layerInfo->nChildren);
-                            CHECK_LAST_CUDA_ERROR();
+                                    layerInfo->nChildren,
+                                    IdxDecomposer{},
+                                    lh->gpuMainQueue);
+                           CHECK_LAST_CUDA_ERROR();
 
                             cub::DeviceSelect::FlaggedIf(
                                     layerInfo->cubTmpMem,
