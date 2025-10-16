@@ -9,14 +9,14 @@ def readLines(filepath):
 
 # Data
 benchmarkSet = [
-     "AFG.txt",
-     "Dumas.txt",
-     "GendreauDumasExtended.txt",
-     "Langevin.txt",
-     "OhlmannThomas.txt",
-     "Solnon25_feasible.txt",
-     "Solnon25_infeasible.txt",
-     "SolomonPesant.txt"
+     #"AFG.txt",
+     #"Dumas.txt",
+     #"GendreauDumasExtended.txt",
+     #"Langevin.txt",
+     #"OhlmannThomas.txt",
+     #"Solnon25_feasible.txt",
+     #"Solnon25_infeasible.txt",
+     "SolomonPesant.txt",
      "SolomonPotvinBengio.txt"
 ]
 timeout = 10 * 60
