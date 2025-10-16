@@ -238,54 +238,100 @@ int main(int argc,char* argv[])
                             gridSize = roundUpDivPosInt<i32>(layerInfo->nChildren, blockSize);
                             calcReprKernel<Model><<<gridSize, blockSize, 0, lh->gpuMainQueue>>>(layerInfo, layerInfo->tmpChildrenInfo);
                             CHECK_LAST_CUDA_ERROR();
+
+                            sortKernel<NodeInfo, IdxDecomposer><<<1, 1, 0, lh->gpuMainQueue>>>(
+                                    layerInfo->cubTmpMem,
+                                    layerInfo->cubTmpMemSize,
+                                    layerInfo->tmpChildrenInfo,
+                                    layerInfo->childrenInfo,
+                                    &layerInfo->nChildren);
+                            CHECK_LAST_CUDA_ERROR();
+
+                            cub::DeviceSelect::FlaggedIf(
+                                    layerInfo->cubTmpMem,
+                                    layerInfo->cubTmpMemSize,
+                                    layerInfo->children,
+                                    layerInfo->childrenInfo,
+                                    &layerInfo->nChildren,
+                                    layerInfo->nChildren,
+                                    SelectNotRep{},
+                                    lh->gpuMainQueue);
+                            CHECK_LAST_CUDA_ERROR();
                         }
                     }
                 }
 
                 // Retrieve nodes
+                cudaStreamSynchronize(lh->gpuMainQueue);
+
+                CHECK_LAST_CUDA_ERROR();
                 if (layerInfo->nChildren > 0)
                 {
-                    tmpLayer.resize(layerInfo->nChildren);
+                    i64 const nextLayerOldSize = nextLayer.size();
+                    nextLayer.resize(nextLayerOldSize + layerInfo->nChildren);
                     cudaMemcpyAsync(
-                            tmpLayer.data(),
+                            nextLayer.data() + nextLayerOldSize,
                             layerInfo->children,
                             sizeof(Node) * layerInfo->nChildren,
                             cudaMemcpyDeviceToHost,
                             lh->gpuAuxQueue);
                     CHECK_LAST_CUDA_ERROR();
 
-                    tmpInfo.resize(layerInfo->nChildren);
-                    cudaMemcpyAsync(
-                            tmpInfo.data(),
-                            layerInfo->tmpChildrenInfo,
-                            sizeof(NodeInfo) * layerInfo->nChildren,
-                            cudaMemcpyDeviceToHost,
-                            lh->gpuMainQueue);
-                    CHECK_LAST_CUDA_ERROR();
-
-                    cudaDeviceSynchronize();
-                    CHECK_LAST_CUDA_ERROR();
-
-                    i64 const tmpLayerSize = tmpLayer.size();
-                    for (i64 i = 0; i < tmpLayerSize; i += 1)
+                    if(model->isTarget(nextLayer.back().state))
                     {
-                        if (not tmpInfo[i].isRepresented)
+                        for (i64 i = nextLayerOldSize; i < nextLayer.size(); i += 1)
                         {
-                            i32 const nIdx = tmpInfo[i].idx;
-                            Node const &n = tmpLayer[nIdx];
-
-                            if (not model->isTarget(n.state))
-                            {
-                                nextLayer.push_back(n);
-                            }
-                                else if (Model::better(n.boundSrcToNode, bestNode.boundSrcToNode))
+                            Node const & n = nextLayer[i];
+                            if (Model::better(n.boundSrcToNode, bestNode.boundSrcToNode))
                             {
                                 bestNode = n;
                                 primalBound = bestNode.boundSrcToNode;
                                 newSolution = true;
                             }
                         }
+                        nextLayer.resize(nextLayerOldSize);
                     }
+//                    tmpLayer.resize(layerInfo->nChildren);
+//                    cudaMemcpyAsync(
+//                            tmpLayer.data(),
+//                            layerInfo->children,
+//                            sizeof(Node) * layerInfo->nChildren,
+//                            cudaMemcpyDeviceToHost,
+//                            lh->gpuAuxQueue);
+//                    CHECK_LAST_CUDA_ERROR();
+//
+//                    tmpInfo.resize(layerInfo->nChildren);
+//                    cudaMemcpyAsync(
+//                            tmpInfo.data(),
+//                            layerInfo->tmpChildrenInfo,
+//                            sizeof(NodeInfo) * layerInfo->nChildren,
+//                            cudaMemcpyDeviceToHost,
+//                            lh->gpuMainQueue);
+//                    CHECK_LAST_CUDA_ERROR();
+
+//                    cudaDeviceSynchronize();
+//                    CHECK_LAST_CUDA_ERROR();
+//
+//                    i64 const tmpLayerSize = tmpLayer.size();
+//                    for (i64 i = 0; i < tmpLayerSize; i += 1)
+//                    {
+//                        if (not tmpInfo[i].isRepresented)
+//                        {
+//                            i32 const nIdx = tmpInfo[i].idx;
+//                            Node const &n = tmpLayer[nIdx];
+//
+//                            if (not model->isTarget(n.state))
+//                            {
+//                                nextLayer.push_back(n);
+//                            }
+//                            else if (Model::better(n.boundSrcToNode, bestNode.boundSrcToNode))
+//                            {
+//                                bestNode = n;
+//                                primalBound = bestNode.boundSrcToNode;
+//                                newSolution = true;
+//                            }
+//                        }
+//                    }
                 }
             }
 
