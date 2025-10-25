@@ -3,13 +3,14 @@
 #include <cassert>
 #include <cstdio>
 #include <type_traits>
+#include <cmath>
 
 #include "Types.hpp"
 #include "Common.hpp"
 #include "Backend.hpp"
 
 #ifdef __CUDACC__
-#include <cuda_runtime.h>
+#include <cuda_runtime_api.h>
 #endif
 
 namespace gfl
@@ -81,9 +82,10 @@ namespace gfl
         static_assert(std::is_integral_v<TOut>);
         assert(a >= 0);
         assert(b > 0);
-        TOut const _a = static_cast<TOut>(a);
-        TOut const _b = static_cast<TOut>(b);
-        return (_a + _b - 1) / _b;
+        using CommonT = std::common_type_t<TIn1, TIn2>;
+        CommonT const _a = static_cast<CommonT>(a);
+        CommonT const _b = static_cast<CommonT>(b);
+        return static_cast<TOut>((_a + _b - 1) / _b);
     }
 
     template <typename TOut, typename TIn1, typename TIn2>
@@ -95,9 +97,10 @@ namespace gfl
         static_assert(std::is_integral_v<TOut>);
         assert(a >= 0);
         assert(b > 0);
-        TOut const _a = static_cast<TOut>(a);
-        TOut const _b = static_cast<TOut>(b);
-        return (_a / _b) * _b;
+        using CommonT = std::common_type_t<TIn1, TIn2>;
+        CommonT const _a = static_cast<CommonT>(a);
+        CommonT const _b = static_cast<CommonT>(b);
+        return static_cast<TOut>((_a / _b) * _b);
     }
 
     template <typename TOut, typename TIn1, typename TIn2>
@@ -109,9 +112,10 @@ namespace gfl
         static_assert(std::is_integral_v<TOut>);
         assert(a >= 0);
         assert(b > 0);
-        TOut const _a = static_cast<TOut>(a);
-        TOut const _b = static_cast<TOut>(b);
-        return ((_a + _b - 1) / _b) * _b;
+        using CommonT = std::common_type_t<TIn1, TIn2>;
+        CommonT const _a = static_cast<CommonT>(a);
+        CommonT const _b = static_cast<CommonT>(b);
+        return static_cast<TOut>(((_a + _b - 1) / _b) * _b);
     }
 
     template <typename TOut, typename TIn1, typename TIn2>
@@ -121,9 +125,17 @@ namespace gfl
         static_assert(std::is_arithmetic_v<TIn1>);
         static_assert(std::is_arithmetic_v<TIn2>);
         static_assert(std::is_arithmetic_v<TOut>);
-        TOut const _a = static_cast<TOut>(a);
-        TOut const _b = static_cast<TOut>(b);
-        return _a < _b ? _a : _b;
+        using CommonT = std::common_type_t<TIn1, TIn2>;
+        CommonT const _a = static_cast<CommonT>(a);
+        CommonT const _b = static_cast<CommonT>(b);
+        return static_cast<TOut>( _a < _b ? _a : _b);
+    }
+
+    template <typename TOut, typename TIn1, typename TIn2, typename... TRest>
+    GFL_HOST_DEVICE constexpr TOut min(TIn1 const a, TIn2 const b, TRest const... rest)
+    {
+        TOut const ab = min<TOut>(a, b);
+        return min<TOut>(ab, rest...);
     }
 
     template <typename TOut, typename TIn1, typename TIn2>
@@ -133,9 +145,17 @@ namespace gfl
         static_assert(std::is_arithmetic_v<TIn1>);
         static_assert(std::is_arithmetic_v<TIn2>);
         static_assert(std::is_arithmetic_v<TOut>);
-        TOut const _a = static_cast<TOut>(a);
-        TOut const _b = static_cast<TOut>(b);
-        return _a > _b ? _a : _b;
+        using CommonT = std::common_type_t<TIn1, TIn2>;
+        CommonT const _a = static_cast<CommonT>(a);
+        CommonT const _b = static_cast<CommonT>(b);
+        return static_cast<TOut>( _a > _b ? _a : _b);
+    }
+
+    template <typename TOut, typename TIn1, typename TIn2, typename... TRest>
+    GFL_HOST_DEVICE constexpr TOut max(TIn1 const a, TIn2 const b, TRest const... rest)
+    {
+        TOut const ab = max<TOut>(a, b);
+        return max<TOut>(ab, rest...);
     }
 
     // Bits

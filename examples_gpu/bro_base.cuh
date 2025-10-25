@@ -1,16 +1,12 @@
-#include "tsptw_model_1.hpp"
 #include "codd.hpp"
-#include "pool.hpp"
-#include "vec.hpp"
 #include "LayerEngine.cuh"
 #include <StackAllocator.hpp>
-#include <queue>
 #include <cxxopts.hpp>
 #include <Malloc.hpp>
 #include <Array.hpp>
 
 constexpr auto static ReadOnlyMemSize{256 * 1024}; // Cached in shared memory
-
+inline
 void printNodeInfo(std::vector<NodeInfo> const * const nodesInfo)
 {
     for (auto const & ni : *nodesInfo)
@@ -23,35 +19,30 @@ void printNodeInfo(std::vector<NodeInfo> const * const nodesInfo)
     }
 }
 
-template<typename State, typename Labels>
-void printLabels(LightNode<State, Labels> const & node)
+template<typename Node>
+void printLabels(Node const & node)
 {
     using namespace gfl;
     Array<u8>::print(node.labelsSrcToNode, node.labelsSrcToNode + node.nEdgesSrcToNode);
 }
 
-int main(int argc,char* argv[])
+template<typename Model, typename Node>
+int run_bro(int argc,char* argv[])
 {
     using namespace gfl;
-
-    using Model = TSPTW1;
-    using State = Model::State;
-    using Labels = Model::Labels;
-    using Node = LightNode<State, Labels>;
-
-    using LayerHelperType = LayerHelper<State, Labels>;
-    using LayerInfoType = LayerInfo<State, Labels>;
+    using LayerHelperType = LayerHelper<Node>;
+    using LayerInfoType = LayerInfo<Node>;
     using LayerBufferType =  std::vector<Node>;
 
     // Select GPU
-    cudaSetDevice(1);
+    cudaSetDevice(0);
 
     // Parse arguments
     i64 width = -1;
     int timeout = std::numeric_limits<int>::max(); // 68 years
     bool gpu = false;
     std::string instance;
-    cxxopts::Options options("", "A C++ solver for the TSPTW");
+    cxxopts::Options options("", "A C++ solver for DIDP models");
     options.add_options("Available")
             ("w,width", "Beam width", cxxopts::value(width))
             ("g,gpu", "Use GPU acceleration", cxxopts::value(gpu))
@@ -87,7 +78,6 @@ int main(int argc,char* argv[])
     Model::parseFile(model, instance, roAllocator);
 
     std::cout << "Instance: " << instance << std::endl;
-    std::cout << "Cities: " << model->n << std::endl;
     std::cout << "GPU: " << (gpu ? "True" : "False") << std::endl;
     std::cout << "Beam Width: ";
     if (width <= 0)
@@ -97,35 +87,58 @@ int main(int argc,char* argv[])
     //std::cout << "Node: "; printMemSize(sizeof(Node)); std::cout << std::endl;
 
     // Search
-    f64 primalBound = Model::worstValue();
-    std::vector<Node> tmpLayer;
-    std::vector<NodeInfo> tmpInfo;
+    Node bestNode;
+    f64 pBound = Model::worstValue();
+    f64 dBound = Model::bestValue();
 
     // GPU
-    LayerHelperType *lh = gpu ? new LayerHelperType() : nullptr;
-    LayerInfoType *layerInfo = gpu ? mallocManaged<LayerInfoType>(sizeof(LayerInfoType)) : nullptr;
-    StackAllocator *gAllocator = gpu ? new StackAllocator(mallocDevice(lh->gpuMemSize), lh->gpuMemSize) : nullptr;
+    LayerHelperType         *lh = gpu ? new LayerHelperType() : nullptr;
+    LayerInfoType *   layerInfo = gpu ? mallocManaged<LayerInfoType>(sizeof(LayerInfoType)) : nullptr;
+    StackAllocator * gAllocator = gpu ? new StackAllocator(mallocDevice(lh->gpuMemSize), lh->gpuMemSize) : nullptr;
 
     // Layers buffers
     std::vector<LayerBufferType> layers;
+    std::vector<LabelsInfo> labelsInfo;
+    std::vector<i64> maxNodesToExpand;
 
     // Initialize first layer
     Node root;
     root.state = model->initial();
+    if constexpr (Model::has_simple_lgf)
+    {
+        root.labels = model->lgf(root.state, DDExact);
+    }
+    else
+    {
+        root.labels = model->lgf(root.state, DDExact, pBound, dBound);
+    }
     root.boundSrcToNode = 0;
     root.nEdgesSrcToNode = 0;
     layers.emplace_back();
     layers.back().push_back(root);
+    LabelsInfo rootLabelsInfo;
+    rootLabelsInfo.update(root.labels.slc());
+    labelsInfo.push_back(rootLabelsInfo);
+    maxNodesToExpand.push_back(1);
 
     // Let's goo!
     auto start = RuntimeMonitor::cputime();
-    Node bestNode;
-    bestNode.boundSrcToNode = Model::worstValue();
     bool interrupted = false;
     bool newSolution = false;
     auto isLayerEmpty = [](LayerBufferType const &l) { return l.empty(); };
     auto isQueueEmpty = [&]{return std::all_of(layers.begin(), layers.end(), isLayerEmpty); };
-    auto lastNotEmpty = [&]{ return std::find_if_not(layers.rbegin(), layers.rend(), isLayerEmpty); };
+    auto lastNotEmpty = [&]{
+        i32 lIdx = -1;
+        for(i32 i = 0; i < layers.size(); i += 1)
+        {
+            printf(" I %3d | S %10lu\n", i, layers[i].size());
+           if (not layers[i].empty())
+           {
+              lIdx = i;
+           }
+        }
+        return lIdx;
+    };
     while (not isQueueEmpty())
     {
         if (RuntimeMonitor::elapsedSeconds(start) > timeout)
@@ -136,12 +149,12 @@ int main(int argc,char* argv[])
         newSolution = false;
 
         // Input
-        i32 const nLayers = layers.size();
-        i32 const layerIdx = std::distance(layers.begin(), --lastNotEmpty().base()); // It is correct, do not ask.
+        i32 const layerIdx = lastNotEmpty();
         if (layerIdx == layers.size()-1)
         {
             layers.emplace_back();
-            layers.back().reserve(layers[layerIdx].size());
+            labelsInfo.emplace_back();
+            maxNodesToExpand.push_back(1); // Not 0!
         }
         auto & currentLayer = layers[layerIdx];
         auto & nextLayer = layers[layerIdx + 1];
@@ -149,15 +162,16 @@ int main(int argc,char* argv[])
         // Processing
         {
             //Batching
-            i32 const fanOut = model->lgf(currentLayer.front().state, DDExact).size(); // Big assumption
-            i32 const maxNodeToExpand = lh->getMaxParents(currentLayer.size(), fanOut);
-            i64 const nParents = width <= 0 ? maxNodeToExpand : gfl::min<i64>(currentLayer.size(), width);
-            i32 const nBatches = roundUpDivPosInt<i32>(nParents, maxNodeToExpand);
+            maxNodesToExpand[layerIdx] = gfl::max<i64>(maxNodesToExpand[layerIdx], lh->getMaxParents(labelsInfo[layerIdx].nLabels));
+            if (width > 0 )
+                maxNodesToExpand[layerIdx] = gfl::min<i64>(maxNodesToExpand[layerIdx], width);
+            i64 const nParents = gfl::min<i64>(currentLayer.size(), width <= 0 ? maxNodesToExpand[layerIdx] : width);
+            i32 const nBatches = roundUpDivPosInt<i32>(nParents, maxNodesToExpand[layerIdx]);
             i64 expandedNodes = 0;
             for (i32 bIdx = 0; bIdx < nBatches; bIdx += 1)
             {
 
-                i32 pBegin, pEnd;
+                i64 pBegin, pEnd;
                 getBeginEnd(pBegin, pEnd, bIdx, nBatches, nParents);
                 i64 const currentBatchSize = pEnd - pBegin; // No + 1!
                 expandedNodes += currentBatchSize;
@@ -170,16 +184,15 @@ int main(int argc,char* argv[])
                        currentLayer.size()-currentBatchSize);
                 printMemSize(sizeof(Node) * currentLayer.size());
                 printf( " | Cost = ");
-                if(bestNode.boundSrcToNode != Model::worstValue())
+                if (pBound != Model::worstValue())
                 {
-
-                    printf("%7.2f", bestNode.boundSrcToNode);
+                    printf("%7.2f", pBound);
                 }
                 else
                 {
                     printf("?");
                 }
-                printf(" | Batch %3d/%3d\n", bIdx+1, nBatches);
+                printf(" | Batch %3d/%3d | Width = %d\n", bIdx+1, nBatches, currentBatchSize);
 
                 fflush(stdout);
 
@@ -187,6 +200,7 @@ int main(int argc,char* argv[])
                 {
                     // Clear
                     LayerHelperType::clear(layerInfo, gAllocator);
+                    layerInfo->labelsInfo = labelsInfo[layerIdx];
 
                     // Parents
                     LayerHelperType::initParents(currentBatchSize, layerInfo, gAllocator);
@@ -198,77 +212,82 @@ int main(int argc,char* argv[])
                             lh->gpuMainQueue);
                     CHECK_LAST_CUDA_ERROR();
 
-                    // Labels
-                    i32 blockSize = 128;
-                    dim3 gridSize = roundUpDivPosInt<i32>(layerInfo->nParents, blockSize);
-                    calcLabelsKernel<Model><<<gridSize, blockSize, 0, lh->gpuMainQueue>>>(model, layerInfo, DDExact);
+                    LayerHelperType::initChildren(layerInfo, gAllocator);
+                    LayerHelperType::initAux(layerInfo, gAllocator);
+
+                    i32 blockSize = 32;
+                    dim3 gridSize;
+                    std::tie(gridSize.x, gridSize.y, gridSize.z) = calcGridSize(layerInfo->nParents);
+                    calcChildrenKernel<Model><<<gridSize, blockSize, 0, lh->gpuMainQueue>>>(
+                            model,
+                            layerInfo,
+                            layerInfo->childrenInfo,
+                            pBound,
+                            DDCtx);
                     CHECK_LAST_CUDA_ERROR();
                     cudaStreamSynchronize(lh->gpuMainQueue);
                     CHECK_LAST_CUDA_ERROR();
 
-                    if (layerInfo->labelsPerParents > 0)
+                    if (layerInfo->nChildren > 0)
                     {
-                        LayerHelperType::initChildren(layerInfo, gAllocator);
-                        LayerHelperType::initAux(layerInfo, gAllocator);
-
-                        blockSize = 32;
-                        std::tie(gridSize.x, gridSize.y, gridSize.z) = calcGridSize(layerInfo->nParents);
-                        calcChildrenKernel<Model><<<gridSize, blockSize, 0, lh->gpuMainQueue>>>(
-                                model,
-                                layerInfo,
+                       //  Representatives
+                        cub::DeviceRadixSort::SortKeys(
+                                layerInfo->cubTmpMem,
+                                layerInfo->cubTmpMemSize,
                                 layerInfo->childrenInfo,
-                                primalBound,
-                                DDCtx);
+                                layerInfo->tmpChildrenInfo,
+                                layerInfo->nChildren,
+                                HashDecomposer{},
+                                lh->gpuMainQueue);
                         CHECK_LAST_CUDA_ERROR();
+
+                        blockSize = 128;
+                        gridSize = roundUpDivPosInt<i32>(layerInfo->nChildren, blockSize);
+                        calcReprKernel<Model><<<gridSize, blockSize, 0, lh->gpuMainQueue>>>(layerInfo, layerInfo->tmpChildrenInfo);
+                        CHECK_LAST_CUDA_ERROR();
+
+                        cub::DeviceRadixSort::SortKeys(
+                                layerInfo->cubTmpMem,
+                                layerInfo->cubTmpMemSize,
+                                layerInfo->tmpChildrenInfo,
+                                layerInfo->childrenInfo,
+                                layerInfo->nChildren,
+                                IdxDecomposer{},
+                                lh->gpuMainQueue);
+                        CHECK_LAST_CUDA_ERROR();
+
+                        cub::DeviceSelect::FlaggedIf(
+                                layerInfo->cubTmpMem,
+                                layerInfo->cubTmpMemSize,
+                                layerInfo->children,
+                                layerInfo->childrenInfo,
+                                &layerInfo->nChildren,
+                                layerInfo->nChildren,
+                                SelectNotRep{},
+                                lh->gpuMainQueue);
+                        CHECK_LAST_CUDA_ERROR();
+
                         cudaStreamSynchronize(lh->gpuMainQueue);
                         CHECK_LAST_CUDA_ERROR();
 
-                        if (layerInfo->nChildren > 0)
-                        {
-                            // Representatives
-                            cub::DeviceRadixSort::SortKeys(
-                                    layerInfo->cubTmpMem,
-                                    layerInfo->cubTmpMemSize,
-                                    layerInfo->childrenInfo,
-                                    layerInfo->tmpChildrenInfo,
-                                    layerInfo->nChildren,
-                                    HashDecomposer{},
-                                    lh->gpuMainQueue);
-                            CHECK_LAST_CUDA_ERROR();
-
-                            blockSize = 128;
-                            gridSize = roundUpDivPosInt<i32>(layerInfo->nChildren, blockSize);
-                            calcReprKernel<Model><<<gridSize, blockSize, 0, lh->gpuMainQueue>>>(layerInfo, layerInfo->tmpChildrenInfo);
-                            CHECK_LAST_CUDA_ERROR();
-
-                            cub::DeviceRadixSort::SortKeys(
-                                    layerInfo->cubTmpMem,
-                                    layerInfo->cubTmpMemSize,
-                                    layerInfo->tmpChildrenInfo,
-                                    layerInfo->childrenInfo,
-                                    layerInfo->nChildren,
-                                    IdxDecomposer{},
-                                    lh->gpuMainQueue);
-                           CHECK_LAST_CUDA_ERROR();
-
-                            cub::DeviceSelect::FlaggedIf(
-                                    layerInfo->cubTmpMem,
-                                    layerInfo->cubTmpMemSize,
-                                    layerInfo->children,
-                                    layerInfo->childrenInfo,
-                                    &layerInfo->nChildren,
-                                    layerInfo->nChildren,
-                                    SelectNotRep{},
-                                    lh->gpuMainQueue);
-                            CHECK_LAST_CUDA_ERROR();
-                        }
+                        // Labels
+                        layerInfo->labelsInfo.reset();
+                        blockSize = 128;
+                        gridSize = roundUpDivPosInt<i32>(layerInfo->nChildren, blockSize);
+                        calcLabelsKernel<Model><<<gridSize, blockSize, 0, lh->gpuMainQueue>>>(
+                                model,
+                                layerInfo,
+                                DDExact,
+                                pBound,
+                                dBound);
+                        CHECK_LAST_CUDA_ERROR();
                     }
                 }
 
                 // Retrieve nodes
                 cudaStreamSynchronize(lh->gpuMainQueue);
-
                 CHECK_LAST_CUDA_ERROR();
+
                 if (layerInfo->nChildren > 0)
                 {
                     i64 const nextLayerOldSize = nextLayer.size();
@@ -281,67 +300,27 @@ int main(int argc,char* argv[])
                             lh->gpuAuxQueue);
                     CHECK_LAST_CUDA_ERROR();
 
+                    labelsInfo[layerIdx+1].update(layerInfo->labelsInfo);
+
                     if(model->isTarget(nextLayer.back().state))
                     {
                         for (i64 i = nextLayerOldSize; i < nextLayer.size(); i += 1)
                         {
                             Node const & n = nextLayer[i];
-                            if (Model::better(n.boundSrcToNode, bestNode.boundSrcToNode))
+                            if (Model::better(n.boundSrcToNode, pBound))
                             {
                                 bestNode = n;
-                                primalBound = bestNode.boundSrcToNode;
+                                pBound = bestNode.boundSrcToNode;
                                 newSolution = true;
                             }
                         }
                         nextLayer.resize(nextLayerOldSize);
                     }
-//                    tmpLayer.resize(layerInfo->nChildren);
-//                    cudaMemcpyAsync(
-//                            tmpLayer.data(),
-//                            layerInfo->children,
-//                            sizeof(Node) * layerInfo->nChildren,
-//                            cudaMemcpyDeviceToHost,
-//                            lh->gpuAuxQueue);
-//                    CHECK_LAST_CUDA_ERROR();
-//
-//                    tmpInfo.resize(layerInfo->nChildren);
-//                    cudaMemcpyAsync(
-//                            tmpInfo.data(),
-//                            layerInfo->tmpChildrenInfo,
-//                            sizeof(NodeInfo) * layerInfo->nChildren,
-//                            cudaMemcpyDeviceToHost,
-//                            lh->gpuMainQueue);
-//                    CHECK_LAST_CUDA_ERROR();
 
-//                    cudaDeviceSynchronize();
-//                    CHECK_LAST_CUDA_ERROR();
-//
-//                    i64 const tmpLayerSize = tmpLayer.size();
-//                    for (i64 i = 0; i < tmpLayerSize; i += 1)
-//                    {
-//                        if (not tmpInfo[i].isRepresented)
-//                        {
-//                            i32 const nIdx = tmpInfo[i].idx;
-//                            Node const &n = tmpLayer[nIdx];
-//
-//                            if (not model->isTarget(n.state))
-//                            {
-//                                nextLayer.push_back(n);
-//                            }
-//                            else if (Model::better(n.boundSrcToNode, bestNode.boundSrcToNode))
-//                            {
-//                                bestNode = n;
-//                                primalBound = bestNode.boundSrcToNode;
-//                                newSolution = true;
-//                            }
-//                        }
-//                    }
                 }
             }
 
             currentLayer.resize(currentLayer.size() - expandedNodes);
-//            auto cmpByBnd = [](Node const & n1, Node const & n2) {return n1.boundSrcToNode > n2.boundSrcToNode;};
-//            std::sort(currentLayer.begin(), currentLayer.end(), cmpByBnd);
 
             if (newSolution)
             {
@@ -349,8 +328,7 @@ int main(int argc,char* argv[])
                 printLabels(bestNode);
                 printf("\n");
                 fflush(stdout);
-            };
-
+            }
         }
     }
 

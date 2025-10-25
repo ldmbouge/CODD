@@ -9,13 +9,18 @@
 enum DDContext : int;
 enum LocalContext : int;
 
-template<typename Model>
+template<typename Model, typename Node>
 GFL_GLOBAL
-void calcLabelsKernel(Model const * const model, LayerInfo<typename Model::State, typename Model::Labels> * const layerInfo, DDContext const ctx)
+void calcLabelsKernel(
+        Model const * const model,
+        LayerInfo<Node> * const layerInfo,
+        DDContext const ctx,
+        gfl::f64 pBound,
+        gfl::f64 dBound)
 {
     using namespace gfl;
 
-    assert(gridDim.x * blockDim.x >= layerInfo->nParents);
+    assert(gridDim.x * blockDim.x >= layerInfo->nChildren);
 
     __shared__ i32 minLabel_s;
     __shared__ i32 maxLabel_s;
@@ -29,11 +34,18 @@ void calcLabelsKernel(Model const * const model, LayerInfo<typename Model::State
     }
     __syncthreads();
 
-    i64 const pIdx = blockIdx.x * blockDim.x + threadIdx.x;
-    if (pIdx < layerInfo->nParents)
+    i64 const cIdx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (cIdx < layerInfo->nChildren)
     {
-        auto & pNode = layerInfo->parents[pIdx];
-        pNode.labels = model->lgf(pNode.state, ctx);
+        auto & pNode = layerInfo->children[cIdx];
+        if constexpr (Model::has_simple_lgf)
+        {
+            pNode.labels = model->lgf(pNode.state, ctx);
+        }
+        else
+        {
+            pNode.labels = model->lgf(pNode.state, ctx, pBound, dBound);
+        }
         auto [smallest,largest,count] = pNode.labels.slc();
         atomicMin_block(&minLabel_s, smallest);
         atomicMax_block(&maxLabel_s, largest);
@@ -44,24 +56,22 @@ void calcLabelsKernel(Model const * const model, LayerInfo<typename Model::State
 
     if (threadIdx.x == 0)
     {
-        atomicMin(&layerInfo->minLabel,minLabel_s);
-        atomicMax(&layerInfo->maxLabel,maxLabel_s);
-        atomicMax(&layerInfo->labelsPerParents, labelsPerParent_s);
+        atomicMin(&layerInfo->labelsInfo.minLabel,minLabel_s);
+        atomicMax(&layerInfo->labelsInfo.maxLabel,maxLabel_s);
+        atomicMax(&layerInfo->labelsInfo.nLabels, labelsPerParent_s);
     }
 }
 
-template<typename Model>
+template<typename Model, typename Node>
 GFL_GLOBAL
 void calcChildrenKernel(
         Model const * const model,
-        LayerInfo<typename Model::State, typename Model::Labels> * const layerInfo,
+        LayerInfo<Node> * const layerInfo,
         NodeInfo * const childrenInfo,
         gfl::f64 primalBound,
         LocalContext localCtx)
 {
     using State = typename Model::State;
-    using Labels = typename Model::Labels;
-    using Node = LightNode<State, Labels>;
     using namespace gfl;
 
     assert(blockDim.x == warpSize);
@@ -72,7 +82,7 @@ void calcChildrenKernel(
         Node cNode;
         NodeInfo cInfo;
         Node const pNode = layerInfo->parents[pIdx];
-        for (i32 label = layerInfo->minLabel + laneIdx(); label <= layerInfo->maxLabel; label += warpSize)
+        for (i32 label = layerInfo->labelsInfo.minLabel + laneIdx(); label <= layerInfo->labelsInfo.maxLabel; label += warpSize)
         {
             u32 const maskActiveThreads = __activemask();
             i32 haveChild = 0;
@@ -83,7 +93,11 @@ void calcChildrenKernel(
                 if (cState.has_value())
                 {
                     f64 cBoundSrcToNode = pNode.boundSrcToNode + model->scf(pNode.state, label);
-                    f64 cHeuristicNodeToSink = Model::has_local ? model->local(cState.value(), localCtx) : 0;
+                    f64 cHeuristicNodeToSink;
+                    if constexpr (Model::has_local)
+                        cHeuristicNodeToSink = model->local(cState.value(), localCtx);
+                    else
+                        cHeuristicNodeToSink = 0;
                     f64 cCost = cBoundSrcToNode + cHeuristicNodeToSink;
                     if (Model::better(cCost, primalBound))
                     {
@@ -97,7 +111,10 @@ void calcChildrenKernel(
                         cNode.nEdgesSrcToNode = pNode.nEdgesSrcToNode + 1;
 
                         // NodeInfo
-                        cInfo.hash = Model::has_dom ? Model::domHash(cNode.state) : State::hash(cNode.state);
+                        if constexpr (Model::has_dom)
+                            cInfo.hash = Model::domHash(cNode.state);
+                        else
+                            cInfo.hash = State::hash(cNode.state);
                         cInfo.boundSrcToNode = cBoundSrcToNode;
                         cInfo.isRepresented = false;
                     }
@@ -119,28 +136,26 @@ void calcChildrenKernel(
                     childrenInfo[cInfo.idx] = cInfo;
                 }
 
-                if (laneIdx() == 1)
-                {
-                    // printf("P %ld has %d children. I see %ld (%ld) children in global\n", pIdx, nThreadsWithChild, layerInfo->nChildren,nChildrenInGlobal);
-                }
+//                if (laneIdx() == 1)
+//                {
+//                    printf("P %ld has %d children. I see %ld (%ld) children in global\n", pIdx, nThreadsWithChild, layerInfo->nChildren,nChildrenInGlobal);
+//                }
             }
         }
     }
 }
 
 
-template<typename Model>
+template<typename Model, typename Node>
 GFL_GLOBAL
 void calcChildrenBlockKernel(
         Model const * const model,
-        LayerInfo<typename Model::State, typename Model::Labels> * const layerInfo,
+        LayerInfo<Node> * const layerInfo,
         NodeInfo * const childrenInfo,
-        gfl::f64 primalBound,
+        gfl::f64 pBound,
         LocalContext localCtx)
 {
     using State = typename Model::State;
-    using Labels = typename Model::Labels;
-    using Node = LightNode<State, Labels>;
     using namespace gfl;
 
     //assert(gridDim.x >= layerInfo->nParents);
@@ -178,7 +193,7 @@ void calcChildrenBlockKernel(
                     f64 cBoundSrcToNode = pNode_r.boundSrcToNode + model->scf(pNode_r.state, label);
                     f64 cHeuristicNodeToSink = Model::has_local ? model->local(cState_r.value(), localCtx) : 0;
                     f64 cCost = cBoundSrcToNode + cHeuristicNodeToSink;
-                    if (Model::better(cCost, primalBound))
+                    if (Model::better(cCost, pBound))
                     {
                         // Node
                         cNode_r.state = cState_r.value();
@@ -191,7 +206,7 @@ void calcChildrenBlockKernel(
                         cInfo_r.hash = Model::has_dom ? Model::domHash(cNode_r.state) : State::hash(cNode_r.state);
                         cInfo_r.boundSrcToNode = cBoundSrcToNode;
                         cInfo_r.idx = -1;
-                        cInfo_r.isRepresented = false;
+                        cInfo_r.isRepresented = 0;
 
                         // Write children and info in shared.
                         auto const idxInShared = atomicAdd_block(&nChildrenInShared_s, 1);
@@ -242,21 +257,21 @@ void checkStatePair(NodeInfo & iInfo, typename Model::State const & iState, Node
     {
         if (Model::State::equal(iState, jState))
         {
-            jInfo.isRepresented = static_cast<i32>(true);
+            jInfo.isRepresented = 1;
         }
     }
     if (Model::better(iInfo.boundSrcToNode, jInfo.boundSrcToNode))
     {
         if (Model::State::equal(iState, jState))
         {
-            jInfo.isRepresented = static_cast<i32>(true);
+            jInfo.isRepresented = 1;
         }
     }
     if (Model::better(jInfo.boundSrcToNode, iInfo.boundSrcToNode))
     {
         if (Model::State::equal(iState, jState))
         {
-            iInfo.isRepresented = static_cast<i32>(true);
+            iInfo.isRepresented = 1;
         }
     }
     if (Model::betterEq(iInfo.boundSrcToNode, jInfo.boundSrcToNode))
@@ -266,25 +281,25 @@ void checkStatePair(NodeInfo & iInfo, typename Model::State const & iState, Node
             jInfo.isRepresented = static_cast<i32>(true);
         }
     }
-    if (Model::has_dom and Model::betterEq(jInfo.boundSrcToNode, iInfo.boundSrcToNode))
+    if constexpr (Model::has_dom)
     {
-        if (Model::dom(jState, iState))
+        if (Model::betterEq(jInfo.boundSrcToNode, iInfo.boundSrcToNode) and Model::dom(jState, iState))
         {
             iInfo.isRepresented = static_cast<i32>(true);
         }
     }
-    if (Model::has_dom and Model::betterEq(iInfo.boundSrcToNode, jInfo.boundSrcToNode))
+    if constexpr (Model::has_dom)
     {
-        if (Model::dom(iState, jState))
+        if (Model::betterEq(iInfo.boundSrcToNode, jInfo.boundSrcToNode) and Model::dom(iState, jState))
         {
             jInfo.isRepresented = static_cast<i32>(true);
         }
     }
 }
 
-template<typename Model>
+template<typename Model, typename Node>
 GFL_GLOBAL
-void calcReprKernel(LayerInfo<typename Model::State, typename Model::Labels> * const layerInfo, NodeInfo * const childrenInfo)
+void calcReprKernel(LayerInfo<Node> * const layerInfo, NodeInfo * const childrenInfo)
 {
     using namespace gfl;
 
@@ -314,33 +329,18 @@ void calcReprKernel(LayerInfo<typename Model::State, typename Model::Labels> * c
     }
 }
 
-template<typename Model>
-GFL_GLOBAL
-void printParents(LayerInfo<typename Model::State, typename Model::Labels> * layerInfo)
-{
-//    using State = typename Model::State;
-//    using Labels = typename Model::Labels;
-//    using GpuParent = GpuParent<State, Labels>;
-//    printf("+++\n");
-//    for(auto pIdx = 0; pIdx < layerInfo->nParents; pIdx += 1)
-//    {
-//        GpuParent const & p = layerInfo->parents[pIdx];
-//        printf("AN %p\n", p.node);
-//    }
-}
-
 GFL_DEVICE inline
 void printNodeInfo(NodeInfo const & childInfo)
 {
-    printf("HASH = %lu, IDX = %d, IS_REP = %d\n",
+    printf("HASH = %lu, IDX = %ld, IS_REP = %d\n",
            childInfo.hash,
            childInfo.idx,
            childInfo.isRepresented);
 }
 
-template<typename Model>
+template<typename Node>
 GFL_GLOBAL
-void printChildrenInfo(LayerInfo<typename Model::State, typename Model::Labels> * layerInfo, NodeInfo * childrenInfo)
+void printChildrenInfo(LayerInfo<Node> * layerInfo, NodeInfo * childrenInfo)
 {
     printf("--- (%d)\n", layerInfo->nChildren);
     for(auto cIdx = 0; cIdx < layerInfo->nChildren; cIdx += 1)
@@ -348,6 +348,18 @@ void printChildrenInfo(LayerInfo<typename Model::State, typename Model::Labels> 
         auto const & childInfo = childrenInfo[cIdx];
         printNodeInfo(childInfo);
     }
+}
+
+template<typename Node>
+GFL_GLOBAL
+void printNotRepCount(LayerInfo<Node> * layerInfo, NodeInfo * childrenInfo)
+{
+    gfl::i64 count  = 0;
+    for(auto cIdx = 0; cIdx < layerInfo->nChildren; cIdx += 1)
+    {
+        count += not childrenInfo[cIdx].isRepresented;
+    }
+    printf("Rep count = %ld\n", count);
 }
 
 

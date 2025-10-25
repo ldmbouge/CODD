@@ -1,6 +1,6 @@
 #pragma once
 
-#include "tsptw_model_base.hpp"
+#include "tsptw_base.hpp"
 #include "model.hpp"
 #include "util.hpp"
 
@@ -245,21 +245,3 @@ struct TSPTW3 : TSPTWBase
 };
 
 static_assert(IsModel<TSPTW3>);
-
-namespace std
-{
-
-    template <>
-    struct hash<TSPTW3::State> {
-        std::size_t operator()(const TSPTW3::State& s) const noexcept {
-            return TSPTW3::State::hash(s);
-        }
-    };
-
-    template <>
-    struct equal_to<TSPTW3::State> {
-        bool operator()(const TSPTW3::State& a, const TSPTW3::State& b) const noexcept {
-            return TSPTW3::State::equal(a, b);
-        }
-    };
-}

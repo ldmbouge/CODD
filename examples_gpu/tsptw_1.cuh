@@ -1,15 +1,16 @@
 #pragma once
 
 #include "model.hpp"
-#include "tsptw_model_base.hpp"
+#include "tsptw_base.hpp"
 #include "util.hpp"
 #include <Common.hpp>
 #include <Backend.hpp>
 
+template<int N = 64>
 struct TSPTW1 : TSPTWBase
 {
     // Model
-    using Set = NatSet<4>;
+    using Set = NatSet<gfl::roundUpDivPosInt<unsigned  short>(N,64)>;
     using Labels = Set;
     struct State
     {
@@ -63,6 +64,7 @@ struct TSPTW1 : TSPTWBase
         return s.e == depot && s.hops == n;
     }
 
+    constexpr static bool has_simple_lgf = true;
     GFL_HOST_DEVICE
     Labels lgf(State const & s, DDContext ctx) const noexcept
     {
@@ -161,22 +163,4 @@ struct TSPTW1 : TSPTWBase
     }
 };
 
-static_assert(IsModel<TSPTW1>);
-
-namespace std
-{
-
-    template <>
-    struct hash<TSPTW1::State> {
-        std::size_t operator()(const TSPTW1::State& s) const noexcept {
-            return TSPTW1::State::hash(s);
-        }
-    };
-
-    template <>
-    struct equal_to<TSPTW1::State> {
-        bool operator()(const TSPTW1::State& a, const TSPTW1::State& b) const noexcept {
-            return TSPTW1::State::equal(a, b);
-        }
-    };
-}
+static_assert(IsModel<TSPTW1<>>);

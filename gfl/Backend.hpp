@@ -33,14 +33,6 @@ namespace gfl
     template <typename... Types>
     using tuple = backend::tuple<Types...>;
 
-    // Bit
-    template <typename T>
-    GFL_HOST_DEVICE
-    T rotl(T x, int s)
-    {
-        return backend::rotl(x, s);
-    }
-
     // Initializer List
     template <typename T>
     using initializer_list = backend::initializer_list<T>;

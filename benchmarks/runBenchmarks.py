@@ -14,12 +14,12 @@ benchmarkSet = [
      #"GendreauDumasExtended.txt",
      #"Langevin.txt",
      #"OhlmannThomas.txt",
-     #"Solnon25_feasible.txt",
-     #"Solnon25_infeasible.txt",
-     "SolomonPesant.txt",
-     "SolomonPotvinBengio.txt"
+     "Solnon25_feasible.txt",
+     "Solnon25_infeasible.txt",
+     #"SolomonPesant.txt",
+     #"SolomonPotvinBengio.txt"
 ]
-timeout = 10 * 60
+timeout = 30 * 60
 exe = "../cmake-build-release-ding/tsptw_gpu_1_cbs"
 resultsDir  = "./results"
 

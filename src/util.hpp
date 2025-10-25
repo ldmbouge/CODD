@@ -213,12 +213,13 @@ public:
          }
       }
    }
+   GFL_HOST_DEVICE
    NatSet(int ofs,const NatSet& s) {  // returns { ofs - v | v in S }
-      // for(auto i=0u;i < nbw;i++)
-      //    _t[i]=0;
-      // for(auto i : s)
-      //    insert(ofs - i);
-      // return;
+       for(auto i=0u;i < nbw;i++)
+          _t[i]=0;
+       for(auto i : s)
+          insert(ofs - i);
+       return;
       
       // unsigned long long bt[nbw];
       // for(auto i=0u;i < nbw;i++)
@@ -233,86 +234,86 @@ public:
       // }
       // std::cout << "\n";      
       
-      int lw = nbw-1;
-      while(lw >= 0 && s._t[lw]==0) lw--;
-      if (lw < 0) {
-         for(auto i=0u;i < nbw;i++)
-            _t[i]=0;
-         return;
-      }
-      const auto lvinLW = 63 - __builtin_clzll(s._t[lw]); // index of MSB bit at 1 in word lw
-      const auto lv = (lw * 64) + lvinLW; // largest value in S
-      const auto dec = ofs - lv;          // Substraction  OFS - max(S)  : size of gap. Could be > 64
-
-
-      for(int i=0;i <= lw;i++) 
-         _t[lw-i] = std::revBitsOfLong(s._t[i]);            
-      for(int i=lw+1;i < nbw;i++) _t[i] = 0;
-      
-      // std::cout << "FLIP:\n";
-      // for(int i=0; i < nbw;i++) {
-      //    std::bitset<64> word(_t[i]);
-      //    std::cout << word << " ";
-      // }
-      // std::cout << "\n";      
-
-            
-      const auto nbs = __builtin_ffsll(_t[0])-1; // least significant bit set to 1 (nbs in 0..63)
-      // std::cout << "DEC=" << dec << "\n"; 
-      // std::cout << "NBS=" << nbs << "\n";
-      const bool down = nbs > dec;
-      if (down) {
-         const auto x = nbs - dec;
-         //std::cout << "MOVE Down=" << x << " lw:" << lw << "\n";
-         unsigned long long nt[nbw] = {0}; 
-         for(int i=0;i <= std::min(lw,nbw-1);i++) {
-            auto next =  (i+1==nbw) ? 0 : _t[i+1] & ((1ull << (x+1))-1); // get the next block to inject here.
-            nt[i] = (_t[i] >> x) | (next << (64 - x));
-         }
-         for(int i=0;i < nbw;i++) _t[i] = nt[i];         
-      } else {
-         auto delta = dec >> 6; // number of words to skip
-         auto moveUp = dec & ((1ull << 6) -1); // remainder (number of bits to shift)
-         auto useBits = 64 - nbs;
-         auto by = 64 - (long)moveUp - useBits; // Could be > 0 or negative (different shift direction)
-         // std::cout << "DELTA=" << delta << " MUP:" << moveUp << " USED=" << useBits << " BY:" << by << " LW=" << lw 
-         //           << " NBW=" << nbw << "\n";
-         if (by > 0) {
-            // moving bits DOWN
-            assert(lw < nbw); // by definition, it's at most the index of the last word (1 less than size)
-            unsigned long long nt[nbw] = {0}; 
-            for(int i=0;i <= lw;i++) {
-               auto next = (i+1==nbw) ? 0 : _t[i+1] & ((1ull << (by+1))-1);
-               nt[i+delta] = (_t[i] >> by) | (next << (64 - by));
-               for(int j=i;j < i+delta;j++) _t[j] = 0;
-            }
-            for(int i=0;i < nbw;i++) _t[i] = nt[i];
-         } else if (by < 0) {
-            //moving bits UP
-            unsigned long long next = 0;
-            unsigned long long nt[nbw] = {0}; 
-            for(int i=0;i <= std::min(lw+1,nbw-1);i++) {
-               nt[i] = (_t[i] << (-by)) | next; 
-               next = (_t[i] & ~((1ull << (64 + by))-1)) >> (64+by); // from MSB w(i) to LSB w(i+1)
-               //std::cout << "NT " << i << " : " << std::bitset<64>(nt[i]) << "\n";
-            }            
-            for(int i=0;i < delta;i++)   _t[i] = 0;
-            for(int i=delta;i < nbw;i++) _t[i] = nt[i-delta]; 
-         } else if (delta) {
-            assert(delta >= 0 && delta < nbw);
-            unsigned long long nt[nbw] = {0}; 
-            for(int i=delta;i < nbw;i++) 
-               nt[i] = _t[i-delta];            
-            for(int i=0;i < nbw;i++) _t[i] = nt[i];            
-         }
-      }
-      // for(auto i=0u;i < nbw;i++)
-      //    if (bt[i] != _t[i]) {
-      //       std::cout << "Oopsies " << ofs << " - " << s << "\n";
-      //       for(auto j=0u;j < nbw;j++)
-      //          std::cout << std::bitset<64>(bt[j]) << " " << std::bitset<64>(_t[j]) << " " << (bt[j] == _t[j]) << "\n";
-      //       abort();
-      //    }      
+//      int lw = nbw-1;
+//      while(lw >= 0 && s._t[lw]==0) lw--;
+//      if (lw < 0) {
+//         for(auto i=0u;i < nbw;i++)
+//            _t[i]=0;
+//         return;
+//      }
+//      const auto lvinLW = 63 - gfl::clz(s._t[lw]); // index of MSB bit at 1 in word lw
+//      const auto lv = (lw * 64) + lvinLW; // largest value in S
+//      const auto dec = ofs - lv;          // Substraction  OFS - max(S)  : size of gap. Could be > 64
+//
+//
+//      for(int i=0;i <= lw;i++)
+//         _t[lw-i] = gfl::bitreverse(s._t[i]);
+//      for(int i=lw+1;i < nbw;i++) _t[i] = 0;
+//
+//      // std::cout << "FLIP:\n";
+//      // for(int i=0; i < nbw;i++) {
+//      //    std::bitset<64> word(_t[i]);
+//      //    std::cout << word << " ";
+//      // }
+//      // std::cout << "\n";
+//
+//
+//      const auto nbs = gfl::ffs(_t[0])-1; // least significant bit set to 1 (nbs in 0..63)
+//      // std::cout << "DEC=" << dec << "\n";
+//      // std::cout << "NBS=" << nbs << "\n";
+//      const bool down = nbs > dec;
+//      if (down) {
+//         const auto x = nbs - dec;
+//         //std::cout << "MOVE Down=" << x << " lw:" << lw << "\n";
+//         unsigned long long nt[nbw] = {0};
+//         for(int i=0;i <= gfl::min<int>(lw,nbw-1);i++) {
+//            auto next =  (i+1==nbw) ? 0 : _t[i+1] & ((1ull << (x+1))-1); // get the next block to inject here.
+//            nt[i] = (_t[i] >> x) | (next << (64 - x));
+//         }
+//         for(int i=0;i < nbw;i++) _t[i] = nt[i];
+//      } else {
+//         auto delta = dec >> 6; // number of words to skip
+//         auto moveUp = dec & ((1ull << 6) -1); // remainder (number of bits to shift)
+//         auto useBits = 64 - nbs;
+//         auto by = 64 - (long)moveUp - useBits; // Could be > 0 or negative (different shift direction)
+//         // std::cout << "DELTA=" << delta << " MUP:" << moveUp << " USED=" << useBits << " BY:" << by << " LW=" << lw
+//         //           << " NBW=" << nbw << "\n";
+//         if (by > 0) {
+//            // moving bits DOWN
+//            assert(lw < nbw); // by definition, it's at most the index of the last word (1 less than size)
+//            unsigned long long nt[nbw] = {0};
+//            for(int i=0;i <= lw;i++) {
+//               auto next = (i+1==nbw) ? 0 : _t[i+1] & ((1ull << (by+1))-1);
+//               nt[i+delta] = (_t[i] >> by) | (next << (64 - by));
+//               for(int j=i;j < i+delta;j++) _t[j] = 0;
+//            }
+//            for(int i=0;i < nbw;i++) _t[i] = nt[i];
+//         } else if (by < 0) {
+//            //moving bits UP
+//            unsigned long long next = 0;
+//            unsigned long long nt[nbw] = {0};
+//            for(int i=0;i <= gfl::min<int>(lw+1,nbw-1);i++) {
+//               nt[i] = (_t[i] << (-by)) | next;
+//               next = (_t[i] & ~((1ull << (64 + by))-1)) >> (64+by); // from MSB w(i) to LSB w(i+1)
+//               //std::cout << "NT " << i << " : " << std::bitset<64>(nt[i]) << "\n";
+//            }
+//            for(int i=0;i < delta;i++)   _t[i] = 0;
+//            for(int i=delta;i < nbw;i++) _t[i] = nt[i-delta];
+//         } else if (delta) {
+//            assert(delta >= 0 && delta < nbw);
+//            unsigned long long nt[nbw] = {0};
+//            for(int i=delta;i < nbw;i++)
+//               nt[i] = _t[i-delta];
+//            for(int i=0;i < nbw;i++) _t[i] = nt[i];
+//         }
+//      }
+//      // for(auto i=0u;i < nbw;i++)
+//      //    if (bt[i] != _t[i]) {
+//      //       std::cout << "Oopsies " << ofs << " - " << s << "\n";
+//      //       for(auto j=0u;j < nbw;j++)
+//      //          std::cout << std::bitset<64>(bt[j]) << " " << std::bitset<64>(_t[j]) << " " << (bt[j] == _t[j]) << "\n";
+//      //       abort();
+//      //    }
    }
    GFL_HOST_DEVICE
    NatSet(std::initializer_list<int> l) {
@@ -342,6 +343,7 @@ public:
          ttl += gfl::popcount(_t[i]);
       return ttl;
    }
+   GFL_HOST_DEVICE
    bool empty() const noexcept {
       bool az = true;
       for(short i=0;i < nbw;++i)
@@ -541,6 +543,7 @@ public:
             return nw == i;
       }
    }
+    GFL_HOST_DEVICE
    friend NatSet operator-(int l,const NatSet& s2) noexcept            { return NatSet(l,s2);}
    GFL_HOST_DEVICE
    friend NatSet operator|(const NatSet& s1,const NatSet& s2) noexcept { return std::move(NatSet(s1).unionWith(s2));}
