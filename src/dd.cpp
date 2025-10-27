@@ -30,12 +30,15 @@ void Bounds::attach(std::shared_ptr<AbstractDD> dd)
 
 AbstractDD::AbstractDD(const GNSet& labels)
    : _mem(new Pool),_labels(labels),_exact(true)
-{}
+{
+  _strat = nullptr;
+}
 
 AbstractDD::~AbstractDD()
 {
    //std::cout << "AbstractDD::~AbstractDD(" << this << ")\n";
-   delete _mem;
+  delete _strat;
+  delete _mem;
 }
 
 void AbstractDD::addArc(Edge::Ptr e)

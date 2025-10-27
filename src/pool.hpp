@@ -5,12 +5,13 @@
 #include "lighthash.hpp"
 
 class LPool {
-   Pool::Ptr _mem;
+   Pool::Ptr _mem; // This is _NOT_ a smart pointer. So manually delete
    unsigned  _id;
    std::stack<ANode::Ptr> _free;
 public:
    typedef LPool* Ptr; // space saving measure
    LPool(Pool::Ptr mem) : _mem(mem),_id(0) {}
+   ~LPool() { delete _mem;}
    unsigned grabId() noexcept     { return _id++;}
    Pool::Ptr get() const noexcept {  return _mem;}
    ANode::Ptr claimNode() {

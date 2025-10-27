@@ -56,10 +56,12 @@ public:
 
 class AbstractNodeAllocator {
 protected:
-   LPool::Ptr _base;
+  LPool::Ptr _base; // this is _NOT_ a smart pointer. Manually delete
 public:
    AbstractNodeAllocator(LPool::Ptr base) : _base(base) {}
-   virtual ~AbstractNodeAllocator() {}
+   virtual ~AbstractNodeAllocator() {
+     delete _base;
+   }
    virtual ANode::Ptr cloneNode(ANode::Ptr src) = 0;
    virtual void release(ANode::Ptr src) = 0;
    Pool::Ptr get() const noexcept { return _base->get();}
@@ -126,6 +128,7 @@ public:
    void display();
    bool isExact() const { return _exact;}
    virtual AbstractDD::Ptr duplicate() = 0;
+   virtual void releaseNode(ANode::Ptr n) = 0;
    virtual void makeInitFrom(ANode::Ptr src) {}
 };
 
@@ -135,6 +138,7 @@ protected:
    friend class AbstractDD;
 public:
    Strategy() : _dd(nullptr) {}
+   virtual ~Strategy() {}
    AbstractDD* theDD() const noexcept { return _dd;}
    virtual const std::string getName() const = 0;
    virtual void compute(Bounds&) {}
@@ -353,6 +357,7 @@ class DDNodeAllocator :public AbstractNodeAllocator {
    LHashtable<ST> _nmap;
 public:
    DDNodeAllocator(LPool::Ptr pool) : AbstractNodeAllocator(pool),_nmap(pool->get(),200000) {}
+   ~DDNodeAllocator() {}
    ANode::Ptr cloneNode(ANode::Ptr src) override {      
       auto sp = static_cast<const Node<ST>*>(src.get());
       Node<ST>* nn = new (_base->get()) Node<ST>(_base->get(),_base->grabId(),*sp);
@@ -450,6 +455,10 @@ private:
       Node<ST>* at = nullptr;
       _nmap.getLoc(state,at);
       return at;
+   }
+   void releaseNode(ANode::Ptr n) {
+      auto np = static_cast<Node<ST>*>(n.get());
+      np->~Node<ST>();
    }
    ANode::Ptr makeNode(ST&& state,bool pExact = true) {
       Node<ST>* at = nullptr;

@@ -16,7 +16,7 @@
 #include "store.hpp"
 #include <algorithm>
 #include <assert.h>
-
+#include <cstring>
 // ========================================================================
 
 Pool::Pool(std::size_t defSize)
@@ -28,6 +28,7 @@ Pool::Pool(std::size_t defSize)
      _mxs(32)
 {
    _store = new Segment*[_mxs];
+   memset(_store,0,sizeof(Segment*)*_mxs);
    _store[0] = new Segment(_segSize);
 }
 
