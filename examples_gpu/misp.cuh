@@ -43,97 +43,89 @@ struct Misp : MispBase<N>
 
     State initial() const noexcept
     {
-        return State{Set(0,nNodes),0};
+        return State{Set(0,MispBase<N>::nNodes-1),0};
     }
 
     GFL_HOST_DEVICE
     State target() const noexcept
     {
-        MISP { GNSet {},top};
-        return State{Set(),nNodes};  // smallest unused distance should be set explicitly to L+1
+        return State{Set(),MispBase<N>::nNodes};
     }
 
     bool isTarget(State const & s) const noexcept
     {
-        return s.k == n;
+        return s.n >= MispBase<N>::nNodes;
     }
 
-    constexpr static bool has_simple_lgf = false;
     GFL_HOST_DEVICE
     Labels lgf(State const & s, DDContext ctx, double pBound, double dBound) const noexcept
     {
-        using namespace gfl;
-
-        int ub = L+1;
-        if (s.k < n/2)
-            ub = gfl::min<int>(pBound,L+1)/2 - OPT[(n/2)-s.k];
-        else
-            ub = gfl::min<int>(pBound-1,L+1) - OPT[n-s.k];
-        auto lb = s.e+s.sm;
-        if (s.k<n-1)
-            lb = gfl::max<int>(lb,roundUpDivPosInt<int>(s.k*(s.k-1),2),OPT[s.k+1]);
-        else
-            lb = gfl::max<int>(lb,roundUpDivPosInt<int>(s.k*(s.k-1),2),OPT[s.k]+1);
-        Set vr;
-        for(int label = lb;label <= ub;label++)
-        {
-            Set leg(s.d);
-            bool legal = (leg.interWith(label - s.m).empty());
-            if (legal)
-            {
-                vr.insert(label);
-            }
-        }
-        return vr;
+        return Set(0,1);
     }
 
     GFL_HOST_DEVICE
-     gfl::optional<State> stf(State const & s, int l) const noexcept
+    gfl::optional<State> stf(State const & s, int l) const noexcept
     {
-        if (s.k == n-1)  // this moves goes to the sink
+        if (s.n >= MispBase<N>::nNodes)
         {
-            return State{Set{}, Set{}, n, 0, L + 1};
+            return gfl::nullopt;
         }
         else
         {
-            Set d_new = (l - s.m) | s.d;
-            int smallest_dist = s.sm;
-            while (d_new.contains(smallest_dist)) smallest_dist += 1;
-            State rv { s.m | Set{l}, d_new, s.k + 1, l, smallest_dist };
-            return rv;
+            if (l and not s.sel.contains(s.n)) return gfl::nullopt; // we cannot take n (label==1) if not legal.
+            Set out = s.sel;
+            out.remove(s.n);   // remove n from state
+            if (l) out.diffWith(MispBase<N>::adj[s.n]); // remove neighbors of n from state (when taking n -- label==1 -- )
+            return State{out, s.n + 1}; // build state accordingly
         }
     }
 
     GFL_HOST_DEVICE
     double scf(State const & s, int l) const noexcept
     {
-        return l - s.e;
+        return static_cast<double>(l);
     }
 
     GFL_HOST_DEVICE constexpr static
-    bool better(double const & c1, double const & c2) noexcept { return c1 < c2; }
+    bool better(double const & c1, double const & c2) noexcept { return c1 > c2; }
     GFL_HOST_DEVICE
-    constexpr static bool betterEq(double const & c1, double const & c2)  noexcept { return c1 <= c2; }
-    constexpr static double bestValue() noexcept { return std::numeric_limits<double>::lowest(); }
-    constexpr static double worstValue() noexcept { return std::numeric_limits<double>::max(); } // lowest() instead of min() because double
+    constexpr static bool betterEq(double const & c1, double const & c2)  noexcept { return c1 >= c2; }
+    constexpr static double bestValue() noexcept { return std::numeric_limits<double>::max(); }
+    constexpr static double worstValue() noexcept { return std::numeric_limits<double>::lowest(); } // lowest() instead of min() because double
 
-    constexpr static bool has_merge = true;
+    constexpr static bool has_merge = false;
+
+    constexpr static bool has_local = true;
     GFL_HOST_DEVICE
-    gfl::optional<State> smf(State const & s1, State const & s2) const noexcept
+    double local(State const & s, LocalContext ctx) const noexcept
     {
-        if (s1.k == s2.k and s1.e == s2.e)
-        {
-            return GRuler{s1.m & s2.m, s1.d & s2.d, s1.k, min<int>(s1.e,s2.e), min<int>(s1.sm,s2.sm)};
-        }
-        else
-        {
-            return std::nullopt; // return  the empty optional
-        }
+        return s.sel.size();
     }
 
-    constexpr static bool has_local = false;
     constexpr static bool has_dom = false;
+    GFL_HOST_DEVICE
+    static bool dom(State const & s1, State const & s2) noexcept
+    {
+        //return  (aU == bU) && (ae == be) && at < bt;
+        return
+                s1.n == s2.n and
+                s2.sel <= s1.sel;
+        //return ae==be && at < bt;
+    }
+    GFL_HOST_DEVICE
+    static std::size_t domHash(State const & s) noexcept
+    {
+        std::size_t seed = 0;
+        hash_combine(seed, static_cast<std::size_t>(s.n));
+        hash_combine(seed, gfl::roundUpToMultiple<std::size_t>(s.sel.size(),2));
+        return seed;
+    }
+    GFL_HOST_DEVICE
+    static bool domEq(State const & s1, State const & s2) noexcept
+    {
+        return s1.n == s2.n;
+    }
 };
 
 
-static_assert(IsModel<GRuler<>>);
+static_assert(IsModel<Misp<>>);

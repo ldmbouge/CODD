@@ -70,8 +70,8 @@ struct LayerHelper
     {
         using namespace gfl;
 
-        // CUB
         auto const nChildren = layerInfo->nParents * layerInfo->labelsInfo.nLabels;
+        layerInfo->tmpChildren = allocator->allocateArray<Node>(nChildren);
         layerInfo->tmpChildrenInfo = allocator->allocateArray<NodeInfo>(nChildren);
         cub::DeviceRadixSort::SortKeys( // Initialize cubTmpMemSize
                 layerInfo->cubTmpMem,
@@ -81,19 +81,6 @@ struct LayerHelper
                 nChildren,
                 DummyDecomposer64{}); // Bigger key used
         CHECK_LAST_CUDA_ERROR();
-        std::size_t const memSizeSort = layerInfo->cubTmpMemSize;
-        layerInfo->cubTmpMemSize = 0;
-        cub::DeviceSelect::FlaggedIf(
-                layerInfo->cubTmpMem,
-                layerInfo->cubTmpMemSize,
-                layerInfo->children,
-                layerInfo->childrenInfo,
-                &layerInfo->nChildren,
-                nChildren,
-                SelectNotRep{});
-        CHECK_LAST_CUDA_ERROR();
-        std::size_t const memSizeSelect = layerInfo->cubTmpMemSize;
-        layerInfo->cubTmpMemSize = gfl::max<i64>(memSizeSort, memSizeSelect);
         layerInfo->cubTmpMem = allocator->allocate<gfl::u8>(layerInfo->cubTmpMemSize, 16);
     }
 
@@ -116,7 +103,8 @@ struct LayerHelper
         gpuMemSize += memSize;
 
         // initAux()
-        memSize = sizeof(NodeInfo) * nChildren + StackAllocator::DefaultAlign;
+        memSize = sizeof(Node) * nChildren + StackAllocator::DefaultAlign;
+        memSize += sizeof(NodeInfo) * nChildren + StackAllocator::DefaultAlign;
         gpuMemSize += memSize;
         std::size_t memSizeSort;
         void * dummyTmpMem = nullptr;
@@ -129,18 +117,7 @@ struct LayerHelper
                 nChildren,
                 DummyDecomposer64{}); // Bigger key used
         CHECK_LAST_CUDA_ERROR();
-        std::size_t memSizeSelect;
-        Node dummyNode;
-        std::size_t dummySize;
-        cub::DeviceSelect::FlaggedIf(
-                dummyTmpMem,
-                memSizeSelect,
-                &dummyNode,
-                &dummyChildInfo[0],
-                &dummySize,
-                nChildren,
-                SelectNotRep{});
-        gpuMemSize += max<i64>(memSizeSort, memSizeSelect);
+        gpuMemSize += memSizeSort;
         return gpuMemSize;
     }
 

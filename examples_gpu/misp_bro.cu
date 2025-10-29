@@ -1,10 +1,11 @@
 #include "bro_base.cuh"
-#include "gruler.cuh"
+#include "misp.cuh"
 
 int main(int argc,char* argv[])
 {
-    using Model = GRuler<256>;
-    using Node = LightNode<Model::State, Model::Labels, 32>;
+    constexpr int N = 1024;
+    using Model = Misp<N>;
+    using Node = LightNode<Model::State, Model::Labels, N>;
 
     return run_bro<Model,Node>(argc, argv);
 }

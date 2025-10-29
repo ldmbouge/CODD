@@ -196,6 +196,7 @@ public:
       for(int i=0;i<nbw;i++)
          _t[i] = s._t[i];      
    }
+   GFL_HOST_DEVICE
    NatSet(int lb,int ub) {
       if (lb > ub) {
          for(auto i=0u;i < nbw;i++)

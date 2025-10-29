@@ -81,7 +81,9 @@ struct LayerInfo
     Node * children;
     NodeInfo * childrenInfo;
 
-    // CUB
+    // Aux
+    gfl::i64 tmpInt;
+    Node * tmpChildren;
     NodeInfo * tmpChildrenInfo;
     std::size_t cubTmpMemSize;
     void * cubTmpMem;

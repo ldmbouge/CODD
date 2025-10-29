@@ -655,6 +655,7 @@ private:
 //       auto const labels = _model->lgf(state, ctx);
 //       auto const branchingFactor = gfl::max<int>(1,labels.size()); // Avoid division by 0
 //       return layerEngine->getNodesPerBatch(nNodes, branchingFactor);
+        return 0;
     }
 
     void offloadLayerExpansion(std::list<ANode::Ptr> const & layer, double primalBound, DDContext ddCtx, LocalContext localCtx)

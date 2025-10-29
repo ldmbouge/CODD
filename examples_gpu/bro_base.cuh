@@ -35,16 +35,16 @@ int run_bro(int argc,char* argv[])
     using LayerBufferType =  std::vector<Node>;
 
     // Select GPU
-    cudaSetDevice(0);
+    cudaSetDevice(1);
 
     // Parse arguments
-    i64 width = -1;
+    i64 maxWidth = -1;
     int timeout = std::numeric_limits<int>::max(); // 68 years
     bool gpu = false;
     std::string instance;
     cxxopts::Options options("", "A C++ solver for DIDP models");
     options.add_options("Available")
-            ("w,width", "Beam width", cxxopts::value(width))
+            ("w,width", "Beam width", cxxopts::value(maxWidth))
             ("g,gpu", "Use GPU acceleration", cxxopts::value(gpu))
             ("h,help", "Show this help message and exit")
             ("i,instance", "Path to the instance file", cxxopts::value(instance))
@@ -55,6 +55,8 @@ int run_bro(int argc,char* argv[])
     auto const result = options.parse(argc, argv);
 
     // Option validation
+    i64 width = 1024;
+
     if (instance.empty())
     {
         std::cerr << "Missing instance file" << std::endl;
@@ -104,14 +106,7 @@ int run_bro(int argc,char* argv[])
     // Initialize first layer
     Node root;
     root.state = model->initial();
-    if constexpr (Model::has_simple_lgf)
-    {
-        root.labels = model->lgf(root.state, DDExact);
-    }
-    else
-    {
-        root.labels = model->lgf(root.state, DDExact, pBound, dBound);
-    }
+    root.labels = model->lgf(root.state, DDExact, pBound, dBound);
     root.boundSrcToNode = 0;
     root.nEdgesSrcToNode = 0;
     layers.emplace_back();
@@ -123,6 +118,7 @@ int run_bro(int argc,char* argv[])
 
     // Let's goo!
     auto start = RuntimeMonitor::cputime();
+    auto lastWidthInc = RuntimeMonitor::now();
     bool interrupted = false;
     bool newSolution = false;
     auto isLayerEmpty = [](LayerBufferType const &l) { return l.empty(); };
@@ -131,7 +127,7 @@ int run_bro(int argc,char* argv[])
         i32 lIdx = -1;
         for(i32 i = 0; i < layers.size(); i += 1)
         {
-            printf(" I %3d | S %10lu\n", i, layers[i].size());
+           //printf(" I %3d | S %10lu\n", i, layers[i].size());
            if (not layers[i].empty())
            {
               lIdx = i;
@@ -150,9 +146,11 @@ int run_bro(int argc,char* argv[])
 
         // Input
         i32 const layerIdx = lastNotEmpty();
+
         if (layerIdx == layers.size()-1)
         {
             layers.emplace_back();
+            layers.reserve(2*layers[layerIdx].size());
             labelsInfo.emplace_back();
             maxNodesToExpand.push_back(1); // Not 0!
         }
@@ -160,6 +158,7 @@ int run_bro(int argc,char* argv[])
         auto & nextLayer = layers[layerIdx + 1];
 
         // Processing
+        auto offloadStart = RuntimeMonitor::now();
         {
             //Batching
             maxNodesToExpand[layerIdx] = gfl::max<i64>(maxNodesToExpand[layerIdx], lh->getMaxParents(labelsInfo[layerIdx].nLabels));
@@ -175,9 +174,9 @@ int run_bro(int argc,char* argv[])
                 getBeginEnd(pBegin, pEnd, bIdx, nBatches, nParents);
                 i64 const currentBatchSize = pEnd - pBegin; // No + 1!
                 expandedNodes += currentBatchSize;
-                Node const * const currentBatch = currentLayer.data() + currentLayer.size() - expandedNodes;
+                Node const * const currentBatch = layers[layerIdx].data() + layers[layerIdx].size() - expandedNodes;
 
-                printf("[%7.2fs] Layer %3d | Nodes = %10ld  -> %10ld | MemSize = ",
+                printf("[%7.2fs] Layer %4d | Nodes = %10ld  -> %10ld | MemSize = ",
                        RuntimeMonitor::elapsedSeconds(start),
                        layerIdx,
                        currentLayer.size(),
@@ -192,7 +191,7 @@ int run_bro(int argc,char* argv[])
                 {
                     printf("?");
                 }
-                printf(" | Batch %3d/%3d | Width = %d\n", bIdx+1, nBatches, currentBatchSize);
+                printf(" | Batch %3d/%3d | Width = %10ld\n", bIdx+1, nBatches, currentBatchSize);
 
                 fflush(stdout);
 
@@ -216,12 +215,12 @@ int run_bro(int argc,char* argv[])
                     LayerHelperType::initAux(layerInfo, gAllocator);
 
                     i32 blockSize = 32;
-                    dim3 gridSize;
-                    std::tie(gridSize.x, gridSize.y, gridSize.z) = calcGridSize(layerInfo->nParents);
+                    dim3 gridSize = layerInfo->nParents;
                     calcChildrenKernel<Model><<<gridSize, blockSize, 0, lh->gpuMainQueue>>>(
                             model,
                             layerInfo,
                             layerInfo->childrenInfo,
+                            layerInfo->tmpChildren,
                             pBound,
                             DDCtx);
                     CHECK_LAST_CUDA_ERROR();
@@ -243,28 +242,15 @@ int run_bro(int argc,char* argv[])
 
                         blockSize = 128;
                         gridSize = roundUpDivPosInt<i32>(layerInfo->nChildren, blockSize);
-                        calcReprKernel<Model><<<gridSize, blockSize, 0, lh->gpuMainQueue>>>(layerInfo, layerInfo->tmpChildrenInfo);
+                        calcReprKernel<Model><<<gridSize, blockSize, 0, lh->gpuMainQueue>>>(layerInfo, layerInfo->tmpChildrenInfo, layerInfo->tmpChildren);
                         CHECK_LAST_CUDA_ERROR();
 
-                        cub::DeviceRadixSort::SortKeys(
-                                layerInfo->cubTmpMem,
-                                layerInfo->cubTmpMemSize,
-                                layerInfo->tmpChildrenInfo,
-                                layerInfo->childrenInfo,
-                                layerInfo->nChildren,
-                                IdxDecomposer{},
-                                lh->gpuMainQueue);
+                        resetChildrenCount<<<1,1,0,lh->gpuMainQueue>>>(layerInfo);
                         CHECK_LAST_CUDA_ERROR();
 
-                        cub::DeviceSelect::FlaggedIf(
-                                layerInfo->cubTmpMem,
-                                layerInfo->cubTmpMemSize,
-                                layerInfo->children,
-                                layerInfo->childrenInfo,
-                                &layerInfo->nChildren,
-                                layerInfo->nChildren,
-                                SelectNotRep{},
-                                lh->gpuMainQueue);
+                        blockSize = 32;
+                        gridSize = roundUpDivPosInt<i32>(layerInfo->nChildren, blockSize);
+                        cpyChildrenKernel<Node><<<gridSize, blockSize, 0, lh->gpuMainQueue>>>(layerInfo, layerInfo->tmpChildrenInfo, layerInfo->tmpChildren, layerInfo->children);
                         CHECK_LAST_CUDA_ERROR();
 
                         cudaStreamSynchronize(lh->gpuMainQueue);
@@ -316,6 +302,19 @@ int run_bro(int argc,char* argv[])
                         }
                         nextLayer.resize(nextLayerOldSize);
                     }
+                    else
+                    {
+//                        auto cmpByCost = [](Node const & a, Node const & b){return not Model::betterEq(a.boundSrcToNode,b.boundSrcToNode);};
+//                        std::sort(nextLayer.data() + nextLayerOldSize, nextLayer.data() + nextLayer.size(), cmpByCost);
+//                        std::inplace_merge(nextLayer.data(), nextLayer.data() + nextLayerOldSize, nextLayer.data() + nextLayer.size(), cmpByCost);
+//                        for(Node const & n : nextLayer)
+//                        {
+//                            printf("%7.2f\n", n.boundSrcToNode);
+//                            std::cout << pro << std::endl;
+//                        }
+//                        printf("\n");
+//                        fflush(stdout);
+                    }
 
                 }
             }
@@ -330,6 +329,18 @@ int run_bro(int argc,char* argv[])
                 fflush(stdout);
             }
         }
+        auto offloadElapsed = RuntimeMonitor::elapsedSeconds(offloadStart);
+        i64 newWidth = width;
+        if (offloadElapsed < 1 and RuntimeMonitor::elapsedSeconds(lastWidthInc) > 2.0)
+        {
+            newWidth *= 2;
+            lastWidthInc = RuntimeMonitor::now();
+        }
+//        double targetTime = gfl::min<double>(0.01 * (10.0 + RuntimeMonitor::elapsedSeconds(start)) / 10.0, 0.5);
+//        double ratio = gfl::min<double>(targetTime / offloadElapsed, 2.0); // 100 layer/s
+//        i64 newWidth = static_cast<i64>(width * ratio);
+//        printf("W = %10ld, E=%7.2f, R=%5.3f, NW=%10ld\n", width, offloadElapsed,ratio, newWidth);
+        width = gfl::min<i64>(newWidth, maxWidth);
     }
 
     printf("[%7.2fs] ", RuntimeMonitor::elapsedSeconds(start));

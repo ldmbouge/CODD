@@ -64,9 +64,8 @@ struct TSPTW1 : TSPTWBase
         return s.e == depot && s.hops == n;
     }
 
-    constexpr static bool has_simple_lgf = true;
     GFL_HOST_DEVICE
-    Labels lgf(State const & s, DDContext ctx) const noexcept
+    Labels lgf(State const & s, DDContext ctx, double pBound, double dBound) const noexcept
     {
         if (s.hops >= n-1)
             return (s.t + d[s.e][depot] <= tw[depot].b) and s.e != depot ? Set{depot} : Set{}; // that's the only way to return the depot

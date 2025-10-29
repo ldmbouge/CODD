@@ -38,14 +38,7 @@ void calcLabelsKernel(
     if (cIdx < layerInfo->nChildren)
     {
         auto & pNode = layerInfo->children[cIdx];
-        if constexpr (Model::has_simple_lgf)
-        {
-            pNode.labels = model->lgf(pNode.state, ctx);
-        }
-        else
-        {
-            pNode.labels = model->lgf(pNode.state, ctx, pBound, dBound);
-        }
+        pNode.labels = model->lgf(pNode.state, ctx, pBound, dBound);
         auto [smallest,largest,count] = pNode.labels.slc();
         atomicMin_block(&minLabel_s, smallest);
         atomicMax_block(&maxLabel_s, largest);
@@ -68,6 +61,7 @@ void calcChildrenKernel(
         Model const * const model,
         LayerInfo<Node> * const layerInfo,
         NodeInfo * const childrenInfo,
+        Node * children,
         gfl::f64 primalBound,
         LocalContext localCtx)
 {
@@ -76,7 +70,7 @@ void calcChildrenKernel(
 
     assert(blockDim.x == warpSize);
 
-    i64 const pIdx = calcBlockIdx();
+    i64 const pIdx = blockIdx.x;
     if (pIdx < layerInfo->nParents)
     {
         Node cNode;
@@ -132,7 +126,7 @@ void calcChildrenKernel(
                     u32 const maskThreadsBefore = maskFilledThrough<u32>(laneIdx());
                     i64 const offset = popcount(maskThreadsWithChild & maskThreadsBefore);
                     cInfo.idx = nChildrenInGlobal + offset;
-                    layerInfo->children[cInfo.idx] = cNode;
+                    children[cInfo.idx] = cNode;
                     childrenInfo[cInfo.idx] = cInfo;
                 }
 
@@ -145,6 +139,48 @@ void calcChildrenKernel(
     }
 }
 
+
+template<typename Node>
+GFL_GLOBAL
+void cpyChildrenKernel(
+        LayerInfo<Node> * const layerInfo,
+        NodeInfo * const childrenInfo,
+        Node * const childrenIn,
+        Node * const childrenOut)
+{
+    using namespace gfl;
+    i64 const cIdx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (cIdx < layerInfo->tmpInt)
+    {
+        u32 const maskActiveThreads = __activemask();
+        i32 haveChild = not childrenInfo[cIdx].isRepresented;
+        u32 const maskThreadsWithChild = __ballot_sync(maskActiveThreads, haveChild);
+        i32 const nThreadsWithChild = popcount(maskThreadsWithChild);
+        if (nThreadsWithChild > 0)
+        {
+            i64 nChildrenInGlobal = laneIdx() == 0 ? atomicAdd((ull *) &layerInfo->nChildren, (ull) nThreadsWithChild) : 0;
+            nChildrenInGlobal = __shfl_sync(maskActiveThreads, nChildrenInGlobal, 0);
+            if (haveChild)
+            {
+                Node cNode = childrenIn[childrenInfo[cIdx].idx];
+                u32 const maskThreadsBefore = maskFilledThrough<u32>(laneIdx());
+                i64 const offset = popcount(maskThreadsWithChild & maskThreadsBefore);
+                childrenOut[nChildrenInGlobal + offset] = cNode;
+            }
+        }
+    }
+//    if(blockIdx.x == 0 and threadIdx.x == 0)
+//    {
+//        printf("I see %lu children\n", layerInfo->tmpInt);
+//        for(i64 cIdx = 0; cIdx < layerInfo->tmpInt; cIdx += 1)
+//        {
+//            if(not childrenInfo[cIdx].isRepresented)
+//            {
+//
+//            }
+//        }
+//    }
+}
 
 template<typename Model, typename Node>
 GFL_GLOBAL
@@ -253,39 +289,18 @@ void checkStatePair(NodeInfo & iInfo, typename Model::State const & iState, Node
 {
     using namespace gfl;
 
-    if (iInfo.boundSrcToNode ==  jInfo.boundSrcToNode)
-    {
-        if (Model::State::equal(iState, jState))
-        {
-            jInfo.isRepresented = 1;
-        }
-    }
-    if (Model::better(iInfo.boundSrcToNode, jInfo.boundSrcToNode))
-    {
-        if (Model::State::equal(iState, jState))
-        {
-            jInfo.isRepresented = 1;
-        }
-    }
-    if (Model::better(jInfo.boundSrcToNode, iInfo.boundSrcToNode))
-    {
-        if (Model::State::equal(iState, jState))
-        {
-            iInfo.isRepresented = 1;
-        }
-    }
     if (Model::betterEq(iInfo.boundSrcToNode, jInfo.boundSrcToNode))
     {
         if (Model::State::equal(iState, jState))
         {
-            jInfo.isRepresented = static_cast<i32>(true);
+            jInfo.isRepresented = 1;
         }
     }
-    if constexpr (Model::has_dom)
+    else if (Model::better(jInfo.boundSrcToNode, iInfo.boundSrcToNode))
     {
-        if (Model::betterEq(jInfo.boundSrcToNode, iInfo.boundSrcToNode) and Model::dom(jState, iState))
+        if (Model::State::equal(iState, jState))
         {
-            iInfo.isRepresented = static_cast<i32>(true);
+            iInfo.isRepresented = 1;
         }
     }
     if constexpr (Model::has_dom)
@@ -294,12 +309,16 @@ void checkStatePair(NodeInfo & iInfo, typename Model::State const & iState, Node
         {
             jInfo.isRepresented = static_cast<i32>(true);
         }
+        else if (Model::betterEq(jInfo.boundSrcToNode, iInfo.boundSrcToNode) and Model::dom(jState, iState))
+        {
+            iInfo.isRepresented = static_cast<i32>(true);
+        }
     }
 }
 
 template<typename Model, typename Node>
 GFL_GLOBAL
-void calcReprKernel(LayerInfo<Node> * const layerInfo, NodeInfo * const childrenInfo)
+void calcReprKernel(LayerInfo<Node> * const layerInfo, NodeInfo * const childrenInfo, Node * const children)
 {
     using namespace gfl;
 
@@ -310,13 +329,13 @@ void calcReprKernel(LayerInfo<Node> * const layerInfo, NodeInfo * const children
         auto & iInfo = childrenInfo[i];
         assert(0 <= iInfo.idx);
         assert(iInfo.idx < layerInfo->nChildren);
-        auto const iChild = layerInfo->children[iInfo.idx].state;
+        auto const iChild = children[iInfo.idx].state;
         for (i32 j = i + 1; j < layerInfo->nChildren; j += 1)
         {
             auto & jInfo = childrenInfo[j];
             assert(0 <= jInfo.idx);
             assert(jInfo.idx < layerInfo->nChildren);
-            auto const jChild = layerInfo->children[jInfo.idx].state;
+            auto const jChild = children[jInfo.idx].state;
             if (iInfo.hash == jInfo.hash)
             {
                 checkStatePair<Model>(iInfo, iChild, jInfo, jChild);
@@ -327,6 +346,14 @@ void calcReprKernel(LayerInfo<Node> * const layerInfo, NodeInfo * const children
             }
         }
     }
+}
+
+template<typename Node>
+GFL_GLOBAL
+void resetChildrenCount(LayerInfo<Node> * const layerInfo)
+{
+   layerInfo->tmpInt = layerInfo->nChildren;
+   layerInfo->nChildren = 0;
 }
 
 GFL_DEVICE inline
