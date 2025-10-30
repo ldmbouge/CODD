@@ -62,7 +62,7 @@ void calcChildrenKernel(
         LayerInfo<Node> * const layerInfo,
         NodeInfo * const childrenInfo,
         Node * children,
-        gfl::f64 primalBound,
+        gfl::f64 pBound,
         LocalContext localCtx)
 {
     using State = typename Model::State;
@@ -93,7 +93,7 @@ void calcChildrenKernel(
                     else
                         cHeuristicNodeToSink = 0;
                     f64 cCost = cBoundSrcToNode + cHeuristicNodeToSink;
-                    if (Model::better(cCost, primalBound))
+                    if (Model::better(cCost, pBound))
                     {
                         haveChild = 1;
 
@@ -140,9 +140,10 @@ void calcChildrenKernel(
 }
 
 
-template<typename Node>
+template<typename Model, typename Node>
 GFL_GLOBAL
 void cpyChildrenKernel(
+        Model const * const m,
         LayerInfo<Node> * const layerInfo,
         NodeInfo * const childrenInfo,
         Node * const childrenIn,
@@ -166,6 +167,10 @@ void cpyChildrenKernel(
                 u32 const maskThreadsBefore = maskFilledThrough<u32>(laneIdx());
                 i64 const offset = popcount(maskThreadsWithChild & maskThreadsBefore);
                 childrenOut[nChildrenInGlobal + offset] = cNode;
+                if (m->isTarget(cNode.state))
+                {
+                    layerInfo->hasTarget = true;
+                }
             }
         }
     }

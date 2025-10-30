@@ -59,6 +59,8 @@ struct TSPTW1 : TSPTWBase
     {
         return {Set(), depot, 0, n };
     }
+
+    GFL_HOST_DEVICE
     bool isTarget(State const & s) const noexcept
     {
         return s.e == depot && s.hops == n;

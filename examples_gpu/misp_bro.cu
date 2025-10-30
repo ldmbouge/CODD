@@ -3,7 +3,7 @@
 
 int main(int argc,char* argv[])
 {
-    constexpr int N = 1024;
+    constexpr int N = 256;
     using Model = Misp<N>;
     using Node = LightNode<Model::State, Model::Labels, N>;
 

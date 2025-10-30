@@ -80,6 +80,7 @@ struct LayerInfo
     gfl::i64 nChildren;
     Node * children;
     NodeInfo * childrenInfo;
+    bool hasTarget;
 
     // Aux
     gfl::i64 tmpInt;
@@ -96,6 +97,7 @@ struct LayerInfo
         nChildren = 0;
         children = nullptr;
         childrenInfo = nullptr;
+        hasTarget = false;
         tmpChildrenInfo = nullptr;
         cubTmpMemSize = 0;
         cubTmpMem = nullptr;

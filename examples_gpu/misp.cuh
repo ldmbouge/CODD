@@ -52,6 +52,7 @@ struct Misp : MispBase<N>
         return State{Set(),MispBase<N>::nNodes};
     }
 
+    GFL_HOST_DEVICE
     bool isTarget(State const & s) const noexcept
     {
         return s.n >= MispBase<N>::nNodes;
@@ -76,7 +77,7 @@ struct Misp : MispBase<N>
             Set out = s.sel;
             out.remove(s.n);   // remove n from state
             if (l) out.diffWith(MispBase<N>::adj[s.n]); // remove neighbors of n from state (when taking n -- label==1 -- )
-            return State{out, s.n + 1}; // build state accordingly
+            return State{out, out.empty() ? MispBase<N>::nNodes : s.n + 1}; // build state accordingly
         }
     }
 
@@ -99,10 +100,16 @@ struct Misp : MispBase<N>
     GFL_HOST_DEVICE
     double local(State const & s, LocalContext ctx) const noexcept
     {
-        return s.sel.size();
+        int minAdj = gfl::numeric_limits<int>::max();
+        for (int i = 0; i < MispBase<N>::nNodes; i += 1)
+        {
+            if(s.sel.contains(i))
+                minAdj = gfl::min<int>(minAdj, (s.sel | MispBase<N>::adj[i]).size());
+        }
+        return s.sel.size() - MispBase<N>::minAdj;
     }
 
-    constexpr static bool has_dom = false;
+    constexpr static bool has_dom = true;
     GFL_HOST_DEVICE
     static bool dom(State const & s1, State const & s2) noexcept
     {

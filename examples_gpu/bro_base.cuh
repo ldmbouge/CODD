@@ -150,7 +150,7 @@ int run_bro(int argc,char* argv[])
         if (layerIdx == layers.size()-1)
         {
             layers.emplace_back();
-            layers.reserve(2*layers[layerIdx].size());
+            layers.reserve(maxWidth);
             labelsInfo.emplace_back();
             maxNodesToExpand.push_back(1); // Not 0!
         }
@@ -191,7 +191,7 @@ int run_bro(int argc,char* argv[])
                 {
                     printf("?");
                 }
-                printf(" | Batch %3d/%3d | Width = %10ld\n", bIdx+1, nBatches, currentBatchSize);
+                printf(" | Batch %3d/%3d | Width = %10ld\r", bIdx+1, nBatches, currentBatchSize);
 
                 fflush(stdout);
 
@@ -224,10 +224,12 @@ int run_bro(int argc,char* argv[])
                             pBound,
                             DDCtx);
                     CHECK_LAST_CUDA_ERROR();
+
                     cudaStreamSynchronize(lh->gpuMainQueue);
                     CHECK_LAST_CUDA_ERROR();
 
-                    if (layerInfo->nChildren > 0)
+                    i64 const nChildren = layerInfo->nChildren;
+                    if (nChildren > 0)
                     {
                        //  Representatives
                         cub::DeviceRadixSort::SortKeys(
@@ -235,13 +237,13 @@ int run_bro(int argc,char* argv[])
                                 layerInfo->cubTmpMemSize,
                                 layerInfo->childrenInfo,
                                 layerInfo->tmpChildrenInfo,
-                                layerInfo->nChildren,
+                                nChildren,
                                 HashDecomposer{},
                                 lh->gpuMainQueue);
                         CHECK_LAST_CUDA_ERROR();
 
                         blockSize = 128;
-                        gridSize = roundUpDivPosInt<i32>(layerInfo->nChildren, blockSize);
+                        gridSize = roundUpDivPosInt<i32>(nChildren, blockSize);
                         calcReprKernel<Model><<<gridSize, blockSize, 0, lh->gpuMainQueue>>>(layerInfo, layerInfo->tmpChildrenInfo, layerInfo->tmpChildren);
                         CHECK_LAST_CUDA_ERROR();
 
@@ -249,8 +251,8 @@ int run_bro(int argc,char* argv[])
                         CHECK_LAST_CUDA_ERROR();
 
                         blockSize = 32;
-                        gridSize = roundUpDivPosInt<i32>(layerInfo->nChildren, blockSize);
-                        cpyChildrenKernel<Node><<<gridSize, blockSize, 0, lh->gpuMainQueue>>>(layerInfo, layerInfo->tmpChildrenInfo, layerInfo->tmpChildren, layerInfo->children);
+                        gridSize = roundUpDivPosInt<i32>(nChildren, blockSize);
+                        cpyChildrenKernel<Model,Node><<<gridSize, blockSize, 0, lh->gpuMainQueue>>>(model, layerInfo, layerInfo->tmpChildrenInfo, layerInfo->tmpChildren, layerInfo->children);
                         CHECK_LAST_CUDA_ERROR();
 
                         cudaStreamSynchronize(lh->gpuMainQueue);
@@ -288,8 +290,9 @@ int run_bro(int argc,char* argv[])
 
                     labelsInfo[layerIdx+1].update(layerInfo->labelsInfo);
 
-                    if(model->isTarget(nextLayer.back().state))
+                    if(layerInfo->hasTarget)
                     {
+                        printf("Cheking targets...\n");
                         for (i64 i = nextLayerOldSize; i < nextLayer.size(); i += 1)
                         {
                             Node const & n = nextLayer[i];
@@ -304,9 +307,9 @@ int run_bro(int argc,char* argv[])
                     }
                     else
                     {
-//                        auto cmpByCost = [](Node const & a, Node const & b){return not Model::betterEq(a.boundSrcToNode,b.boundSrcToNode);};
-//                        std::sort(nextLayer.data() + nextLayerOldSize, nextLayer.data() + nextLayer.size(), cmpByCost);
-//                        std::inplace_merge(nextLayer.data(), nextLayer.data() + nextLayerOldSize, nextLayer.data() + nextLayer.size(), cmpByCost);
+                        auto cmpByCost = [](Node const & a, Node const & b){return not Model::betterEq(a.boundSrcToNode,b.boundSrcToNode);};
+                        std::sort(nextLayer.data() + nextLayerOldSize, nextLayer.data() + nextLayer.size(), cmpByCost);
+                        std::inplace_merge(nextLayer.data(), nextLayer.data() + nextLayerOldSize, nextLayer.data() + nextLayer.size(), cmpByCost);
 //                        for(Node const & n : nextLayer)
 //                        {
 //                            printf("%7.2f\n", n.boundSrcToNode);

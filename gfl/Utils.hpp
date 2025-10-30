@@ -79,7 +79,6 @@ namespace gfl
     {
         static_assert(std::is_integral_v<TIn1>);
         static_assert(std::is_integral_v<TIn2>);
-        static_assert(std::is_integral_v<TOut>);
         assert(a >= 0);
         assert(b > 0);
         using CommonT = std::common_type_t<TIn1, TIn2>;
