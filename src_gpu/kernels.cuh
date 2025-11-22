@@ -313,15 +313,14 @@ void calcRepKernel(LayerInfo<Node> * const layerInfo)
     Node const * const children = layerInfo->children.Current();
     NodeInfo * const childrenInfo = layerInfo->childrenInfo.Current();
 
-    i32 cBegin,cEnd;
+    i64 cBegin,cEnd;
     getBeginEnd(cBegin,cEnd,blockIdx.x,gridDim.x,layerInfo->nChildren);
-    for (i32 i = cBegin + threadIdx.x; i < cEnd; i += blockDim.x)
-    {
+    for (i64 i = cBegin + threadIdx.x; i < cEnd; i += blockDim.x) {
         auto & iInfo = childrenInfo[i];
         assert(0 <= iInfo.idx);
         assert(iInfo.idx < layerInfo->nChildren);
         auto const iChild = children[iInfo.idx].state;
-        for (i32 j = i + 1; j < layerInfo->nChildren; j += 1)
+        for (i64 j = i + 1; j < layerInfo->nChildren; j += 1)
         {
             auto & jInfo = childrenInfo[j];
             assert(0 <= jInfo.idx);
@@ -398,3 +397,10 @@ void printNotRepCount(LayerInfo<Node> * layerInfo, NodeInfo * childrenInfo)
 }
 
 
+
+template<typename Node>
+GFL_GLOBAL
+void printDebugInfo(LayerInfo<Node> const * const  layerInfo)
+{
+    printf("Reprs %ld\n", layerInfo->nRepresentatives);
+}

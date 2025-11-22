@@ -225,6 +225,11 @@ int run_bro(int argc,char* argv[])
                 calcRepKernel<Model><<<gridSize, blockSize, 0, lh->gpuMainQueue>>>(layerInfo);
                 CHECK_LAST_CUDA_ERROR();
 
+                blockSize = 32;
+                gridSize = roundUpDivPosInt<i32>(nChildren, blockSize);
+                countRepKernel<Node><<<gridSize, blockSize, 0, lh->gpuMainQueue>>>(layerInfo);
+                CHECK_LAST_CUDA_ERROR();
+
                 if (sort)
                     cub::DeviceRadixSort::SortKeys(
                             layerInfo->cubTmpMem,
@@ -241,11 +246,6 @@ int run_bro(int argc,char* argv[])
                             nChildren,
                             RepDecomposer{},
                             lh->gpuMainQueue);
-                CHECK_LAST_CUDA_ERROR();
-
-                blockSize = 32;
-                gridSize = roundUpDivPosInt<i32>(nChildren, blockSize);
-                countRepKernel<Node><<<gridSize, blockSize, 0, lh->gpuMainQueue>>>(layerInfo);
                 CHECK_LAST_CUDA_ERROR();
 
                 blockSize = 128;
