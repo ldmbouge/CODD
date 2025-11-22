@@ -3,8 +3,9 @@
 
 int main(int argc,char* argv[])
 {
-    using Model = TSPTW1<64>;
-    using Node = LightNode<Model::State, Model::Labels, 64>;
+    constexpr int N = 64;
+    using Model = TSPTW1<N>;
+    using Node = LightNode<Model::State, Model::Labels,N>;
 
     return run_bro<Model,Node>(argc, argv);
 }

@@ -61,8 +61,14 @@ struct LayerHelper
         using namespace gfl;
 
         i32 const nChildren = layerInfo->nParents * layerInfo->labelsInfo.nLabels;
-        layerInfo->children = allocator->allocateArray<Node>(nChildren);
-        layerInfo->childrenInfo = allocator->allocateArray<NodeInfo>(nChildren);
+
+        auto children = allocator->allocateArray<Node>(nChildren);
+        auto tmpChildren = allocator->allocateArray<Node>(nChildren);
+        layerInfo->children = cub::DoubleBuffer<Node>(children, tmpChildren);
+
+        auto childrenInfo = allocator->allocateArray<NodeInfo>(nChildren);
+        auto tmpChildrenInfo =  allocator->allocateArray<NodeInfo>(nChildren);
+        layerInfo->childrenInfo = cub::DoubleBuffer<NodeInfo>(childrenInfo, tmpChildrenInfo);
     }
 
     static
@@ -71,12 +77,9 @@ struct LayerHelper
         using namespace gfl;
 
         auto const nChildren = layerInfo->nParents * layerInfo->labelsInfo.nLabels;
-        layerInfo->tmpChildren = allocator->allocateArray<Node>(nChildren);
-        layerInfo->tmpChildrenInfo = allocator->allocateArray<NodeInfo>(nChildren);
         cub::DeviceRadixSort::SortKeys( // Initialize cubTmpMemSize
                 layerInfo->cubTmpMem,
                 layerInfo->cubTmpMemSize,
-                layerInfo->tmpChildrenInfo,
                 layerInfo->childrenInfo,
                 nChildren,
                 DummyDecomposer64{}); // Bigger key used
@@ -90,30 +93,23 @@ struct LayerHelper
         using namespace gfl;
 
         i64 gpuMemSize = 0;
-        i64 memSize = 0;
 
         // initParents()
-        memSize = sizeof(Node) * nParents + StackAllocator::DefaultAlign;
-        gpuMemSize += memSize;
+        gpuMemSize += sizeof(Node) * nParents + StackAllocator::DefaultAlign;
 
         // initChildren()
         i64 const nChildren = nParents * fanout;
-        memSize = sizeof(Node) * nChildren + StackAllocator::DefaultAlign;
-        memSize += sizeof(NodeInfo) * nChildren + StackAllocator::DefaultAlign;
-        gpuMemSize += memSize;
+        gpuMemSize += 2 * sizeof(Node) * nChildren + StackAllocator::DefaultAlign;
+        gpuMemSize += 2 * sizeof(NodeInfo) * nChildren + StackAllocator::DefaultAlign;
 
         // initAux()
-        memSize = sizeof(Node) * nChildren + StackAllocator::DefaultAlign;
-        memSize += sizeof(NodeInfo) * nChildren + StackAllocator::DefaultAlign;
-        gpuMemSize += memSize;
         std::size_t memSizeSort;
         void * dummyTmpMem = nullptr;
-        NodeInfo dummyChildInfo[2];
+        cub::DoubleBuffer<NodeInfo> dummyChildrenInfo(nullptr, nullptr);
         cub::DeviceRadixSort::SortKeys( // Initialize cubTmpMemSize
                 dummyTmpMem,
                 memSizeSort,
-                &dummyChildInfo[0],
-                &dummyChildInfo[1],
+                dummyChildrenInfo,
                 nChildren,
                 DummyDecomposer64{}); // Bigger key used
         CHECK_LAST_CUDA_ERROR();
@@ -121,25 +117,26 @@ struct LayerHelper
         return gpuMemSize;
     }
 
-    gfl::i64 getMaxParents(gfl::i32 const fanout)
+    gfl::i64 getMaxParents(gfl::i32 const branchingFactor)
     {
         using namespace gfl;
 
         // Binary search on the number of parents
         i64 lbParents = 0;
-        i64 upParents = 1;
+        i64 ubParents = 1;
 
-        while (calcGpuMemSize(upParents, fanout) <= gpuMemSize) {
-            lbParents = upParents;
-            upParents *= 2;
+        while (calcGpuMemSize(ubParents, branchingFactor) <= gpuMemSize)
+        {
+            lbParents = ubParents;
+            ubParents *= 2;
         }
 
-        while (lbParents < upParents)
+        while (lbParents < ubParents)
         {
-            i64 const mid = lbParents + (upParents - lbParents + 1) / 2;
-            i64 const memSize = calcGpuMemSize(mid, fanout);
+            i64 const mid = lbParents + (ubParents - lbParents + 1) / 2;
+            i64 const memSize = calcGpuMemSize(mid, branchingFactor);
             if (memSize <= gpuMemSize) lbParents = mid;  // still fits
-            else upParents = mid - 1; // too big
+            else ubParents = mid - 1; // too big
         }
         return lbParents;
     }

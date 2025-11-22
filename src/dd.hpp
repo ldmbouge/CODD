@@ -18,7 +18,6 @@
 #include "pool.hpp"
 #include <atomic>
 
-#include "LayerEngine.cuh"
 #include "RuntimeMonitor.hpp"
 #include "model.hpp"
 

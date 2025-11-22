@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cub/cub.cuh>
 #include "node.hpp"
 #include "MirrorAllocator.hpp"
 
@@ -18,14 +19,23 @@ struct alignas(16) LightNode
     LightNode() noexcept {};
 
     GFL_HOST_DEVICE
+    LightNode(State const & s, Labels const & l) noexcept :
+            state(s),
+            labels(l),
+            boundSrcToNode(0),
+            nEdgesSrcToNode(0)
+        {};
+
+
+    GFL_HOST_DEVICE
     LightNode(LightNode const & other) noexcept {memcpy(this,&other,sizeof(LightNode));};
 };
 
-struct NodeInfo
+struct alignas(16) NodeInfo
 {
     gfl::u64 hash;
-    gfl::f64 boundSrcToNode;
     gfl::i64 idx;
+    gfl::f32 boundSrcToNode;
     gfl::u32 isRepresented;
 
     GFL_HOST_DEVICE
@@ -39,12 +49,19 @@ struct LabelsInfo
     gfl::i32 maxLabel;
     gfl::i32 nLabels;
 
-    LabelsInfo():
+    LabelsInfo() noexcept :
         minLabel(gfl::numeric_limits<gfl::i32>::max()),
         maxLabel(gfl::numeric_limits<gfl::i32>::min()),
         nLabels(0)
     {};
 
+    LabelsInfo(gfl::backend::tuple<gfl::i32, gfl::i32,gfl::i32> const & t) noexcept:
+            minLabel(gfl::backend::get<0>(t)),
+            maxLabel(gfl::backend::get<1>(t)),
+            nLabels(gfl::backend::get<2>(t))
+    {};
+
+    GFL_HOST_DEVICE
     void reset()
     {
         minLabel = gfl::numeric_limits<gfl::i32>::max();
@@ -78,14 +95,11 @@ struct LayerInfo
 
     // Children
     gfl::i64 nChildren;
-    Node * children;
-    NodeInfo * childrenInfo;
-    bool hasTarget;
+    gfl::i64 nRepresentatives;
+    cub::DoubleBuffer<Node> children;
+    cub::DoubleBuffer<NodeInfo> childrenInfo;
 
     // Aux
-    gfl::i64 tmpInt;
-    Node * tmpChildren;
-    NodeInfo * tmpChildrenInfo;
     std::size_t cubTmpMemSize;
     void * cubTmpMem;
 
@@ -95,10 +109,9 @@ struct LayerInfo
         parents = nullptr;
         labelsInfo = LabelsInfo();
         nChildren = 0;
-        children = nullptr;
-        childrenInfo = nullptr;
-        hasTarget = false;
-        tmpChildrenInfo = nullptr;
+        nRepresentatives = 0;
+        children = cub::DoubleBuffer<Node>(nullptr,nullptr);
+        childrenInfo = cub::DoubleBuffer<NodeInfo>(nullptr,nullptr);
         cubTmpMemSize = 0;
         cubTmpMem = nullptr;
     }
@@ -123,20 +136,20 @@ struct HashDecomposer
     }
 };
 
-struct IdxDecomposer
+struct RepDecomposer
 {
     GFL_HOST_DEVICE
-    gfl::tuple<gfl::i64&> operator()(NodeInfo & nodeInfo) const
+    gfl::tuple<gfl::u32&> operator()(NodeInfo & nodeInfo) const
     {
-        return {nodeInfo.idx};
+        return {nodeInfo.isRepresented};
     }
 };
 
-struct SelectNotRep
+struct RepCostDecomposer
 {
     GFL_HOST_DEVICE
-    bool operator()(NodeInfo const & nodeInfo) const
+    gfl::tuple<gfl::u32&,gfl::f32&> operator()(NodeInfo & nodeInfo) const
     {
-        return nodeInfo.isRepresented != 1;
+        return {nodeInfo.isRepresented,nodeInfo.boundSrcToNode};
     }
 };

@@ -9,6 +9,20 @@
 enum DDContext : int;
 enum LocalContext : int;
 
+template <typename T>
+GFL_GLOBAL
+void swapDoubleBuffer(cub::DoubleBuffer<T> * doubleBuffer)
+{
+    doubleBuffer->selector ^= 1;
+}
+
+template<typename Node>
+GFL_GLOBAL
+void resetLabelsInfo(LayerInfo<Node> * const layerInfo)
+{
+    layerInfo->labelsInfo.reset();
+}
+
 template<typename Model, typename Node>
 GFL_GLOBAL
 void calcLabelsKernel(
@@ -21,6 +35,8 @@ void calcLabelsKernel(
     using namespace gfl;
 
     assert(gridDim.x * blockDim.x >= layerInfo->nChildren);
+
+    Node * const children = layerInfo->children.Current();
 
     __shared__ i32 minLabel_s;
     __shared__ i32 maxLabel_s;
@@ -35,9 +51,9 @@ void calcLabelsKernel(
     __syncthreads();
 
     i64 const cIdx = blockIdx.x * blockDim.x + threadIdx.x;
-    if (cIdx < layerInfo->nChildren)
+    if (cIdx < layerInfo->nRepresentatives)
     {
-        auto & pNode = layerInfo->children[cIdx];
+        auto & pNode = children[cIdx];
         pNode.labels = model->lgf(pNode.state, ctx, pBound, dBound);
         auto [smallest,largest,count] = pNode.labels.slc();
         atomicMin_block(&minLabel_s, smallest);
@@ -60,13 +76,14 @@ GFL_GLOBAL
 void calcChildrenKernel(
         Model const * const model,
         LayerInfo<Node> * const layerInfo,
-        NodeInfo * const childrenInfo,
-        Node * children,
         gfl::f64 pBound,
         LocalContext localCtx)
 {
     using State = typename Model::State;
     using namespace gfl;
+
+    Node * const children = layerInfo->children.Current();
+    NodeInfo * const childrenInfo = layerInfo->childrenInfo.Current();
 
     assert(blockDim.x == warpSize);
 
@@ -110,7 +127,7 @@ void calcChildrenKernel(
                         else
                             cInfo.hash = State::hash(cNode.state);
                         cInfo.boundSrcToNode = cBoundSrcToNode;
-                        cInfo.isRepresented = false;
+                        cInfo.isRepresented = 0;
                     }
                 }
             }
@@ -142,49 +159,17 @@ void calcChildrenKernel(
 
 template<typename Model, typename Node>
 GFL_GLOBAL
-void cpyChildrenKernel(
-        Model const * const m,
-        LayerInfo<Node> * const layerInfo,
-        NodeInfo * const childrenInfo,
-        Node * const childrenIn,
-        Node * const childrenOut)
+void copyRepKernel(LayerInfo<Node> * const layerInfo, bool reverse = false)
 {
     using namespace gfl;
-    i64 const cIdx = blockIdx.x * blockDim.x + threadIdx.x;
-    if (cIdx < layerInfo->tmpInt)
+
+    i64 const rIdx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (rIdx < layerInfo->nRepresentatives)
     {
-        u32 const maskActiveThreads = __activemask();
-        i32 haveChild = not childrenInfo[cIdx].isRepresented;
-        u32 const maskThreadsWithChild = __ballot_sync(maskActiveThreads, haveChild);
-        i32 const nThreadsWithChild = popcount(maskThreadsWithChild);
-        if (nThreadsWithChild > 0)
-        {
-            i64 nChildrenInGlobal = laneIdx() == 0 ? atomicAdd((ull *) &layerInfo->nChildren, (ull) nThreadsWithChild) : 0;
-            nChildrenInGlobal = __shfl_sync(maskActiveThreads, nChildrenInGlobal, 0);
-            if (haveChild)
-            {
-                Node cNode = childrenIn[childrenInfo[cIdx].idx];
-                u32 const maskThreadsBefore = maskFilledThrough<u32>(laneIdx());
-                i64 const offset = popcount(maskThreadsWithChild & maskThreadsBefore);
-                childrenOut[nChildrenInGlobal + offset] = cNode;
-                if (m->isTarget(cNode.state))
-                {
-                    layerInfo->hasTarget = true;
-                }
-            }
-        }
+        i64 const cIdx = layerInfo->childrenInfo.Current()[rIdx].idx;
+        i64 const tIdx = not reverse ? rIdx : layerInfo->nRepresentatives - 1 - rIdx;
+        layerInfo->children.Alternate()[tIdx] = layerInfo->children.Current()[cIdx];
     }
-//    if(blockIdx.x == 0 and threadIdx.x == 0)
-//    {
-//        printf("I see %lu children\n", layerInfo->tmpInt);
-//        for(i64 cIdx = 0; cIdx < layerInfo->tmpInt; cIdx += 1)
-//        {
-//            if(not childrenInfo[cIdx].isRepresented)
-//            {
-//
-//            }
-//        }
-//    }
 }
 
 template<typename Model, typename Node>
@@ -279,13 +264,14 @@ void calcChildrenBlockKernel(
 
 template<typename KeyType, typename  KeyDecomposer>
 GFL_GLOBAL
-void sortKernel(void * tmpMem, std::size_t tmpMemSize, KeyType const * keysIn, KeyType * keysOut, gfl::i64 const * const nKeys)
+void sortKernel(void * tmpMem, std::size_t tmpMemSize, cub::DoubleBuffer<KeyType> * const doubleBuffer, gfl::i64 const * const nKeys)
 {
 //    printf("Sorting %d keys\n",*nKeys);
 //    printf("TMP = %p (%lu) | K_IN = %p | K_OUT = %p | N_KEYS = %p (%d)\n", tmpMem, tmpMemSize, keysIn, keysOut, nKeys, *nKeys);
     cudaStream_t gpuSortQueue;
     cudaStreamCreateWithFlags(&gpuSortQueue, cudaStreamNonBlocking);
-    cub::DeviceRadixSort::SortKeys(tmpMem, tmpMemSize, keysIn, keysOut, *nKeys, KeyDecomposer{}, gpuSortQueue);
+    cub::DeviceRadixSort::SortKeys(tmpMem, tmpMemSize, *doubleBuffer, *nKeys, KeyDecomposer{}, gpuSortQueue);
+    cudaStreamDestroy(gpuSortQueue);
 }
 
 template<typename Model>
@@ -294,16 +280,13 @@ void checkStatePair(NodeInfo & iInfo, typename Model::State const & iState, Node
 {
     using namespace gfl;
 
-    if (Model::betterEq(iInfo.boundSrcToNode, jInfo.boundSrcToNode))
+    if (Model::State::equal(iState, jState))
     {
-        if (Model::State::equal(iState, jState))
+        if (Model::betterEq(iInfo.boundSrcToNode, jInfo.boundSrcToNode))
         {
             jInfo.isRepresented = 1;
         }
-    }
-    else if (Model::better(jInfo.boundSrcToNode, iInfo.boundSrcToNode))
-    {
-        if (Model::State::equal(iState, jState))
+        else
         {
             iInfo.isRepresented = 1;
         }
@@ -312,20 +295,23 @@ void checkStatePair(NodeInfo & iInfo, typename Model::State const & iState, Node
     {
         if (Model::betterEq(iInfo.boundSrcToNode, jInfo.boundSrcToNode) and Model::dom(iState, jState))
         {
-            jInfo.isRepresented = static_cast<i32>(true);
+            jInfo.isRepresented = 1;
         }
         else if (Model::betterEq(jInfo.boundSrcToNode, iInfo.boundSrcToNode) and Model::dom(jState, iState))
         {
-            iInfo.isRepresented = static_cast<i32>(true);
+            iInfo.isRepresented = 1;
         }
     }
 }
 
 template<typename Model, typename Node>
 GFL_GLOBAL
-void calcReprKernel(LayerInfo<Node> * const layerInfo, NodeInfo * const childrenInfo, Node * const children)
+void calcRepKernel(LayerInfo<Node> * const layerInfo)
 {
     using namespace gfl;
+
+    Node const * const children = layerInfo->children.Current();
+    NodeInfo * const childrenInfo = layerInfo->childrenInfo.Current();
 
     i32 cBegin,cEnd;
     getBeginEnd(cBegin,cEnd,blockIdx.x,gridDim.x,layerInfo->nChildren);
@@ -355,11 +341,28 @@ void calcReprKernel(LayerInfo<Node> * const layerInfo, NodeInfo * const children
 
 template<typename Node>
 GFL_GLOBAL
-void resetChildrenCount(LayerInfo<Node> * const layerInfo)
+void countRepKernel(LayerInfo<Node> * const layerInfo)
 {
-   layerInfo->tmpInt = layerInfo->nChildren;
-   layerInfo->nChildren = 0;
+    using namespace gfl;
+    NodeInfo const * const childrenInfo = layerInfo->childrenInfo.Current();
+
+    i64 const cIdx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (cIdx < layerInfo->nChildren)
+    {
+        u32 const maskActiveThreads = __activemask();
+        bool isRepresentative = childrenInfo[cIdx].isRepresented == 0;
+        u32 const maskRepresentatives = __ballot_sync(maskActiveThreads, isRepresentative);
+        i32 const nRepresentatives = popcount(maskRepresentatives);
+        if (nRepresentatives > 0)
+        {
+            if (laneIdx() == 0)
+            {
+                atomicAdd((ull *) &layerInfo->nRepresentatives, (ull) nRepresentatives);
+            }
+        }
+    }
 }
+
 
 GFL_DEVICE inline
 void printNodeInfo(NodeInfo const & childInfo)
@@ -372,12 +375,12 @@ void printNodeInfo(NodeInfo const & childInfo)
 
 template<typename Node>
 GFL_GLOBAL
-void printChildrenInfo(LayerInfo<Node> * layerInfo, NodeInfo * childrenInfo)
+void printChildrenInfo(LayerInfo<Node> * layerInfo)
 {
     printf("--- (%d)\n", layerInfo->nChildren);
     for(auto cIdx = 0; cIdx < layerInfo->nChildren; cIdx += 1)
     {
-        auto const & childInfo = childrenInfo[cIdx];
+        auto const & childInfo = layerInfo->childrenInfo[cIdx];
         printNodeInfo(childInfo);
     }
 }
