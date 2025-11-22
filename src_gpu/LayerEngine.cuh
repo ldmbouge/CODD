@@ -82,7 +82,7 @@ struct LayerHelper
                 layerInfo->cubTmpMemSize,
                 layerInfo->childrenInfo,
                 nChildren,
-                DummyDecomposer64{}); // Bigger key used
+                RepCostDecomposer{}); // Bigger key used
         CHECK_LAST_CUDA_ERROR();
         layerInfo->cubTmpMem = allocator->allocate<gfl::u8>(layerInfo->cubTmpMemSize, 16);
     }
@@ -111,7 +111,7 @@ struct LayerHelper
                 memSizeSort,
                 dummyChildrenInfo,
                 nChildren,
-                DummyDecomposer64{}); // Bigger key used
+                RepCostDecomposer{}); // Bigger key used
         CHECK_LAST_CUDA_ERROR();
         gpuMemSize += memSizeSort;
         return gpuMemSize;

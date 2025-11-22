@@ -31,11 +31,11 @@ struct alignas(16) LightNode
     LightNode(LightNode const & other) noexcept {memcpy(this,&other,sizeof(LightNode));};
 };
 
-struct alignas(16) NodeInfo
+struct NodeInfo
 {
     gfl::u64 hash;
     gfl::i64 idx;
-    gfl::f32 boundSrcToNode;
+    gfl::f64 boundSrcToNode;
     gfl::u32 isRepresented;
 
     GFL_HOST_DEVICE
@@ -117,13 +117,13 @@ struct LayerInfo
     }
 };
 
-struct DummyDecomposer64
+struct DummyDecomposer128
 {
     GFL_HOST_DEVICE
-    gfl::tuple<gfl::u32&, gfl::u32&> operator()(NodeInfo &) const
+    gfl::tuple<gfl::f64&, gfl::f64&> operator()(NodeInfo &) const
     {
-        gfl::u32 tmp32 = 0;
-        return {tmp32,tmp32};
+        gfl::f64 tmp = 0;
+        return {tmp,tmp};
     }
 };
 
@@ -148,7 +148,7 @@ struct RepDecomposer
 struct RepCostDecomposer
 {
     GFL_HOST_DEVICE
-    gfl::tuple<gfl::u32&,gfl::f32&> operator()(NodeInfo & nodeInfo) const
+    gfl::tuple<gfl::u32&,gfl::f64&> operator()(NodeInfo & nodeInfo) const
     {
         return {nodeInfo.isRepresented,nodeInfo.boundSrcToNode};
     }
