@@ -4,6 +4,7 @@
 #include <cxxopts.hpp>
 #include <Malloc.hpp>
 #include <Array.hpp>
+#include <span>
 
 constexpr auto static ReadOnlyMemSize{256 * 1024}; // Cached in shared memory
 inline
@@ -215,6 +216,7 @@ int run_bro(int argc,char* argv[])
                         layerInfo->cubTmpMem,
                         layerInfo->cubTmpMemSize,
                         layerInfo->childrenInfo,
+                        layerInfo->tmpChildrenInfo,
                         nChildren,
                         HashDecomposer{},
                         lh->gpuMainQueue);
@@ -222,18 +224,24 @@ int run_bro(int argc,char* argv[])
 
                 blockSize = 128;
                 gridSize = roundUpDivPosInt<i32>(nChildren, blockSize);
-                calcRepKernel<Model><<<gridSize, blockSize, 0, lh->gpuMainQueue>>>(layerInfo);
+                calcRepKernel<Model><<<gridSize, blockSize, 0, lh->gpuMainQueue>>>(
+                        nChildren,
+                        layerInfo->children,
+                        layerInfo->tmpChildrenInfo);
                 CHECK_LAST_CUDA_ERROR();
 
                 blockSize = 32;
                 gridSize = roundUpDivPosInt<i32>(nChildren, blockSize);
-                countRepKernel<Node><<<gridSize, blockSize, 0, lh->gpuMainQueue>>>(layerInfo);
+                countRepKernel<Node><<<gridSize, blockSize, 0, lh->gpuMainQueue>>>(
+                        layerInfo,
+                        layerInfo->tmpChildrenInfo);
                 CHECK_LAST_CUDA_ERROR();
 
                 if (sort)
                     cub::DeviceRadixSort::SortKeys(
                             layerInfo->cubTmpMem,
                             layerInfo->cubTmpMemSize,
+                            layerInfo->tmpChildrenInfo,
                             layerInfo->childrenInfo,
                             nChildren,
                             RepCostDecomposer{},
@@ -242,17 +250,19 @@ int run_bro(int argc,char* argv[])
                     cub::DeviceRadixSort::SortKeys(
                             layerInfo->cubTmpMem,
                             layerInfo->cubTmpMemSize,
+                            layerInfo->tmpChildrenInfo,
                             layerInfo->childrenInfo,
                             nChildren,
                             RepDecomposer{},
                             lh->gpuMainQueue);
                 CHECK_LAST_CUDA_ERROR();
 
+                swapPtr<Node><<<1,1,0,lh->gpuMainQueue>>>(&layerInfo->children, &layerInfo->tmpChildren);
+                CHECK_LAST_CUDA_ERROR();
+
                 blockSize = 128;
                 gridSize = roundUpDivPosInt<i32>(nChildren, blockSize);
                 copyRepKernel<Node><<<gridSize, blockSize, 0, lh->gpuMainQueue>>>(layerInfo, sort);
-                CHECK_LAST_CUDA_ERROR();
-                swapDoubleBuffer<Node><<<1,1,0,lh->gpuMainQueue>>>(&layerInfo->children);
                 CHECK_LAST_CUDA_ERROR();
 
                 // Labels
@@ -278,7 +288,7 @@ int run_bro(int argc,char* argv[])
                 nextLayer.resize(nextLayerOldSize + layerInfo->nRepresentatives);
                 cudaMemcpy(
                         nextLayer.data() + nextLayerOldSize,
-                        layerInfo->children.Current(),
+                        layerInfo->children,
                         sizeof(Node) * layerInfo->nRepresentatives,
                         cudaMemcpyDeviceToHost);
                 CHECK_LAST_CUDA_ERROR();

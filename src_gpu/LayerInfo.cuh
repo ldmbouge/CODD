@@ -31,12 +31,12 @@ struct alignas(16) LightNode
     LightNode(LightNode const & other) noexcept {memcpy(this,&other,sizeof(LightNode));};
 };
 
-struct NodeInfo
+struct alignas(16) NodeInfo
 {
     gfl::u64 hash;
     gfl::i64 idx;
-    gfl::f64 boundSrcToNode;
     gfl::u32 isRepresented;
+    gfl::f64 boundSrcToNode;
 
     GFL_HOST_DEVICE
     NodeInfo() noexcept {};
@@ -96,8 +96,10 @@ struct LayerInfo
     // Children
     gfl::i64 nChildren;
     gfl::i64 nRepresentatives;
-    cub::DoubleBuffer<Node> children;
-    cub::DoubleBuffer<NodeInfo> childrenInfo;
+    Node * children;
+    Node * tmpChildren;
+    NodeInfo * childrenInfo;
+    NodeInfo * tmpChildrenInfo;
 
     // Aux
     std::size_t cubTmpMemSize;
@@ -110,8 +112,10 @@ struct LayerInfo
         labelsInfo = LabelsInfo();
         nChildren = 0;
         nRepresentatives = 0;
-        children = cub::DoubleBuffer<Node>(nullptr,nullptr);
-        childrenInfo = cub::DoubleBuffer<NodeInfo>(nullptr,nullptr);
+        children = nullptr;
+        tmpChildren = nullptr;
+        childrenInfo = nullptr;
+        tmpChildrenInfo = nullptr;
         cubTmpMemSize = 0;
         cubTmpMem = nullptr;
     }

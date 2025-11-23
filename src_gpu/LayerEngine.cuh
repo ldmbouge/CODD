@@ -62,13 +62,11 @@ struct LayerHelper
 
         i32 const nChildren = layerInfo->nParents * layerInfo->labelsInfo.nLabels;
 
-        auto children = allocator->allocateArray<Node>(nChildren);
-        auto tmpChildren = allocator->allocateArray<Node>(nChildren);
-        layerInfo->children = cub::DoubleBuffer<Node>(children, tmpChildren);
+        layerInfo->children = allocator->allocateArray<Node>(nChildren);
+        layerInfo->tmpChildren = allocator->allocateArray<Node>(nChildren);
 
-        auto childrenInfo = allocator->allocateArray<NodeInfo>(nChildren);
-        auto tmpChildrenInfo =  allocator->allocateArray<NodeInfo>(nChildren);
-        layerInfo->childrenInfo = cub::DoubleBuffer<NodeInfo>(childrenInfo, tmpChildrenInfo);
+        layerInfo->childrenInfo = allocator->allocateArray<NodeInfo>(nChildren);
+        layerInfo->tmpChildrenInfo =  allocator->allocateArray<NodeInfo>(nChildren);
     }
 
     static
@@ -81,6 +79,7 @@ struct LayerHelper
                 layerInfo->cubTmpMem,
                 layerInfo->cubTmpMemSize,
                 layerInfo->childrenInfo,
+                layerInfo->tmpChildrenInfo,
                 nChildren,
                 RepCostDecomposer{}); // Bigger key used
         CHECK_LAST_CUDA_ERROR();
@@ -99,16 +98,17 @@ struct LayerHelper
 
         // initChildren()
         i64 const nChildren = nParents * fanout;
-        gpuMemSize += 2 * sizeof(Node) * nChildren + StackAllocator::DefaultAlign;
-        gpuMemSize += 2 * sizeof(NodeInfo) * nChildren + StackAllocator::DefaultAlign;
+        gpuMemSize += 2 * (sizeof(Node) * nChildren + StackAllocator::DefaultAlign);
+        gpuMemSize += 2 * (sizeof(NodeInfo) * nChildren + StackAllocator::DefaultAlign);
 
         // initAux()
         std::size_t memSizeSort;
         void * dummyTmpMem = nullptr;
-        cub::DoubleBuffer<NodeInfo> dummyChildrenInfo(nullptr, nullptr);
+        NodeInfo * dummyChildrenInfo = nullptr;
         cub::DeviceRadixSort::SortKeys( // Initialize cubTmpMemSize
                 dummyTmpMem,
                 memSizeSort,
+                dummyChildrenInfo,
                 dummyChildrenInfo,
                 nChildren,
                 RepCostDecomposer{}); // Bigger key used

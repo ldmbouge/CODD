@@ -16,6 +16,15 @@ void swapDoubleBuffer(cub::DoubleBuffer<T> * doubleBuffer)
     doubleBuffer->selector ^= 1;
 }
 
+template <typename T>
+GFL_GLOBAL
+void swapPtr(T** a, T** b)
+{
+    T * tmp = *a;
+    *a = *b;
+    *b = tmp;
+}
+
 template<typename Node>
 GFL_GLOBAL
 void resetLabelsInfo(LayerInfo<Node> * const layerInfo)
@@ -36,7 +45,7 @@ void calcLabelsKernel(
 
     assert(gridDim.x * blockDim.x >= layerInfo->nChildren);
 
-    Node * const children = layerInfo->children.Current();
+    Node * const children = layerInfo->children;
 
     __shared__ i32 minLabel_s;
     __shared__ i32 maxLabel_s;
@@ -82,8 +91,8 @@ void calcChildrenKernel(
     using State = typename Model::State;
     using namespace gfl;
 
-    Node * const children = layerInfo->children.Current();
-    NodeInfo * const childrenInfo = layerInfo->childrenInfo.Current();
+    Node * const children = layerInfo->children;
+    NodeInfo * const childrenInfo = layerInfo->childrenInfo;
 
     assert(blockDim.x == warpSize);
 
@@ -157,7 +166,7 @@ void calcChildrenKernel(
 }
 
 
-template<typename Model, typename Node>
+template<typename Node>
 GFL_GLOBAL
 void copyRepKernel(LayerInfo<Node> * const layerInfo, bool reverse = false)
 {
@@ -166,9 +175,9 @@ void copyRepKernel(LayerInfo<Node> * const layerInfo, bool reverse = false)
     i64 const rIdx = blockIdx.x * blockDim.x + threadIdx.x;
     if (rIdx < layerInfo->nRepresentatives)
     {
-        i64 const cIdx = layerInfo->childrenInfo.Current()[rIdx].idx;
+        i64 const cIdx = layerInfo->childrenInfo[rIdx].idx;
         i64 const tIdx = not reverse ? rIdx : layerInfo->nRepresentatives - 1 - rIdx;
-        layerInfo->children.Alternate()[tIdx] = layerInfo->children.Current()[cIdx];
+        layerInfo->children[tIdx] = layerInfo->tmpChildren[cIdx];
     }
 }
 
@@ -306,21 +315,18 @@ void checkStatePair(NodeInfo & iInfo, typename Model::State const & iState, Node
 
 template<typename Model, typename Node>
 GFL_GLOBAL
-void calcRepKernel(LayerInfo<Node> * const layerInfo)
+void calcRepKernel(gfl::i64 const nChildren, Node const * const children,  NodeInfo * const childrenInfo)
 {
     using namespace gfl;
 
-    Node const * const children = layerInfo->children.Current();
-    NodeInfo * const childrenInfo = layerInfo->childrenInfo.Current();
-
     i64 cBegin,cEnd;
-    getBeginEnd(cBegin,cEnd,blockIdx.x,gridDim.x,layerInfo->nChildren);
+    getBeginEnd(cBegin,cEnd,blockIdx.x,gridDim.x,nChildren);
     for (i64 i = cBegin + threadIdx.x; i < cEnd; i += blockDim.x) {
         auto & iInfo = childrenInfo[i];
         assert(0 <= iInfo.idx);
-        assert(iInfo.idx < layerInfo->nChildren);
+        assert(iInfo.idx < nChildren);
         auto const iChild = children[iInfo.idx].state;
-        for (i64 j = i + 1; j < layerInfo->nChildren; j += 1)
+        for (i64 j = i + 1; j < nChildren; j += 1)
         {
             auto & jInfo = childrenInfo[j];
             assert(0 <= jInfo.idx);
@@ -340,10 +346,9 @@ void calcRepKernel(LayerInfo<Node> * const layerInfo)
 
 template<typename Node>
 GFL_GLOBAL
-void countRepKernel(LayerInfo<Node> * const layerInfo)
+void countRepKernel(LayerInfo<Node> * const layerInfo,  NodeInfo const * const childrenInfo)
 {
     using namespace gfl;
-    NodeInfo const * const childrenInfo = layerInfo->childrenInfo.Current();
 
     i64 const cIdx = blockIdx.x * blockDim.x + threadIdx.x;
     if (cIdx < layerInfo->nChildren)
