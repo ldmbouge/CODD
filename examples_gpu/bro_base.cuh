@@ -164,11 +164,13 @@ int run_bro(int argc,char* argv[])
             getBeginEnd(bBegin, bEnd, bIdx, nBatches, fragmentSize);
             i64 const currentBatchSize = bEnd - bBegin; // No + 1!
             auto const currentBatch = std::span(fragment.data() + bBegin, currentBatchSize);
-            printf("[%7.2fs] Layer %4d | Nodes = %10ld  -> %10ld | MemSize = ",
+            printf("[%7.2fs] Layer = %4d | Visited = %10ld | Nodes = %10ld -> %10ld",
                    RuntimeMonitor::elapsedSeconds(start),
                    lIdx,
+                   expandedNodes,
                    currentLayer.size(),
                    currentLayer.size()-currentBatchSize);
+            printf( " | MemSize = ");
             printMemSize(sizeof(Node) * currentLayer.size());
             printf( " | Cost = ");
             if (pBound != Model::worstValue())
@@ -179,7 +181,7 @@ int run_bro(int argc,char* argv[])
             {
                 printf("?");
             }
-            printf(" | Batch %3d/%3d | Width = %10ld\n", bIdx+1, nBatches, currentBatchSize);
+            printf(" | Batch %3d/%3d | BatchSize = %10ld\n", bIdx+1, nBatches, currentBatchSize);
             fflush(stdout);
 
             // Init
@@ -331,7 +333,7 @@ int run_bro(int argc,char* argv[])
 
         if (newSolution)
         {
-            printf("[%7.2fs] SOLUTION  | Cost = %7.2f | Value = ", RuntimeMonitor::elapsedSeconds(start), bestNode.boundSrcToNode);
+            printf("[%7.2fs] SOLUTION     | Visited = %10ld | Cost = %7.2f | Value = ", expandedNodes, RuntimeMonitor::elapsedSeconds(start), bestNode.boundSrcToNode);
             printLabels(bestNode);
             printf("\n");
             fflush(stdout);
@@ -343,20 +345,19 @@ int run_bro(int argc,char* argv[])
     {
         if (bestNode.boundSrcToNode != Model::worstValue())
         {
-            printf("COMPLETED | Cost = %7.2f | Value = ", bestNode.boundSrcToNode);
+            printf("COMPLETED    | Visited = %10ld | Cost = %7.2f | Value = ", expandedNodes, bestNode.boundSrcToNode);
             printLabels(bestNode);
             printf("\n");
         }
         else
         {
-            printf("INFEASIBLE\n");
+            printf("INFEASIBLE   | Visited = %10ld\n", expandedNodes);
         }
     }
     else
     {
-        printf("TIMEOUT\n");
+        printf("TIMEOUT      | Visited = %10ld\n", expandedNodes);
     }
-    printf("[%7.2fs] NODES %10ld\n", RuntimeMonitor::elapsedSeconds(start), expandedNodes);
     fflush(stdout);
 
     return EXIT_SUCCESS;
