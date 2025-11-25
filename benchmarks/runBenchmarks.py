@@ -6,41 +6,49 @@ from datetime import datetime
 def readLines(filepath):
     with open(filepath, "r", encoding="utf-8") as f:
         return [line.strip() for line in f]
+def readFirstInt(filepath):
+    with open(filepath, "r", encoding="utf-8") as f:
+        return int(f.readline().strip())
 
+def roundUpToMultiple(x,b):
+    return ((x + b - 1) // b) * b
 # Data
 benchmarkSet = [
-     #"AFG.txt",
      #"Dumas.txt",
-     #"GendreauDumasExtended.txt",
      #"Langevin.txt",
-     #"OhlmannThomas.txt",
-     "Solnon25_feasible.txt",
+     #"Solnon25_feasible.txt",
      "Solnon25_infeasible.txt",
-     #"SolomonPesant.txt",
-     #"SolomonPotvinBengio.txt"
+     "SolomonPesant.txt",
+     "SolomonPotvinBengio.txt"
+     "AFG.txt",
+     "GendreauDumasExtended.txt",
+     "OhlmannThomas.txt"
 ]
-timeout = 30 * 60
-exe = "../cmake-build-release-ding/tsptw_gpu_1_cbs"
+timeout = 10 * 60
+exe = "../tsptw_1_bro"
 resultsDir  = "./results"
 
 # Run
 exeName = os.path.basename(exe)
 useGpu = True
+sort = False
 for benchmark in benchmarkSet:
     logfile = (f"{resultsDir}/{exeName}_" +
-               f"{'g' if useGpu else 'c'}_" +
-               f"{timeout}_" +
+               ("g_" if useGpu else "") +
+               ("s_" if sort else "") +
                f"{benchmark.removesuffix('.txt')}_" +
                f"{datetime.now().strftime('%Y%m%d%H%M')}" +
                f".txt")
     instances = readLines(benchmark)
     with open(logfile, "w") as f:
         for instance in instances:
+            nCities = readFirstInt(instance)
             cmd = ["/usr/bin/time",
                    "-v",
-                   exe,
+                   exe + "_" + str(roundUpToMultiple(nCities,64)),
                    "-t", str(timeout),
                    "-g" if useGpu else "",
+                   "-s" if sort else "",
                    "-i", instance
                   ]
             cmd = [c for c in cmd if c]
