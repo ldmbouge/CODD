@@ -311,14 +311,13 @@ int run_bro(int argc,char* argv[])
                         }
                     }
                     nextLayer.resize(nextLayerOldSize);
-
                 }
-                if (sort)
+                if (sort and nextLayerOldSize > 0)
                 {
                     // Reverse because we work on the tail of the vector
                     auto cmpByCost = [](Node const & a, Node const & b){return not Model::betterEq(a.boundSrcToNode,b.boundSrcToNode);};
                     //assert(std::is_sorted(nextLayer.data() + nextLayerOldSize, nextLayer.data() + nextLayer.size(), cmpByCost));
-                    //std::inplace_merge(nextLayer.data(), nextLayer.data() + nextLayerOldSize, nextLayer.data() + nextLayer.size(), cmpByCost);
+                    std::inplace_merge(nextLayer.data(), nextLayer.data() + nextLayerOldSize, nextLayer.data() + nextLayer.size(), cmpByCost);
                     assert(std::is_sorted(nextLayer.begin(), nextLayer.end(), cmpByCost));
                 }
 //                    for(Node const & n : nextLayer)
@@ -343,7 +342,7 @@ int run_bro(int argc,char* argv[])
     printf("[%7.2fs] ", RuntimeMonitor::elapsedSeconds(start));
     if (not interrupted)
     {
-        if (bestNode.boundSrcToNode != Model::worstValue())
+        if (pBound != Model::worstValue())
         {
             printf("COMPLETED    | Visited = %10ld | Cost = %7.2f | Value = ", expandedNodes, bestNode.boundSrcToNode);
             printLabels(bestNode);
