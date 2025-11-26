@@ -97,7 +97,7 @@ void calcChildrenKernel(
     assert(blockDim.x == warpSize);
 
     i64 const pIdx = blockIdx.x;
-    if (pIdx < layerInfo->nParents)
+    if (pIdx < layerInfo->nParents and layerInfo->labelsInfo.nLabels > 0)
     {
         Node cNode;
         NodeInfo cInfo;
@@ -330,7 +330,7 @@ void calcRepKernel(gfl::i64 const nChildren, Node const * const children,  NodeI
         {
             auto & jInfo = childrenInfo[j];
             assert(0 <= jInfo.idx);
-            assert(jInfo.idx < layerInfo->nChildren);
+            assert(jInfo.idx < nChildren);
             auto const jChild = children[jInfo.idx].state;
             if (iInfo.hash == jInfo.hash)
             {
