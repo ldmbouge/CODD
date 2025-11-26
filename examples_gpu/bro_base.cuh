@@ -36,7 +36,10 @@ int run_bro(int argc,char* argv[])
     using LayerBufferType = std::vector<Node>;
 
     // Select GPU
-    cudaSetDevice(1);
+    auto const gpuId = 0;
+    cudaSetDevice(gpuId);
+    cudaDeviceProp deviceProp;
+    cudaGetDeviceProperties(&deviceProp, gpuId);
 
     // Parse arguments
     i64 width = -1;
@@ -86,7 +89,16 @@ int run_bro(int argc,char* argv[])
     Model::parseFile(model, instance, roAllocator);
 
     std::cout << "Instance: " << instance << std::endl;
-    std::cout << "GPU: " << (gpu ? "True" : "False") << std::endl;
+    if (not gpu)
+    {
+        std::cout << "GPU: False" << std::endl;
+    }
+    else
+    {
+        std::cout << "GPU: " <<  deviceProp.name << " (";
+        printMemSize(deviceProp.totalGlobalMem);
+        std::cout <<  " VRAM)" << std::endl;
+    }
     std::cout << "Width: ";
     if (width <= 0)
         std::cout << "Auto" << std::endl;
