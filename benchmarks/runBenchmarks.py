@@ -16,10 +16,10 @@ def roundUpToMultiple(x,b):
 benchmarkSet = [
      #"Dumas.txt",
      #"Langevin.txt",
-     #"Solnon25_feasible.txt",
+     "Solnon25_feasible.txt",
      "Solnon25_infeasible.txt",
      "SolomonPesant.txt",
-     "SolomonPotvinBengio.txt"
+     "SolomonPotvinBengio.txt",
      "AFG.txt",
      "GendreauDumasExtended.txt",
      "OhlmannThomas.txt"
@@ -34,6 +34,7 @@ useGpu = True
 sort = False
 for benchmark in benchmarkSet:
     logfile = (f"{resultsDir}/{exeName}_" +
+               f"t{timeout}_" +
                ("g_" if useGpu else "") +
                ("s_" if sort else "") +
                f"{benchmark.removesuffix('.txt')}_" +

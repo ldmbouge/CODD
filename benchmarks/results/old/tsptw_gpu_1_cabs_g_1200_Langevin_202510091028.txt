@@ -1,0 +1,1430 @@
+Instance: ../data/tsptw/Langevin/N20ft301.dat
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->        19 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =        19 ->       342 | Cost =    0.00
+[   0.02s] Layer =   2 | Nodes =       342 ->      2907 | Cost =    0.00
+[   0.03s] Layer =   3 | Nodes =      2907 ->     15504 | Cost =    0.00
+[   0.05s] Layer =   4 | Nodes =     15504 ->     58140 | Cost =    0.00
+[   0.13s] Layer =   5 | Nodes =     58140 ->    162792 | Cost =    0.00
+[   0.35s] Layer =   6 | Nodes =    162792 ->    352716 | Cost =    0.00
+[   0.78s] Layer =   7 | Nodes =    352716 ->    604656 | Cost =    0.00
+[   1.46s] Layer =   8 | Nodes =    604656 ->    831402 | Cost =    0.00
+[   2.34s] Layer =   9 | Nodes =    831402 ->    923780 | Cost =    0.00
+[   2.62s] Layer =  10 | Nodes =    923780 ->    831402 | Cost =    0.00
+[   2.81s] Layer =  11 | Nodes =    831402 ->    604656 | Cost =    0.00
+[   2.93s] Layer =  12 | Nodes =    604656 ->    352716 | Cost =    0.00
+[   2.99s] Layer =  13 | Nodes =    352716 ->    162792 | Cost =    0.00
+[   3.01s] Layer =  14 | Nodes =    162792 ->     58140 | Cost =    0.00
+[   3.02s] Layer =  15 | Nodes =     58140 ->     15504 | Cost =    0.00
+[   3.02s] Layer =  16 | Nodes =     15504 ->      2907 | Cost =    0.00
+[   3.02s] Layer =  17 | Nodes =      2907 ->       342 | Cost =    0.00
+[   3.02s] Layer =  18 | Nodes =       342 ->        19 | Cost =    0.00
+[   3.02s] Layer =  19 | Nodes =        19 ->         1 | Cost =    0.00
+[   3.03s] COMPLETED
+Cost =    0.00 | Value = 1,13,16,15,3,18,12,19,6,8,10,5,14,9,2,11,7,4,17,0
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N20ft301.dat
+
+Instance: ../data/tsptw/Langevin/N20ft302.dat
+GPU: True
+[   0.03s] Layer =   0 | Nodes =         1 ->        19 | Cost =    0.00
+[   0.03s] Layer =   1 | Nodes =        19 ->       342 | Cost =    0.00
+[   0.03s] Layer =   2 | Nodes =       342 ->      2907 | Cost =    0.00
+[   0.04s] Layer =   3 | Nodes =      2907 ->     15504 | Cost =    0.00
+[   0.06s] Layer =   4 | Nodes =     15504 ->     58140 | Cost =    0.00
+[   0.16s] Layer =   5 | Nodes =     58140 ->    162792 | Cost =    0.00
+[   0.38s] Layer =   6 | Nodes =    162792 ->    352716 | Cost =    0.00
+[   0.83s] Layer =   7 | Nodes =    352716 ->    604656 | Cost =    0.00
+[   1.52s] Layer =   8 | Nodes =    604656 ->    831402 | Cost =    0.00
+[   2.40s] Layer =   9 | Nodes =    831402 ->    923780 | Cost =    0.00
+[   2.68s] Layer =  10 | Nodes =    923780 ->    831402 | Cost =    0.00
+[   2.87s] Layer =  11 | Nodes =    831402 ->    604656 | Cost =    0.00
+[   2.99s] Layer =  12 | Nodes =    604656 ->    352716 | Cost =    0.00
+[   3.05s] Layer =  13 | Nodes =    352716 ->    162792 | Cost =    0.00
+[   3.07s] Layer =  14 | Nodes =    162792 ->     58140 | Cost =    0.00
+[   3.08s] Layer =  15 | Nodes =     58140 ->     15504 | Cost =    0.00
+[   3.08s] Layer =  16 | Nodes =     15504 ->      2907 | Cost =    0.00
+[   3.08s] Layer =  17 | Nodes =      2907 ->       342 | Cost =    0.00
+[   3.08s] Layer =  18 | Nodes =       342 ->        19 | Cost =    0.00
+[   3.08s] Layer =  19 | Nodes =        19 ->         1 | Cost =    0.00
+[   3.08s] COMPLETED
+Cost =    0.00 | Value = 18,9,17,2,14,15,10,13,19,4,16,7,3,1,6,12,8,11,5,0
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N20ft302.dat
+
+Instance: ../data/tsptw/Langevin/N20ft303.dat
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->        19 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =        19 ->       342 | Cost =    0.00
+[   0.02s] Layer =   2 | Nodes =       342 ->      2907 | Cost =    0.00
+[   0.03s] Layer =   3 | Nodes =      2907 ->     15504 | Cost =    0.00
+[   0.06s] Layer =   4 | Nodes =     15504 ->     58140 | Cost =    0.00
+[   0.15s] Layer =   5 | Nodes =     58140 ->    162792 | Cost =    0.00
+[   0.37s] Layer =   6 | Nodes =    162792 ->    352716 | Cost =    0.00
+[   0.81s] Layer =   7 | Nodes =    352716 ->    604656 | Cost =    0.00
+[   1.51s] Layer =   8 | Nodes =    604656 ->    831402 | Cost =    0.00
+[   2.37s] Layer =   9 | Nodes =    831402 ->    923780 | Cost =    0.00
+[   2.66s] Layer =  10 | Nodes =    923780 ->    831402 | Cost =    0.00
+[   2.84s] Layer =  11 | Nodes =    831402 ->    604656 | Cost =    0.00
+[   2.96s] Layer =  12 | Nodes =    604656 ->    352716 | Cost =    0.00
+[   3.02s] Layer =  13 | Nodes =    352716 ->    162792 | Cost =    0.00
+[   3.04s] Layer =  14 | Nodes =    162792 ->     58140 | Cost =    0.00
+[   3.05s] Layer =  15 | Nodes =     58140 ->     15504 | Cost =    0.00
+[   3.05s] Layer =  16 | Nodes =     15504 ->      2907 | Cost =    0.00
+[   3.05s] Layer =  17 | Nodes =      2907 ->       342 | Cost =    0.00
+[   3.05s] Layer =  18 | Nodes =       342 ->        19 | Cost =    0.00
+[   3.05s] Layer =  19 | Nodes =        19 ->         1 | Cost =    0.00
+[   3.05s] COMPLETED
+Cost =    0.00 | Value = 1,7,5,13,16,12,3,9,18,10,8,4,17,6,2,11,19,15,14,0
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N20ft303.dat
+
+Instance: ../data/tsptw/Langevin/N20ft304.dat
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->        19 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =        19 ->       342 | Cost =    0.00
+[   0.02s] Layer =   2 | Nodes =       342 ->      2907 | Cost =    0.00
+[   0.03s] Layer =   3 | Nodes =      2907 ->     15504 | Cost =    0.00
+[   0.06s] Layer =   4 | Nodes =     15504 ->     58140 | Cost =    0.00
+[   0.15s] Layer =   5 | Nodes =     58140 ->    162792 | Cost =    0.00
+[   0.37s] Layer =   6 | Nodes =    162792 ->    352716 | Cost =    0.00
+[   0.81s] Layer =   7 | Nodes =    352716 ->    604656 | Cost =    0.00
+[   1.51s] Layer =   8 | Nodes =    604656 ->    831402 | Cost =    0.00
+[   2.38s] Layer =   9 | Nodes =    831402 ->    923780 | Cost =    0.00
+[   2.67s] Layer =  10 | Nodes =    923780 ->    831402 | Cost =    0.00
+[   2.85s] Layer =  11 | Nodes =    831402 ->    604656 | Cost =    0.00
+[   2.97s] Layer =  12 | Nodes =    604656 ->    352716 | Cost =    0.00
+[   3.03s] Layer =  13 | Nodes =    352716 ->    162792 | Cost =    0.00
+[   3.06s] Layer =  14 | Nodes =    162792 ->     58140 | Cost =    0.00
+[   3.06s] Layer =  15 | Nodes =     58140 ->     15504 | Cost =    0.00
+[   3.06s] Layer =  16 | Nodes =     15504 ->      2907 | Cost =    0.00
+[   3.06s] Layer =  17 | Nodes =      2907 ->       342 | Cost =    0.00
+[   3.07s] Layer =  18 | Nodes =       342 ->        19 | Cost =    0.00
+[   3.07s] Layer =  19 | Nodes =        19 ->         1 | Cost =    0.00
+[   3.07s] COMPLETED
+Cost =    0.00 | Value = 2,7,9,11,13,14,18,4,16,6,15,10,1,8,3,12,5,19,17,0
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N20ft304.dat
+
+Instance: ../data/tsptw/Langevin/N20ft305.dat
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->        19 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =        19 ->       342 | Cost =    0.00
+[   0.03s] Layer =   2 | Nodes =       342 ->      2907 | Cost =    0.00
+[   0.03s] Layer =   3 | Nodes =      2907 ->     15504 | Cost =    0.00
+[   0.06s] Layer =   4 | Nodes =     15504 ->     58140 | Cost =    0.00
+[   0.15s] Layer =   5 | Nodes =     58140 ->    162792 | Cost =    0.00
+[   0.37s] Layer =   6 | Nodes =    162792 ->    352716 | Cost =    0.00
+[   0.82s] Layer =   7 | Nodes =    352716 ->    604656 | Cost =    0.00
+[   1.52s] Layer =   8 | Nodes =    604656 ->    831402 | Cost =    0.00
+[   2.40s] Layer =   9 | Nodes =    831402 ->    923780 | Cost =    0.00
+[   2.68s] Layer =  10 | Nodes =    923780 ->    831402 | Cost =    0.00
+[   2.86s] Layer =  11 | Nodes =    831402 ->    604656 | Cost =    0.00
+[   2.98s] Layer =  12 | Nodes =    604656 ->    352716 | Cost =    0.00
+[   3.04s] Layer =  13 | Nodes =    352716 ->    162792 | Cost =    0.00
+[   3.06s] Layer =  14 | Nodes =    162792 ->     58140 | Cost =    0.00
+[   3.07s] Layer =  15 | Nodes =     58140 ->     15504 | Cost =    0.00
+[   3.07s] Layer =  16 | Nodes =     15504 ->      2907 | Cost =    0.00
+[   3.07s] Layer =  17 | Nodes =      2907 ->       342 | Cost =    0.00
+[   3.07s] Layer =  18 | Nodes =       342 ->        19 | Cost =    0.00
+[   3.07s] Layer =  19 | Nodes =        19 ->         1 | Cost =    0.00
+[   3.07s] COMPLETED
+Cost =    0.00 | Value = 18,16,12,3,19,11,2,7,17,4,15,5,1,10,6,9,8,13,14,0
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N20ft305.dat
+
+Instance: ../data/tsptw/Langevin/N20ft306.dat
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->        19 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =        19 ->       342 | Cost =    0.00
+[   0.02s] Layer =   2 | Nodes =       342 ->      2907 | Cost =    0.00
+[   0.03s] Layer =   3 | Nodes =      2907 ->     15504 | Cost =    0.00
+[   0.06s] Layer =   4 | Nodes =     15504 ->     58140 | Cost =    0.00
+[   0.15s] Layer =   5 | Nodes =     58140 ->    162792 | Cost =    0.00
+[   0.37s] Layer =   6 | Nodes =    162792 ->    352716 | Cost =    0.00
+[   0.81s] Layer =   7 | Nodes =    352716 ->    604656 | Cost =    0.00
+[   1.51s] Layer =   8 | Nodes =    604656 ->    831402 | Cost =    0.00
+[   2.38s] Layer =   9 | Nodes =    831402 ->    923780 | Cost =    0.00
+[   2.66s] Layer =  10 | Nodes =    923780 ->    831402 | Cost =    0.00
+[   2.84s] Layer =  11 | Nodes =    831402 ->    604656 | Cost =    0.00
+[   2.96s] Layer =  12 | Nodes =    604656 ->    352716 | Cost =    0.00
+[   3.02s] Layer =  13 | Nodes =    352716 ->    162792 | Cost =    0.00
+[   3.04s] Layer =  14 | Nodes =    162792 ->     58140 | Cost =    0.00
+[   3.05s] Layer =  15 | Nodes =     58140 ->     15504 | Cost =    0.00
+[   3.05s] Layer =  16 | Nodes =     15504 ->      2907 | Cost =    0.00
+[   3.05s] Layer =  17 | Nodes =      2907 ->       342 | Cost =    0.00
+[   3.05s] Layer =  18 | Nodes =       342 ->        19 | Cost =    0.00
+[   3.05s] Layer =  19 | Nodes =        19 ->         1 | Cost =    0.00
+[   3.05s] COMPLETED
+Cost =    0.00 | Value = 3,9,6,11,5,16,13,14,12,15,10,2,18,7,19,1,8,4,17,0
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N20ft306.dat
+
+Instance: ../data/tsptw/Langevin/N20ft307.dat
+GPU: True
+[   0.03s] Layer =   0 | Nodes =         1 ->        19 | Cost =    0.00
+[   0.03s] Layer =   1 | Nodes =        19 ->       342 | Cost =    0.00
+[   0.03s] Layer =   2 | Nodes =       342 ->      2907 | Cost =    0.00
+[   0.04s] Layer =   3 | Nodes =      2907 ->     15504 | Cost =    0.00
+[   0.06s] Layer =   4 | Nodes =     15504 ->     58140 | Cost =    0.00
+[   0.15s] Layer =   5 | Nodes =     58140 ->    162792 | Cost =    0.00
+[   0.38s] Layer =   6 | Nodes =    162792 ->    352716 | Cost =    0.00
+[   0.82s] Layer =   7 | Nodes =    352716 ->    604656 | Cost =    0.00
+[   1.50s] Layer =   8 | Nodes =    604656 ->    831402 | Cost =    0.00
+[   2.37s] Layer =   9 | Nodes =    831402 ->    923780 | Cost =    0.00
+[   2.65s] Layer =  10 | Nodes =    923780 ->    831402 | Cost =    0.00
+[   2.83s] Layer =  11 | Nodes =    831402 ->    604656 | Cost =    0.00
+[   2.95s] Layer =  12 | Nodes =    604656 ->    352716 | Cost =    0.00
+[   3.01s] Layer =  13 | Nodes =    352716 ->    162792 | Cost =    0.00
+[   3.03s] Layer =  14 | Nodes =    162792 ->     58140 | Cost =    0.00
+[   3.04s] Layer =  15 | Nodes =     58140 ->     15504 | Cost =    0.00
+[   3.04s] Layer =  16 | Nodes =     15504 ->      2907 | Cost =    0.00
+[   3.04s] Layer =  17 | Nodes =      2907 ->       342 | Cost =    0.00
+[   3.04s] Layer =  18 | Nodes =       342 ->        19 | Cost =    0.00
+[   3.04s] Layer =  19 | Nodes =        19 ->         1 | Cost =    0.00
+[   3.04s] COMPLETED
+Cost =    0.00 | Value = 15,18,13,1,9,3,8,2,16,10,7,6,4,19,12,17,14,11,5,0
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N20ft307.dat
+
+Instance: ../data/tsptw/Langevin/N20ft308.dat
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->        19 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =        19 ->       342 | Cost =    0.00
+[   0.02s] Layer =   2 | Nodes =       342 ->      2907 | Cost =    0.00
+[   0.03s] Layer =   3 | Nodes =      2907 ->     15504 | Cost =    0.00
+[   0.06s] Layer =   4 | Nodes =     15504 ->     58140 | Cost =    0.00
+[   0.14s] Layer =   5 | Nodes =     58140 ->    162792 | Cost =    0.00
+[   0.37s] Layer =   6 | Nodes =    162792 ->    352716 | Cost =    0.00
+[   0.82s] Layer =   7 | Nodes =    352716 ->    604656 | Cost =    0.00
+[   1.51s] Layer =   8 | Nodes =    604656 ->    831402 | Cost =    0.00
+[   2.39s] Layer =   9 | Nodes =    831402 ->    923780 | Cost =    0.00
+[   2.67s] Layer =  10 | Nodes =    923780 ->    831402 | Cost =    0.00
+[   2.85s] Layer =  11 | Nodes =    831402 ->    604656 | Cost =    0.00
+[   2.97s] Layer =  12 | Nodes =    604656 ->    352716 | Cost =    0.00
+[   3.03s] Layer =  13 | Nodes =    352716 ->    162792 | Cost =    0.00
+[   3.05s] Layer =  14 | Nodes =    162792 ->     58140 | Cost =    0.00
+[   3.06s] Layer =  15 | Nodes =     58140 ->     15504 | Cost =    0.00
+[   3.06s] Layer =  16 | Nodes =     15504 ->      2907 | Cost =    0.00
+[   3.06s] Layer =  17 | Nodes =      2907 ->       342 | Cost =    0.00
+[   3.06s] Layer =  18 | Nodes =       342 ->        19 | Cost =    0.00
+[   3.06s] Layer =  19 | Nodes =        19 ->         1 | Cost =    0.00
+[   3.06s] COMPLETED
+Cost =    0.00 | Value = 16,19,2,7,15,9,1,3,14,6,5,12,11,10,18,8,13,4,17,0
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N20ft308.dat
+
+Instance: ../data/tsptw/Langevin/N20ft309.dat
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->        19 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =        19 ->       342 | Cost =    0.00
+[   0.02s] Layer =   2 | Nodes =       342 ->      2907 | Cost =    0.00
+[   0.03s] Layer =   3 | Nodes =      2907 ->     15504 | Cost =    0.00
+[   0.05s] Layer =   4 | Nodes =     15504 ->     58140 | Cost =    0.00
+[   0.15s] Layer =   5 | Nodes =     58140 ->    162792 | Cost =    0.00
+[   0.37s] Layer =   6 | Nodes =    162792 ->    352716 | Cost =    0.00
+[   0.81s] Layer =   7 | Nodes =    352716 ->    604656 | Cost =    0.00
+[   1.49s] Layer =   8 | Nodes =    604656 ->    831402 | Cost =    0.00
+[   2.35s] Layer =   9 | Nodes =    831402 ->    923780 | Cost =    0.00
+[   2.64s] Layer =  10 | Nodes =    923780 ->    831402 | Cost =    0.00
+[   2.82s] Layer =  11 | Nodes =    831402 ->    604656 | Cost =    0.00
+[   2.94s] Layer =  12 | Nodes =    604656 ->    352716 | Cost =    0.00
+[   3.00s] Layer =  13 | Nodes =    352716 ->    162792 | Cost =    0.00
+[   3.02s] Layer =  14 | Nodes =    162792 ->     58140 | Cost =    0.00
+[   3.03s] Layer =  15 | Nodes =     58140 ->     15504 | Cost =    0.00
+[   3.03s] Layer =  16 | Nodes =     15504 ->      2907 | Cost =    0.00
+[   3.03s] Layer =  17 | Nodes =      2907 ->       342 | Cost =    0.00
+[   3.03s] Layer =  18 | Nodes =       342 ->        19 | Cost =    0.00
+[   3.03s] Layer =  19 | Nodes =        19 ->         1 | Cost =    0.00
+[   3.03s] COMPLETED
+Cost =    0.00 | Value = 17,3,10,1,4,8,11,7,5,2,18,9,19,6,12,15,16,13,14,0
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N20ft309.dat
+
+Instance: ../data/tsptw/Langevin/N20ft310.dat
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->        19 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =        19 ->       342 | Cost =    0.00
+[   0.02s] Layer =   2 | Nodes =       342 ->      2907 | Cost =    0.00
+[   0.03s] Layer =   3 | Nodes =      2907 ->     15504 | Cost =    0.00
+[   0.06s] Layer =   4 | Nodes =     15504 ->     58140 | Cost =    0.00
+[   0.15s] Layer =   5 | Nodes =     58140 ->    162792 | Cost =    0.00
+[   0.37s] Layer =   6 | Nodes =    162792 ->    352716 | Cost =    0.00
+[   0.81s] Layer =   7 | Nodes =    352716 ->    604656 | Cost =    0.00
+[   1.51s] Layer =   8 | Nodes =    604656 ->    831402 | Cost =    0.00
+[   2.38s] Layer =   9 | Nodes =    831402 ->    923780 | Cost =    0.00
+[   2.67s] Layer =  10 | Nodes =    923780 ->    831402 | Cost =    0.00
+[   2.85s] Layer =  11 | Nodes =    831402 ->    604656 | Cost =    0.00
+[   2.97s] Layer =  12 | Nodes =    604656 ->    352716 | Cost =    0.00
+[   3.03s] Layer =  13 | Nodes =    352716 ->    162792 | Cost =    0.00
+[   3.05s] Layer =  14 | Nodes =    162792 ->     58140 | Cost =    0.00
+[   3.06s] Layer =  15 | Nodes =     58140 ->     15504 | Cost =    0.00
+[   3.06s] Layer =  16 | Nodes =     15504 ->      2907 | Cost =    0.00
+[   3.06s] Layer =  17 | Nodes =      2907 ->       342 | Cost =    0.00
+[   3.06s] Layer =  18 | Nodes =       342 ->        19 | Cost =    0.00
+[   3.06s] Layer =  19 | Nodes =        19 ->         1 | Cost =    0.00
+[   3.06s] COMPLETED
+Cost =    0.00 | Value = 5,8,6,7,2,4,19,17,18,16,1,9,12,10,3,13,11,15,14,0
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N20ft310.dat
+
+Instance: ../data/tsptw/Langevin/N20ft401.dat
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->        19 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =        19 ->       342 | Cost =    0.00
+[   0.02s] Layer =   2 | Nodes =       342 ->      2907 | Cost =    0.00
+[   0.03s] Layer =   3 | Nodes =      2907 ->     15504 | Cost =    0.00
+[   0.05s] Layer =   4 | Nodes =     15504 ->     58140 | Cost =    0.00
+[   0.14s] Layer =   5 | Nodes =     58140 ->    162792 | Cost =    0.00
+[   0.36s] Layer =   6 | Nodes =    162792 ->    352716 | Cost =    0.00
+[   0.81s] Layer =   7 | Nodes =    352716 ->    604656 | Cost =    0.00
+[   1.50s] Layer =   8 | Nodes =    604656 ->    831402 | Cost =    0.00
+[   2.37s] Layer =   9 | Nodes =    831402 ->    923780 | Cost =    0.00
+[   2.65s] Layer =  10 | Nodes =    923780 ->    831402 | Cost =    0.00
+[   2.84s] Layer =  11 | Nodes =    831402 ->    604656 | Cost =    0.00
+[   2.95s] Layer =  12 | Nodes =    604656 ->    352716 | Cost =    0.00
+[   3.01s] Layer =  13 | Nodes =    352716 ->    162792 | Cost =    0.00
+[   3.03s] Layer =  14 | Nodes =    162792 ->     58140 | Cost =    0.00
+[   3.04s] Layer =  15 | Nodes =     58140 ->     15504 | Cost =    0.00
+[   3.04s] Layer =  16 | Nodes =     15504 ->      2907 | Cost =    0.00
+[   3.04s] Layer =  17 | Nodes =      2907 ->       342 | Cost =    0.00
+[   3.05s] Layer =  18 | Nodes =       342 ->        19 | Cost =    0.00
+[   3.05s] Layer =  19 | Nodes =        19 ->         1 | Cost =    0.00
+[   3.05s] COMPLETED
+Cost =    0.00 | Value = 4,11,18,15,14,6,10,13,12,9,5,8,1,2,16,7,3,19,17,0
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N20ft401.dat
+
+Instance: ../data/tsptw/Langevin/N20ft402.dat
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->        19 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =        19 ->       342 | Cost =    0.00
+[   0.02s] Layer =   2 | Nodes =       342 ->      2907 | Cost =    0.00
+[   0.03s] Layer =   3 | Nodes =      2907 ->     15504 | Cost =    0.00
+[   0.06s] Layer =   4 | Nodes =     15504 ->     58140 | Cost =    0.00
+[   0.15s] Layer =   5 | Nodes =     58140 ->    162792 | Cost =    0.00
+[   0.37s] Layer =   6 | Nodes =    162792 ->    352716 | Cost =    0.00
+[   0.82s] Layer =   7 | Nodes =    352716 ->    604656 | Cost =    0.00
+[   1.52s] Layer =   8 | Nodes =    604656 ->    831402 | Cost =    0.00
+[   2.39s] Layer =   9 | Nodes =    831402 ->    923780 | Cost =    0.00
+[   2.67s] Layer =  10 | Nodes =    923780 ->    831402 | Cost =    0.00
+[   2.86s] Layer =  11 | Nodes =    831402 ->    604656 | Cost =    0.00
+[   2.98s] Layer =  12 | Nodes =    604656 ->    352716 | Cost =    0.00
+[   3.04s] Layer =  13 | Nodes =    352716 ->    162792 | Cost =    0.00
+[   3.06s] Layer =  14 | Nodes =    162792 ->     58140 | Cost =    0.00
+[   3.07s] Layer =  15 | Nodes =     58140 ->     15504 | Cost =    0.00
+[   3.07s] Layer =  16 | Nodes =     15504 ->      2907 | Cost =    0.00
+[   3.07s] Layer =  17 | Nodes =      2907 ->       342 | Cost =    0.00
+[   3.07s] Layer =  18 | Nodes =       342 ->        19 | Cost =    0.00
+[   3.07s] Layer =  19 | Nodes =        19 ->         1 | Cost =    0.00
+[   3.07s] COMPLETED
+Cost =    0.00 | Value = 16,11,12,6,19,18,13,2,10,1,8,5,7,3,4,15,14,9,17,0
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N20ft402.dat
+
+Instance: ../data/tsptw/Langevin/N20ft403.dat
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->        19 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =        19 ->       342 | Cost =    0.00
+[   0.02s] Layer =   2 | Nodes =       342 ->      2907 | Cost =    0.00
+[   0.03s] Layer =   3 | Nodes =      2907 ->     15504 | Cost =    0.00
+[   0.06s] Layer =   4 | Nodes =     15504 ->     58140 | Cost =    0.00
+[   0.15s] Layer =   5 | Nodes =     58140 ->    162792 | Cost =    0.00
+[   0.37s] Layer =   6 | Nodes =    162792 ->    352716 | Cost =    0.00
+[   0.81s] Layer =   7 | Nodes =    352716 ->    604656 | Cost =    0.00
+[   1.50s] Layer =   8 | Nodes =    604656 ->    831402 | Cost =    0.00
+[   2.38s] Layer =   9 | Nodes =    831402 ->    923780 | Cost =    0.00
+[   2.66s] Layer =  10 | Nodes =    923780 ->    831402 | Cost =    0.00
+[   2.84s] Layer =  11 | Nodes =    831402 ->    604656 | Cost =    0.00
+[   2.96s] Layer =  12 | Nodes =    604656 ->    352716 | Cost =    0.00
+[   3.02s] Layer =  13 | Nodes =    352716 ->    162792 | Cost =    0.00
+[   3.04s] Layer =  14 | Nodes =    162792 ->     58140 | Cost =    0.00
+[   3.05s] Layer =  15 | Nodes =     58140 ->     15504 | Cost =    0.00
+[   3.05s] Layer =  16 | Nodes =     15504 ->      2907 | Cost =    0.00
+[   3.05s] Layer =  17 | Nodes =      2907 ->       342 | Cost =    0.00
+[   3.05s] Layer =  18 | Nodes =       342 ->        19 | Cost =    0.00
+[   3.05s] Layer =  19 | Nodes =        19 ->         1 | Cost =    0.00
+[   3.06s] COMPLETED
+Cost =    0.00 | Value = 6,8,3,13,10,5,7,1,4,19,11,2,12,16,18,15,14,9,17,0
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N20ft403.dat
+
+Instance: ../data/tsptw/Langevin/N20ft404.dat
+GPU: True
+[   0.03s] Layer =   0 | Nodes =         1 ->        19 | Cost =    0.00
+[   0.03s] Layer =   1 | Nodes =        19 ->       342 | Cost =    0.00
+[   0.03s] Layer =   2 | Nodes =       342 ->      2907 | Cost =    0.00
+[   0.04s] Layer =   3 | Nodes =      2907 ->     15504 | Cost =    0.00
+[   0.06s] Layer =   4 | Nodes =     15504 ->     58140 | Cost =    0.00
+[   0.15s] Layer =   5 | Nodes =     58140 ->    162792 | Cost =    0.00
+[   0.38s] Layer =   6 | Nodes =    162792 ->    352716 | Cost =    0.00
+[   0.82s] Layer =   7 | Nodes =    352716 ->    604656 | Cost =    0.00
+[   1.51s] Layer =   8 | Nodes =    604656 ->    831402 | Cost =    0.00
+[   2.38s] Layer =   9 | Nodes =    831402 ->    923780 | Cost =    0.00
+[   2.67s] Layer =  10 | Nodes =    923780 ->    831402 | Cost =    0.00
+[   2.85s] Layer =  11 | Nodes =    831402 ->    604656 | Cost =    0.00
+[   2.96s] Layer =  12 | Nodes =    604656 ->    352716 | Cost =    0.00
+[   3.02s] Layer =  13 | Nodes =    352716 ->    162792 | Cost =    0.00
+[   3.04s] Layer =  14 | Nodes =    162792 ->     58140 | Cost =    0.00
+[   3.05s] Layer =  15 | Nodes =     58140 ->     15504 | Cost =    0.00
+[   3.05s] Layer =  16 | Nodes =     15504 ->      2907 | Cost =    0.00
+[   3.06s] Layer =  17 | Nodes =      2907 ->       342 | Cost =    0.00
+[   3.06s] Layer =  18 | Nodes =       342 ->        19 | Cost =    0.00
+[   3.06s] Layer =  19 | Nodes =        19 ->         1 | Cost =    0.00
+[   3.06s] COMPLETED
+Cost =    0.00 | Value = 16,11,1,8,5,4,18,12,19,7,6,3,13,9,10,17,2,15,14,0
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N20ft404.dat
+
+Instance: ../data/tsptw/Langevin/N20ft405.dat
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->        19 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =        19 ->       342 | Cost =    0.00
+[   0.02s] Layer =   2 | Nodes =       342 ->      2907 | Cost =    0.00
+[   0.03s] Layer =   3 | Nodes =      2907 ->     15504 | Cost =    0.00
+[   0.06s] Layer =   4 | Nodes =     15504 ->     58140 | Cost =    0.00
+[   0.15s] Layer =   5 | Nodes =     58140 ->    162792 | Cost =    0.00
+[   0.37s] Layer =   6 | Nodes =    162792 ->    352716 | Cost =    0.00
+[   0.81s] Layer =   7 | Nodes =    352716 ->    604656 | Cost =    0.00
+[   1.51s] Layer =   8 | Nodes =    604656 ->    831402 | Cost =    0.00
+[   2.38s] Layer =   9 | Nodes =    831402 ->    923780 | Cost =    0.00
+[   2.67s] Layer =  10 | Nodes =    923780 ->    831402 | Cost =    0.00
+[   2.85s] Layer =  11 | Nodes =    831402 ->    604656 | Cost =    0.00
+[   2.96s] Layer =  12 | Nodes =    604656 ->    352716 | Cost =    0.00
+[   3.02s] Layer =  13 | Nodes =    352716 ->    162792 | Cost =    0.00
+[   3.05s] Layer =  14 | Nodes =    162792 ->     58140 | Cost =    0.00
+[   3.06s] Layer =  15 | Nodes =     58140 ->     15504 | Cost =    0.00
+[   3.06s] Layer =  16 | Nodes =     15504 ->      2907 | Cost =    0.00
+[   3.06s] Layer =  17 | Nodes =      2907 ->       342 | Cost =    0.00
+[   3.06s] Layer =  18 | Nodes =       342 ->        19 | Cost =    0.00
+[   3.06s] Layer =  19 | Nodes =        19 ->         1 | Cost =    0.00
+[   3.06s] COMPLETED
+Cost =    0.00 | Value = 17,3,18,11,13,7,19,15,1,10,4,8,6,2,16,9,5,12,14,0
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N20ft405.dat
+
+Instance: ../data/tsptw/Langevin/N20ft406.dat
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->        19 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =        19 ->       342 | Cost =    0.00
+[   0.02s] Layer =   2 | Nodes =       342 ->      2907 | Cost =    0.00
+[   0.03s] Layer =   3 | Nodes =      2907 ->     15504 | Cost =    0.00
+[   0.06s] Layer =   4 | Nodes =     15504 ->     58140 | Cost =    0.00
+[   0.15s] Layer =   5 | Nodes =     58140 ->    162792 | Cost =    0.00
+[   0.37s] Layer =   6 | Nodes =    162792 ->    352716 | Cost =    0.00
+[   0.82s] Layer =   7 | Nodes =    352716 ->    604656 | Cost =    0.00
+[   1.52s] Layer =   8 | Nodes =    604656 ->    831402 | Cost =    0.00
+[   2.39s] Layer =   9 | Nodes =    831402 ->    923780 | Cost =    0.00
+[   2.68s] Layer =  10 | Nodes =    923780 ->    831402 | Cost =    0.00
+[   2.86s] Layer =  11 | Nodes =    831402 ->    604656 | Cost =    0.00
+[   2.98s] Layer =  12 | Nodes =    604656 ->    352716 | Cost =    0.00
+[   3.04s] Layer =  13 | Nodes =    352716 ->    162792 | Cost =    0.00
+[   3.06s] Layer =  14 | Nodes =    162792 ->     58140 | Cost =    0.00
+[   3.07s] Layer =  15 | Nodes =     58140 ->     15504 | Cost =    0.00
+[   3.07s] Layer =  16 | Nodes =     15504 ->      2907 | Cost =    0.00
+[   3.08s] Layer =  17 | Nodes =      2907 ->       342 | Cost =    0.00
+[   3.08s] Layer =  18 | Nodes =       342 ->        19 | Cost =    0.00
+[   3.08s] Layer =  19 | Nodes =        19 ->         1 | Cost =    0.00
+[   3.08s] COMPLETED
+Cost =    0.00 | Value = 19,8,4,3,10,2,5,11,18,16,6,1,12,17,7,9,15,13,14,0
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N20ft406.dat
+
+Instance: ../data/tsptw/Langevin/N20ft407.dat
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->        19 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =        19 ->       342 | Cost =    0.00
+[   0.02s] Layer =   2 | Nodes =       342 ->      2907 | Cost =    0.00
+[   0.03s] Layer =   3 | Nodes =      2907 ->     15504 | Cost =    0.00
+[   0.06s] Layer =   4 | Nodes =     15504 ->     58140 | Cost =    0.00
+[   0.14s] Layer =   5 | Nodes =     58140 ->    162792 | Cost =    0.00
+[   0.37s] Layer =   6 | Nodes =    162792 ->    352716 | Cost =    0.00
+[   0.82s] Layer =   7 | Nodes =    352716 ->    604656 | Cost =    0.00
+[   1.51s] Layer =   8 | Nodes =    604656 ->    831402 | Cost =    0.00
+[   2.38s] Layer =   9 | Nodes =    831402 ->    923780 | Cost =    0.00
+[   2.67s] Layer =  10 | Nodes =    923780 ->    831402 | Cost =    0.00
+[   2.85s] Layer =  11 | Nodes =    831402 ->    604656 | Cost =    0.00
+[   2.97s] Layer =  12 | Nodes =    604656 ->    352716 | Cost =    0.00
+[   3.03s] Layer =  13 | Nodes =    352716 ->    162792 | Cost =    0.00
+[   3.05s] Layer =  14 | Nodes =    162792 ->     58140 | Cost =    0.00
+[   3.06s] Layer =  15 | Nodes =     58140 ->     15504 | Cost =    0.00
+[   3.06s] Layer =  16 | Nodes =     15504 ->      2907 | Cost =    0.00
+[   3.06s] Layer =  17 | Nodes =      2907 ->       342 | Cost =    0.00
+[   3.06s] Layer =  18 | Nodes =       342 ->        19 | Cost =    0.00
+[   3.06s] Layer =  19 | Nodes =        19 ->         1 | Cost =    0.00
+[   3.06s] COMPLETED
+Cost =    0.00 | Value = 11,18,12,15,13,10,9,14,6,16,4,8,1,2,7,5,3,19,17,0
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N20ft407.dat
+
+Instance: ../data/tsptw/Langevin/N20ft408.dat
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->        19 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =        19 ->       342 | Cost =    0.00
+[   0.02s] Layer =   2 | Nodes =       342 ->      2907 | Cost =    0.00
+[   0.03s] Layer =   3 | Nodes =      2907 ->     15504 | Cost =    0.00
+[   0.06s] Layer =   4 | Nodes =     15504 ->     58140 | Cost =    0.00
+[   0.15s] Layer =   5 | Nodes =     58140 ->    162792 | Cost =    0.00
+[   0.38s] Layer =   6 | Nodes =    162792 ->    352716 | Cost =    0.00
+[   0.81s] Layer =   7 | Nodes =    352716 ->    604656 | Cost =    0.00
+[   1.50s] Layer =   8 | Nodes =    604656 ->    831402 | Cost =    0.00
+[   2.35s] Layer =   9 | Nodes =    831402 ->    923780 | Cost =    0.00
+[   2.64s] Layer =  10 | Nodes =    923780 ->    831402 | Cost =    0.00
+[   2.83s] Layer =  11 | Nodes =    831402 ->    604656 | Cost =    0.00
+[   2.94s] Layer =  12 | Nodes =    604656 ->    352716 | Cost =    0.00
+[   3.00s] Layer =  13 | Nodes =    352716 ->    162792 | Cost =    0.00
+[   3.02s] Layer =  14 | Nodes =    162792 ->     58140 | Cost =    0.00
+[   3.03s] Layer =  15 | Nodes =     58140 ->     15504 | Cost =    0.00
+[   3.03s] Layer =  16 | Nodes =     15504 ->      2907 | Cost =    0.00
+[   3.04s] Layer =  17 | Nodes =      2907 ->       342 | Cost =    0.00
+[   3.04s] Layer =  18 | Nodes =       342 ->        19 | Cost =    0.00
+[   3.04s] Layer =  19 | Nodes =        19 ->         1 | Cost =    0.00
+[   3.04s] COMPLETED
+Cost =    0.00 | Value = 2,8,15,3,14,10,12,18,19,1,16,5,6,9,7,13,11,4,17,0
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N20ft408.dat
+
+Instance: ../data/tsptw/Langevin/N20ft409.dat
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->        19 | Cost =    0.00
+[   0.03s] Layer =   1 | Nodes =        19 ->       342 | Cost =    0.00
+[   0.03s] Layer =   2 | Nodes =       342 ->      2907 | Cost =    0.00
+[   0.03s] Layer =   3 | Nodes =      2907 ->     15504 | Cost =    0.00
+[   0.06s] Layer =   4 | Nodes =     15504 ->     58140 | Cost =    0.00
+[   0.15s] Layer =   5 | Nodes =     58140 ->    162792 | Cost =    0.00
+[   0.37s] Layer =   6 | Nodes =    162792 ->    352716 | Cost =    0.00
+[   0.82s] Layer =   7 | Nodes =    352716 ->    604656 | Cost =    0.00
+[   1.51s] Layer =   8 | Nodes =    604656 ->    831402 | Cost =    0.00
+[   2.37s] Layer =   9 | Nodes =    831402 ->    923780 | Cost =    0.00
+[   2.66s] Layer =  10 | Nodes =    923780 ->    831402 | Cost =    0.00
+[   2.85s] Layer =  11 | Nodes =    831402 ->    604656 | Cost =    0.00
+[   2.96s] Layer =  12 | Nodes =    604656 ->    352716 | Cost =    0.00
+[   3.02s] Layer =  13 | Nodes =    352716 ->    162792 | Cost =    0.00
+[   3.05s] Layer =  14 | Nodes =    162792 ->     58140 | Cost =    0.00
+[   3.06s] Layer =  15 | Nodes =     58140 ->     15504 | Cost =    0.00
+[   3.06s] Layer =  16 | Nodes =     15504 ->      2907 | Cost =    0.00
+[   3.06s] Layer =  17 | Nodes =      2907 ->       342 | Cost =    0.00
+[   3.06s] Layer =  18 | Nodes =       342 ->        19 | Cost =    0.00
+[   3.06s] Layer =  19 | Nodes =        19 ->         1 | Cost =    0.00
+[   3.06s] COMPLETED
+Cost =    0.00 | Value = 12,17,2,8,13,10,4,18,6,16,3,9,1,15,19,14,7,11,5,0
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N20ft409.dat
+
+Instance: ../data/tsptw/Langevin/N20ft410.dat
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->        19 | Cost =    0.00
+[   0.03s] Layer =   1 | Nodes =        19 ->       342 | Cost =    0.00
+[   0.03s] Layer =   2 | Nodes =       342 ->      2907 | Cost =    0.00
+[   0.03s] Layer =   3 | Nodes =      2907 ->     15504 | Cost =    0.00
+[   0.06s] Layer =   4 | Nodes =     15504 ->     58140 | Cost =    0.00
+[   0.15s] Layer =   5 | Nodes =     58140 ->    162792 | Cost =    0.00
+[   0.38s] Layer =   6 | Nodes =    162792 ->    352716 | Cost =    0.00
+[   0.81s] Layer =   7 | Nodes =    352716 ->    604656 | Cost =    0.00
+[   1.50s] Layer =   8 | Nodes =    604656 ->    831402 | Cost =    0.00
+[   2.37s] Layer =   9 | Nodes =    831402 ->    923780 | Cost =    0.00
+[   2.65s] Layer =  10 | Nodes =    923780 ->    831402 | Cost =    0.00
+[   2.84s] Layer =  11 | Nodes =    831402 ->    604656 | Cost =    0.00
+[   2.96s] Layer =  12 | Nodes =    604656 ->    352716 | Cost =    0.00
+[   3.01s] Layer =  13 | Nodes =    352716 ->    162792 | Cost =    0.00
+[   3.04s] Layer =  14 | Nodes =    162792 ->     58140 | Cost =    0.00
+[   3.04s] Layer =  15 | Nodes =     58140 ->     15504 | Cost =    0.00
+[   3.05s] Layer =  16 | Nodes =     15504 ->      2907 | Cost =    0.00
+[   3.05s] Layer =  17 | Nodes =      2907 ->       342 | Cost =    0.00
+[   3.05s] Layer =  18 | Nodes =       342 ->        19 | Cost =    0.00
+[   3.05s] Layer =  19 | Nodes =        19 ->         1 | Cost =    0.00
+[   3.05s] COMPLETED
+Cost =    0.00 | Value = 11,17,13,4,6,19,2,1,15,18,10,8,12,9,16,7,5,3,14,0
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N20ft410.dat
+
+Instance: ../data/tsptw/Langevin/N40ft201.dat
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->        39 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =        39 ->      1482 | Cost =    0.00
+[   0.03s] Layer =   2 | Nodes =      1482 ->     27417 | Cost =    0.00
+[   0.15s] Layer =   3 | Nodes =     27417 ->    329004 | Cost =    0.00
+[   1.39s] Layer =   4 | Nodes =    329004 ->   2878785 | Cost =    0.00
+[  11.15s] Layer =   5 | Nodes =   2878785 ->  19575738 | Cost =    0.00
+           Batch =   0 | Nodes =   4893935 ->  26916648 
+           Batch =   1 | Nodes =   4893935 ->  26916681 
+           Batch =   2 | Nodes =   4893935 ->  26916681 
+           Batch =   3 | Nodes =   4893933 ->  26916648 
+[  44.49s] Layer =   6 | Nodes =  19575738 -> 107666658 | Cost =    0.00
+terminate called after throwing an instance of 'std::length_error'
+  what():  vector::reserve
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N40ft201.dat
+
+Instance: ../data/tsptw/Langevin/N40ft202.dat
+GPU: True
+[   0.03s] Layer =   0 | Nodes =         1 ->        39 | Cost =    0.00
+[   0.03s] Layer =   1 | Nodes =        39 ->      1482 | Cost =    0.00
+[   0.04s] Layer =   2 | Nodes =      1482 ->     27417 | Cost =    0.00
+[   0.16s] Layer =   3 | Nodes =     27417 ->    329004 | Cost =    0.00
+[   1.44s] Layer =   4 | Nodes =    329004 ->   2878785 | Cost =    0.00
+[  11.42s] Layer =   5 | Nodes =   2878785 ->  19575738 | Cost =    0.00
+           Batch =   0 | Nodes =   4893935 ->  26916648 
+           Batch =   1 | Nodes =   4893935 ->  26916681 
+           Batch =   2 | Nodes =   4893935 ->  26916681 
+           Batch =   3 | Nodes =   4893933 ->  26916648 
+[  45.85s] Layer =   6 | Nodes =  19575738 -> 107666658 | Cost =    0.00
+terminate called after throwing an instance of 'std::length_error'
+  what():  vector::reserve
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N40ft202.dat
+
+Instance: ../data/tsptw/Langevin/N40ft203.dat
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->        39 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =        39 ->      1482 | Cost =    0.00
+[   0.03s] Layer =   2 | Nodes =      1482 ->     27417 | Cost =    0.00
+[   0.15s] Layer =   3 | Nodes =     27417 ->    329004 | Cost =    0.00
+[   1.40s] Layer =   4 | Nodes =    329004 ->   2878785 | Cost =    0.00
+[  11.26s] Layer =   5 | Nodes =   2878785 ->  19575738 | Cost =    0.00
+           Batch =   0 | Nodes =   4893935 ->  26916648 
+           Batch =   1 | Nodes =   4893935 ->  26916681 
+           Batch =   2 | Nodes =   4893935 ->  26916681 
+           Batch =   3 | Nodes =   4893933 ->  26916648 
+[  44.79s] Layer =   6 | Nodes =  19575738 -> 107666658 | Cost =    0.00
+terminate called after throwing an instance of 'std::length_error'
+  what():  vector::reserve
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N40ft203.dat
+
+Instance: ../data/tsptw/Langevin/N40ft204.dat
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->        39 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =        39 ->      1482 | Cost =    0.00
+[   0.03s] Layer =   2 | Nodes =      1482 ->     27417 | Cost =    0.00
+[   0.15s] Layer =   3 | Nodes =     27417 ->    329004 | Cost =    0.00
+[   1.41s] Layer =   4 | Nodes =    329004 ->   2878785 | Cost =    0.00
+[  11.24s] Layer =   5 | Nodes =   2878785 ->  19575738 | Cost =    0.00
+           Batch =   0 | Nodes =   4893935 ->  26916648 
+           Batch =   1 | Nodes =   4893935 ->  26916681 
+           Batch =   2 | Nodes =   4893935 ->  26916681 
+           Batch =   3 | Nodes =   4893933 ->  26916648 
+[  44.90s] Layer =   6 | Nodes =  19575738 -> 107666658 | Cost =    0.00
+terminate called after throwing an instance of 'std::length_error'
+  what():  vector::reserve
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N40ft204.dat
+
+Instance: ../data/tsptw/Langevin/N40ft205.dat
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->        39 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =        39 ->      1482 | Cost =    0.00
+[   0.03s] Layer =   2 | Nodes =      1482 ->     27417 | Cost =    0.00
+[   0.15s] Layer =   3 | Nodes =     27417 ->    329004 | Cost =    0.00
+[   1.40s] Layer =   4 | Nodes =    329004 ->   2878785 | Cost =    0.00
+[  11.19s] Layer =   5 | Nodes =   2878785 ->  19575738 | Cost =    0.00
+           Batch =   0 | Nodes =   4893935 ->  26916648 
+           Batch =   1 | Nodes =   4893935 ->  26916681 
+           Batch =   2 | Nodes =   4893935 ->  26916681 
+           Batch =   3 | Nodes =   4893933 ->  26916648 
+[  44.44s] Layer =   6 | Nodes =  19575738 -> 107666658 | Cost =    0.00
+terminate called after throwing an instance of 'std::length_error'
+  what():  vector::reserve
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N40ft205.dat
+
+Instance: ../data/tsptw/Langevin/N40ft206.dat
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->        39 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =        39 ->      1482 | Cost =    0.00
+[   0.03s] Layer =   2 | Nodes =      1482 ->     27417 | Cost =    0.00
+[   0.15s] Layer =   3 | Nodes =     27417 ->    329004 | Cost =    0.00
+[   1.40s] Layer =   4 | Nodes =    329004 ->   2878785 | Cost =    0.00
+[  11.21s] Layer =   5 | Nodes =   2878785 ->  19575738 | Cost =    0.00
+           Batch =   0 | Nodes =   4893935 ->  26916648 
+           Batch =   1 | Nodes =   4893935 ->  26916681 
+           Batch =   2 | Nodes =   4893935 ->  26916681 
+           Batch =   3 | Nodes =   4893933 ->  26916648 
+[  44.94s] Layer =   6 | Nodes =  19575738 -> 107666658 | Cost =    0.00
+terminate called after throwing an instance of 'std::length_error'
+  what():  vector::reserve
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N40ft206.dat
+
+Instance: ../data/tsptw/Langevin/N40ft207.dat
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->        39 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =        39 ->      1482 | Cost =    0.00
+[   0.03s] Layer =   2 | Nodes =      1482 ->     27417 | Cost =    0.00
+[   0.15s] Layer =   3 | Nodes =     27417 ->    329004 | Cost =    0.00
+[   1.41s] Layer =   4 | Nodes =    329004 ->   2878785 | Cost =    0.00
+[  11.26s] Layer =   5 | Nodes =   2878785 ->  19575738 | Cost =    0.00
+           Batch =   0 | Nodes =   4893935 ->  26916648 
+           Batch =   1 | Nodes =   4893935 ->  26916681 
+           Batch =   2 | Nodes =   4893935 ->  26916681 
+           Batch =   3 | Nodes =   4893933 ->  26916648 
+[  44.88s] Layer =   6 | Nodes =  19575738 -> 107666658 | Cost =    0.00
+terminate called after throwing an instance of 'std::length_error'
+  what():  vector::reserve
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N40ft207.dat
+
+Instance: ../data/tsptw/Langevin/N40ft208.dat
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->        39 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =        39 ->      1482 | Cost =    0.00
+[   0.03s] Layer =   2 | Nodes =      1482 ->     27417 | Cost =    0.00
+[   0.15s] Layer =   3 | Nodes =     27417 ->    329004 | Cost =    0.00
+[   1.41s] Layer =   4 | Nodes =    329004 ->   2878785 | Cost =    0.00
+[  11.31s] Layer =   5 | Nodes =   2878785 ->  19575738 | Cost =    0.00
+           Batch =   0 | Nodes =   4893935 ->  26916648 
+           Batch =   1 | Nodes =   4893935 ->  26916681 
+           Batch =   2 | Nodes =   4893935 ->  26916681 
+           Batch =   3 | Nodes =   4893933 ->  26916648 
+[  44.89s] Layer =   6 | Nodes =  19575738 -> 107666658 | Cost =    0.00
+terminate called after throwing an instance of 'std::length_error'
+  what():  vector::reserve
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N40ft208.dat
+
+Instance: ../data/tsptw/Langevin/N40ft209.dat
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->        39 | Cost =    0.00
+[   0.03s] Layer =   1 | Nodes =        39 ->      1482 | Cost =    0.00
+[   0.03s] Layer =   2 | Nodes =      1482 ->     27417 | Cost =    0.00
+[   0.14s] Layer =   3 | Nodes =     27417 ->    329004 | Cost =    0.00
+[   1.39s] Layer =   4 | Nodes =    329004 ->   2878785 | Cost =    0.00
+[  11.25s] Layer =   5 | Nodes =   2878785 ->  19575738 | Cost =    0.00
+           Batch =   0 | Nodes =   4893935 ->  26916648 
+           Batch =   1 | Nodes =   4893935 ->  26916681 
+           Batch =   2 | Nodes =   4893935 ->  26916681 
+           Batch =   3 | Nodes =   4893933 ->  26916648 
+[  44.86s] Layer =   6 | Nodes =  19575738 -> 107666658 | Cost =    0.00
+terminate called after throwing an instance of 'std::length_error'
+  what():  vector::reserve
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N40ft209.dat
+
+Instance: ../data/tsptw/Langevin/N40ft210.dat
+GPU: True
+[   0.03s] Layer =   0 | Nodes =         1 ->        39 | Cost =    0.00
+[   0.03s] Layer =   1 | Nodes =        39 ->      1482 | Cost =    0.00
+[   0.04s] Layer =   2 | Nodes =      1482 ->     27417 | Cost =    0.00
+[   0.16s] Layer =   3 | Nodes =     27417 ->    329004 | Cost =    0.00
+[   1.41s] Layer =   4 | Nodes =    329004 ->   2878785 | Cost =    0.00
+[  11.22s] Layer =   5 | Nodes =   2878785 ->  19575738 | Cost =    0.00
+           Batch =   0 | Nodes =   4893935 ->  26916648 
+           Batch =   1 | Nodes =   4893935 ->  26916681 
+           Batch =   2 | Nodes =   4893935 ->  26916681 
+           Batch =   3 | Nodes =   4893933 ->  26916648 
+[  44.68s] Layer =   6 | Nodes =  19575738 -> 107666658 | Cost =    0.00
+terminate called after throwing an instance of 'std::length_error'
+  what():  vector::reserve
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N40ft210.dat
+
+Instance: ../data/tsptw/Langevin/N40ft401.dat
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->        39 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =        39 ->      1482 | Cost =    0.00
+[   0.03s] Layer =   2 | Nodes =      1482 ->     27417 | Cost =    0.00
+[   0.15s] Layer =   3 | Nodes =     27417 ->    329004 | Cost =    0.00
+[   1.40s] Layer =   4 | Nodes =    329004 ->   2878785 | Cost =    0.00
+[  11.24s] Layer =   5 | Nodes =   2878785 ->  19575738 | Cost =    0.00
+           Batch =   0 | Nodes =   4893935 ->  26916648 
+           Batch =   1 | Nodes =   4893935 ->  26916681 
+           Batch =   2 | Nodes =   4893935 ->  26916681 
+           Batch =   3 | Nodes =   4893933 ->  26916648 
+[  44.58s] Layer =   6 | Nodes =  19575738 -> 107666658 | Cost =    0.00
+terminate called after throwing an instance of 'std::length_error'
+  what():  vector::reserve
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N40ft401.dat
+
+Instance: ../data/tsptw/Langevin/N40ft402.dat
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->        39 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =        39 ->      1482 | Cost =    0.00
+[   0.03s] Layer =   2 | Nodes =      1482 ->     27417 | Cost =    0.00
+[   0.15s] Layer =   3 | Nodes =     27417 ->    329004 | Cost =    0.00
+[   1.40s] Layer =   4 | Nodes =    329004 ->   2878785 | Cost =    0.00
+[  11.21s] Layer =   5 | Nodes =   2878785 ->  19575738 | Cost =    0.00
+           Batch =   0 | Nodes =   4893935 ->  26916648 
+           Batch =   1 | Nodes =   4893935 ->  26916681 
+           Batch =   2 | Nodes =   4893935 ->  26916681 
+           Batch =   3 | Nodes =   4893933 ->  26916648 
+[  44.60s] Layer =   6 | Nodes =  19575738 -> 107666658 | Cost =    0.00
+terminate called after throwing an instance of 'std::length_error'
+  what():  vector::reserve
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N40ft402.dat
+
+Instance: ../data/tsptw/Langevin/N40ft403.dat
+GPU: True
+[   0.03s] Layer =   0 | Nodes =         1 ->        39 | Cost =    0.00
+[   0.03s] Layer =   1 | Nodes =        39 ->      1482 | Cost =    0.00
+[   0.03s] Layer =   2 | Nodes =      1482 ->     27417 | Cost =    0.00
+[   0.14s] Layer =   3 | Nodes =     27417 ->    329004 | Cost =    0.00
+[   1.41s] Layer =   4 | Nodes =    329004 ->   2878785 | Cost =    0.00
+[  11.33s] Layer =   5 | Nodes =   2878785 ->  19575738 | Cost =    0.00
+           Batch =   0 | Nodes =   4893935 ->  26916648 
+           Batch =   1 | Nodes =   4893935 ->  26916681 
+           Batch =   2 | Nodes =   4893935 ->  26916681 
+           Batch =   3 | Nodes =   4893933 ->  26916648 
+[  45.46s] Layer =   6 | Nodes =  19575738 -> 107666658 | Cost =    0.00
+terminate called after throwing an instance of 'std::length_error'
+  what():  vector::reserve
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N40ft403.dat
+
+Instance: ../data/tsptw/Langevin/N40ft404.dat
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->        39 | Cost =    0.00
+[   0.03s] Layer =   1 | Nodes =        39 ->      1482 | Cost =    0.00
+[   0.03s] Layer =   2 | Nodes =      1482 ->     27417 | Cost =    0.00
+[   0.15s] Layer =   3 | Nodes =     27417 ->    329004 | Cost =    0.00
+[   1.41s] Layer =   4 | Nodes =    329004 ->   2878785 | Cost =    0.00
+[  11.39s] Layer =   5 | Nodes =   2878785 ->  19575738 | Cost =    0.00
+           Batch =   0 | Nodes =   4893935 ->  26916648 
+           Batch =   1 | Nodes =   4893935 ->  26916681 
+           Batch =   2 | Nodes =   4893935 ->  26916681 
+           Batch =   3 | Nodes =   4893933 ->  26916648 
+[  45.65s] Layer =   6 | Nodes =  19575738 -> 107666658 | Cost =    0.00
+terminate called after throwing an instance of 'std::length_error'
+  what():  vector::reserve
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N40ft404.dat
+
+Instance: ../data/tsptw/Langevin/N40ft405.dat
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->        39 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =        39 ->      1482 | Cost =    0.00
+[   0.03s] Layer =   2 | Nodes =      1482 ->     27417 | Cost =    0.00
+[   0.16s] Layer =   3 | Nodes =     27417 ->    329004 | Cost =    0.00
+[   1.42s] Layer =   4 | Nodes =    329004 ->   2878785 | Cost =    0.00
+[  11.42s] Layer =   5 | Nodes =   2878785 ->  19575738 | Cost =    0.00
+           Batch =   0 | Nodes =   4893935 ->  26916648 
+           Batch =   1 | Nodes =   4893935 ->  26916681 
+           Batch =   2 | Nodes =   4893935 ->  26916681 
+           Batch =   3 | Nodes =   4893933 ->  26916648 
+[  45.58s] Layer =   6 | Nodes =  19575738 -> 107666658 | Cost =    0.00
+terminate called after throwing an instance of 'std::length_error'
+  what():  vector::reserve
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N40ft405.dat
+
+Instance: ../data/tsptw/Langevin/N40ft406.dat
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->        39 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =        39 ->      1482 | Cost =    0.00
+[   0.03s] Layer =   2 | Nodes =      1482 ->     27417 | Cost =    0.00
+[   0.14s] Layer =   3 | Nodes =     27417 ->    329004 | Cost =    0.00
+[   1.42s] Layer =   4 | Nodes =    329004 ->   2878785 | Cost =    0.00
+[  11.45s] Layer =   5 | Nodes =   2878785 ->  19575738 | Cost =    0.00
+           Batch =   0 | Nodes =   4893935 ->  26916648 
+           Batch =   1 | Nodes =   4893935 ->  26916681 
+           Batch =   2 | Nodes =   4893935 ->  26916681 
+           Batch =   3 | Nodes =   4893933 ->  26916648 
+[  45.73s] Layer =   6 | Nodes =  19575738 -> 107666658 | Cost =    0.00
+terminate called after throwing an instance of 'std::length_error'
+  what():  vector::reserve
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N40ft406.dat
+
+Instance: ../data/tsptw/Langevin/N40ft407.dat
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->        39 | Cost =    0.00
+[   0.03s] Layer =   1 | Nodes =        39 ->      1482 | Cost =    0.00
+[   0.03s] Layer =   2 | Nodes =      1482 ->     27417 | Cost =    0.00
+[   0.16s] Layer =   3 | Nodes =     27417 ->    329004 | Cost =    0.00
+[   1.43s] Layer =   4 | Nodes =    329004 ->   2878785 | Cost =    0.00
+[  11.41s] Layer =   5 | Nodes =   2878785 ->  19575738 | Cost =    0.00
+           Batch =   0 | Nodes =   4893935 ->  26916648 
+           Batch =   1 | Nodes =   4893935 ->  26916681 
+           Batch =   2 | Nodes =   4893935 ->  26916681 
+           Batch =   3 | Nodes =   4893933 ->  26916648 
+[  45.19s] Layer =   6 | Nodes =  19575738 -> 107666658 | Cost =    0.00
+terminate called after throwing an instance of 'std::length_error'
+  what():  vector::reserve
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N40ft407.dat
+
+Instance: ../data/tsptw/Langevin/N40ft408.dat
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->        39 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =        39 ->      1482 | Cost =    0.00
+[   0.03s] Layer =   2 | Nodes =      1482 ->     27417 | Cost =    0.00
+[   0.15s] Layer =   3 | Nodes =     27417 ->    329004 | Cost =    0.00
+[   1.42s] Layer =   4 | Nodes =    329004 ->   2878785 | Cost =    0.00
+[  11.37s] Layer =   5 | Nodes =   2878785 ->  19575738 | Cost =    0.00
+           Batch =   0 | Nodes =   4893935 ->  26916648 
+           Batch =   1 | Nodes =   4893935 ->  26916681 
+           Batch =   2 | Nodes =   4893935 ->  26916681 
+           Batch =   3 | Nodes =   4893933 ->  26916648 
+[  45.28s] Layer =   6 | Nodes =  19575738 -> 107666658 | Cost =    0.00
+terminate called after throwing an instance of 'std::length_error'
+  what():  vector::reserve
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N40ft408.dat
+
+Instance: ../data/tsptw/Langevin/N40ft409.dat
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->        39 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =        39 ->      1482 | Cost =    0.00
+[   0.03s] Layer =   2 | Nodes =      1482 ->     27417 | Cost =    0.00
+[   0.15s] Layer =   3 | Nodes =     27417 ->    329004 | Cost =    0.00
+[   1.42s] Layer =   4 | Nodes =    329004 ->   2878785 | Cost =    0.00
+[  11.25s] Layer =   5 | Nodes =   2878785 ->  19575738 | Cost =    0.00
+           Batch =   0 | Nodes =   4893935 ->  26916648 
+           Batch =   1 | Nodes =   4893935 ->  26916681 
+           Batch =   2 | Nodes =   4893935 ->  26916681 
+           Batch =   3 | Nodes =   4893933 ->  26916648 
+[  44.78s] Layer =   6 | Nodes =  19575738 -> 107666658 | Cost =    0.00
+terminate called after throwing an instance of 'std::length_error'
+  what():  vector::reserve
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N40ft409.dat
+
+Instance: ../data/tsptw/Langevin/N40ft410.dat
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->        39 | Cost =    0.00
+[   0.03s] Layer =   1 | Nodes =        39 ->      1482 | Cost =    0.00
+[   0.03s] Layer =   2 | Nodes =      1482 ->     27417 | Cost =    0.00
+[   0.14s] Layer =   3 | Nodes =     27417 ->    329004 | Cost =    0.00
+[   1.39s] Layer =   4 | Nodes =    329004 ->   2878785 | Cost =    0.00
+[  11.25s] Layer =   5 | Nodes =   2878785 ->  19575738 | Cost =    0.00
+           Batch =   0 | Nodes =   4893935 ->  26916648 
+           Batch =   1 | Nodes =   4893935 ->  26916681 
+           Batch =   2 | Nodes =   4893935 ->  26916681 
+           Batch =   3 | Nodes =   4893933 ->  26916648 
+[  44.73s] Layer =   6 | Nodes =  19575738 -> 107666658 | Cost =    0.00
+terminate called after throwing an instance of 'std::length_error'
+  what():  vector::reserve
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N40ft410.dat
+
+Instance: ../data/tsptw/Langevin/N60ft201.dat
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->        59 | Cost =    0.00
+[   0.03s] Layer =   1 | Nodes =        59 ->      3422 | Cost =    0.00
+[   0.05s] Layer =   2 | Nodes =      3422 ->     97527 | Cost =    0.00
+[   0.71s] Layer =   3 | Nodes =     97527 ->   1820504 | Cost =    0.00
+[  11.40s] Layer =   4 | Nodes =   1820504 ->  25031930 | Cost =    0.00
+           Batch =   0 | Nodes =   3128992 ->  33793146 
+           Batch =   1 | Nodes =   3128992 ->  33793146 
+           Batch =   2 | Nodes =   3128992 ->  33793200 
+           Batch =   3 | Nodes =   3128992 ->  33793146 
+           Batch =   4 | Nodes =   3128992 ->  33793146 
+           Batch =   5 | Nodes =   3128992 ->  33793146 
+           Batch =   6 | Nodes =   3128992 ->  33793146 
+           Batch =   7 | Nodes =   3128986 ->  33793092 
+[  76.80s] Layer =   5 | Nodes =  25031930 -> 270345168 | Cost =    0.00
+CUDA API error = 0009 "invalid configuration argument" from /home/fabio/CODD/examples_gpu/tsptw_gpu_1_cabs.cu:197
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N60ft201.dat
+
+Instance: ../data/tsptw/Langevin/N60ft202.dat
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->        59 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =        59 ->      3422 | Cost =    0.00
+[   0.05s] Layer =   2 | Nodes =      3422 ->     97527 | Cost =    0.00
+[   0.71s] Layer =   3 | Nodes =     97527 ->   1820504 | Cost =    0.00
+[  11.46s] Layer =   4 | Nodes =   1820504 ->  25031930 | Cost =    0.00
+           Batch =   0 | Nodes =   3128992 ->  33793146 
+           Batch =   1 | Nodes =   3128992 ->  33793146 
+           Batch =   2 | Nodes =   3128992 ->  33793200 
+           Batch =   3 | Nodes =   3128992 ->  33793146 
+           Batch =   4 | Nodes =   3128992 ->  33793146 
+           Batch =   5 | Nodes =   3128992 ->  33793146 
+           Batch =   6 | Nodes =   3128992 ->  33793146 
+           Batch =   7 | Nodes =   3128986 ->  33793092 
+[  76.95s] Layer =   5 | Nodes =  25031930 -> 270345168 | Cost =    0.00
+CUDA API error = 0009 "invalid configuration argument" from /home/fabio/CODD/examples_gpu/tsptw_gpu_1_cabs.cu:197
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N60ft202.dat
+
+Instance: ../data/tsptw/Langevin/N60ft203.dat
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->        59 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =        59 ->      3422 | Cost =    0.00
+[   0.05s] Layer =   2 | Nodes =      3422 ->     97527 | Cost =    0.00
+[   0.71s] Layer =   3 | Nodes =     97527 ->   1820504 | Cost =    0.00
+[  11.43s] Layer =   4 | Nodes =   1820504 ->  25031930 | Cost =    0.00
+           Batch =   0 | Nodes =   3128992 ->  33793146 
+           Batch =   1 | Nodes =   3128992 ->  33793146 
+           Batch =   2 | Nodes =   3128992 ->  33793200 
+           Batch =   3 | Nodes =   3128992 ->  33793146 
+           Batch =   4 | Nodes =   3128992 ->  33793146 
+           Batch =   5 | Nodes =   3128992 ->  33793146 
+           Batch =   6 | Nodes =   3128992 ->  33793146 
+           Batch =   7 | Nodes =   3128986 ->  33793092 
+[  76.78s] Layer =   5 | Nodes =  25031930 -> 270345168 | Cost =    0.00
+CUDA API error = 0009 "invalid configuration argument" from /home/fabio/CODD/examples_gpu/tsptw_gpu_1_cabs.cu:197
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N60ft203.dat
+
+Instance: ../data/tsptw/Langevin/N60ft204.dat
+GPU: True
+[   0.03s] Layer =   0 | Nodes =         1 ->        59 | Cost =    0.00
+[   0.03s] Layer =   1 | Nodes =        59 ->      3422 | Cost =    0.00
+[   0.06s] Layer =   2 | Nodes =      3422 ->     97527 | Cost =    0.00
+[   0.72s] Layer =   3 | Nodes =     97527 ->   1820504 | Cost =    0.00
+[  11.45s] Layer =   4 | Nodes =   1820504 ->  25031930 | Cost =    0.00
+           Batch =   0 | Nodes =   3128992 ->  33793146 
+           Batch =   1 | Nodes =   3128992 ->  33793146 
+           Batch =   2 | Nodes =   3128992 ->  33793200 
+           Batch =   3 | Nodes =   3128992 ->  33793146 
+           Batch =   4 | Nodes =   3128992 ->  33793146 
+           Batch =   5 | Nodes =   3128992 ->  33793146 
+           Batch =   6 | Nodes =   3128992 ->  33793146 
+           Batch =   7 | Nodes =   3128986 ->  33793092 
+[  76.36s] Layer =   5 | Nodes =  25031930 -> 270345168 | Cost =    0.00
+CUDA API error = 0009 "invalid configuration argument" from /home/fabio/CODD/examples_gpu/tsptw_gpu_1_cabs.cu:197
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N60ft204.dat
+
+Instance: ../data/tsptw/Langevin/N60ft205.dat
+GPU: True
+[   0.03s] Layer =   0 | Nodes =         1 ->        59 | Cost =    0.00
+[   0.03s] Layer =   1 | Nodes =        59 ->      3422 | Cost =    0.00
+[   0.06s] Layer =   2 | Nodes =      3422 ->     97527 | Cost =    0.00
+[   0.72s] Layer =   3 | Nodes =     97527 ->   1820504 | Cost =    0.00
+[  11.47s] Layer =   4 | Nodes =   1820504 ->  25031930 | Cost =    0.00
+           Batch =   0 | Nodes =   3128992 ->  33793146 
+           Batch =   1 | Nodes =   3128992 ->  33793146 
+           Batch =   2 | Nodes =   3128992 ->  33793200 
+           Batch =   3 | Nodes =   3128992 ->  33793146 
+           Batch =   4 | Nodes =   3128992 ->  33793146 
+           Batch =   5 | Nodes =   3128992 ->  33793146 
+           Batch =   6 | Nodes =   3128992 ->  33793146 
+           Batch =   7 | Nodes =   3128986 ->  33793092 
+[  76.93s] Layer =   5 | Nodes =  25031930 -> 270345168 | Cost =    0.00
+CUDA API error = 0009 "invalid configuration argument" from /home/fabio/CODD/examples_gpu/tsptw_gpu_1_cabs.cu:197
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N60ft205.dat
+
+Instance: ../data/tsptw/Langevin/N60ft206.dat
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->        59 | Cost =    0.00
+[   0.03s] Layer =   1 | Nodes =        59 ->      3422 | Cost =    0.00
+[   0.05s] Layer =   2 | Nodes =      3422 ->     97527 | Cost =    0.00
+[   0.71s] Layer =   3 | Nodes =     97527 ->   1820504 | Cost =    0.00
+[  11.40s] Layer =   4 | Nodes =   1820504 ->  25031930 | Cost =    0.00
+           Batch =   0 | Nodes =   3128992 ->  33793146 
+           Batch =   1 | Nodes =   3128992 ->  33793146 
+           Batch =   2 | Nodes =   3128992 ->  33793200 
+           Batch =   3 | Nodes =   3128992 ->  33793146 
+           Batch =   4 | Nodes =   3128992 ->  33793146 
+           Batch =   5 | Nodes =   3128992 ->  33793146 
+           Batch =   6 | Nodes =   3128992 ->  33793146 
+           Batch =   7 | Nodes =   3128986 ->  33793092 
+[  76.14s] Layer =   5 | Nodes =  25031930 -> 270345168 | Cost =    0.00
+CUDA API error = 0009 "invalid configuration argument" from /home/fabio/CODD/examples_gpu/tsptw_gpu_1_cabs.cu:197
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N60ft206.dat
+
+Instance: ../data/tsptw/Langevin/N60ft207.dat
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->        59 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =        59 ->      3422 | Cost =    0.00
+[   0.05s] Layer =   2 | Nodes =      3422 ->     97527 | Cost =    0.00
+[   0.70s] Layer =   3 | Nodes =     97527 ->   1820504 | Cost =    0.00
+[  11.45s] Layer =   4 | Nodes =   1820504 ->  25031930 | Cost =    0.00
+           Batch =   0 | Nodes =   3128992 ->  33793146 
+           Batch =   1 | Nodes =   3128992 ->  33793146 
+           Batch =   2 | Nodes =   3128992 ->  33793200 
+           Batch =   3 | Nodes =   3128992 ->  33793146 
+           Batch =   4 | Nodes =   3128992 ->  33793146 
+           Batch =   5 | Nodes =   3128992 ->  33793146 
+           Batch =   6 | Nodes =   3128992 ->  33793146 
+           Batch =   7 | Nodes =   3128986 ->  33793092 
+[  77.08s] Layer =   5 | Nodes =  25031930 -> 270345168 | Cost =    0.00
+CUDA API error = 0009 "invalid configuration argument" from /home/fabio/CODD/examples_gpu/tsptw_gpu_1_cabs.cu:197
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N60ft207.dat
+
+Instance: ../data/tsptw/Langevin/N60ft208.dat
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->        59 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =        59 ->      3422 | Cost =    0.00
+[   0.05s] Layer =   2 | Nodes =      3422 ->     97527 | Cost =    0.00
+[   0.70s] Layer =   3 | Nodes =     97527 ->   1820504 | Cost =    0.00
+[  11.38s] Layer =   4 | Nodes =   1820504 ->  25031930 | Cost =    0.00
+           Batch =   0 | Nodes =   3128992 ->  33793146 
+           Batch =   1 | Nodes =   3128992 ->  33793146 
+           Batch =   2 | Nodes =   3128992 ->  33793200 
+           Batch =   3 | Nodes =   3128992 ->  33793146 
+           Batch =   4 | Nodes =   3128992 ->  33793146 
+           Batch =   5 | Nodes =   3128992 ->  33793146 
+           Batch =   6 | Nodes =   3128992 ->  33793146 
+           Batch =   7 | Nodes =   3128986 ->  33793092 
+[  76.23s] Layer =   5 | Nodes =  25031930 -> 270345168 | Cost =    0.00
+CUDA API error = 0009 "invalid configuration argument" from /home/fabio/CODD/examples_gpu/tsptw_gpu_1_cabs.cu:197
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N60ft208.dat
+
+Instance: ../data/tsptw/Langevin/N60ft209.dat
+GPU: True
+[   0.03s] Layer =   0 | Nodes =         1 ->        59 | Cost =    0.00
+[   0.03s] Layer =   1 | Nodes =        59 ->      3422 | Cost =    0.00
+[   0.06s] Layer =   2 | Nodes =      3422 ->     97527 | Cost =    0.00
+[   0.71s] Layer =   3 | Nodes =     97527 ->   1820504 | Cost =    0.00
+[  11.40s] Layer =   4 | Nodes =   1820504 ->  25031930 | Cost =    0.00
+           Batch =   0 | Nodes =   3128992 ->  33793146 
+           Batch =   1 | Nodes =   3128992 ->  33793146 
+           Batch =   2 | Nodes =   3128992 ->  33793200 
+           Batch =   3 | Nodes =   3128992 ->  33793146 
+           Batch =   4 | Nodes =   3128992 ->  33793146 
+           Batch =   5 | Nodes =   3128992 ->  33793146 
+           Batch =   6 | Nodes =   3128992 ->  33793146 
+           Batch =   7 | Nodes =   3128986 ->  33793092 
+[  76.09s] Layer =   5 | Nodes =  25031930 -> 270345168 | Cost =    0.00
+CUDA API error = 0009 "invalid configuration argument" from /home/fabio/CODD/examples_gpu/tsptw_gpu_1_cabs.cu:197
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N60ft209.dat
+
+Instance: ../data/tsptw/Langevin/N60ft210.dat
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->        59 | Cost =    0.00
+[   0.03s] Layer =   1 | Nodes =        59 ->      3422 | Cost =    0.00
+[   0.05s] Layer =   2 | Nodes =      3422 ->     97527 | Cost =    0.00
+[   0.71s] Layer =   3 | Nodes =     97527 ->   1820504 | Cost =    0.00
+[  11.44s] Layer =   4 | Nodes =   1820504 ->  25031930 | Cost =    0.00
+           Batch =   0 | Nodes =   3128992 ->  33793146 
+           Batch =   1 | Nodes =   3128992 ->  33793146 
+           Batch =   2 | Nodes =   3128992 ->  33793200 
+           Batch =   3 | Nodes =   3128992 ->  33793146 
+           Batch =   4 | Nodes =   3128992 ->  33793146 
+           Batch =   5 | Nodes =   3128992 ->  33793146 
+           Batch =   6 | Nodes =   3128992 ->  33793146 
+           Batch =   7 | Nodes =   3128986 ->  33793092 
+[  76.67s] Layer =   5 | Nodes =  25031930 -> 270345168 | Cost =    0.00
+CUDA API error = 0009 "invalid configuration argument" from /home/fabio/CODD/examples_gpu/tsptw_gpu_1_cabs.cu:197
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N60ft210.dat
+
+Instance: ../data/tsptw/Langevin/N60ft301.dat
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->        59 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =        59 ->      3422 | Cost =    0.00
+[   0.05s] Layer =   2 | Nodes =      3422 ->     97527 | Cost =    0.00
+[   0.71s] Layer =   3 | Nodes =     97527 ->   1820504 | Cost =    0.00
+[  11.46s] Layer =   4 | Nodes =   1820504 ->  25031930 | Cost =    0.00
+           Batch =   0 | Nodes =   3128992 ->  33793146 
+           Batch =   1 | Nodes =   3128992 ->  33793146 
+           Batch =   2 | Nodes =   3128992 ->  33793200 
+           Batch =   3 | Nodes =   3128992 ->  33793146 
+           Batch =   4 | Nodes =   3128992 ->  33793146 
+           Batch =   5 | Nodes =   3128992 ->  33793146 
+           Batch =   6 | Nodes =   3128992 ->  33793146 
+           Batch =   7 | Nodes =   3128986 ->  33793092 
+[  76.91s] Layer =   5 | Nodes =  25031930 -> 270345168 | Cost =    0.00
+CUDA API error = 0009 "invalid configuration argument" from /home/fabio/CODD/examples_gpu/tsptw_gpu_1_cabs.cu:197
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N60ft301.dat
+
+Instance: ../data/tsptw/Langevin/N60ft302.dat
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->        59 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =        59 ->      3422 | Cost =    0.00
+[   0.05s] Layer =   2 | Nodes =      3422 ->     97527 | Cost =    0.00
+[   0.70s] Layer =   3 | Nodes =     97527 ->   1820504 | Cost =    0.00
+[  11.46s] Layer =   4 | Nodes =   1820504 ->  25031930 | Cost =    0.00
+           Batch =   0 | Nodes =   3128992 ->  33793146 
+           Batch =   1 | Nodes =   3128992 ->  33793146 
+           Batch =   2 | Nodes =   3128992 ->  33793200 
+           Batch =   3 | Nodes =   3128992 ->  33793146 
+           Batch =   4 | Nodes =   3128992 ->  33793146 
+           Batch =   5 | Nodes =   3128992 ->  33793146 
+           Batch =   6 | Nodes =   3128992 ->  33793146 
+           Batch =   7 | Nodes =   3128986 ->  33793092 
+[  76.87s] Layer =   5 | Nodes =  25031930 -> 270345168 | Cost =    0.00
+CUDA API error = 0009 "invalid configuration argument" from /home/fabio/CODD/examples_gpu/tsptw_gpu_1_cabs.cu:197
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N60ft302.dat
+
+Instance: ../data/tsptw/Langevin/N60ft303.dat
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->        59 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =        59 ->      3422 | Cost =    0.00
+[   0.05s] Layer =   2 | Nodes =      3422 ->     97527 | Cost =    0.00
+[   0.70s] Layer =   3 | Nodes =     97527 ->   1820504 | Cost =    0.00
+[  11.40s] Layer =   4 | Nodes =   1820504 ->  25031930 | Cost =    0.00
+           Batch =   0 | Nodes =   3128992 ->  33793146 
+           Batch =   1 | Nodes =   3128992 ->  33793146 
+           Batch =   2 | Nodes =   3128992 ->  33793200 
+           Batch =   3 | Nodes =   3128992 ->  33793146 
+           Batch =   4 | Nodes =   3128992 ->  33793146 
+           Batch =   5 | Nodes =   3128992 ->  33793146 
+           Batch =   6 | Nodes =   3128992 ->  33793146 
+           Batch =   7 | Nodes =   3128986 ->  33793092 
+[  76.13s] Layer =   5 | Nodes =  25031930 -> 270345168 | Cost =    0.00
+CUDA API error = 0009 "invalid configuration argument" from /home/fabio/CODD/examples_gpu/tsptw_gpu_1_cabs.cu:197
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N60ft303.dat
+
+Instance: ../data/tsptw/Langevin/N60ft304.dat
+GPU: True
+[   0.03s] Layer =   0 | Nodes =         1 ->        59 | Cost =    0.00
+[   0.03s] Layer =   1 | Nodes =        59 ->      3422 | Cost =    0.00
+[   0.05s] Layer =   2 | Nodes =      3422 ->     97527 | Cost =    0.00
+[   0.71s] Layer =   3 | Nodes =     97527 ->   1820504 | Cost =    0.00
+[  11.48s] Layer =   4 | Nodes =   1820504 ->  25031930 | Cost =    0.00
+           Batch =   0 | Nodes =   3128992 ->  33793146 
+           Batch =   1 | Nodes =   3128992 ->  33793146 
+           Batch =   2 | Nodes =   3128992 ->  33793200 
+           Batch =   3 | Nodes =   3128992 ->  33793146 
+           Batch =   4 | Nodes =   3128992 ->  33793146 
+           Batch =   5 | Nodes =   3128992 ->  33793146 
+           Batch =   6 | Nodes =   3128992 ->  33793146 
+           Batch =   7 | Nodes =   3128986 ->  33793092 
+[  77.86s] Layer =   5 | Nodes =  25031930 -> 270345168 | Cost =    0.00
+CUDA API error = 0009 "invalid configuration argument" from /home/fabio/CODD/examples_gpu/tsptw_gpu_1_cabs.cu:197
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N60ft304.dat
+
+Instance: ../data/tsptw/Langevin/N60ft305.dat
+GPU: True
+[   0.03s] Layer =   0 | Nodes =         1 ->        59 | Cost =    0.00
+[   0.03s] Layer =   1 | Nodes =        59 ->      3422 | Cost =    0.00
+[   0.05s] Layer =   2 | Nodes =      3422 ->     97527 | Cost =    0.00
+[   0.70s] Layer =   3 | Nodes =     97527 ->   1820504 | Cost =    0.00
+[  11.41s] Layer =   4 | Nodes =   1820504 ->  25031930 | Cost =    0.00
+           Batch =   0 | Nodes =   3128992 ->  33793146 
+           Batch =   1 | Nodes =   3128992 ->  33793146 
+           Batch =   2 | Nodes =   3128992 ->  33793200 
+           Batch =   3 | Nodes =   3128992 ->  33793146 
+           Batch =   4 | Nodes =   3128992 ->  33793146 
+           Batch =   5 | Nodes =   3128992 ->  33793146 
+           Batch =   6 | Nodes =   3128992 ->  33793146 
+           Batch =   7 | Nodes =   3128986 ->  33793092 
+[  76.32s] Layer =   5 | Nodes =  25031930 -> 270345168 | Cost =    0.00
+CUDA API error = 0009 "invalid configuration argument" from /home/fabio/CODD/examples_gpu/tsptw_gpu_1_cabs.cu:197
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N60ft305.dat
+
+Instance: ../data/tsptw/Langevin/N60ft306.dat
+GPU: True
+[   0.03s] Layer =   0 | Nodes =         1 ->        59 | Cost =    0.00
+[   0.03s] Layer =   1 | Nodes =        59 ->      3422 | Cost =    0.00
+[   0.05s] Layer =   2 | Nodes =      3422 ->     97527 | Cost =    0.00
+[   0.71s] Layer =   3 | Nodes =     97527 ->   1820504 | Cost =    0.00
+[  11.44s] Layer =   4 | Nodes =   1820504 ->  25031930 | Cost =    0.00
+           Batch =   0 | Nodes =   3128992 ->  33793146 
+           Batch =   1 | Nodes =   3128992 ->  33793146 
+           Batch =   2 | Nodes =   3128992 ->  33793200 
+           Batch =   3 | Nodes =   3128992 ->  33793146 
+           Batch =   4 | Nodes =   3128992 ->  33793146 
+           Batch =   5 | Nodes =   3128992 ->  33793146 
+           Batch =   6 | Nodes =   3128992 ->  33793146 
+           Batch =   7 | Nodes =   3128986 ->  33793092 
+[  76.42s] Layer =   5 | Nodes =  25031930 -> 270345168 | Cost =    0.00
+CUDA API error = 0009 "invalid configuration argument" from /home/fabio/CODD/examples_gpu/tsptw_gpu_1_cabs.cu:197
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N60ft306.dat
+
+Instance: ../data/tsptw/Langevin/N60ft307.dat
+GPU: True
+[   0.03s] Layer =   0 | Nodes =         1 ->        59 | Cost =    0.00
+[   0.03s] Layer =   1 | Nodes =        59 ->      3422 | Cost =    0.00
+[   0.06s] Layer =   2 | Nodes =      3422 ->     97527 | Cost =    0.00
+[   0.71s] Layer =   3 | Nodes =     97527 ->   1820504 | Cost =    0.00
+[  11.36s] Layer =   4 | Nodes =   1820504 ->  25031930 | Cost =    0.00
+           Batch =   0 | Nodes =   3128992 ->  33793146 
+           Batch =   1 | Nodes =   3128992 ->  33793146 
+           Batch =   2 | Nodes =   3128992 ->  33793200 
+           Batch =   3 | Nodes =   3128992 ->  33793146 
+           Batch =   4 | Nodes =   3128992 ->  33793146 
+           Batch =   5 | Nodes =   3128992 ->  33793146 
+           Batch =   6 | Nodes =   3128992 ->  33793146 
+           Batch =   7 | Nodes =   3128986 ->  33793092 
+[  76.32s] Layer =   5 | Nodes =  25031930 -> 270345168 | Cost =    0.00
+CUDA API error = 0009 "invalid configuration argument" from /home/fabio/CODD/examples_gpu/tsptw_gpu_1_cabs.cu:197
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N60ft307.dat
+
+Instance: ../data/tsptw/Langevin/N60ft308.dat
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->        59 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =        59 ->      3422 | Cost =    0.00
+[   0.05s] Layer =   2 | Nodes =      3422 ->     97527 | Cost =    0.00
+[   0.71s] Layer =   3 | Nodes =     97527 ->   1820504 | Cost =    0.00
+[  11.46s] Layer =   4 | Nodes =   1820504 ->  25031930 | Cost =    0.00
+           Batch =   0 | Nodes =   3128992 ->  33793146 
+           Batch =   1 | Nodes =   3128992 ->  33793146 
+           Batch =   2 | Nodes =   3128992 ->  33793200 
+           Batch =   3 | Nodes =   3128992 ->  33793146 
+           Batch =   4 | Nodes =   3128992 ->  33793146 
+           Batch =   5 | Nodes =   3128992 ->  33793146 
+           Batch =   6 | Nodes =   3128992 ->  33793146 
+           Batch =   7 | Nodes =   3128986 ->  33793092 
+[  76.90s] Layer =   5 | Nodes =  25031930 -> 270345168 | Cost =    0.00
+CUDA API error = 0009 "invalid configuration argument" from /home/fabio/CODD/examples_gpu/tsptw_gpu_1_cabs.cu:197
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N60ft308.dat
+
+Instance: ../data/tsptw/Langevin/N60ft309.dat
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->        59 | Cost =    0.00
+[   0.03s] Layer =   1 | Nodes =        59 ->      3422 | Cost =    0.00
+[   0.06s] Layer =   2 | Nodes =      3422 ->     97527 | Cost =    0.00
+[   0.73s] Layer =   3 | Nodes =     97527 ->   1820504 | Cost =    0.00
+[  11.44s] Layer =   4 | Nodes =   1820504 ->  25031930 | Cost =    0.00
+           Batch =   0 | Nodes =   3128992 ->  33793146 
+           Batch =   1 | Nodes =   3128992 ->  33793146 
+           Batch =   2 | Nodes =   3128992 ->  33793200 
+           Batch =   3 | Nodes =   3128992 ->  33793146 
+           Batch =   4 | Nodes =   3128992 ->  33793146 
+           Batch =   5 | Nodes =   3128992 ->  33793146 
+           Batch =   6 | Nodes =   3128992 ->  33793146 
+           Batch =   7 | Nodes =   3128986 ->  33793092 
+[  76.80s] Layer =   5 | Nodes =  25031930 -> 270345168 | Cost =    0.00
+CUDA API error = 0009 "invalid configuration argument" from /home/fabio/CODD/examples_gpu/tsptw_gpu_1_cabs.cu:197
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N60ft309.dat
+
+Instance: ../data/tsptw/Langevin/N60ft310.dat
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->        59 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =        59 ->      3422 | Cost =    0.00
+[   0.05s] Layer =   2 | Nodes =      3422 ->     97527 | Cost =    0.00
+[   0.70s] Layer =   3 | Nodes =     97527 ->   1820504 | Cost =    0.00
+[  11.38s] Layer =   4 | Nodes =   1820504 ->  25031930 | Cost =    0.00
+           Batch =   0 | Nodes =   3128992 ->  33793146 
+           Batch =   1 | Nodes =   3128992 ->  33793146 
+           Batch =   2 | Nodes =   3128992 ->  33793200 
+           Batch =   3 | Nodes =   3128992 ->  33793146 
+           Batch =   4 | Nodes =   3128992 ->  33793146 
+           Batch =   5 | Nodes =   3128992 ->  33793146 
+           Batch =   6 | Nodes =   3128992 ->  33793146 
+           Batch =   7 | Nodes =   3128986 ->  33793092 
+[  76.23s] Layer =   5 | Nodes =  25031930 -> 270345168 | Cost =    0.00
+CUDA API error = 0009 "invalid configuration argument" from /home/fabio/CODD/examples_gpu/tsptw_gpu_1_cabs.cu:197
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N60ft310.dat
+
+Instance: ../data/tsptw/Langevin/N60ft401.dat
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->        59 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =        59 ->      3422 | Cost =    0.00
+[   0.05s] Layer =   2 | Nodes =      3422 ->     97527 | Cost =    0.00
+[   0.69s] Layer =   3 | Nodes =     97527 ->   1820504 | Cost =    0.00
+[  11.37s] Layer =   4 | Nodes =   1820504 ->  25031930 | Cost =    0.00
+           Batch =   0 | Nodes =   3128992 ->  33793146 
+           Batch =   1 | Nodes =   3128992 ->  33793146 
+           Batch =   2 | Nodes =   3128992 ->  33793200 
+           Batch =   3 | Nodes =   3128992 ->  33793146 
+           Batch =   4 | Nodes =   3128992 ->  33793146 
+           Batch =   5 | Nodes =   3128992 ->  33793146 
+           Batch =   6 | Nodes =   3128992 ->  33793146 
+           Batch =   7 | Nodes =   3128986 ->  33793092 
+[  76.65s] Layer =   5 | Nodes =  25031930 -> 270345168 | Cost =    0.00
+CUDA API error = 0009 "invalid configuration argument" from /home/fabio/CODD/examples_gpu/tsptw_gpu_1_cabs.cu:197
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N60ft401.dat
+
+Instance: ../data/tsptw/Langevin/N60ft402.dat
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->        59 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =        59 ->      3422 | Cost =    0.00
+[   0.05s] Layer =   2 | Nodes =      3422 ->     97527 | Cost =    0.00
+[   0.71s] Layer =   3 | Nodes =     97527 ->   1820504 | Cost =    0.00
+[  11.41s] Layer =   4 | Nodes =   1820504 ->  25031930 | Cost =    0.00
+           Batch =   0 | Nodes =   3128992 ->  33793146 
+           Batch =   1 | Nodes =   3128992 ->  33793146 
+           Batch =   2 | Nodes =   3128992 ->  33793200 
+           Batch =   3 | Nodes =   3128992 ->  33793146 
+           Batch =   4 | Nodes =   3128992 ->  33793146 
+           Batch =   5 | Nodes =   3128992 ->  33793146 
+           Batch =   6 | Nodes =   3128992 ->  33793146 
+           Batch =   7 | Nodes =   3128986 ->  33793092 
+[  76.19s] Layer =   5 | Nodes =  25031930 -> 270345168 | Cost =    0.00
+CUDA API error = 0009 "invalid configuration argument" from /home/fabio/CODD/examples_gpu/tsptw_gpu_1_cabs.cu:197
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N60ft402.dat
+
+Instance: ../data/tsptw/Langevin/N60ft403.dat
+GPU: True
+[   0.03s] Layer =   0 | Nodes =         1 ->        59 | Cost =    0.00
+[   0.03s] Layer =   1 | Nodes =        59 ->      3422 | Cost =    0.00
+[   0.05s] Layer =   2 | Nodes =      3422 ->     97527 | Cost =    0.00
+[   0.70s] Layer =   3 | Nodes =     97527 ->   1820504 | Cost =    0.00
+[  11.38s] Layer =   4 | Nodes =   1820504 ->  25031930 | Cost =    0.00
+           Batch =   0 | Nodes =   3128992 ->  33793146 
+           Batch =   1 | Nodes =   3128992 ->  33793146 
+           Batch =   2 | Nodes =   3128992 ->  33793200 
+           Batch =   3 | Nodes =   3128992 ->  33793146 
+           Batch =   4 | Nodes =   3128992 ->  33793146 
+           Batch =   5 | Nodes =   3128992 ->  33793146 
+           Batch =   6 | Nodes =   3128992 ->  33793146 
+           Batch =   7 | Nodes =   3128986 ->  33793092 
+[  76.16s] Layer =   5 | Nodes =  25031930 -> 270345168 | Cost =    0.00
+CUDA API error = 0009 "invalid configuration argument" from /home/fabio/CODD/examples_gpu/tsptw_gpu_1_cabs.cu:197
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N60ft403.dat
+
+Instance: ../data/tsptw/Langevin/N60ft404.dat
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->        59 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =        59 ->      3422 | Cost =    0.00
+[   0.05s] Layer =   2 | Nodes =      3422 ->     97527 | Cost =    0.00
+[   0.71s] Layer =   3 | Nodes =     97527 ->   1820504 | Cost =    0.00
+[  11.50s] Layer =   4 | Nodes =   1820504 ->  25031930 | Cost =    0.00
+           Batch =   0 | Nodes =   3128992 ->  33793146 
+           Batch =   1 | Nodes =   3128992 ->  33793146 
+           Batch =   2 | Nodes =   3128992 ->  33793200 
+           Batch =   3 | Nodes =   3128992 ->  33793146 
+           Batch =   4 | Nodes =   3128992 ->  33793146 
+           Batch =   5 | Nodes =   3128992 ->  33793146 
+           Batch =   6 | Nodes =   3128992 ->  33793146 
+           Batch =   7 | Nodes =   3128986 ->  33793092 
+[  77.07s] Layer =   5 | Nodes =  25031930 -> 270345168 | Cost =    0.00
+CUDA API error = 0009 "invalid configuration argument" from /home/fabio/CODD/examples_gpu/tsptw_gpu_1_cabs.cu:197
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N60ft404.dat
+
+Instance: ../data/tsptw/Langevin/N60ft405.dat
+GPU: True
+[   0.03s] Layer =   0 | Nodes =         1 ->        59 | Cost =    0.00
+[   0.03s] Layer =   1 | Nodes =        59 ->      3422 | Cost =    0.00
+[   0.06s] Layer =   2 | Nodes =      3422 ->     97527 | Cost =    0.00
+[   0.72s] Layer =   3 | Nodes =     97527 ->   1820504 | Cost =    0.00
+[  11.41s] Layer =   4 | Nodes =   1820504 ->  25031930 | Cost =    0.00
+           Batch =   0 | Nodes =   3128992 ->  33793146 
+           Batch =   1 | Nodes =   3128992 ->  33793146 
+           Batch =   2 | Nodes =   3128992 ->  33793200 
+           Batch =   3 | Nodes =   3128992 ->  33793146 
+           Batch =   4 | Nodes =   3128992 ->  33793146 
+           Batch =   5 | Nodes =   3128992 ->  33793146 
+           Batch =   6 | Nodes =   3128992 ->  33793146 
+           Batch =   7 | Nodes =   3128986 ->  33793092 
+[  76.18s] Layer =   5 | Nodes =  25031930 -> 270345168 | Cost =    0.00
+CUDA API error = 0009 "invalid configuration argument" from /home/fabio/CODD/examples_gpu/tsptw_gpu_1_cabs.cu:197
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N60ft405.dat
+
+Instance: ../data/tsptw/Langevin/N60ft406.dat
+GPU: True
+[   0.03s] Layer =   0 | Nodes =         1 ->        59 | Cost =    0.00
+[   0.03s] Layer =   1 | Nodes =        59 ->      3422 | Cost =    0.00
+[   0.05s] Layer =   2 | Nodes =      3422 ->     97527 | Cost =    0.00
+[   0.71s] Layer =   3 | Nodes =     97527 ->   1820504 | Cost =    0.00
+[  11.42s] Layer =   4 | Nodes =   1820504 ->  25031930 | Cost =    0.00
+           Batch =   0 | Nodes =   3128992 ->  33793146 
+           Batch =   1 | Nodes =   3128992 ->  33793146 
+           Batch =   2 | Nodes =   3128992 ->  33793200 
+           Batch =   3 | Nodes =   3128992 ->  33793146 
+           Batch =   4 | Nodes =   3128992 ->  33793146 
+           Batch =   5 | Nodes =   3128992 ->  33793146 
+           Batch =   6 | Nodes =   3128992 ->  33793146 
+           Batch =   7 | Nodes =   3128986 ->  33793092 
+[  76.90s] Layer =   5 | Nodes =  25031930 -> 270345168 | Cost =    0.00
+CUDA API error = 0009 "invalid configuration argument" from /home/fabio/CODD/examples_gpu/tsptw_gpu_1_cabs.cu:197
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N60ft406.dat
+
+Instance: ../data/tsptw/Langevin/N60ft407.dat
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->        59 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =        59 ->      3422 | Cost =    0.00
+[   0.05s] Layer =   2 | Nodes =      3422 ->     97527 | Cost =    0.00
+[   0.71s] Layer =   3 | Nodes =     97527 ->   1820504 | Cost =    0.00
+[  11.39s] Layer =   4 | Nodes =   1820504 ->  25031930 | Cost =    0.00
+           Batch =   0 | Nodes =   3128992 ->  33793146 
+           Batch =   1 | Nodes =   3128992 ->  33793146 
+           Batch =   2 | Nodes =   3128992 ->  33793200 
+           Batch =   3 | Nodes =   3128992 ->  33793146 
+           Batch =   4 | Nodes =   3128992 ->  33793146 
+           Batch =   5 | Nodes =   3128992 ->  33793146 
+           Batch =   6 | Nodes =   3128992 ->  33793146 
+           Batch =   7 | Nodes =   3128986 ->  33793092 
+[  76.25s] Layer =   5 | Nodes =  25031930 -> 270345168 | Cost =    0.00
+CUDA API error = 0009 "invalid configuration argument" from /home/fabio/CODD/examples_gpu/tsptw_gpu_1_cabs.cu:197
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N60ft407.dat
+
+Instance: ../data/tsptw/Langevin/N60ft408.dat
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->        59 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =        59 ->      3422 | Cost =    0.00
+[   0.05s] Layer =   2 | Nodes =      3422 ->     97527 | Cost =    0.00
+[   0.70s] Layer =   3 | Nodes =     97527 ->   1820504 | Cost =    0.00
+[  11.44s] Layer =   4 | Nodes =   1820504 ->  25031930 | Cost =    0.00
+           Batch =   0 | Nodes =   3128992 ->  33793146 
+           Batch =   1 | Nodes =   3128992 ->  33793146 
+           Batch =   2 | Nodes =   3128992 ->  33793200 
+           Batch =   3 | Nodes =   3128992 ->  33793146 
+           Batch =   4 | Nodes =   3128992 ->  33793146 
+           Batch =   5 | Nodes =   3128992 ->  33793146 
+           Batch =   6 | Nodes =   3128992 ->  33793146 
+           Batch =   7 | Nodes =   3128986 ->  33793092 
+[  76.77s] Layer =   5 | Nodes =  25031930 -> 270345168 | Cost =    0.00
+CUDA API error = 0009 "invalid configuration argument" from /home/fabio/CODD/examples_gpu/tsptw_gpu_1_cabs.cu:197
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N60ft408.dat
+
+Instance: ../data/tsptw/Langevin/N60ft409.dat
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->        59 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =        59 ->      3422 | Cost =    0.00
+[   0.05s] Layer =   2 | Nodes =      3422 ->     97527 | Cost =    0.00
+[   0.73s] Layer =   3 | Nodes =     97527 ->   1820504 | Cost =    0.00
+[  11.49s] Layer =   4 | Nodes =   1820504 ->  25031930 | Cost =    0.00
+           Batch =   0 | Nodes =   3128992 ->  33793146 
+           Batch =   1 | Nodes =   3128992 ->  33793146 
+           Batch =   2 | Nodes =   3128992 ->  33793200 
+           Batch =   3 | Nodes =   3128992 ->  33793146 
+           Batch =   4 | Nodes =   3128992 ->  33793146 
+           Batch =   5 | Nodes =   3128992 ->  33793146 
+           Batch =   6 | Nodes =   3128992 ->  33793146 
+           Batch =   7 | Nodes =   3128986 ->  33793092 
+[  77.69s] Layer =   5 | Nodes =  25031930 -> 270345168 | Cost =    0.00
+CUDA API error = 0009 "invalid configuration argument" from /home/fabio/CODD/examples_gpu/tsptw_gpu_1_cabs.cu:197
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N60ft409.dat
+
+Instance: ../data/tsptw/Langevin/N60ft410.dat
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->        59 | Cost =    0.00
+[   0.03s] Layer =   1 | Nodes =        59 ->      3422 | Cost =    0.00
+[   0.06s] Layer =   2 | Nodes =      3422 ->     97527 | Cost =    0.00
+[   0.72s] Layer =   3 | Nodes =     97527 ->   1820504 | Cost =    0.00
+[  11.42s] Layer =   4 | Nodes =   1820504 ->  25031930 | Cost =    0.00
+           Batch =   0 | Nodes =   3128992 ->  33793146 
+           Batch =   1 | Nodes =   3128992 ->  33793146 
+           Batch =   2 | Nodes =   3128992 ->  33793200 
+           Batch =   3 | Nodes =   3128992 ->  33793146 
+           Batch =   4 | Nodes =   3128992 ->  33793146 
+           Batch =   5 | Nodes =   3128992 ->  33793146 
+           Batch =   6 | Nodes =   3128992 ->  33793146 
+           Batch =   7 | Nodes =   3128986 ->  33793092 
+[  76.64s] Layer =   5 | Nodes =  25031930 -> 270345168 | Cost =    0.00
+CUDA API error = 0009 "invalid configuration argument" from /home/fabio/CODD/examples_gpu/tsptw_gpu_1_cabs.cu:197
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/Langevin/N60ft410.dat
+

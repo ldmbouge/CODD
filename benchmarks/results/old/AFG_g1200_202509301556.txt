@@ -1,0 +1,100 @@
+../cmake-build-release-ding/tsptw3gpu -w 2 -s RONQ -t 1200 -g 0 -i ../data/tsptw/AFG/rbg132.tw
+
+../cmake-build-release-ding/tsptw3gpu -w 2 -s RONQ -t 1200 -g 0 -i ../data/tsptw/AFG/rbg020a.tw
+
+../cmake-build-release-ding/tsptw3gpu -w 2 -s RONQ -t 1200 -g 0 -i ../data/tsptw/AFG/rbg152.3.tw
+
+../cmake-build-release-ding/tsptw3gpu -w 2 -s RONQ -t 1200 -g 0 -i ../data/tsptw/AFG/rbg193.2.tw
+
+../cmake-build-release-ding/tsptw3gpu -w 2 -s RONQ -t 1200 -g 0 -i ../data/tsptw/AFG/rbg040a.tw
+
+../cmake-build-release-ding/tsptw3gpu -w 2 -s RONQ -t 1200 -g 0 -i ../data/tsptw/AFG/rbg019b.tw
+
+../cmake-build-release-ding/tsptw3gpu -w 2 -s RONQ -t 1200 -g 0 -i ../data/tsptw/AFG/rbg021.6.tw
+
+../cmake-build-release-ding/tsptw3gpu -w 2 -s RONQ -t 1200 -g 0 -i ../data/tsptw/AFG/rbg035a.tw
+
+../cmake-build-release-ding/tsptw3gpu -w 2 -s RONQ -t 1200 -g 0 -i ../data/tsptw/AFG/rbg027a.tw
+
+../cmake-build-release-ding/tsptw3gpu -w 2 -s RONQ -t 1200 -g 0 -i ../data/tsptw/AFG/rbg021.2.tw
+
+../cmake-build-release-ding/tsptw3gpu -w 2 -s RONQ -t 1200 -g 0 -i ../data/tsptw/AFG/rbg055a.tw
+
+../cmake-build-release-ding/tsptw3gpu -w 2 -s RONQ -t 1200 -g 0 -i ../data/tsptw/AFG/rbg016a.tw
+
+../cmake-build-release-ding/tsptw3gpu -w 2 -s RONQ -t 1200 -g 0 -i ../data/tsptw/AFG/rbg067a.tw
+
+../cmake-build-release-ding/tsptw3gpu -w 2 -s RONQ -t 1200 -g 0 -i ../data/tsptw/AFG/rbg021.5.tw
+
+../cmake-build-release-ding/tsptw3gpu -w 2 -s RONQ -t 1200 -g 0 -i ../data/tsptw/AFG/rbg017a.tw
+
+../cmake-build-release-ding/tsptw3gpu -w 2 -s RONQ -t 1200 -g 0 -i ../data/tsptw/AFG/rbg201a.tw
+
+../cmake-build-release-ding/tsptw3gpu -w 2 -s RONQ -t 1200 -g 0 -i ../data/tsptw/AFG/rbg021.3.tw
+
+../cmake-build-release-ding/tsptw3gpu -w 2 -s RONQ -t 1200 -g 0 -i ../data/tsptw/AFG/rbg193.tw
+
+../cmake-build-release-ding/tsptw3gpu -w 2 -s RONQ -t 1200 -g 0 -i ../data/tsptw/AFG/rbg010a.tw
+
+../cmake-build-release-ding/tsptw3gpu -w 2 -s RONQ -t 1200 -g 0 -i ../data/tsptw/AFG/rbg021.7.tw
+
+../cmake-build-release-ding/tsptw3gpu -w 2 -s RONQ -t 1200 -g 0 -i ../data/tsptw/AFG/rbg233.tw
+
+../cmake-build-release-ding/tsptw3gpu -w 2 -s RONQ -t 1200 -g 0 -i ../data/tsptw/AFG/rbg049a.tw
+
+../cmake-build-release-ding/tsptw3gpu -w 2 -s RONQ -t 1200 -g 0 -i ../data/tsptw/AFG/rbg152.tw
+
+../cmake-build-release-ding/tsptw3gpu -w 2 -s RONQ -t 1200 -g 0 -i ../data/tsptw/AFG/rbg019d.tw
+
+../cmake-build-release-ding/tsptw3gpu -w 2 -s RONQ -t 1200 -g 0 -i ../data/tsptw/AFG/rbg021.8.tw
+
+../cmake-build-release-ding/tsptw3gpu -w 2 -s RONQ -t 1200 -g 0 -i ../data/tsptw/AFG/rbg016b.tw
+
+../cmake-build-release-ding/tsptw3gpu -w 2 -s RONQ -t 1200 -g 0 -i ../data/tsptw/AFG/rbg034a.tw
+
+../cmake-build-release-ding/tsptw3gpu -w 2 -s RONQ -t 1200 -g 0 -i ../data/tsptw/AFG/rbg021.4.tw
+
+../cmake-build-release-ding/tsptw3gpu -w 2 -s RONQ -t 1200 -g 0 -i ../data/tsptw/AFG/rbg050b.tw
+
+../cmake-build-release-ding/tsptw3gpu -w 2 -s RONQ -t 1200 -g 0 -i ../data/tsptw/AFG/rbg172a.tw
+
+../cmake-build-release-ding/tsptw3gpu -w 2 -s RONQ -t 1200 -g 0 -i ../data/tsptw/AFG/rbg125a.tw
+
+../cmake-build-release-ding/tsptw3gpu -w 2 -s RONQ -t 1200 -g 0 -i ../data/tsptw/AFG/rbg132.2.tw
+
+../cmake-build-release-ding/tsptw3gpu -w 2 -s RONQ -t 1200 -g 0 -i ../data/tsptw/AFG/rbg017.tw
+
+../cmake-build-release-ding/tsptw3gpu -w 2 -s RONQ -t 1200 -g 0 -i ../data/tsptw/AFG/rbg031a.tw
+
+../cmake-build-release-ding/tsptw3gpu -w 2 -s RONQ -t 1200 -g 0 -i ../data/tsptw/AFG/rbg042a.tw
+
+../cmake-build-release-ding/tsptw3gpu -w 2 -s RONQ -t 1200 -g 0 -i ../data/tsptw/AFG/rbg019a.tw
+
+../cmake-build-release-ding/tsptw3gpu -w 2 -s RONQ -t 1200 -g 0 -i ../data/tsptw/AFG/rbg086a.tw
+
+../cmake-build-release-ding/tsptw3gpu -w 2 -s RONQ -t 1200 -g 0 -i ../data/tsptw/AFG/rbg050c.tw
+
+../cmake-build-release-ding/tsptw3gpu -w 2 -s RONQ -t 1200 -g 0 -i ../data/tsptw/AFG/rbg233.2.tw
+
+../cmake-build-release-ding/tsptw3gpu -w 2 -s RONQ -t 1200 -g 0 -i ../data/tsptw/AFG/rbg035a.2.tw
+
+../cmake-build-release-ding/tsptw3gpu -w 2 -s RONQ -t 1200 -g 0 -i ../data/tsptw/AFG/rbg033a.tw
+
+../cmake-build-release-ding/tsptw3gpu -w 2 -s RONQ -t 1200 -g 0 -i ../data/tsptw/AFG/rbg019c.tw
+
+../cmake-build-release-ding/tsptw3gpu -w 2 -s RONQ -t 1200 -g 0 -i ../data/tsptw/AFG/rbg092a.tw
+
+../cmake-build-release-ding/tsptw3gpu -w 2 -s RONQ -t 1200 -g 0 -i ../data/tsptw/AFG/rbg048a.tw
+
+../cmake-build-release-ding/tsptw3gpu -w 2 -s RONQ -t 1200 -g 0 -i ../data/tsptw/AFG/rbg050a.tw
+
+../cmake-build-release-ding/tsptw3gpu -w 2 -s RONQ -t 1200 -g 0 -i ../data/tsptw/AFG/rbg021.9.tw
+
+../cmake-build-release-ding/tsptw3gpu -w 2 -s RONQ -t 1200 -g 0 -i ../data/tsptw/AFG/rbg041a.tw
+
+../cmake-build-release-ding/tsptw3gpu -w 2 -s RONQ -t 1200 -g 0 -i ../data/tsptw/AFG/rbg017.2.tw
+
+../cmake-build-release-ding/tsptw3gpu -w 2 -s RONQ -t 1200 -g 0 -i ../data/tsptw/AFG/rbg038a.tw
+
+../cmake-build-release-ding/tsptw3gpu -w 2 -s RONQ -t 1200 -g 0 -i ../data/tsptw/AFG/rbg021.tw
+

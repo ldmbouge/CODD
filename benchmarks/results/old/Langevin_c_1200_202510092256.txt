@@ -1,0 +1,1 @@
+../cmake-build-release-ding/tsptw3gpu -w 2 -s RONQ -t 1200 -g 1073741824 -i ../data/tsptw/Langevin/N20ft301.dat.txt

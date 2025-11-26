@@ -1,0 +1,400 @@
+Instance: ../data/tsptw/SolomonPotvinBengio/rc_201.1.txt
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->        18 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =        18 ->       324 | Cost =    0.00
+[   0.02s] Layer =   2 | Nodes =       324 ->      2907 | Cost =    0.00
+[   0.03s] Layer =   3 | Nodes =      2907 ->     15504 | Cost =    0.00
+[   0.05s] Layer =   4 | Nodes =     15504 ->     58140 | Cost =    0.00
+[   0.15s] Layer =   5 | Nodes =     58140 ->    162792 | Cost =    0.00
+[   0.38s] Layer =   6 | Nodes =    162792 ->    352716 | Cost =    0.00
+[   0.83s] Layer =   7 | Nodes =    352716 ->    604656 | Cost =    0.00
+[   1.55s] Layer =   8 | Nodes =    604656 ->    831402 | Cost =    0.00
+[   2.45s] Layer =   9 | Nodes =    831402 ->    923780 | Cost =    0.00
+[   2.74s] Layer =  10 | Nodes =    923780 ->    831402 | Cost =    0.00
+[   2.92s] Layer =  11 | Nodes =    831402 ->    604656 | Cost =    0.00
+[   3.04s] Layer =  12 | Nodes =    604656 ->    352716 | Cost =    0.00
+[   3.10s] Layer =  13 | Nodes =    352716 ->    162792 | Cost =    0.00
+[   3.12s] Layer =  14 | Nodes =    162792 ->     58140 | Cost =    0.00
+[   3.13s] Layer =  15 | Nodes =     58140 ->     15504 | Cost =    0.00
+[   3.13s] Layer =  16 | Nodes =     15504 ->      2907 | Cost =    0.00
+[   3.13s] Layer =  17 | Nodes =      2907 ->       342 | Cost =    0.00
+[   3.13s] Layer =  18 | Nodes =       342 ->        19 | Cost =    0.00
+[   3.13s] Layer =  19 | Nodes =        19 ->         1 | Cost =    0.00
+[   3.14s] COMPLETED
+Cost =    0.00 | Value = 10,4,8,3,11,19,9,17,1,12,5,15,16,2,18,7,6,13,14,0
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/SolomonPotvinBengio/rc_201.1.txt
+
+Instance: ../data/tsptw/SolomonPotvinBengio/rc_201.2.txt
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->        24 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =        24 ->       576 | Cost =    0.00
+[   0.03s] Layer =   2 | Nodes =       576 ->      6900 | Cost =    0.00
+[   0.05s] Layer =   3 | Nodes =      6900 ->     50600 | Cost =    0.00
+[   0.17s] Layer =   4 | Nodes =     50600 ->    265650 | Cost =    0.00
+[   0.75s] Layer =   5 | Nodes =    265650 ->   1062600 | Cost =    0.00
+[   2.84s] Layer =   6 | Nodes =   1062600 ->   3364900 | Cost =    0.00
+[   8.78s] Layer =   7 | Nodes =   3364900 ->   8652600 | Cost =    0.00
+[  22.88s] Layer =   8 | Nodes =   8652600 ->  18386775 | Cost =    0.00
+           Batch =   0 | Nodes =   9193388 ->  16343808 
+           Batch =   1 | Nodes =   9193387 ->  16343808 
+[  42.00s] Layer =   9 | Nodes =  18386775 ->  32687616 | Cost =    0.00
+           Batch =   0 | Nodes =  10895872 ->  18327870 
+           Batch =   1 | Nodes =  10895872 ->  38595990 
+           Batch =   2 | Nodes =  10895872 ->  18351465 
+[  70.12s] Layer =  10 | Nodes =  32687616 ->  75275325 | Cost =    0.00
+           Batch =   0 | Nodes =  10753618 ->  16521036 
+           Batch =   1 | Nodes =  10753618 ->  33447358 
+           Batch =   2 | Nodes =  10753618 ->  21009730 
+           Batch =   3 | Nodes =  10753618 ->  14731136 
+           Batch =   4 | Nodes =  10753618 ->  16205686 
+           Batch =   5 | Nodes =  10753618 ->  34493620 
+           Batch =   6 | Nodes =  10753617 ->  15614774 
+[ 116.29s] Layer =  11 | Nodes =  75275325 -> 152023340 | Cost =    0.00
+           Batch =   0 | Nodes =  12668612 ->  16437447 
+           Batch =   1 | Nodes =  12668612 ->  24537942 
+           Batch =   2 | Nodes =  12668612 ->  17211545 
+           Batch =   3 | Nodes =  12668612 ->  23822734 
+           Batch =   4 | Nodes =  12668612 ->  17875624 
+           Batch =   5 | Nodes =  12668612 ->  47694062 
+           Batch =   6 | Nodes =  12668612 ->  32126679 
+           Batch =   7 | Nodes =  12668612 ->  15668601 
+           Batch =   8 | Nodes =  12668612 ->  15926261 
+           Batch =   9 | Nodes =  12668612 ->  16392012 
+           Batch =  10 | Nodes =  12668612 ->  33975123 
+           Batch =  11 | Nodes =  12668608 ->  16001609 
+[ 193.88s] Layer =  12 | Nodes = 152023340 -> 277669639 | Cost =    0.00
+terminate called after throwing an instance of 'std::length_error'
+  what():  vector::reserve
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/SolomonPotvinBengio/rc_201.2.txt
+
+Instance: ../data/tsptw/SolomonPotvinBengio/rc_201.3.txt
+GPU: True
+[   0.03s] Layer =   0 | Nodes =         1 ->        30 | Cost =    0.00
+[   0.03s] Layer =   1 | Nodes =        30 ->       900 | Cost =    0.00
+[   0.03s] Layer =   2 | Nodes =       900 ->     13485 | Cost =    0.00
+[   0.08s] Layer =   3 | Nodes =     13485 ->    125860 | Cost =    0.00
+[   0.47s] Layer =   4 | Nodes =    125860 ->    849555 | Cost =    0.00
+[   2.78s] Layer =   5 | Nodes =    849555 ->   4417686 | Cost =    0.00
+[  13.59s] Layer =   6 | Nodes =   4417686 ->  18407025 | Cost =    0.00
+           Batch =   0 | Nodes =   6135675 ->  21036600 
+           Batch =   1 | Nodes =   6135675 ->  21036600 
+           Batch =   2 | Nodes =   6135675 ->  21036600 
+[  37.97s] Layer =   7 | Nodes =  18407025 ->  63109800 | Cost =    0.00
+           Batch =   0 | Nodes =   7012200 ->  21562523 
+           Batch =   1 | Nodes =   7012200 ->  24941177 
+           Batch =   2 | Nodes =   7012200 ->  83233550 
+           Batch =   3 | Nodes =   7012200 ->  52827343 
+           Batch =   4 | Nodes =   7012200 ->  23908132 
+           Batch =   5 | Nodes =   7012200 ->  55555465 
+           Batch =   6 | Nodes =   7012200 ->  43819393 
+           Batch =   7 | Nodes =   7012200 ->  23418968 
+           Batch =   8 | Nodes =   7012200 ->  23404064 
+[ 112.06s] Layer =   8 | Nodes =  63109800 -> 352670615 | Cost =    0.00
+terminate called after throwing an instance of 'std::length_error'
+  what():  vector::reserve
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/SolomonPotvinBengio/rc_201.3.txt
+
+Instance: ../data/tsptw/SolomonPotvinBengio/rc_201.4.txt
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->        24 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =        24 ->       576 | Cost =    0.00
+[   0.03s] Layer =   2 | Nodes =       576 ->      6900 | Cost =    0.00
+[   0.04s] Layer =   3 | Nodes =      6900 ->     50600 | Cost =    0.00
+[   0.17s] Layer =   4 | Nodes =     50600 ->    265650 | Cost =    0.00
+[   0.75s] Layer =   5 | Nodes =    265650 ->   1062600 | Cost =    0.00
+[   2.83s] Layer =   6 | Nodes =   1062600 ->   3364900 | Cost =    0.00
+[   8.75s] Layer =   7 | Nodes =   3364900 ->   8652600 | Cost =    0.00
+[  22.77s] Layer =   8 | Nodes =   8652600 ->  18386775 | Cost =    0.00
+           Batch =   0 | Nodes =   9193388 ->  16343808 
+           Batch =   1 | Nodes =   9193387 ->  16343808 
+[  41.70s] Layer =   9 | Nodes =  18386775 ->  32687616 | Cost =    0.00
+           Batch =   0 | Nodes =  10895872 ->  18327870 
+           Batch =   1 | Nodes =  10895872 ->  38595990 
+           Batch =   2 | Nodes =  10895872 ->  18351465 
+[  69.56s] Layer =  10 | Nodes =  32687616 ->  75275325 | Cost =    0.00
+           Batch =   0 | Nodes =  10753618 ->  16521036 
+           Batch =   1 | Nodes =  10753618 ->  33447358 
+           Batch =   2 | Nodes =  10753618 ->  21009730 
+           Batch =   3 | Nodes =  10753618 ->  14731136 
+           Batch =   4 | Nodes =  10753618 ->  16205686 
+           Batch =   5 | Nodes =  10753618 ->  34493620 
+           Batch =   6 | Nodes =  10753617 ->  15614774 
+[ 115.38s] Layer =  11 | Nodes =  75275325 -> 152023340 | Cost =    0.00
+           Batch =   0 | Nodes =  12668612 ->  16437447 
+           Batch =   1 | Nodes =  12668612 ->  24537942 
+           Batch =   2 | Nodes =  12668612 ->  17211545 
+           Batch =   3 | Nodes =  12668612 ->  23822734 
+           Batch =   4 | Nodes =  12668612 ->  17875624 
+           Batch =   5 | Nodes =  12668612 ->  47694062 
+           Batch =   6 | Nodes =  12668612 ->  32126679 
+           Batch =   7 | Nodes =  12668612 ->  15668601 
+           Batch =   8 | Nodes =  12668612 ->  15926261 
+           Batch =   9 | Nodes =  12668612 ->  16392012 
+           Batch =  10 | Nodes =  12668612 ->  33975123 
+           Batch =  11 | Nodes =  12668608 ->  16001609 
+[ 191.96s] Layer =  12 | Nodes = 152023340 -> 277669639 | Cost =    0.00
+terminate called after throwing an instance of 'std::length_error'
+  what():  vector::reserve
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/SolomonPotvinBengio/rc_201.4.txt
+
+Instance: ../data/tsptw/SolomonPotvinBengio/rc_202.1.txt
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->        31 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =        31 ->       961 | Cost =    0.00
+[   0.03s] Layer =   2 | Nodes =       961 ->     14880 | Cost =    0.00
+[   0.09s] Layer =   3 | Nodes =     14880 ->    143840 | Cost =    0.00
+[   0.54s] Layer =   4 | Nodes =    143840 ->   1006880 | Cost =    0.00
+[   3.36s] Layer =   5 | Nodes =   1006880 ->   5437152 | Cost =    0.00
+[  17.23s] Layer =   6 | Nodes =   5437152 ->  23560992 | Cost =    0.00
+           Batch =   0 | Nodes =   5890248 ->  21036600 
+           Batch =   1 | Nodes =   5890248 ->  21036600 
+           Batch =   2 | Nodes =   5890248 ->  21036600 
+           Batch =   3 | Nodes =   5890248 ->  21036600 
+[  46.69s] Layer =   7 | Nodes =  23560992 ->  84146400 | Cost =    0.00
+           Batch =   0 | Nodes =   7012200 ->  26213352 
+           Batch =   1 | Nodes =   7012200 ->  25826064 
+           Batch =   2 | Nodes =   7012200 ->  75946896 
+           Batch =   3 | Nodes =   7012200 ->  46967664 
+           Batch =   4 | Nodes =   7012200 ->  27253704 
+           Batch =   5 | Nodes =   7012200 ->  51199104 
+           Batch =   6 | Nodes =   7012200 ->  68781168 
+           Batch =   7 | Nodes =   7012200 ->  25848432 
+           Batch =   8 | Nodes =   7012200 ->  39728064 
+           Batch =   9 | Nodes =   7012200 -> 111025320 
+           Batch =  10 | Nodes =   7012200 ->  22499256 
+           Batch =  11 | Nodes =   7012200 ->  21443928 
+[ 152.90s] Layer =   8 | Nodes =  84146400 -> 542732952 | Cost =    0.00
+terminate called after throwing an instance of 'std::length_error'
+  what():  vector::reserve
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/SolomonPotvinBengio/rc_202.1.txt
+
+Instance: ../data/tsptw/SolomonPotvinBengio/rc_202.2.txt
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->        12 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =        12 ->       144 | Cost =    0.00
+[   0.03s] Layer =   2 | Nodes =       144 ->       858 | Cost =    0.00
+[   0.03s] Layer =   3 | Nodes =       858 ->      2860 | Cost =    0.00
+[   0.03s] Layer =   4 | Nodes =      2860 ->      6435 | Cost =    0.00
+[   0.04s] Layer =   5 | Nodes =      6435 ->     10296 | Cost =    0.00
+[   0.04s] Layer =   6 | Nodes =     10296 ->     12012 | Cost =    0.00
+[   0.05s] Layer =   7 | Nodes =     12012 ->     10296 | Cost =    0.00
+[   0.05s] Layer =   8 | Nodes =     10296 ->      6435 | Cost =    0.00
+[   0.05s] Layer =   9 | Nodes =      6435 ->      2860 | Cost =    0.00
+[   0.05s] Layer =  10 | Nodes =      2860 ->       858 | Cost =    0.00
+[   0.05s] Layer =  11 | Nodes =       858 ->       156 | Cost =    0.00
+[   0.06s] Layer =  12 | Nodes =       156 ->        13 | Cost =    0.00
+[   0.06s] Layer =  13 | Nodes =        13 ->         1 | Cost =    0.00
+[   0.06s] COMPLETED
+Cost =    0.00 | Value = 6,11,10,12,9,5,1,3,7,2,13,8,4,0
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/SolomonPotvinBengio/rc_202.2.txt
+
+Instance: ../data/tsptw/SolomonPotvinBengio/rc_202.3.txt
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->        27 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =        27 ->       729 | Cost =    0.00
+[   0.03s] Layer =   2 | Nodes =       729 ->      9828 | Cost =    0.00
+[   0.07s] Layer =   3 | Nodes =      9828 ->     81900 | Cost =    0.00
+[   0.31s] Layer =   4 | Nodes =     81900 ->    491400 | Cost =    0.00
+[   1.54s] Layer =   5 | Nodes =    491400 ->   2260440 | Cost =    0.00
+[   6.56s] Layer =   6 | Nodes =   2260440 ->   8288280 | Cost =    0.00
+           Batch =   0 | Nodes =   4144140 ->  12432420 
+           Batch =   1 | Nodes =   4144140 ->  12432420 
+[  18.18s] Layer =   7 | Nodes =   8288280 ->  24864840 | Cost =    0.00
+           Batch =   0 | Nodes =   8288280 ->  23615000 
+           Batch =   1 | Nodes =   8288280 ->  42838560 
+           Batch =   2 | Nodes =   8288280 ->  21870540 
+[  47.47s] Layer =   8 | Nodes =  24864840 ->  88324100 | Cost =    0.00
+           Batch =   0 | Nodes =   8832410 ->  21709457 
+           Batch =   1 | Nodes =   8832410 ->  19978595 
+           Batch =   2 | Nodes =   8832410 ->  50372895 
+           Batch =   3 | Nodes =   8832410 ->  22760537 
+           Batch =   4 | Nodes =   8832410 ->  26290490 
+           Batch =   5 | Nodes =   8832410 ->  19844398 
+           Batch =   6 | Nodes =   8832410 ->  23386454 
+           Batch =   7 | Nodes =   8832410 ->  65786759 
+           Batch =   8 | Nodes =   8832410 ->  20055982 
+           Batch =   9 | Nodes =   8832410 ->  21495308 
+[ 120.54s] Layer =   9 | Nodes =  88324100 -> 291680875 | Cost =    0.00
+CUDA API error = 0009 "invalid configuration argument" from /home/fabio/CODD/examples_gpu/tsptw_gpu_1_cabs.cu:195
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/SolomonPotvinBengio/rc_202.3.txt
+
+Instance: ../data/tsptw/SolomonPotvinBengio/rc_202.4.txt
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->        26 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =        26 ->       676 | Cost =    0.00
+[   0.03s] Layer =   2 | Nodes =       676 ->      8775 | Cost =    0.00
+[   0.06s] Layer =   3 | Nodes =      8775 ->     70200 | Cost =    0.00
+[   0.26s] Layer =   4 | Nodes =     70200 ->    403650 | Cost =    0.00
+[   1.24s] Layer =   5 | Nodes =    403650 ->   1776060 | Cost =    0.00
+[   5.24s] Layer =   6 | Nodes =   1776060 ->   6216210 | Cost =    0.00
+[  17.61s] Layer =   7 | Nodes =   6216210 ->  17760600 | Cost =    0.00
+           Batch =   0 | Nodes =   5920200 ->  14060475 
+           Batch =   1 | Nodes =   5920200 ->  14060475 
+           Batch =   2 | Nodes =   5920200 ->  14060475 
+[  37.85s] Layer =   8 | Nodes =  17760600 ->  42181425 | Cost =    0.00
+           Batch =   0 | Nodes =   8436285 ->  19926090 
+           Batch =   1 | Nodes =   8436285 ->  37645398 
+           Batch =   2 | Nodes =   8436285 ->  19274742 
+           Batch =   3 | Nodes =   8436285 ->  51355152 
+           Batch =   4 | Nodes =   8436285 ->  17432478 
+[  77.76s] Layer =   9 | Nodes =  42181425 -> 145633860 | Cost =    0.00
+terminate called after throwing an instance of 'std::length_error'
+  what():  vector::reserve
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/SolomonPotvinBengio/rc_202.4.txt
+
+Instance: ../data/tsptw/SolomonPotvinBengio/rc_203.1.txt
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->        17 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =        17 ->       289 | Cost =    0.00
+[   0.02s] Layer =   2 | Nodes =       289 ->      2448 | Cost =    0.00
+[   0.03s] Layer =   3 | Nodes =      2448 ->     12240 | Cost =    0.00
+[   0.05s] Layer =   4 | Nodes =     12240 ->     42840 | Cost =    0.00
+[   0.11s] Layer =   5 | Nodes =     42840 ->    111384 | Cost =    0.00
+[   0.26s] Layer =   6 | Nodes =    111384 ->    222768 | Cost =    0.00
+[   0.54s] Layer =   7 | Nodes =    222768 ->    350064 | Cost =    0.00
+[   0.93s] Layer =   8 | Nodes =    350064 ->    437580 | Cost =    0.00
+[   1.39s] Layer =   9 | Nodes =    437580 ->    437580 | Cost =    0.00
+[   1.49s] Layer =  10 | Nodes =    437580 ->    350064 | Cost =    0.00
+[   1.56s] Layer =  11 | Nodes =    350064 ->    222768 | Cost =    0.00
+[   1.59s] Layer =  12 | Nodes =    222768 ->    111384 | Cost =    0.00
+[   1.61s] Layer =  13 | Nodes =    111384 ->     42840 | Cost =    0.00
+[   1.62s] Layer =  14 | Nodes =     42840 ->     12240 | Cost =    0.00
+[   1.62s] Layer =  15 | Nodes =     12240 ->      2448 | Cost =    0.00
+[   1.62s] Layer =  16 | Nodes =      2448 ->       306 | Cost =    0.00
+[   1.62s] Layer =  17 | Nodes =       306 ->        18 | Cost =    0.00
+[   1.62s] Layer =  18 | Nodes =        18 ->         1 | Cost =    0.00
+[   1.62s] COMPLETED
+Cost =    0.00 | Value = 3,18,10,8,17,6,2,1,14,12,11,9,13,4,7,15,5,16,0
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/SolomonPotvinBengio/rc_203.1.txt
+
+Instance: ../data/tsptw/SolomonPotvinBengio/rc_203.2.txt
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->        31 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =        31 ->       961 | Cost =    0.00
+[   0.03s] Layer =   2 | Nodes =       961 ->     14880 | Cost =    0.00
+[   0.08s] Layer =   3 | Nodes =     14880 ->    143840 | Cost =    0.00
+[   0.57s] Layer =   4 | Nodes =    143840 ->   1006880 | Cost =    0.00
+[   3.44s] Layer =   5 | Nodes =   1006880 ->   5437152 | Cost =    0.00
+[  17.42s] Layer =   6 | Nodes =   5437152 ->  23560992 | Cost =    0.00
+           Batch =   0 | Nodes =   5890248 ->  21036600 
+           Batch =   1 | Nodes =   5890248 ->  21036600 
+           Batch =   2 | Nodes =   5890248 ->  21036600 
+           Batch =   3 | Nodes =   5890248 ->  21036600 
+[  47.09s] Layer =   7 | Nodes =  23560992 ->  84146400 | Cost =    0.00
+           Batch =   0 | Nodes =   7012200 ->  26213352 
+           Batch =   1 | Nodes =   7012200 ->  25826064 
+           Batch =   2 | Nodes =   7012200 ->  75946896 
+           Batch =   3 | Nodes =   7012200 ->  46967664 
+           Batch =   4 | Nodes =   7012200 ->  27253704 
+           Batch =   5 | Nodes =   7012200 ->  51199104 
+           Batch =   6 | Nodes =   7012200 ->  68781168 
+           Batch =   7 | Nodes =   7012200 ->  25848432 
+           Batch =   8 | Nodes =   7012200 ->  39728064 
+           Batch =   9 | Nodes =   7012200 -> 111025320 
+           Batch =  10 | Nodes =   7012200 ->  22499256 
+           Batch =  11 | Nodes =   7012200 ->  21443928 
+[ 154.22s] Layer =   8 | Nodes =  84146400 -> 542732952 | Cost =    0.00
+terminate called after throwing an instance of 'std::length_error'
+  what():  vector::reserve
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/SolomonPotvinBengio/rc_203.2.txt
+
+Instance: ../data/tsptw/SolomonPotvinBengio/rc_203.3.txt
+GPU: True
+Timeout: 1200s
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/SolomonPotvinBengio/rc_203.3.txt
+
+Instance: ../data/tsptw/SolomonPotvinBengio/rc_203.4.txt
+GPU: True
+Timeout: 1200s
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/SolomonPotvinBengio/rc_203.4.txt
+
+Instance: ../data/tsptw/SolomonPotvinBengio/rc_204.1.txt
+GPU: True
+Timeout: 1200s
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/SolomonPotvinBengio/rc_204.1.txt
+
+Instance: ../data/tsptw/SolomonPotvinBengio/rc_204.2.txt
+GPU: True
+Timeout: 1200s
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/SolomonPotvinBengio/rc_204.2.txt
+
+Instance: ../data/tsptw/SolomonPotvinBengio/rc_204.3.txt
+GPU: True
+Timeout: 1200s
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/SolomonPotvinBengio/rc_204.3.txt
+
+Instance: ../data/tsptw/SolomonPotvinBengio/rc_205.1.txt
+GPU: True
+Timeout: 1200s
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/SolomonPotvinBengio/rc_205.1.txt
+
+Instance: ../data/tsptw/SolomonPotvinBengio/rc_205.2.txt
+GPU: True
+Timeout: 1200s
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/SolomonPotvinBengio/rc_205.2.txt
+
+Instance: ../data/tsptw/SolomonPotvinBengio/rc_205.3.txt
+GPU: True
+Timeout: 1200s
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/SolomonPotvinBengio/rc_205.3.txt
+
+Instance: ../data/tsptw/SolomonPotvinBengio/rc_205.4.txt
+GPU: True
+Timeout: 1200s
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/SolomonPotvinBengio/rc_205.4.txt
+
+Instance: ../data/tsptw/SolomonPotvinBengio/rc_206.1.txt
+GPU: True
+Timeout: 1200s
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/SolomonPotvinBengio/rc_206.1.txt
+
+Instance: ../data/tsptw/SolomonPotvinBengio/rc_206.2.txt
+GPU: True
+Timeout: 1200s
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/SolomonPotvinBengio/rc_206.2.txt
+
+Instance: ../data/tsptw/SolomonPotvinBengio/rc_206.3.txt
+GPU: True
+Timeout: 1200s
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/SolomonPotvinBengio/rc_206.3.txt
+
+Instance: ../data/tsptw/SolomonPotvinBengio/rc_206.4.txt
+GPU: True
+Timeout: 1200s
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/SolomonPotvinBengio/rc_206.4.txt
+
+Instance: ../data/tsptw/SolomonPotvinBengio/rc_207.1.txt
+GPU: True
+Timeout: 1200s
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/SolomonPotvinBengio/rc_207.1.txt
+
+Instance: ../data/tsptw/SolomonPotvinBengio/rc_207.2.txt
+GPU: True
+Timeout: 1200s
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/SolomonPotvinBengio/rc_207.2.txt
+
+Instance: ../data/tsptw/SolomonPotvinBengio/rc_207.3.txt
+GPU: True
+Timeout: 1200s
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/SolomonPotvinBengio/rc_207.3.txt
+
+Instance: ../data/tsptw/SolomonPotvinBengio/rc_207.4.txt
+GPU: True
+Timeout: 1200s
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/SolomonPotvinBengio/rc_207.4.txt
+
+Instance: ../data/tsptw/SolomonPotvinBengio/rc_208.1.txt
+GPU: True
+Timeout: 1200s
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/SolomonPotvinBengio/rc_208.1.txt
+
+Instance: ../data/tsptw/SolomonPotvinBengio/rc_208.2.txt
+GPU: True
+Timeout: 1200s
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/SolomonPotvinBengio/rc_208.2.txt
+
+Instance: ../data/tsptw/SolomonPotvinBengio/rc_208.3.txt
+GPU: True
+Timeout: 1200s
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/SolomonPotvinBengio/rc_208.3.txt
+

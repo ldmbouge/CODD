@@ -1,0 +1,1523 @@
+Instance: ../data/tsptw/AFG/rbg010a.tw
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->         4 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =         4 ->        14 | Cost =   54.00
+[   0.02s] Layer =   2 | Nodes =        14 ->        27 | Cost =  131.00
+[   0.02s] Layer =   3 | Nodes =        27 ->        30 | Cost =  196.00
+[   0.02s] Layer =   4 | Nodes =        30 ->        29 | Cost =  252.00
+[   0.02s] Layer =   5 | Nodes =        29 ->        17 | Cost =  330.00
+[   0.03s] Layer =   6 | Nodes =        17 ->        10 | Cost =  403.00
+[   0.03s] Layer =   7 | Nodes =        10 ->         4 | Cost =  472.00
+[   0.03s] Layer =   8 | Nodes =         4 ->         1 | Cost =  549.00
+[   0.03s] Layer =   9 | Nodes =         1 ->         1 | Cost =  629.00
+[   0.03s] Layer =  10 | Nodes =         1 ->         1 | Cost =  671.00
+[   0.03s] COMPLETED
+Cost =  671.00 | Value = 4,1,2,5,3,7,6,8,9,10,0
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/AFG/rbg010a.tw
+
+Instance: ../data/tsptw/AFG/rbg016a.tw
+GPU: True
+[   0.03s] Layer =   0 | Nodes =         1 ->         6 | Cost =    0.00
+[   0.03s] Layer =   1 | Nodes =         6 ->        25 | Cost =   55.00
+[   0.03s] Layer =   2 | Nodes =        25 ->        48 | Cost =  116.00
+[   0.03s] Layer =   3 | Nodes =        48 ->        49 | Cost =  182.00
+[   0.03s] Layer =   4 | Nodes =        49 ->        37 | Cost =  255.00
+[   0.03s] Layer =   5 | Nodes =        37 ->        14 | Cost =  302.00
+[   0.03s] Layer =   6 | Nodes =        14 ->         7 | Cost =  380.00
+[   0.03s] Layer =   7 | Nodes =         7 ->         6 | Cost =  449.00
+[   0.03s] Layer =   8 | Nodes =         6 ->         1 | Cost =  521.00
+[   0.03s] Layer =   9 | Nodes =         1 ->         3 | Cost =  579.00
+[   0.03s] Layer =  10 | Nodes =         3 ->         6 | Cost =  625.00
+[   0.03s] Layer =  11 | Nodes =         6 ->         4 | Cost =  672.00
+[   0.03s] Layer =  12 | Nodes =         4 ->         1 | Cost =  742.00
+[   0.03s] Layer =  13 | Nodes =         1 ->         3 | Cost =  794.00
+[   0.04s] Layer =  14 | Nodes =         3 ->         6 | Cost =  845.00
+[   0.04s] Layer =  15 | Nodes =         6 ->         3 | Cost =  897.00
+[   0.04s] Layer =  16 | Nodes =         3 ->         1 | Cost =  938.00
+[   0.04s] COMPLETED
+Cost =  938.00 | Value = 6,3,2,1,5,4,7,8,9,12,11,10,13,14,16,15,0
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/AFG/rbg016a.tw
+
+Instance: ../data/tsptw/AFG/rbg016b.tw
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->         7 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =         7 ->        36 | Cost =   45.00
+[   0.02s] Layer =   2 | Nodes =        36 ->       109 | Cost =   97.00
+[   0.03s] Layer =   3 | Nodes =       109 ->       177 | Cost =  155.00
+[   0.03s] Layer =   4 | Nodes =       177 ->       173 | Cost =  203.00
+[   0.03s] Layer =   5 | Nodes =       173 ->       140 | Cost =  265.00
+[   0.03s] Layer =   6 | Nodes =       140 ->       145 | Cost =  355.00
+[   0.03s] Layer =   7 | Nodes =       145 ->       238 | Cost =  456.00
+[   0.03s] Layer =   8 | Nodes =       238 ->       335 | Cost =  773.00
+[   0.03s] Layer =   9 | Nodes =       335 ->       372 | Cost =  842.00
+[   0.03s] Layer =  10 | Nodes =       372 ->       294 | Cost =  901.00
+[   0.03s] Layer =  11 | Nodes =       294 ->       189 | Cost =  972.00
+[   0.03s] Layer =  12 | Nodes =       189 ->       117 | Cost = 1049.00
+[   0.03s] Layer =  13 | Nodes =       117 ->        80 | Cost = 1112.00
+[   0.03s] Layer =  14 | Nodes =        80 ->        41 | Cost = 1190.00
+[   0.03s] Layer =  15 | Nodes =        41 ->        12 | Cost = 1248.00
+[   0.04s] Layer =  16 | Nodes =        12 ->         1 | Cost = 1304.00
+[   0.04s] COMPLETED
+Cost = 1304.00 | Value = 2,3,1,10,4,5,8,9,11,12,13,6,15,7,16,14,0
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/AFG/rbg016b.tw
+
+Instance: ../data/tsptw/AFG/rbg017.2.tw
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->         6 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =         6 ->        26 | Cost =   45.00
+[   0.03s] Layer =   2 | Nodes =        26 ->        70 | Cost =   90.00
+[   0.03s] Layer =   3 | Nodes =        70 ->       170 | Cost =  137.00
+[   0.03s] Layer =   4 | Nodes =       170 ->       681 | Cost =  198.00
+[   0.03s] Layer =   5 | Nodes =       681 ->      2442 | Cost =  248.00
+[   0.03s] Layer =   6 | Nodes =      2442 ->      5861 | Cost =  301.00
+[   0.04s] Layer =   7 | Nodes =      5861 ->      9285 | Cost =  356.00
+[   0.04s] Layer =   8 | Nodes =      9285 ->      9919 | Cost =  412.00
+[   0.05s] Layer =   9 | Nodes =      9919 ->      7292 | Cost =  477.00
+[   0.06s] Layer =  10 | Nodes =      7292 ->      3982 | Cost =  541.00
+[   0.06s] Layer =  11 | Nodes =      3982 ->      1733 | Cost =  605.00
+[   0.07s] Layer =  12 | Nodes =      1733 ->       648 | Cost =  669.00
+[   0.07s] Layer =  13 | Nodes =       648 ->       175 | Cost =  732.00
+[   0.07s] Layer =  14 | Nodes =       175 ->        25 | Cost =  797.00
+[   0.07s] Layer =  15 | Nodes =        25 ->         1 | Cost =  852.00
+[   0.07s] COMPLETED
+Cost =  852.00 | Value = 2,1,4,3,13,7,6,9,8,11,10,5,15,14,12,0
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/AFG/rbg017.2.tw
+
+Instance: ../data/tsptw/AFG/rbg017a.tw
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->         1 | Cost =    0.00
+[   0.03s] Layer =   1 | Nodes =         1 ->         1 | Cost = 3371.00
+[   0.03s] Layer =   2 | Nodes =         1 ->         1 | Cost = 3420.00
+[   0.03s] Layer =   3 | Nodes =         1 ->         1 | Cost = 3474.00
+[   0.03s] Layer =   4 | Nodes =         1 ->        12 | Cost = 3520.00
+[   0.03s] Layer =   5 | Nodes =        12 ->       116 | Cost = 3582.00
+[   0.03s] Layer =   6 | Nodes =       116 ->        27 | Cost = 3653.00
+[   0.03s] Layer =   7 | Nodes =        27 ->        17 | Cost = 3718.00
+[   0.03s] Layer =   8 | Nodes =        17 ->        19 | Cost = 3770.00
+[   0.03s] Layer =   9 | Nodes =        19 ->        65 | Cost = 3822.00
+[   0.03s] Layer =  10 | Nodes =        65 ->        61 | Cost = 3874.00
+[   0.03s] Layer =  11 | Nodes =        61 ->        21 | Cost = 3929.00
+[   0.03s] Layer =  12 | Nodes =        21 ->        18 | Cost = 3981.00
+[   0.03s] Layer =  13 | Nodes =        18 ->        18 | Cost = 4035.00
+[   0.04s] Layer =  14 | Nodes =        18 ->         9 | Cost = 4088.00
+[   0.04s] Layer =  15 | Nodes =         9 ->         6 | Cost = 4151.00
+[   0.04s] Layer =  16 | Nodes =         6 ->         3 | Cost = 4232.00
+[   0.04s] Layer =  17 | Nodes =         3 ->         1 | Cost = 4296.00
+[   0.04s] COMPLETED
+Cost = 4296.00 | Value = 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,0
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/AFG/rbg017a.tw
+
+Instance: ../data/tsptw/AFG/rbg017.tw
+GPU: True
+[   0.03s] Layer =   0 | Nodes =         1 ->         2 | Cost =    0.00
+[   0.03s] Layer =   1 | Nodes =         2 ->         2 | Cost =   46.00
+[   0.03s] Layer =   2 | Nodes =         2 ->         4 | Cost =  116.00
+[   0.03s] Layer =   3 | Nodes =         4 ->        12 | Cost =  161.00
+[   0.03s] Layer =   4 | Nodes =        12 ->        17 | Cost =  212.00
+[   0.03s] Layer =   5 | Nodes =        17 ->        17 | Cost =  265.00
+[   0.03s] Layer =   6 | Nodes =        17 ->        44 | Cost =  333.00
+[   0.03s] Layer =   7 | Nodes =        44 ->       107 | Cost =  402.00
+[   0.03s] Layer =   8 | Nodes =       107 ->       210 | Cost =  459.00
+[   0.03s] Layer =   9 | Nodes =       210 ->       343 | Cost =  520.00
+[   0.03s] Layer =  10 | Nodes =       343 ->       350 | Cost =  575.00
+[   0.04s] Layer =  11 | Nodes =       350 ->       190 | Cost =  644.00
+[   0.04s] Layer =  12 | Nodes =       190 ->        42 | Cost =  717.00
+[   0.04s] Layer =  13 | Nodes =        42 ->         3 | Cost =  793.00
+[   0.04s] Layer =  14 | Nodes =         3 ->         2 | Cost =  847.00
+[   0.04s] Layer =  15 | Nodes =         2 ->         1 | Cost =  893.00
+[   0.04s] COMPLETED
+Cost =  893.00 | Value = 2,1,4,3,7,5,12,6,11,10,9,8,13,15,14,0
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/AFG/rbg017.tw
+
+Instance: ../data/tsptw/AFG/rbg019a.tw
+GPU: True
+[   0.03s] Layer =   0 | Nodes =         1 ->         2 | Cost =    0.00
+[   0.03s] Layer =   1 | Nodes =         2 ->         3 | Cost =   64.00
+[   0.03s] Layer =   2 | Nodes =         3 ->         3 | Cost =  167.00
+[   0.03s] Layer =   3 | Nodes =         3 ->         3 | Cost =  230.00
+[   0.03s] Layer =   4 | Nodes =         3 ->         3 | Cost =  305.00
+[   0.03s] Layer =   5 | Nodes =         3 ->         3 | Cost =  352.00
+[   0.03s] Layer =   6 | Nodes =         3 ->         3 | Cost =  424.00
+[   0.03s] Layer =   7 | Nodes =         3 ->         4 | Cost =  483.00
+[   0.03s] Layer =   8 | Nodes =         4 ->         8 | Cost =  544.00
+[   0.03s] Layer =   9 | Nodes =         8 ->         8 | Cost =  616.00
+[   0.03s] Layer =  10 | Nodes =         8 ->         3 | Cost =  688.00
+[   0.04s] Layer =  11 | Nodes =         3 ->         2 | Cost =  767.00
+[   0.04s] Layer =  12 | Nodes =         2 ->         2 | Cost =  822.00
+[   0.04s] Layer =  13 | Nodes =         2 ->         2 | Cost =  883.00
+[   0.04s] Layer =  14 | Nodes =         2 ->         3 | Cost =  953.00
+[   0.04s] Layer =  15 | Nodes =         3 ->         3 | Cost = 1009.00
+[   0.04s] Layer =  16 | Nodes =         3 ->         2 | Cost = 1076.00
+[   0.04s] Layer =  17 | Nodes =         2 ->         3 | Cost = 1143.00
+[   0.04s] Layer =  18 | Nodes =         3 ->         2 | Cost = 1201.00
+[   0.04s] Layer =  19 | Nodes =         2 ->         1 | Cost = 1262.00
+[   0.04s] COMPLETED
+Cost = 1262.00 | Value = 1,2,3,5,4,7,6,8,11,10,9,13,12,15,14,16,17,19,18,0
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/AFG/rbg019a.tw
+
+Instance: ../data/tsptw/AFG/rbg019b.tw
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->         8 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =         8 ->        57 | Cost =   46.00
+[   0.02s] Layer =   2 | Nodes =        57 ->       223 | Cost =  110.00
+[   0.03s] Layer =   3 | Nodes =       223 ->       537 | Cost =  170.00
+[   0.03s] Layer =   4 | Nodes =       537 ->       814 | Cost =  235.00
+[   0.03s] Layer =   5 | Nodes =       814 ->       865 | Cost =  309.00
+[   0.03s] Layer =   6 | Nodes =       865 ->       742 | Cost =  370.00
+[   0.03s] Layer =   7 | Nodes =       742 ->       670 | Cost =  432.00
+[   0.03s] Layer =   8 | Nodes =       670 ->       655 | Cost =  494.00
+[   0.03s] Layer =   9 | Nodes =       655 ->       656 | Cost =  558.00
+[   0.04s] Layer =  10 | Nodes =       656 ->       599 | Cost =  620.00
+[   0.04s] Layer =  11 | Nodes =       599 ->       463 | Cost =  673.00
+[   0.04s] Layer =  12 | Nodes =       463 ->       262 | Cost =  736.00
+[   0.04s] Layer =  13 | Nodes =       262 ->        86 | Cost =  799.00
+[   0.04s] Layer =  14 | Nodes =        86 ->        14 | Cost =  862.00
+[   0.04s] Layer =  15 | Nodes =        14 ->         6 | Cost =  933.00
+[   0.04s] Layer =  16 | Nodes =         6 ->        10 | Cost = 1688.00
+[   0.04s] Layer =  17 | Nodes =        10 ->         6 | Cost = 1751.00
+[   0.04s] Layer =  18 | Nodes =         6 ->         1 | Cost = 1824.00
+[   0.04s] Layer =  19 | Nodes =         1 ->         1 | Cost = 1866.00
+[   0.04s] COMPLETED
+Cost = 1866.00 | Value = 3,1,4,6,8,5,7,2,13,12,9,14,10,11,15,18,16,17,19,0
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/AFG/rbg019b.tw
+
+Instance: ../data/tsptw/AFG/rbg019c.tw
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->         1 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =         1 ->         1 | Cost = 3438.00
+[   0.03s] Layer =   2 | Nodes =         1 ->         1 | Cost = 3499.00
+[   0.03s] Layer =   3 | Nodes =         1 ->         5 | Cost = 3541.00
+[   0.03s] Layer =   4 | Nodes =         5 ->        16 | Cost = 3587.00
+[   0.03s] Layer =   5 | Nodes =        16 ->       123 | Cost = 3668.00
+[   0.03s] Layer =   6 | Nodes =       123 ->       428 | Cost = 3724.00
+[   0.03s] Layer =   7 | Nodes =       428 ->       762 | Cost = 3785.00
+[   0.03s] Layer =   8 | Nodes =       762 ->       741 | Cost = 3838.00
+[   0.03s] Layer =   9 | Nodes =       741 ->       207 | Cost = 3900.00
+[   0.03s] Layer =  10 | Nodes =       207 ->        60 | Cost = 3963.00
+[   0.03s] Layer =  11 | Nodes =        60 ->        40 | Cost = 4025.00
+[   0.03s] Layer =  12 | Nodes =        40 ->        36 | Cost = 4082.00
+[   0.03s] Layer =  13 | Nodes =        36 ->        45 | Cost = 4142.00
+[   0.04s] Layer =  14 | Nodes =        45 ->        77 | Cost = 4205.00
+[   0.04s] Layer =  15 | Nodes =        77 ->        41 | Cost = 4268.00
+[   0.04s] Layer =  16 | Nodes =        41 ->        22 | Cost = 4333.00
+[   0.04s] Layer =  17 | Nodes =        22 ->         6 | Cost = 4416.00
+[   0.04s] Layer =  18 | Nodes =         6 ->         2 | Cost = 4480.00
+[   0.04s] Layer =  19 | Nodes =         2 ->         1 | Cost = 4536.00
+[   0.04s] COMPLETED
+Cost = 4536.00 | Value = 1,2,3,4,5,6,8,7,9,10,11,12,13,14,15,16,17,18,19,0
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/AFG/rbg019c.tw
+
+Instance: ../data/tsptw/AFG/rbg019d.tw
+GPU: True
+[   0.03s] Layer =   0 | Nodes =         1 ->         5 | Cost =    0.00
+[   0.03s] Layer =   1 | Nodes =         5 ->        20 | Cost =   63.00
+[   0.03s] Layer =   2 | Nodes =        20 ->        32 | Cost =  135.00
+[   0.03s] Layer =   3 | Nodes =        32 ->        30 | Cost =  228.00
+[   0.03s] Layer =   4 | Nodes =        30 ->        25 | Cost =  323.00
+[   0.03s] Layer =   5 | Nodes =        25 ->        19 | Cost =  399.00
+[   0.03s] Layer =   6 | Nodes =        19 ->        15 | Cost =  471.00
+[   0.04s] Layer =   7 | Nodes =        15 ->        12 | Cost =  566.00
+[   0.04s] Layer =   8 | Nodes =        12 ->         4 | Cost =  639.00
+[   0.04s] Layer =   9 | Nodes =         4 ->         5 | Cost =  719.00
+[   0.04s] Layer =  10 | Nodes =         5 ->        21 | Cost =  779.00
+[   0.04s] Layer =  11 | Nodes =        21 ->        43 | Cost =  847.00
+[   0.04s] Layer =  12 | Nodes =        43 ->        36 | Cost =  921.00
+[   0.04s] Layer =  13 | Nodes =        36 ->        17 | Cost =  995.00
+[   0.04s] Layer =  14 | Nodes =        17 ->         9 | Cost = 1062.00
+[   0.04s] Layer =  15 | Nodes =         9 ->        11 | Cost = 1118.00
+[   0.04s] Layer =  16 | Nodes =        11 ->        20 | Cost = 1184.00
+[   0.04s] Layer =  17 | Nodes =        20 ->        21 | Cost = 1238.00
+[   0.04s] Layer =  18 | Nodes =        21 ->        10 | Cost = 1301.00
+[   0.04s] Layer =  19 | Nodes =        10 ->         1 | Cost = 1356.00
+[   0.04s] COMPLETED
+Cost = 1356.00 | Value = 2,3,4,5,1,6,8,9,7,10,12,13,14,11,16,15,19,17,18,0
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/AFG/rbg019d.tw
+
+Instance: ../data/tsptw/AFG/rbg020a.tw
+GPU: True
+[   0.03s] Layer =   0 | Nodes =         1 ->         1 | Cost =    0.00
+[   0.03s] Layer =   1 | Nodes =         1 ->         1 | Cost = 3494.00
+[   0.03s] Layer =   2 | Nodes =         1 ->         1 | Cost = 3558.00
+[   0.03s] Layer =   3 | Nodes =         1 ->         1 | Cost = 3646.00
+[   0.03s] Layer =   4 | Nodes =         1 ->         1 | Cost = 3712.00
+[   0.03s] Layer =   5 | Nodes =         1 ->         1 | Cost = 3767.00
+[   0.03s] Layer =   6 | Nodes =         1 ->         1 | Cost = 3825.00
+[   0.03s] Layer =   7 | Nodes =         1 ->         1 | Cost = 3874.00
+[   0.04s] Layer =   8 | Nodes =         1 ->         1 | Cost = 3926.00
+[   0.04s] Layer =   9 | Nodes =         1 ->         3 | Cost = 3988.00
+[   0.04s] Layer =  10 | Nodes =         3 ->         6 | Cost = 4034.00
+[   0.04s] Layer =  11 | Nodes =         6 ->         5 | Cost = 4092.00
+[   0.04s] Layer =  12 | Nodes =         5 ->         9 | Cost = 4152.00
+[   0.04s] Layer =  13 | Nodes =         9 ->        42 | Cost = 4209.00
+[   0.04s] Layer =  14 | Nodes =        42 ->       105 | Cost = 4269.00
+[   0.04s] Layer =  15 | Nodes =       105 ->       113 | Cost = 4337.00
+[   0.04s] Layer =  16 | Nodes =       113 ->        54 | Cost = 4407.00
+[   0.04s] Layer =  17 | Nodes =        54 ->        27 | Cost = 4480.00
+[   0.04s] Layer =  18 | Nodes =        27 ->        15 | Cost = 4547.00
+[   0.04s] Layer =  19 | Nodes =        15 ->         4 | Cost = 4630.00
+[   0.04s] Layer =  20 | Nodes =         4 ->         1 | Cost = 4689.00
+[   0.04s] COMPLETED
+Cost = 4689.00 | Value = 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,0
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/AFG/rbg020a.tw
+
+Instance: ../data/tsptw/AFG/rbg021.2.tw
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->         1 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =         1 ->         1 | Cost = 3438.00
+[   0.03s] Layer =   2 | Nodes =         1 ->         1 | Cost = 3499.00
+[   0.03s] Layer =   3 | Nodes =         1 ->         5 | Cost = 3541.00
+[   0.03s] Layer =   4 | Nodes =         5 ->        16 | Cost = 3587.00
+[   0.03s] Layer =   5 | Nodes =        16 ->       124 | Cost = 3668.00
+[   0.03s] Layer =   6 | Nodes =       124 ->       445 | Cost = 3724.00
+[   0.03s] Layer =   7 | Nodes =       445 ->       912 | Cost = 3785.00
+[   0.03s] Layer =   8 | Nodes =       912 ->      2344 | Cost = 3838.00
+[   0.04s] Layer =   9 | Nodes =      2344 ->      2557 | Cost = 3897.00
+[   0.04s] Layer =  10 | Nodes =      2557 ->      2049 | Cost = 3958.00
+[   0.04s] Layer =  11 | Nodes =      2049 ->      1379 | Cost = 4013.00
+[   0.04s] Layer =  12 | Nodes =      1379 ->      1104 | Cost = 4072.00
+[   0.04s] Layer =  13 | Nodes =      1104 ->      1334 | Cost = 4136.00
+[   0.05s] Layer =  14 | Nodes =      1334 ->      1390 | Cost = 4197.00
+[   0.05s] Layer =  15 | Nodes =      1390 ->       915 | Cost = 4261.00
+[   0.05s] Layer =  16 | Nodes =       915 ->       318 | Cost = 4326.00
+[   0.05s] Layer =  17 | Nodes =       318 ->        69 | Cost = 4405.00
+[   0.05s] Layer =  18 | Nodes =        69 ->         8 | Cost = 4472.00
+[   0.05s] Layer =  19 | Nodes =         8 ->         1 | Cost = 4528.00
+[   0.05s] COMPLETED
+Cost = 4528.00 | Value = 1,2,3,4,5,10,13,8,7,11,12,9,6,14,15,16,17,18,19,0
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/AFG/rbg021.2.tw
+
+Instance: ../data/tsptw/AFG/rbg021.3.tw
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->         1 | Cost =    0.00
+[   0.03s] Layer =   1 | Nodes =         1 ->         1 | Cost = 3438.00
+[   0.03s] Layer =   2 | Nodes =         1 ->         1 | Cost = 3499.00
+[   0.03s] Layer =   3 | Nodes =         1 ->        12 | Cost = 3541.00
+[   0.03s] Layer =   4 | Nodes =        12 ->       133 | Cost = 3587.00
+[   0.03s] Layer =   5 | Nodes =       133 ->       631 | Cost = 3639.00
+[   0.03s] Layer =   6 | Nodes =       631 ->       668 | Cost = 3695.00
+[   0.03s] Layer =   7 | Nodes =       668 ->      1047 | Cost = 3755.00
+[   0.04s] Layer =   8 | Nodes =      1047 ->      3100 | Cost = 3836.00
+[   0.04s] Layer =   9 | Nodes =      3100 ->      6384 | Cost = 3892.00
+[   0.05s] Layer =  10 | Nodes =      6384 ->      5645 | Cost = 3947.00
+[   0.06s] Layer =  11 | Nodes =      5645 ->      2246 | Cost = 4004.00
+[   0.06s] Layer =  12 | Nodes =      2246 ->      2075 | Cost = 4063.00
+[   0.06s] Layer =  13 | Nodes =      2075 ->      2349 | Cost = 4126.00
+[   0.06s] Layer =  14 | Nodes =      2349 ->      2049 | Cost = 4187.00
+[   0.07s] Layer =  15 | Nodes =      2049 ->      1187 | Cost = 4252.00
+[   0.07s] Layer =  16 | Nodes =      1187 ->       393 | Cost = 4323.00
+[   0.07s] Layer =  17 | Nodes =       393 ->        88 | Cost = 4395.00
+[   0.07s] Layer =  18 | Nodes =        88 ->        11 | Cost = 4470.00
+[   0.07s] Layer =  19 | Nodes =        11 ->         1 | Cost = 4528.00
+[   0.07s] COMPLETED
+Cost = 4528.00 | Value = 1,2,3,4,5,10,13,8,7,11,12,9,6,14,15,16,17,18,19,0
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/AFG/rbg021.3.tw
+
+Instance: ../data/tsptw/AFG/rbg021.4.tw
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->         1 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =         1 ->         1 | Cost = 3438.00
+[   0.02s] Layer =   2 | Nodes =         1 ->         1 | Cost = 3499.00
+[   0.03s] Layer =   3 | Nodes =         1 ->        13 | Cost = 3541.00
+[   0.03s] Layer =   4 | Nodes =        13 ->       147 | Cost = 3587.00
+[   0.03s] Layer =   5 | Nodes =       147 ->       800 | Cost = 3639.00
+[   0.03s] Layer =   6 | Nodes =       800 ->      2511 | Cost = 3695.00
+[   0.04s] Layer =   7 | Nodes =      2511 ->      5337 | Cost = 3755.00
+[   0.05s] Layer =   8 | Nodes =      5337 ->     12791 | Cost = 3809.00
+[   0.07s] Layer =   9 | Nodes =     12791 ->     21857 | Cost = 3861.00
+[   0.11s] Layer =  10 | Nodes =     21857 ->     20443 | Cost = 3924.00
+[   0.14s] Layer =  11 | Nodes =     20443 ->     15372 | Cost = 3985.00
+[   0.15s] Layer =  12 | Nodes =     15372 ->     14688 | Cost = 4045.00
+[   0.17s] Layer =  13 | Nodes =     14688 ->     12441 | Cost = 4108.00
+[   0.18s] Layer =  14 | Nodes =     12441 ->      8237 | Cost = 4174.00
+[   0.19s] Layer =  15 | Nodes =      8237 ->      3851 | Cost = 4245.00
+[   0.19s] Layer =  16 | Nodes =      3851 ->       932 | Cost = 4319.00
+[   0.19s] Layer =  17 | Nodes =       932 ->       142 | Cost = 4386.00
+[   0.19s] Layer =  18 | Nodes =       142 ->        11 | Cost = 4465.00
+[   0.19s] Layer =  19 | Nodes =        11 ->         1 | Cost = 4525.00
+[   0.19s] COMPLETED
+Cost = 4525.00 | Value = 1,2,3,4,11,12,13,8,7,9,6,14,15,16,17,18,10,5,19,0
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/AFG/rbg021.4.tw
+
+Instance: ../data/tsptw/AFG/rbg021.5.tw
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->         1 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =         1 ->         1 | Cost = 3438.00
+[   0.02s] Layer =   2 | Nodes =         1 ->         1 | Cost = 3499.00
+[   0.02s] Layer =   3 | Nodes =         1 ->        15 | Cost = 3541.00
+[   0.03s] Layer =   4 | Nodes =        15 ->       197 | Cost = 3587.00
+[   0.03s] Layer =   5 | Nodes =       197 ->      1283 | Cost = 3639.00
+[   0.03s] Layer =   6 | Nodes =      1283 ->      5166 | Cost = 3695.00
+[   0.03s] Layer =   7 | Nodes =      5166 ->     14549 | Cost = 3748.00
+[   0.05s] Layer =   8 | Nodes =     14549 ->     26031 | Cost = 3802.00
+[   0.06s] Layer =   9 | Nodes =     26031 ->     28061 | Cost = 3861.00
+[   0.07s] Layer =  10 | Nodes =     28061 ->     23806 | Cost = 3920.00
+[   0.07s] Layer =  11 | Nodes =     23806 ->     19280 | Cost = 3980.00
+[   0.07s] Layer =  12 | Nodes =     19280 ->     19085 | Cost = 4038.00
+[   0.08s] Layer =  13 | Nodes =     19085 ->     16424 | Cost = 4102.00
+[   0.08s] Layer =  14 | Nodes =     16424 ->     11296 | Cost = 4164.00
+[   0.08s] Layer =  15 | Nodes =     11296 ->      5673 | Cost = 4232.00
+[   0.08s] Layer =  16 | Nodes =      5673 ->      1529 | Cost = 4303.00
+[   0.09s] Layer =  17 | Nodes =      1529 ->       224 | Cost = 4376.00
+[   0.09s] Layer =  18 | Nodes =       224 ->        17 | Cost = 4452.00
+[   0.09s] Layer =  19 | Nodes =        17 ->         1 | Cost = 4515.00
+[   0.09s] COMPLETED
+Cost = 4515.00 | Value = 1,2,3,4,11,12,10,9,6,8,14,15,16,17,18,13,7,5,19,0
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/AFG/rbg021.5.tw
+
+Instance: ../data/tsptw/AFG/rbg021.6.tw
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->        15 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =        15 ->       196 | Cost =   42.00
+[   0.02s] Layer =   2 | Nodes =       196 ->      1553 | Cost =   88.00
+[   0.03s] Layer =   3 | Nodes =      1553 ->      6822 | Cost =  140.00
+[   0.03s] Layer =   4 | Nodes =      6822 ->     17308 | Cost =  194.00
+[   0.05s] Layer =   5 | Nodes =     17308 ->     34287 | Cost =  250.00
+[   0.07s] Layer =   6 | Nodes =     34287 ->     55355 | Cost =  304.00
+[   0.10s] Layer =   7 | Nodes =     55355 ->     76256 | Cost =  366.00
+[   0.14s] Layer =   8 | Nodes =     76256 ->     85809 | Cost =  428.00
+[   0.20s] Layer =   9 | Nodes =     85809 ->     91503 | Cost =  490.00
+[   0.21s] Layer =  10 | Nodes =     91503 ->     87549 | Cost =  564.00
+[   0.24s] Layer =  11 | Nodes =     87549 ->     75980 | Cost =  640.00
+[   0.25s] Layer =  12 | Nodes =     75980 ->     61529 | Cost =  721.00
+[   0.26s] Layer =  13 | Nodes =     61529 ->     42461 | Cost =  808.00
+[   0.27s] Layer =  14 | Nodes =     42461 ->     24188 | Cost =  859.00
+[   0.27s] Layer =  15 | Nodes =     24188 ->     10976 | Cost = 4205.00
+[   0.27s] Layer =  16 | Nodes =     10976 ->      3138 | Cost = 4273.00
+[   0.27s] Layer =  17 | Nodes =      3138 ->       493 | Cost = 4341.00
+[   0.27s] Layer =  18 | Nodes =       493 ->        41 | Cost = 4417.00
+[   0.28s] Layer =  19 | Nodes =        41 ->         1 | Cost = 4480.00
+[   0.28s] COMPLETED
+Cost = 4480.00 | Value = 1,12,10,11,3,4,9,6,2,16,17,19,18,13,14,15,8,7,5,0
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/AFG/rbg021.6.tw
+
+Instance: ../data/tsptw/AFG/rbg021.7.tw
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->        18 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =        18 ->       293 | Cost =   42.00
+[   0.02s] Layer =   2 | Nodes =       293 ->      3041 | Cost =   88.00
+[   0.03s] Layer =   3 | Nodes =      3041 ->     19282 | Cost =  140.00
+[   0.06s] Layer =   4 | Nodes =     19282 ->     80767 | Cost =  194.00
+[   0.17s] Layer =   5 | Nodes =     80767 ->    240652 | Cost =  249.00
+[   0.44s] Layer =   6 | Nodes =    240652 ->    531453 | Cost =  303.00
+[   0.98s] Layer =   7 | Nodes =    531453 ->    920002 | Cost =  359.00
+[   1.84s] Layer =   8 | Nodes =    920002 ->   1267321 | Cost =  416.00
+[   2.91s] Layer =   9 | Nodes =   1267321 ->   1379676 | Cost =  474.00
+[   3.28s] Layer =  10 | Nodes =   1379676 ->   1179252 | Cost =  535.00
+[   3.50s] Layer =  11 | Nodes =   1179252 ->    781224 | Cost =  594.00
+[   3.63s] Layer =  12 | Nodes =    781224 ->    435525 | Cost =  654.00
+[   3.69s] Layer =  13 | Nodes =    435525 ->    208642 | Cost =  715.00
+[   3.72s] Layer =  14 | Nodes =    208642 ->     85056 | Cost =  777.00
+[   3.73s] Layer =  15 | Nodes =     85056 ->     28054 | Cost =  851.00
+[   3.73s] Layer =  16 | Nodes =     28054 ->      6058 | Cost =  933.00
+[   3.73s] Layer =  17 | Nodes =      6058 ->       749 | Cost = 1022.00
+[   3.73s] Layer =  18 | Nodes =       749 ->        46 | Cost = 4412.00
+[   3.73s] Layer =  19 | Nodes =        46 ->         1 | Cost = 4479.00
+[   3.73s] COMPLETED
+Cost = 4479.00 | Value = 1,12,10,11,9,6,14,15,8,7,3,4,5,17,18,13,2,16,19,0
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/AFG/rbg021.7.tw
+
+Instance: ../data/tsptw/AFG/rbg021.8.tw
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->        19 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =        19 ->       330 | Cost =   42.00
+[   0.02s] Layer =   2 | Nodes =       330 ->      3655 | Cost =   88.00
+[   0.03s] Layer =   3 | Nodes =      3655 ->     24617 | Cost =  140.00
+[   0.07s] Layer =   4 | Nodes =     24617 ->    110916 | Cost =  194.00
+[   0.24s] Layer =   5 | Nodes =    110916 ->    359118 | Cost =  248.00
+[   0.71s] Layer =   6 | Nodes =    359118 ->    880458 | Cost =  303.00
+[   1.77s] Layer =   7 | Nodes =    880458 ->   1684707 | Cost =  356.00
+[   3.60s] Layer =   8 | Nodes =   1684707 ->   2541625 | Cost =  412.00
+[   6.07s] Layer =   9 | Nodes =   2541625 ->   3039226 | Cost =  470.00
+[   8.76s] Layer =  10 | Nodes =   3039226 ->   2886788 | Cost =  526.00
+[   9.38s] Layer =  11 | Nodes =   2886788 ->   2178896 | Cost =  587.00
+[   9.79s] Layer =  12 | Nodes =   2178896 ->   1327966 | Cost =  646.00
+[  10.00s] Layer =  13 | Nodes =   1327966 ->    642078 | Cost =  705.00
+[  10.09s] Layer =  14 | Nodes =    642078 ->    241933 | Cost =  768.00
+[  10.12s] Layer =  15 | Nodes =    241933 ->     68121 | Cost =  832.00
+[  10.12s] Layer =  16 | Nodes =     68121 ->     12300 | Cost =  905.00
+[  10.13s] Layer =  17 | Nodes =     12300 ->      1305 | Cost =  983.00
+[  10.13s] Layer =  18 | Nodes =      1305 ->        76 | Cost = 1067.00
+[  10.13s] Layer =  19 | Nodes =        76 ->         1 | Cost = 4478.00
+[  10.13s] COMPLETED
+Cost = 4478.00 | Value = 1,12,10,11,5,17,19,18,13,7,3,4,9,6,14,15,8,2,16,0
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/AFG/rbg021.8.tw
+
+Instance: ../data/tsptw/AFG/rbg021.9.tw
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->        19 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =        19 ->       331 | Cost =   42.00
+[   0.02s] Layer =   2 | Nodes =       331 ->      3677 | Cost =   88.00
+[   0.03s] Layer =   3 | Nodes =      3677 ->     24772 | Cost =  140.00
+[   0.07s] Layer =   4 | Nodes =     24772 ->    111549 | Cost =  194.00
+[   0.24s] Layer =   5 | Nodes =    111549 ->    360863 | Cost =  248.00
+[   0.71s] Layer =   6 | Nodes =    360863 ->    884106 | Cost =  303.00
+[   1.79s] Layer =   7 | Nodes =    884106 ->   1691798 | Cost =  356.00
+[   3.64s] Layer =   8 | Nodes =   1691798 ->   2563706 | Cost =  412.00
+[   6.18s] Layer =   9 | Nodes =   2563706 ->   3091318 | Cost =  470.00
+[   8.95s] Layer =  10 | Nodes =   3091318 ->   2960284 | Cost =  526.00
+[   9.60s] Layer =  11 | Nodes =   2960284 ->   2243023 | Cost =  587.00
+[  10.02s] Layer =  12 | Nodes =   2243023 ->   1371271 | Cost =  646.00
+[  10.25s] Layer =  13 | Nodes =   1371271 ->    667541 | Cost =  705.00
+[  10.35s] Layer =  14 | Nodes =    667541 ->    253407 | Cost =  767.00
+[  10.38s] Layer =  15 | Nodes =    253407 ->     71927 | Cost =  829.00
+[  10.39s] Layer =  16 | Nodes =     71927 ->     13150 | Cost =  902.00
+[  10.39s] Layer =  17 | Nodes =     13150 ->      1424 | Cost =  982.00
+[  10.39s] Layer =  18 | Nodes =      1424 ->        82 | Cost = 1067.00
+[  10.39s] Layer =  19 | Nodes =        82 ->         1 | Cost = 4478.00
+[  10.39s] COMPLETED
+Cost = 4478.00 | Value = 1,11,12,10,5,17,18,13,14,15,8,7,3,4,9,6,2,16,19,0
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/AFG/rbg021.9.tw
+
+Instance: ../data/tsptw/AFG/rbg021.tw
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->         1 | Cost =    0.00
+[   0.03s] Layer =   1 | Nodes =         1 ->         1 | Cost = 3438.00
+[   0.03s] Layer =   2 | Nodes =         1 ->         1 | Cost = 3499.00
+[   0.03s] Layer =   3 | Nodes =         1 ->         5 | Cost = 3541.00
+[   0.03s] Layer =   4 | Nodes =         5 ->        16 | Cost = 3587.00
+[   0.03s] Layer =   5 | Nodes =        16 ->       123 | Cost = 3668.00
+[   0.03s] Layer =   6 | Nodes =       123 ->       428 | Cost = 3724.00
+[   0.03s] Layer =   7 | Nodes =       428 ->       762 | Cost = 3785.00
+[   0.03s] Layer =   8 | Nodes =       762 ->       741 | Cost = 3838.00
+[   0.03s] Layer =   9 | Nodes =       741 ->       207 | Cost = 3900.00
+[   0.03s] Layer =  10 | Nodes =       207 ->        60 | Cost = 3963.00
+[   0.03s] Layer =  11 | Nodes =        60 ->        40 | Cost = 4025.00
+[   0.03s] Layer =  12 | Nodes =        40 ->        36 | Cost = 4082.00
+[   0.03s] Layer =  13 | Nodes =        36 ->        45 | Cost = 4142.00
+[   0.04s] Layer =  14 | Nodes =        45 ->        77 | Cost = 4205.00
+[   0.04s] Layer =  15 | Nodes =        77 ->        41 | Cost = 4268.00
+[   0.04s] Layer =  16 | Nodes =        41 ->        22 | Cost = 4333.00
+[   0.04s] Layer =  17 | Nodes =        22 ->         6 | Cost = 4416.00
+[   0.04s] Layer =  18 | Nodes =         6 ->         2 | Cost = 4480.00
+[   0.04s] Layer =  19 | Nodes =         2 ->         1 | Cost = 4536.00
+[   0.04s] COMPLETED
+Cost = 4536.00 | Value = 1,2,3,4,5,6,8,7,9,10,11,12,13,14,15,16,17,18,19,0
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/AFG/rbg021.tw
+
+Instance: ../data/tsptw/AFG/rbg027a.tw
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->         1 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =         1 ->         1 | Cost = 3525.00
+[   0.02s] Layer =   2 | Nodes =         1 ->         1 | Cost = 3587.00
+[   0.02s] Layer =   3 | Nodes =         1 ->        15 | Cost = 3643.00
+[   0.03s] Layer =   4 | Nodes =        15 ->        27 | Cost = 3708.00
+[   0.03s] Layer =   5 | Nodes =        27 ->        25 | Cost = 3769.00
+[   0.03s] Layer =   6 | Nodes =        25 ->        24 | Cost = 3822.00
+[   0.03s] Layer =   7 | Nodes =        24 ->        25 | Cost = 3869.00
+[   0.03s] Layer =   8 | Nodes =        25 ->        31 | Cost = 3923.00
+[   0.03s] Layer =   9 | Nodes =        31 ->        32 | Cost = 3972.00
+[   0.03s] Layer =  10 | Nodes =        32 ->        13 | Cost = 4047.00
+[   0.03s] Layer =  11 | Nodes =        13 ->        12 | Cost = 4127.00
+[   0.03s] Layer =  12 | Nodes =        12 ->        15 | Cost = 4194.00
+[   0.03s] Layer =  13 | Nodes =        15 ->        13 | Cost = 4258.00
+[   0.03s] Layer =  14 | Nodes =        13 ->        16 | Cost = 4329.00
+[   0.03s] Layer =  15 | Nodes =        16 ->        15 | Cost = 4400.00
+[   0.03s] Layer =  16 | Nodes =        15 ->        16 | Cost = 4452.00
+[   0.03s] Layer =  17 | Nodes =        16 ->        28 | Cost = 4497.00
+[   0.03s] Layer =  18 | Nodes =        28 ->        89 | Cost = 4543.00
+[   0.03s] Layer =  19 | Nodes =        89 ->       174 | Cost = 4608.00
+[   0.04s] Layer =  20 | Nodes =       174 ->       324 | Cost = 4664.00
+[   0.04s] Layer =  21 | Nodes =       324 ->       434 | Cost = 4735.00
+[   0.04s] Layer =  22 | Nodes =       434 ->       281 | Cost = 4794.00
+[   0.04s] Layer =  23 | Nodes =       281 ->       130 | Cost = 4848.00
+[   0.04s] Layer =  24 | Nodes =       130 ->        65 | Cost = 4903.00
+[   0.04s] Layer =  25 | Nodes =        65 ->        21 | Cost = 4971.00
+[   0.04s] Layer =  26 | Nodes =        21 ->         5 | Cost = 5034.00
+[   0.04s] Layer =  27 | Nodes =         5 ->         1 | Cost = 5091.00
+[   0.04s] COMPLETED
+Cost = 5091.00 | Value = 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,23,22,24,25,26,27,0
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/AFG/rbg027a.tw
+
+Instance: ../data/tsptw/AFG/rbg031a.tw
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->         7 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =         7 ->        41 | Cost =   51.00
+[   0.02s] Layer =   2 | Nodes =        41 ->       126 | Cost =  110.00
+[   0.03s] Layer =   3 | Nodes =       126 ->       225 | Cost =  169.00
+[   0.03s] Layer =   4 | Nodes =       225 ->       267 | Cost =  222.00
+[   0.03s] Layer =   5 | Nodes =       267 ->       270 | Cost =  280.00
+[   0.03s] Layer =   6 | Nodes =       270 ->       330 | Cost =  342.00
+[   0.03s] Layer =   7 | Nodes =       330 ->       451 | Cost =  396.00
+[   0.03s] Layer =   8 | Nodes =       451 ->       453 | Cost =  438.00
+[   0.03s] Layer =   9 | Nodes =       453 ->       344 | Cost =  496.00
+[   0.03s] Layer =  10 | Nodes =       344 ->       199 | Cost =  542.00
+[   0.03s] Layer =  11 | Nodes =       199 ->       110 | Cost =  608.00
+[   0.03s] Layer =  12 | Nodes =       110 ->        63 | Cost =  672.00
+[   0.04s] Layer =  13 | Nodes =        63 ->        60 | Cost =  745.00
+[   0.04s] Layer =  14 | Nodes =        60 ->        71 | Cost =  807.00
+[   0.04s] Layer =  15 | Nodes =        71 ->        75 | Cost =  858.00
+[   0.04s] Layer =  16 | Nodes =        75 ->        74 | Cost =  933.00
+[   0.04s] Layer =  17 | Nodes =        74 ->        59 | Cost = 1003.00
+[   0.04s] Layer =  18 | Nodes =        59 ->        40 | Cost = 1066.00
+[   0.04s] Layer =  19 | Nodes =        40 ->        37 | Cost = 1125.00
+[   0.04s] Layer =  20 | Nodes =        37 ->        47 | Cost = 1180.00
+[   0.04s] Layer =  21 | Nodes =        47 ->        78 | Cost = 1246.00
+[   0.04s] Layer =  22 | Nodes =        78 ->        99 | Cost = 1309.00
+[   0.04s] Layer =  23 | Nodes =        99 ->        94 | Cost = 1364.00
+[   0.04s] Layer =  24 | Nodes =        94 ->        83 | Cost = 1428.00
+[   0.04s] Layer =  25 | Nodes =        83 ->        86 | Cost = 1491.00
+[   0.04s] Layer =  26 | Nodes =        86 ->        75 | Cost = 1550.00
+[   0.04s] Layer =  27 | Nodes =        75 ->        41 | Cost = 1610.00
+[   0.04s] Layer =  28 | Nodes =        41 ->         9 | Cost = 1675.00
+[   0.04s] Layer =  29 | Nodes =         9 ->         3 | Cost = 1743.00
+[   0.04s] Layer =  30 | Nodes =         3 ->         2 | Cost = 1817.00
+[   0.04s] Layer =  31 | Nodes =         2 ->         1 | Cost = 1863.00
+[   0.04s] COMPLETED
+Cost = 1863.00 | Value = 3,2,1,9,5,4,6,10,8,7,13,14,12,11,19,16,17,15,21,20,18,24,22,23,27,28,26,25,29,31,30,0
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/AFG/rbg031a.tw
+
+Instance: ../data/tsptw/AFG/rbg033a.tw
+GPU: True
+[   0.03s] Layer =   0 | Nodes =         1 ->         9 | Cost =    0.00
+[   0.03s] Layer =   1 | Nodes =         9 ->        64 | Cost =   43.00
+[   0.03s] Layer =   2 | Nodes =        64 ->       266 | Cost =   98.00
+[   0.03s] Layer =   3 | Nodes =       266 ->       669 | Cost =  155.00
+[   0.03s] Layer =   4 | Nodes =       669 ->      1141 | Cost =  211.00
+[   0.03s] Layer =   5 | Nodes =      1141 ->      1425 | Cost =  270.00
+[   0.03s] Layer =   6 | Nodes =      1425 ->      1221 | Cost =  336.00
+[   0.04s] Layer =   7 | Nodes =      1221 ->       746 | Cost =  397.00
+[   0.04s] Layer =   8 | Nodes =       746 ->       328 | Cost =  453.00
+[   0.04s] Layer =   9 | Nodes =       328 ->       114 | Cost =  517.00
+[   0.04s] Layer =  10 | Nodes =       114 ->        64 | Cost =  573.00
+[   0.04s] Layer =  11 | Nodes =        64 ->        66 | Cost =  641.00
+[   0.04s] Layer =  12 | Nodes =        66 ->        74 | Cost =  697.00
+[   0.04s] Layer =  13 | Nodes =        74 ->        82 | Cost =  755.00
+[   0.04s] Layer =  14 | Nodes =        82 ->        88 | Cost =  822.00
+[   0.04s] Layer =  15 | Nodes =        88 ->        96 | Cost =  887.00
+[   0.04s] Layer =  16 | Nodes =        96 ->       104 | Cost =  944.00
+[   0.04s] Layer =  17 | Nodes =       104 ->       102 | Cost =  999.00
+[   0.04s] Layer =  18 | Nodes =       102 ->        69 | Cost = 1063.00
+[   0.04s] Layer =  19 | Nodes =        69 ->        22 | Cost = 1132.00
+[   0.04s] Layer =  20 | Nodes =        22 ->         7 | Cost = 1206.00
+[   0.04s] Layer =  21 | Nodes =         7 ->        29 | Cost = 1264.00
+[   0.04s] Layer =  22 | Nodes =        29 ->        73 | Cost = 1329.00
+[   0.04s] Layer =  23 | Nodes =        73 ->       106 | Cost = 1410.00
+[   0.04s] Layer =  24 | Nodes =       106 ->       109 | Cost = 1490.00
+[   0.05s] Layer =  25 | Nodes =       109 ->        86 | Cost = 1571.00
+[   0.05s] Layer =  26 | Nodes =        86 ->        50 | Cost = 1647.00
+[   0.05s] Layer =  27 | Nodes =        50 ->        19 | Cost = 1719.00
+[   0.05s] Layer =  28 | Nodes =        19 ->         8 | Cost = 1799.00
+[   0.05s] Layer =  29 | Nodes =         8 ->        18 | Cost = 1850.00
+[   0.05s] Layer =  30 | Nodes =        18 ->        32 | Cost = 1910.00
+[   0.05s] Layer =  31 | Nodes =        32 ->        36 | Cost = 1962.00
+[   0.05s] Layer =  32 | Nodes =        36 ->        15 | Cost = 2024.00
+[   0.05s] Layer =  33 | Nodes =        15 ->         1 | Cost = 2069.00
+[   0.05s] COMPLETED
+Cost = 2069.00 | Value = 3,2,6,4,10,1,7,8,5,9,12,11,14,15,16,13,18,17,20,19,21,22,24,25,26,27,23,28,31,30,29,32,33,0
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/AFG/rbg033a.tw
+
+Instance: ../data/tsptw/AFG/rbg034a.tw
+GPU: True
+[   0.03s] Layer =   0 | Nodes =         1 ->         3 | Cost =    0.00
+[   0.03s] Layer =   1 | Nodes =         3 ->         7 | Cost =   67.00
+[   0.03s] Layer =   2 | Nodes =         7 ->         9 | Cost =  152.00
+[   0.03s] Layer =   3 | Nodes =         9 ->        12 | Cost =  218.00
+[   0.03s] Layer =   4 | Nodes =        12 ->        18 | Cost =  297.00
+[   0.03s] Layer =   5 | Nodes =        18 ->        22 | Cost =  347.00
+[   0.04s] Layer =   6 | Nodes =        22 ->        25 | Cost =  399.00
+[   0.04s] Layer =   7 | Nodes =        25 ->        72 | Cost =  450.00
+[   0.04s] Layer =   8 | Nodes =        72 ->       244 | Cost =  509.00
+[   0.04s] Layer =   9 | Nodes =       244 ->       579 | Cost =  577.00
+[   0.04s] Layer =  10 | Nodes =       579 ->       895 | Cost =  636.00
+[   0.04s] Layer =  11 | Nodes =       895 ->      1036 | Cost =  697.00
+[   0.04s] Layer =  12 | Nodes =      1036 ->       995 | Cost =  764.00
+[   0.04s] Layer =  13 | Nodes =       995 ->       759 | Cost =  835.00
+[   0.04s] Layer =  14 | Nodes =       759 ->       471 | Cost =  900.00
+[   0.05s] Layer =  15 | Nodes =       471 ->       261 | Cost =  963.00
+[   0.05s] Layer =  16 | Nodes =       261 ->       217 | Cost = 1021.00
+[   0.05s] Layer =  17 | Nodes =       217 ->       319 | Cost = 1090.00
+[   0.05s] Layer =  18 | Nodes =       319 ->       512 | Cost = 1147.00
+[   0.05s] Layer =  19 | Nodes =       512 ->       802 | Cost = 1216.00
+[   0.05s] Layer =  20 | Nodes =       802 ->      1175 | Cost = 1277.00
+[   0.05s] Layer =  21 | Nodes =      1175 ->      1577 | Cost = 1333.00
+[   0.05s] Layer =  22 | Nodes =      1577 ->      1746 | Cost = 1396.00
+[   0.06s] Layer =  23 | Nodes =      1746 ->      1620 | Cost = 1456.00
+[   0.06s] Layer =  24 | Nodes =      1620 ->      1246 | Cost = 1527.00
+[   0.06s] Layer =  25 | Nodes =      1246 ->       834 | Cost = 1601.00
+[   0.06s] Layer =  26 | Nodes =       834 ->       526 | Cost = 1666.00
+[   0.06s] Layer =  27 | Nodes =       526 ->       285 | Cost = 1740.00
+[   0.06s] Layer =  28 | Nodes =       285 ->       127 | Cost = 1820.00
+[   0.06s] Layer =  29 | Nodes =       127 ->        46 | Cost = 1885.00
+[   0.06s] Layer =  30 | Nodes =        46 ->        33 | Cost = 1953.00
+[   0.07s] Layer =  31 | Nodes =        33 ->        36 | Cost = 2026.00
+[   0.07s] Layer =  32 | Nodes =        36 ->        26 | Cost = 2101.00
+[   0.07s] Layer =  33 | Nodes =        26 ->         7 | Cost = 2169.00
+[   0.07s] Layer =  34 | Nodes =         7 ->         1 | Cost = 2222.00
+[   0.07s] COMPLETED
+Cost = 2222.00 | Value = 1,2,3,4,6,5,8,9,7,13,18,10,14,15,16,11,12,19,17,23,20,28,21,24,22,27,30,29,26,31,25,34,33,32,0
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/AFG/rbg034a.tw
+
+Instance: ../data/tsptw/AFG/rbg035a.2.tw
+GPU: True
+[   0.03s] Layer =   0 | Nodes =         1 ->        18 | Cost =    0.00
+[   0.03s] Layer =   1 | Nodes =        18 ->       276 | Cost =   47.00
+[   0.03s] Layer =   2 | Nodes =       276 ->      2251 | Cost =  109.00
+[   0.04s] Layer =   3 | Nodes =      2251 ->     11744 | Cost =  164.00
+[   0.06s] Layer =   4 | Nodes =     11744 ->     41744 | Cost =  225.00
+[   0.12s] Layer =   5 | Nodes =     41744 ->    109330 | Cost =  282.00
+[   0.26s] Layer =   6 | Nodes =    109330 ->    222107 | Cost =  346.00
+[   0.47s] Layer =   7 | Nodes =    222107 ->    370799 | Cost =  402.00
+[   0.77s] Layer =   8 | Nodes =    370799 ->    533221 | Cost =  463.00
+[   1.21s] Layer =   9 | Nodes =    533221 ->    697712 | Cost =  524.00
+[   1.78s] Layer =  10 | Nodes =    697712 ->    779453 | Cost =  585.00
+[   2.40s] Layer =  11 | Nodes =    779453 ->    753246 | Cost =  639.00
+[   2.57s] Layer =  12 | Nodes =    753246 ->    722170 | Cost =  693.00
+[   2.75s] Layer =  13 | Nodes =    722170 ->    762272 | Cost =  740.00
+[   3.00s] Layer =  14 | Nodes =    762272 ->   1000478 | Cost =  797.00
+[   3.90s] Layer =  15 | Nodes =   1000478 ->   1330022 | Cost =  841.00
+[   5.09s] Layer =  16 | Nodes =   1330022 ->   1542480 | Cost =  898.00
+[   6.41s] Layer =  17 | Nodes =   1542480 ->   1541450 | Cost =  946.00
+[   6.83s] Layer =  18 | Nodes =   1541450 ->   1321806 | Cost = 1012.00
+[   7.08s] Layer =  19 | Nodes =   1321806 ->    997017 | Cost = 1067.00
+[   7.27s] Layer =  20 | Nodes =    997017 ->    686511 | Cost = 1129.00
+[   7.39s] Layer =  21 | Nodes =    686511 ->    449078 | Cost = 1191.00
+[   7.47s] Layer =  22 | Nodes =    449078 ->    307859 | Cost = 1245.00
+[   7.53s] Layer =  23 | Nodes =    307859 ->    243789 | Cost = 1306.00
+[   7.58s] Layer =  24 | Nodes =    243789 ->    242584 | Cost = 1359.00
+[   7.64s] Layer =  25 | Nodes =    242584 ->    271212 | Cost = 1420.00
+[   7.70s] Layer =  26 | Nodes =    271212 ->    281445 | Cost = 1476.00
+[   7.76s] Layer =  27 | Nodes =    281445 ->    243262 | Cost = 1531.00
+[   7.80s] Layer =  28 | Nodes =    243262 ->    167638 | Cost = 1593.00
+[   7.83s] Layer =  29 | Nodes =    167638 ->     90627 | Cost = 1654.00
+[   7.85s] Layer =  30 | Nodes =     90627 ->     37496 | Cost = 1712.00
+[   7.85s] Layer =  31 | Nodes =     37496 ->     11574 | Cost = 1778.00
+[   7.85s] Layer =  32 | Nodes =     11574 ->      2598 | Cost = 1848.00
+[   7.85s] Layer =  33 | Nodes =      2598 ->       331 | Cost = 1924.00
+[   7.85s] Layer =  34 | Nodes =       331 ->        19 | Cost = 2001.00
+[   7.86s] Layer =  35 | Nodes =        19 ->         1 | Cost = 2056.00
+[   7.86s] COMPLETED
+Cost = 2056.00 | Value = 32,3,1,24,5,4,9,2,7,6,34,10,8,14,16,15,11,20,13,12,21,19,18,23,26,25,22,28,29,27,30,17,33,31,35,0
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/AFG/rbg035a.2.tw
+
+Instance: ../data/tsptw/AFG/rbg035a.tw
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->         6 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =         6 ->        26 | Cost =   47.00
+[   0.02s] Layer =   2 | Nodes =        26 ->        62 | Cost =  112.00
+[   0.02s] Layer =   3 | Nodes =        62 ->        83 | Cost =  186.00
+[   0.02s] Layer =   4 | Nodes =        83 ->        85 | Cost =  255.00
+[   0.02s] Layer =   5 | Nodes =        85 ->       105 | Cost =  345.00
+[   0.02s] Layer =   6 | Nodes =       105 ->       127 | Cost =  409.00
+[   0.03s] Layer =   7 | Nodes =       127 ->       140 | Cost =  456.00
+[   0.03s] Layer =   8 | Nodes =       140 ->       123 | Cost =  516.00
+[   0.03s] Layer =   9 | Nodes =       123 ->       113 | Cost =  591.00
+[   0.03s] Layer =  10 | Nodes =       113 ->       151 | Cost =  651.00
+[   0.03s] Layer =  11 | Nodes =       151 ->       216 | Cost =  711.00
+[   0.03s] Layer =  12 | Nodes =       216 ->       314 | Cost =  762.00
+[   0.03s] Layer =  13 | Nodes =       314 ->       484 | Cost =  813.00
+[   0.03s] Layer =  14 | Nodes =       484 ->       637 | Cost =  875.00
+[   0.03s] Layer =  15 | Nodes =       637 ->       675 | Cost =  924.00
+[   0.03s] Layer =  16 | Nodes =       675 ->       659 | Cost =  976.00
+[   0.03s] Layer =  17 | Nodes =       659 ->       505 | Cost = 1023.00
+[   0.03s] Layer =  18 | Nodes =       505 ->       284 | Cost = 1083.00
+[   0.04s] Layer =  19 | Nodes =       284 ->       144 | Cost = 1146.00
+[   0.04s] Layer =  20 | Nodes =       144 ->        93 | Cost = 1204.00
+[   0.04s] Layer =  21 | Nodes =        93 ->        77 | Cost = 1267.00
+[   0.04s] Layer =  22 | Nodes =        77 ->        75 | Cost = 1332.00
+[   0.04s] Layer =  23 | Nodes =        75 ->        83 | Cost = 1399.00
+[   0.04s] Layer =  24 | Nodes =        83 ->        55 | Cost = 1465.00
+[   0.04s] Layer =  25 | Nodes =        55 ->        22 | Cost = 1535.00
+[   0.04s] Layer =  26 | Nodes =        22 ->        10 | Cost = 1607.00
+[   0.04s] Layer =  27 | Nodes =        10 ->        25 | Cost = 1651.00
+[   0.04s] Layer =  28 | Nodes =        25 ->        62 | Cost = 1703.00
+[   0.04s] Layer =  29 | Nodes =        62 ->       105 | Cost = 1769.00
+[   0.04s] Layer =  30 | Nodes =       105 ->       136 | Cost = 1825.00
+[   0.04s] Layer =  31 | Nodes =       136 ->       155 | Cost = 1878.00
+[   0.04s] Layer =  32 | Nodes =       155 ->       126 | Cost = 1940.00
+[   0.04s] Layer =  33 | Nodes =       126 ->        63 | Cost = 2010.00
+[   0.04s] Layer =  34 | Nodes =        63 ->        16 | Cost = 2084.00
+[   0.04s] Layer =  35 | Nodes =        16 ->         1 | Cost = 2144.00
+[   0.04s] COMPLETED
+Cost = 2144.00 | Value = 5,4,2,3,1,9,7,6,11,10,8,14,17,20,13,12,16,15,21,19,18,24,23,26,25,22,30,28,29,27,32,33,31,35,34,0
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/AFG/rbg035a.tw
+
+Instance: ../data/tsptw/AFG/rbg038a.tw
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->         3 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =         3 ->         6 | Cost =   58.00
+[   0.02s] Layer =   2 | Nodes =         6 ->         3 | Cost =  134.00
+[   0.03s] Layer =   3 | Nodes =         3 ->         1 | Cost =  212.00
+[   0.03s] Layer =   4 | Nodes =         1 ->         2 | Cost =  260.00
+[   0.03s] Layer =   5 | Nodes =         2 ->         3 | Cost =  320.00
+[   0.03s] Layer =   6 | Nodes =         3 ->         8 | Cost =  390.00
+[   0.03s] Layer =   7 | Nodes =         8 ->        38 | Cost =  444.00
+[   0.03s] Layer =   8 | Nodes =        38 ->       102 | Cost =  495.00
+[   0.03s] Layer =   9 | Nodes =       102 ->       188 | Cost =  552.00
+[   0.03s] Layer =  10 | Nodes =       188 ->       330 | Cost =  614.00
+[   0.03s] Layer =  11 | Nodes =       330 ->       581 | Cost =  675.00
+[   0.03s] Layer =  12 | Nodes =       581 ->       905 | Cost =  735.00
+[   0.03s] Layer =  13 | Nodes =       905 ->      1200 | Cost =  799.00
+[   0.04s] Layer =  14 | Nodes =      1200 ->      1360 | Cost =  873.00
+[   0.04s] Layer =  15 | Nodes =      1360 ->      1252 | Cost =  947.00
+[   0.04s] Layer =  16 | Nodes =      1252 ->       959 | Cost = 1021.00
+[   0.04s] Layer =  17 | Nodes =       959 ->       611 | Cost = 1097.00
+[   0.04s] Layer =  18 | Nodes =       611 ->       303 | Cost = 1171.00
+[   0.04s] Layer =  19 | Nodes =       303 ->       122 | Cost = 1246.00
+[   0.04s] Layer =  20 | Nodes =       122 ->        49 | Cost = 1322.00
+[   0.04s] Layer =  21 | Nodes =        49 ->        31 | Cost = 1410.00
+[   0.04s] Layer =  22 | Nodes =        31 ->        26 | Cost = 1484.00
+[   0.04s] Layer =  23 | Nodes =        26 ->        40 | Cost = 1541.00
+[   0.04s] Layer =  24 | Nodes =        40 ->        69 | Cost = 1598.00
+[   0.05s] Layer =  25 | Nodes =        69 ->        90 | Cost = 1664.00
+[   0.05s] Layer =  26 | Nodes =        90 ->        87 | Cost = 1719.00
+[   0.05s] Layer =  27 | Nodes =        87 ->        86 | Cost = 1781.00
+[   0.05s] Layer =  28 | Nodes =        86 ->       107 | Cost = 1849.00
+[   0.05s] Layer =  29 | Nodes =       107 ->       174 | Cost = 1917.00
+[   0.05s] Layer =  30 | Nodes =       174 ->       259 | Cost = 1971.00
+[   0.05s] Layer =  31 | Nodes =       259 ->       285 | Cost = 2031.00
+[   0.05s] Layer =  32 | Nodes =       285 ->       268 | Cost = 2092.00
+[   0.05s] Layer =  33 | Nodes =       268 ->       257 | Cost = 2153.00
+[   0.05s] Layer =  34 | Nodes =       257 ->       221 | Cost = 2214.00
+[   0.05s] Layer =  35 | Nodes =       221 ->       153 | Cost = 2276.00
+[   0.05s] Layer =  36 | Nodes =       153 ->        71 | Cost = 2342.00
+[   0.05s] Layer =  37 | Nodes =        71 ->        18 | Cost = 2418.00
+[   0.05s] Layer =  38 | Nodes =        18 ->         1 | Cost = 2480.00
+[   0.05s] COMPLETED
+Cost = 2480.00 | Value = 1,3,2,4,6,5,8,7,9,10,11,12,13,15,21,14,17,19,20,18,16,24,22,25,27,23,26,29,28,33,31,34,30,36,35,37,38,32,0
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/AFG/rbg038a.tw
+
+Instance: ../data/tsptw/AFG/rbg040a.tw
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->         2 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =         2 ->         2 | Cost =   47.00
+[   0.02s] Layer =   2 | Nodes =         2 ->         1 | Cost =  133.00
+[   0.02s] Layer =   3 | Nodes =         1 ->         5 | Cost =  197.00
+[   0.03s] Layer =   4 | Nodes =         5 ->        15 | Cost =  259.00
+[   0.03s] Layer =   5 | Nodes =        15 ->        26 | Cost =  319.00
+[   0.03s] Layer =   6 | Nodes =        26 ->        48 | Cost =  372.00
+[   0.03s] Layer =   7 | Nodes =        48 ->        89 | Cost =  433.00
+[   0.03s] Layer =   8 | Nodes =        89 ->       132 | Cost =  485.00
+[   0.03s] Layer =   9 | Nodes =       132 ->       119 | Cost =  547.00
+[   0.03s] Layer =  10 | Nodes =       119 ->       135 | Cost =  613.00
+[   0.03s] Layer =  11 | Nodes =       135 ->       224 | Cost =  671.00
+[   0.03s] Layer =  12 | Nodes =       224 ->       398 | Cost =  722.00
+[   0.03s] Layer =  13 | Nodes =       398 ->       575 | Cost =  774.00
+[   0.03s] Layer =  14 | Nodes =       575 ->       690 | Cost =  830.00
+[   0.04s] Layer =  15 | Nodes =       690 ->       687 | Cost =  890.00
+[   0.04s] Layer =  16 | Nodes =       687 ->       628 | Cost =  950.00
+[   0.04s] Layer =  17 | Nodes =       628 ->       693 | Cost = 1007.00
+[   0.04s] Layer =  18 | Nodes =       693 ->       928 | Cost = 1060.00
+[   0.04s] Layer =  19 | Nodes =       928 ->      1091 | Cost = 1118.00
+[   0.04s] Layer =  20 | Nodes =      1091 ->      1186 | Cost = 1170.00
+[   0.04s] Layer =  21 | Nodes =      1186 ->      1385 | Cost = 1221.00
+[   0.05s] Layer =  22 | Nodes =      1385 ->      1606 | Cost = 1273.00
+[   0.05s] Layer =  23 | Nodes =      1606 ->      1604 | Cost = 1328.00
+[   0.05s] Layer =  24 | Nodes =      1604 ->      1156 | Cost = 1386.00
+[   0.05s] Layer =  25 | Nodes =      1156 ->       485 | Cost = 1450.00
+[   0.05s] Layer =  26 | Nodes =       485 ->       109 | Cost = 1521.00
+[   0.05s] Layer =  27 | Nodes =       109 ->        48 | Cost = 1583.00
+[   0.05s] Layer =  28 | Nodes =        48 ->        49 | Cost = 1632.00
+[   0.06s] Layer =  29 | Nodes =        49 ->        40 | Cost = 1688.00
+[   0.06s] Layer =  30 | Nodes =        40 ->        25 | Cost = 1749.00
+[   0.06s] Layer =  31 | Nodes =        25 ->        23 | Cost = 1823.00
+[   0.06s] Layer =  32 | Nodes =        23 ->        47 | Cost = 1881.00
+[   0.06s] Layer =  33 | Nodes =        47 ->       105 | Cost = 1939.00
+[   0.06s] Layer =  34 | Nodes =       105 ->       165 | Cost = 2000.00
+[   0.06s] Layer =  35 | Nodes =       165 ->       157 | Cost = 2058.00
+[   0.06s] Layer =  36 | Nodes =       157 ->       101 | Cost = 2134.00
+[   0.06s] Layer =  37 | Nodes =       101 ->        54 | Cost = 2199.00
+[   0.06s] Layer =  38 | Nodes =        54 ->        23 | Cost = 2257.00
+[   0.06s] Layer =  39 | Nodes =        23 ->         6 | Cost = 2332.00
+[   0.06s] Layer =  40 | Nodes =         6 ->         1 | Cost = 2378.00
+[   0.06s] COMPLETED
+Cost = 2378.00 | Value = 2,1,3,5,4,10,11,7,6,8,9,16,13,17,14,19,12,22,15,21,20,18,27,24,25,26,23,31,29,30,28,33,32,38,34,36,39,35,37,40,0
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/AFG/rbg040a.tw
+
+Instance: ../data/tsptw/AFG/rbg041a.tw
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->         7 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =         7 ->        37 | Cost =   48.00
+[   0.03s] Layer =   2 | Nodes =        37 ->       110 | Cost =   98.00
+[   0.03s] Layer =   3 | Nodes =       110 ->       170 | Cost =  162.00
+[   0.03s] Layer =   4 | Nodes =       170 ->       157 | Cost =  214.00
+[   0.03s] Layer =   5 | Nodes =       157 ->        90 | Cost =  274.00
+[   0.03s] Layer =   6 | Nodes =        90 ->        53 | Cost =  343.00
+[   0.03s] Layer =   7 | Nodes =        53 ->        67 | Cost =  390.00
+[   0.03s] Layer =   8 | Nodes =        67 ->       210 | Cost =  452.00
+[   0.03s] Layer =   9 | Nodes =       210 ->       655 | Cost =  512.00
+[   0.03s] Layer =  10 | Nodes =       655 ->      1663 | Cost =  569.00
+[   0.04s] Layer =  11 | Nodes =      1663 ->      3284 | Cost =  628.00
+[   0.04s] Layer =  12 | Nodes =      3284 ->      4337 | Cost =  695.00
+[   0.05s] Layer =  13 | Nodes =      4337 ->      4383 | Cost =  753.00
+[   0.05s] Layer =  14 | Nodes =      4383 ->      3434 | Cost =  820.00
+[   0.06s] Layer =  15 | Nodes =      3434 ->      2396 | Cost =  889.00
+[   0.06s] Layer =  16 | Nodes =      2396 ->      1712 | Cost =  954.00
+[   0.06s] Layer =  17 | Nodes =      1712 ->      1147 | Cost = 1014.00
+[   0.06s] Layer =  18 | Nodes =      1147 ->       690 | Cost = 1094.00
+[   0.06s] Layer =  19 | Nodes =       690 ->       379 | Cost = 1157.00
+[   0.06s] Layer =  20 | Nodes =       379 ->       156 | Cost = 1243.00
+[   0.06s] Layer =  21 | Nodes =       156 ->        53 | Cost = 1312.00
+[   0.07s] Layer =  22 | Nodes =        53 ->         9 | Cost = 1384.00
+[   0.07s] Layer =  23 | Nodes =         9 ->        16 | Cost = 1449.00
+[   0.07s] Layer =  24 | Nodes =        16 ->        64 | Cost = 1505.00
+[   0.07s] Layer =  25 | Nodes =        64 ->       217 | Cost = 1574.00
+[   0.07s] Layer =  26 | Nodes =       217 ->       409 | Cost = 1645.00
+[   0.07s] Layer =  27 | Nodes =       409 ->       530 | Cost = 1713.00
+[   0.07s] Layer =  28 | Nodes =       530 ->       517 | Cost = 1774.00
+[   0.07s] Layer =  29 | Nodes =       517 ->       395 | Cost = 1847.00
+[   0.07s] Layer =  30 | Nodes =       395 ->       206 | Cost = 1911.00
+[   0.07s] Layer =  31 | Nodes =       206 ->        87 | Cost = 1985.00
+[   0.07s] Layer =  32 | Nodes =        87 ->        49 | Cost = 2046.00
+[   0.07s] Layer =  33 | Nodes =        49 ->        74 | Cost = 2116.00
+[   0.07s] Layer =  34 | Nodes =        74 ->       197 | Cost = 2176.00
+[   0.07s] Layer =  35 | Nodes =       197 ->       389 | Cost = 2234.00
+[   0.07s] Layer =  36 | Nodes =       389 ->       502 | Cost = 2291.00
+[   0.08s] Layer =  37 | Nodes =       502 ->       416 | Cost = 2350.00
+[   0.08s] Layer =  38 | Nodes =       416 ->       218 | Cost = 2412.00
+[   0.08s] Layer =  39 | Nodes =       218 ->        71 | Cost = 2481.00
+[   0.08s] Layer =  40 | Nodes =        71 ->        13 | Cost = 2547.00
+[   0.08s] Layer =  41 | Nodes =        13 ->         1 | Cost = 2598.00
+[   0.08s] COMPLETED
+Cost = 2598.00 | Value = 3,2,6,5,4,1,11,7,8,16,17,9,13,12,10,19,20,15,14,18,21,22,24,23,32,27,26,25,31,29,28,33,34,30,39,37,38,36,35,40,41,0
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/AFG/rbg041a.tw
+
+Instance: ../data/tsptw/AFG/rbg042a.tw
+GPU: True
+[   0.03s] Layer =   0 | Nodes =         1 ->        11 | Cost =    0.00
+[   0.03s] Layer =   1 | Nodes =        11 ->        89 | Cost =   47.00
+[   0.03s] Layer =   2 | Nodes =        89 ->       370 | Cost =   96.00
+[   0.03s] Layer =   3 | Nodes =       370 ->       927 | Cost =  159.00
+[   0.03s] Layer =   4 | Nodes =       927 ->      1700 | Cost =  222.00
+[   0.03s] Layer =   5 | Nodes =      1700 ->      2430 | Cost =  293.00
+[   0.04s] Layer =   6 | Nodes =      2430 ->      3282 | Cost =  365.00
+[   0.04s] Layer =   7 | Nodes =      3282 ->      4853 | Cost =  428.00
+[   0.04s] Layer =   8 | Nodes =      4853 ->      7777 | Cost =  487.00
+[   0.06s] Layer =   9 | Nodes =      7777 ->     11796 | Cost =  550.00
+[   0.07s] Layer =  10 | Nodes =     11796 ->     15438 | Cost =  607.00
+[   0.10s] Layer =  11 | Nodes =     15438 ->     16158 | Cost =  677.00
+[   0.12s] Layer =  12 | Nodes =     16158 ->     13290 | Cost =  743.00
+[   0.13s] Layer =  13 | Nodes =     13290 ->      7877 | Cost =  804.00
+[   0.14s] Layer =  14 | Nodes =      7877 ->      5091 | Cost =  860.00
+[   0.15s] Layer =  15 | Nodes =      5091 ->      8294 | Cost =  926.00
+[   0.16s] Layer =  16 | Nodes =      8294 ->     11253 | Cost =  994.00
+[   0.17s] Layer =  17 | Nodes =     11253 ->      8731 | Cost = 1070.00
+[   0.18s] Layer =  18 | Nodes =      8731 ->      3976 | Cost = 1134.00
+[   0.18s] Layer =  19 | Nodes =      3976 ->      1564 | Cost = 1195.00
+[   0.18s] Layer =  20 | Nodes =      1564 ->       389 | Cost = 1265.00
+[   0.18s] Layer =  21 | Nodes =       389 ->        60 | Cost = 1331.00
+[   0.18s] Layer =  22 | Nodes =        60 ->         8 | Cost = 1399.00
+[   0.19s] Layer =  23 | Nodes =         8 ->        27 | Cost = 1465.00
+[   0.19s] Layer =  24 | Nodes =        27 ->       129 | Cost = 1529.00
+[   0.19s] Layer =  25 | Nodes =       129 ->       528 | Cost = 1582.00
+[   0.19s] Layer =  26 | Nodes =       528 ->      1542 | Cost = 1636.00
+[   0.19s] Layer =  27 | Nodes =      1542 ->      2618 | Cost = 1710.00
+[   0.19s] Layer =  28 | Nodes =      2618 ->      3034 | Cost = 1790.00
+[   0.20s] Layer =  29 | Nodes =      3034 ->      2852 | Cost = 1860.00
+[   0.20s] Layer =  30 | Nodes =      2852 ->      2345 | Cost = 1932.00
+[   0.20s] Layer =  31 | Nodes =      2345 ->      1818 | Cost = 1996.00
+[   0.20s] Layer =  32 | Nodes =      1818 ->      1225 | Cost = 2065.00
+[   0.20s] Layer =  33 | Nodes =      1225 ->       644 | Cost = 2138.00
+[   0.20s] Layer =  34 | Nodes =       644 ->       353 | Cost = 2219.00
+[   0.20s] Layer =  35 | Nodes =       353 ->       216 | Cost = 2291.00
+[   0.21s] Layer =  36 | Nodes =       216 ->       187 | Cost = 2370.00
+[   0.21s] Layer =  37 | Nodes =       187 ->       192 | Cost = 2436.00
+[   0.21s] Layer =  38 | Nodes =       192 ->       221 | Cost = 2512.00
+[   0.21s] Layer =  39 | Nodes =       221 ->       192 | Cost = 2574.00
+[   0.21s] Layer =  40 | Nodes =       192 ->       126 | Cost = 2637.00
+[   0.21s] Layer =  41 | Nodes =       126 ->        36 | Cost = 2712.00
+[   0.21s] Layer =  42 | Nodes =        36 ->         1 | Cost = 2772.00
+[   0.21s] COMPLETED
+Cost = 2772.00 | Value = 2,4,3,1,6,7,9,13,5,22,11,12,20,8,15,16,14,10,18,19,21,17,31,23,26,25,24,33,27,30,28,29,32,36,38,35,34,37,40,39,41,42,0
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/AFG/rbg042a.tw
+
+Instance: ../data/tsptw/AFG/rbg048a.tw
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->         1 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =         1 ->         1 | Cost = 6585.00
+[   0.03s] Layer =   2 | Nodes =         1 ->         1 | Cost = 6664.00
+[   0.03s] Layer =   3 | Nodes =         1 ->         1 | Cost = 6731.00
+[   0.03s] Layer =   4 | Nodes =         1 ->         1 | Cost = 6817.00
+[   0.03s] Layer =   5 | Nodes =         1 ->        31 | Cost = 6888.00
+[   0.03s] Layer =   6 | Nodes =        31 ->       929 | Cost = 6938.00
+[   0.04s] Layer =   7 | Nodes =       929 ->     13729 | Cost = 6975.00
+[   0.11s] Layer =   8 | Nodes =     13729 ->    126749 | Cost = 7019.00
+[   0.31s] Layer =   9 | Nodes =    126749 ->    312794 | Cost = 7069.00
+[   0.58s] Layer =  10 | Nodes =    312794 ->    603067 | Cost = 7119.00
+[   0.68s] Layer =  11 | Nodes =    603067 ->    128846 | Cost = 7179.00
+[   0.70s] Layer =  12 | Nodes =    128846 ->     98744 | Cost = 7231.00
+[   0.73s] Layer =  13 | Nodes =     98744 ->    130330 | Cost = 7301.00
+[   0.77s] Layer =  14 | Nodes =    130330 ->    189624 | Cost = 7348.00
+[   0.81s] Layer =  15 | Nodes =    189624 ->    183302 | Cost = 7393.00
+[   0.82s] Layer =  16 | Nodes =    183302 ->     53668 | Cost = 7452.00
+[   0.82s] Layer =  17 | Nodes =     53668 ->     24777 | Cost = 7502.00
+[   0.83s] Layer =  18 | Nodes =     24777 ->      6928 | Cost = 7564.00
+[   0.83s] Layer =  19 | Nodes =      6928 ->     12102 | Cost = 7616.00
+[   0.83s] Layer =  20 | Nodes =     12102 ->     14275 | Cost = 7678.00
+[   0.84s] Layer =  21 | Nodes =     14275 ->     12665 | Cost = 7735.00
+[   0.84s] Layer =  22 | Nodes =     12665 ->     11536 | Cost = 7790.00
+[   0.84s] Layer =  23 | Nodes =     11536 ->     10458 | Cost = 7837.00
+[   0.84s] Layer =  24 | Nodes =     10458 ->      9777 | Cost = 7893.00
+[   0.84s] Layer =  25 | Nodes =      9777 ->      8905 | Cost = 7945.00
+[   0.85s] Layer =  26 | Nodes =      8905 ->      8403 | Cost = 7999.00
+[   0.85s] Layer =  27 | Nodes =      8403 ->      7465 | Cost = 8051.00
+[   0.85s] Layer =  28 | Nodes =      7465 ->      6597 | Cost = 8109.00
+[   0.85s] Layer =  29 | Nodes =      6597 ->      6983 | Cost = 8175.00
+[   0.85s] Layer =  30 | Nodes =      6983 ->      6374 | Cost = 8237.00
+[   0.85s] Layer =  31 | Nodes =      6374 ->      4440 | Cost = 8293.00
+[   0.86s] Layer =  32 | Nodes =      4440 ->      2665 | Cost = 8348.00
+[   0.86s] Layer =  33 | Nodes =      2665 ->      1320 | Cost = 8401.00
+[   0.86s] Layer =  34 | Nodes =      1320 ->       571 | Cost = 8455.00
+[   0.86s] Layer =  35 | Nodes =       571 ->       198 | Cost = 8519.00
+[   0.86s] Layer =  36 | Nodes =       198 ->        63 | Cost = 8590.00
+[   0.86s] Layer =  37 | Nodes =        63 ->       107 | Cost = 8682.00
+[   0.86s] Layer =  38 | Nodes =       107 ->       510 | Cost = 8741.00
+[   0.86s] Layer =  39 | Nodes =       510 ->      1520 | Cost = 8797.00
+[   0.86s] Layer =  40 | Nodes =      1520 ->      2934 | Cost = 8852.00
+[   0.87s] Layer =  41 | Nodes =      2934 ->      3892 | Cost = 8906.00
+[   0.87s] Layer =  42 | Nodes =      3892 ->      3610 | Cost = 8964.00
+[   0.88s] Layer =  43 | Nodes =      3610 ->      2498 | Cost = 9038.00
+[   0.88s] Layer =  44 | Nodes =      2498 ->      1428 | Cost = 9088.00
+[   0.88s] Layer =  45 | Nodes =      1428 ->       645 | Cost = 9140.00
+[   0.88s] Layer =  46 | Nodes =       645 ->       201 | Cost = 9228.00
+[   0.88s] Layer =  47 | Nodes =       201 ->        46 | Cost = 9319.00
+[   0.88s] Layer =  48 | Nodes =        46 ->         1 | Cost = 9383.00
+[   0.88s] COMPLETED
+Cost = 9383.00 | Value = 1,2,3,4,5,31,9,6,15,14,12,10,11,13,32,7,17,16,8,19,18,21,27,20,24,26,22,23,25,28,35,30,34,29,33,36,38,47,44,37,45,40,42,39,46,48,41,43,0
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/AFG/rbg048a.tw
+
+Instance: ../data/tsptw/AFG/rbg049a.tw
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->         2 | Cost =    0.00
+[   0.03s] Layer =   1 | Nodes =         2 ->         2 | Cost =   68.00
+[   0.03s] Layer =   2 | Nodes =         2 ->         1 | Cost =  162.00
+[   0.03s] Layer =   3 | Nodes =         1 ->         1 | Cost = 7244.00
+[   0.03s] Layer =   4 | Nodes =         1 ->         1 | Cost = 7322.00
+[   0.03s] Layer =   5 | Nodes =         1 ->        27 | Cost = 7387.00
+[   0.03s] Layer =   6 | Nodes =        27 ->       689 | Cost = 7439.00
+[   0.03s] Layer =   7 | Nodes =       689 ->      8616 | Cost = 7494.00
+[   0.06s] Layer =   8 | Nodes =      8616 ->     67702 | Cost = 7542.00
+[   0.17s] Layer =   9 | Nodes =     67702 ->    104182 | Cost = 7595.00
+[   0.25s] Layer =  10 | Nodes =    104182 ->    145692 | Cost = 7647.00
+[   0.35s] Layer =  11 | Nodes =    145692 ->    202249 | Cost = 7702.00
+[   0.40s] Layer =  12 | Nodes =    202249 ->     89816 | Cost = 7754.00
+[   0.41s] Layer =  13 | Nodes =     89816 ->     35397 | Cost = 7817.00
+[   0.42s] Layer =  14 | Nodes =     35397 ->     27617 | Cost = 7879.00
+[   0.42s] Layer =  15 | Nodes =     27617 ->     25948 | Cost = 7935.00
+[   0.43s] Layer =  16 | Nodes =     25948 ->     15682 | Cost = 7994.00
+[   0.43s] Layer =  17 | Nodes =     15682 ->      6780 | Cost = 8052.00
+[   0.43s] Layer =  18 | Nodes =      6780 ->      2000 | Cost = 8112.00
+[   0.43s] Layer =  19 | Nodes =      2000 ->      1794 | Cost = 8172.00
+[   0.43s] Layer =  20 | Nodes =      1794 ->      2136 | Cost = 8226.00
+[   0.43s] Layer =  21 | Nodes =      2136 ->      3093 | Cost = 8282.00
+[   0.44s] Layer =  22 | Nodes =      3093 ->      3214 | Cost = 8337.00
+[   0.44s] Layer =  23 | Nodes =      3214 ->      2570 | Cost = 8400.00
+[   0.44s] Layer =  24 | Nodes =      2570 ->      2064 | Cost = 8461.00
+[   0.44s] Layer =  25 | Nodes =      2064 ->      1897 | Cost = 8520.00
+[   0.44s] Layer =  26 | Nodes =      1897 ->      1867 | Cost = 8581.00
+[   0.44s] Layer =  27 | Nodes =      1867 ->      1707 | Cost = 8640.00
+[   0.44s] Layer =  28 | Nodes =      1707 ->      1460 | Cost = 8703.00
+[   0.45s] Layer =  29 | Nodes =      1460 ->       966 | Cost = 8764.00
+[   0.45s] Layer =  30 | Nodes =       966 ->       403 | Cost = 8825.00
+[   0.45s] Layer =  31 | Nodes =       403 ->       141 | Cost = 8888.00
+[   0.45s] Layer =  32 | Nodes =       141 ->        42 | Cost = 8961.00
+[   0.45s] Layer =  33 | Nodes =        42 ->         8 | Cost = 9035.00
+[   0.45s] Layer =  34 | Nodes =         8 ->        10 | Cost = 9099.00
+[   0.45s] Layer =  35 | Nodes =        10 ->        66 | Cost = 9146.00
+[   0.45s] Layer =  36 | Nodes =        66 ->       281 | Cost = 9205.00
+[   0.45s] Layer =  37 | Nodes =       281 ->       681 | Cost = 9259.00
+[   0.45s] Layer =  38 | Nodes =       681 ->       976 | Cost = 9318.00
+[   0.45s] Layer =  39 | Nodes =       976 ->       855 | Cost = 9376.00
+[   0.46s] Layer =  40 | Nodes =       855 ->       501 | Cost = 9434.00
+[   0.46s] Layer =  41 | Nodes =       501 ->       249 | Cost = 9485.00
+[   0.46s] Layer =  42 | Nodes =       249 ->       121 | Cost = 9550.00
+[   0.46s] Layer =  43 | Nodes =       121 ->       121 | Cost = 9614.00
+[   0.46s] Layer =  44 | Nodes =       121 ->       161 | Cost = 9686.00
+[   0.46s] Layer =  45 | Nodes =       161 ->       178 | Cost = 9756.00
+[   0.46s] Layer =  46 | Nodes =       178 ->       135 | Cost = 9825.00
+[   0.46s] Layer =  47 | Nodes =       135 ->        59 | Cost = 9891.00
+[   0.46s] Layer =  48 | Nodes =        59 ->        14 | Cost = 9963.00
+[   0.46s] Layer =  49 | Nodes =        14 ->         1 | Cost = 10018.00
+[   0.46s] COMPLETED
+Cost = 10018.00 | Value = 2,1,3,4,5,11,10,12,14,7,9,13,25,6,17,19,8,15,16,22,21,18,32,20,31,33,23,24,27,26,29,28,30,34,35,38,43,40,39,42,36,37,48,46,41,47,45,44,49,0
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/AFG/rbg049a.tw
+
+Instance: ../data/tsptw/AFG/rbg050a.tw
+GPU: True
+[   0.03s] Layer =   0 | Nodes =         1 ->         2 | Cost =    0.00
+[   0.03s] Layer =   1 | Nodes =         2 ->         2 | Cost =   48.00
+[   0.03s] Layer =   2 | Nodes =         2 ->         1 | Cost =  125.00
+[   0.03s] Layer =   3 | Nodes =         1 ->        33 | Cost =  202.00
+[   0.03s] Layer =   4 | Nodes =        33 ->       999 | Cost =  240.00
+[   0.03s] Layer =   5 | Nodes =       999 ->     18609 | Cost =  281.00
+[   0.10s] Layer =   6 | Nodes =     18609 ->    213302 | Cost =  328.00
+[   0.74s] Layer =   7 | Nodes =    213302 ->   1671963 | Cost =  375.00
+[   5.03s] Layer =   8 | Nodes =   1671963 ->   9791097 | Cost =  425.00
+           Batch =   0 | Nodes =   3263699 ->  15021245 
+           Batch =   1 | Nodes =   3263699 ->  15586168 
+           Batch =   2 | Nodes =   3263699 ->  14609703 
+[  19.51s] Layer =   9 | Nodes =   9791097 ->  45217116 | Cost =  476.00
+           Batch =   0 | Nodes =   4110647 ->  16027113 
+           Batch =   1 | Nodes =   4110647 ->  17587672 
+           Batch =   2 | Nodes =   4110647 ->  17582026 
+           Batch =   3 | Nodes =   4110647 ->  40111527 
+           Batch =   4 | Nodes =   4110647 ->  16370054 
+           Batch =   5 | Nodes =   4110647 ->  17059833 
+           Batch =   6 | Nodes =   4110647 ->  17411516 
+           Batch =   7 | Nodes =   4110647 ->  53486069 
+           Batch =   8 | Nodes =   4110647 ->  14376223 
+           Batch =   9 | Nodes =   4110647 ->  15248092 
+           Batch =  10 | Nodes =   4110646 ->  14288803 
+[  71.06s] Layer =  10 | Nodes =  45217116 -> 239548928 | Cost =  525.00
+CUDA API error = 0009 "invalid configuration argument" from /home/fabio/CODD/examples_gpu/tsptw_gpu_1_cabs.cu:197
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/AFG/rbg050a.tw
+
+Instance: ../data/tsptw/AFG/rbg050b.tw
+GPU: True
+[   0.03s] Layer =   0 | Nodes =         1 ->         2 | Cost =    0.00
+[   0.03s] Layer =   1 | Nodes =         2 ->         2 | Cost =   53.00
+[   0.03s] Layer =   2 | Nodes =         2 ->         1 | Cost =  140.00
+[   0.03s] Layer =   3 | Nodes =         1 ->         1 | Cost = 7126.00
+[   0.03s] Layer =   4 | Nodes =         1 ->         4 | Cost = 7217.00
+[   0.03s] Layer =   5 | Nodes =         4 ->        31 | Cost = 7263.00
+[   0.03s] Layer =   6 | Nodes =        31 ->       756 | Cost = 7312.00
+[   0.04s] Layer =   7 | Nodes =       756 ->      9880 | Cost = 7365.00
+[   0.05s] Layer =   8 | Nodes =      9880 ->     37404 | Cost = 7409.00
+[   0.07s] Layer =   9 | Nodes =     37404 ->     56937 | Cost = 7455.00
+[   0.11s] Layer =  10 | Nodes =     56937 ->     65586 | Cost = 7501.00
+[   0.21s] Layer =  11 | Nodes =     65586 ->     79548 | Cost = 7586.00
+[   0.28s] Layer =  12 | Nodes =     79548 ->    106194 | Cost = 7637.00
+[   0.37s] Layer =  13 | Nodes =    106194 ->    176733 | Cost = 7681.00
+[   0.43s] Layer =  14 | Nodes =    176733 ->    108222 | Cost = 7731.00
+[   0.44s] Layer =  15 | Nodes =    108222 ->     26996 | Cost = 7779.00
+[   0.45s] Layer =  16 | Nodes =     26996 ->      3425 | Cost = 7857.00
+[   0.45s] Layer =  17 | Nodes =      3425 ->      2831 | Cost = 7921.00
+[   0.45s] Layer =  18 | Nodes =      2831 ->      2721 | Cost = 7992.00
+[   0.45s] Layer =  19 | Nodes =      2721 ->      4419 | Cost = 8050.00
+[   0.45s] Layer =  20 | Nodes =      4419 ->      7183 | Cost = 8118.00
+[   0.45s] Layer =  21 | Nodes =      7183 ->      6413 | Cost = 8175.00
+[   0.46s] Layer =  22 | Nodes =      6413 ->      5080 | Cost = 8227.00
+[   0.46s] Layer =  23 | Nodes =      5080 ->      3928 | Cost = 8280.00
+[   0.46s] Layer =  24 | Nodes =      3928 ->      4610 | Cost = 8339.00
+[   0.46s] Layer =  25 | Nodes =      4610 ->      3763 | Cost = 8394.00
+[   0.46s] Layer =  26 | Nodes =      3763 ->      2740 | Cost = 8449.00
+[   0.47s] Layer =  27 | Nodes =      2740 ->      1677 | Cost = 8515.00
+[   0.47s] Layer =  28 | Nodes =      1677 ->      1147 | Cost = 8570.00
+[   0.47s] Layer =  29 | Nodes =      1147 ->       848 | Cost = 8626.00
+[   0.47s] Layer =  30 | Nodes =       848 ->       440 | Cost = 8682.00
+[   0.47s] Layer =  31 | Nodes =       440 ->       188 | Cost = 8736.00
+[   0.47s] Layer =  32 | Nodes =       188 ->        96 | Cost = 8788.00
+[   0.47s] Layer =  33 | Nodes =        96 ->        56 | Cost = 8841.00
+[   0.47s] Layer =  34 | Nodes =        56 ->        35 | Cost = 8900.00
+[   0.47s] Layer =  35 | Nodes =        35 ->        17 | Cost = 8961.00
+[   0.47s] Layer =  36 | Nodes =        17 ->        29 | Cost = 9022.00
+[   0.47s] Layer =  37 | Nodes =        29 ->       142 | Cost = 9074.00
+[   0.48s] Layer =  38 | Nodes =       142 ->       737 | Cost = 9128.00
+[   0.48s] Layer =  39 | Nodes =       737 ->      2479 | Cost = 9184.00
+[   0.48s] Layer =  40 | Nodes =      2479 ->      5420 | Cost = 9240.00
+[   0.49s] Layer =  41 | Nodes =      5420 ->      8510 | Cost = 9305.00
+[   0.49s] Layer =  42 | Nodes =      8510 ->     10611 | Cost = 9365.00
+[   0.51s] Layer =  43 | Nodes =     10611 ->     11204 | Cost = 9415.00
+[   0.52s] Layer =  44 | Nodes =     11204 ->     11112 | Cost = 9484.00
+[   0.53s] Layer =  45 | Nodes =     11112 ->      8912 | Cost = 9548.00
+[   0.54s] Layer =  46 | Nodes =      8912 ->      4972 | Cost = 9617.00
+[   0.54s] Layer =  47 | Nodes =      4972 ->      1399 | Cost = 9680.00
+[   0.55s] Layer =  48 | Nodes =      1399 ->       304 | Cost = 9740.00
+[   0.55s] Layer =  49 | Nodes =       304 ->        38 | Cost = 9805.00
+[   0.55s] Layer =  50 | Nodes =        38 ->         1 | Cost = 9863.00
+[   0.55s] COMPLETED
+Cost = 9863.00 | Value = 2,1,3,4,11,5,9,8,10,13,12,15,14,22,6,31,7,17,16,18,21,19,20,36,24,30,29,23,26,25,28,35,27,33,32,34,39,42,41,40,37,45,44,49,38,43,50,48,47,46,0
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/AFG/rbg050b.tw
+
+Instance: ../data/tsptw/AFG/rbg050c.tw
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->         2 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =         2 ->         2 | Cost =   46.00
+[   0.02s] Layer =   2 | Nodes =         2 ->         1 | Cost =  126.00
+[   0.02s] Layer =   3 | Nodes =         1 ->         1 | Cost = 7140.00
+[   0.02s] Layer =   4 | Nodes =         1 ->         1 | Cost = 7239.00
+[   0.02s] Layer =   5 | Nodes =         1 ->         1 | Cost = 7321.00
+[   0.02s] Layer =   6 | Nodes =         1 ->        29 | Cost = 7403.00
+[   0.03s] Layer =   7 | Nodes =        29 ->       811 | Cost = 7450.00
+[   0.03s] Layer =   8 | Nodes =       811 ->     11230 | Cost = 7495.00
+[   0.07s] Layer =   9 | Nodes =     11230 ->     99860 | Cost = 7541.00
+[   0.33s] Layer =  10 | Nodes =     99860 ->    456923 | Cost = 7593.00
+[   0.75s] Layer =  11 | Nodes =    456923 ->    811877 | Cost = 7644.00
+[   2.42s] Layer =  12 | Nodes =    811877 ->   3260128 | Cost = 7692.00
+[   5.77s] Layer =  13 | Nodes =   3260128 ->   6574651 | Cost = 7745.00
+           Batch =   0 | Nodes =   3287326 ->   8514717 
+           Batch =   1 | Nodes =   3287325 ->   8937424 
+[  12.91s] Layer =  14 | Nodes =   6574651 ->  17452141 | Cost = 7792.00
+           Batch =   0 | Nodes =   4363036 ->  11985149 
+           Batch =   1 | Nodes =   4363036 ->  17739746 
+           Batch =   2 | Nodes =   4363036 ->  20476884 
+           Batch =   3 | Nodes =   4363033 ->  11896612 
+[  28.72s] Layer =  15 | Nodes =  17452141 ->  62098391 | Cost = 7847.00
+           Batch =   0 | Nodes =   4776800 ->   3842717 
+           Batch =   1 | Nodes =   4776800 ->   4161385 
+           Batch =   2 | Nodes =   4776800 ->   7235432 
+           Batch =   3 | Nodes =   4776800 ->   5053124 
+           Batch =   4 | Nodes =   4776800 ->   4535031 
+           Batch =   5 | Nodes =   4776800 ->   3947688 
+           Batch =   6 | Nodes =   4776800 ->   5121001 
+           Batch =   7 | Nodes =   4776800 ->   5323714 
+           Batch =   8 | Nodes =   4776800 ->   4293143 
+           Batch =   9 | Nodes =   4776800 ->   4389071 
+           Batch =  10 | Nodes =   4776800 ->   9865579 
+           Batch =  11 | Nodes =   4776800 ->   4335689 
+           Batch =  12 | Nodes =   4776791 ->   3849189 
+[  44.44s] Layer =  16 | Nodes =  62098391 ->  65952763 | Cost = 7907.00
+terminate called after throwing an instance of 'std::length_error'
+  what():  vector::reserve
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/AFG/rbg050c.tw
+
+Instance: ../data/tsptw/AFG/rbg055a.tw
+GPU: True
+[   0.03s] Layer =   0 | Nodes =         1 ->         5 | Cost =    0.00
+[   0.03s] Layer =   1 | Nodes =         5 ->        20 | Cost =   63.00
+[   0.03s] Layer =   2 | Nodes =        20 ->        32 | Cost =  135.00
+[   0.03s] Layer =   3 | Nodes =        32 ->        30 | Cost =  228.00
+[   0.03s] Layer =   4 | Nodes =        30 ->        25 | Cost =  323.00
+[   0.03s] Layer =   5 | Nodes =        25 ->        19 | Cost =  399.00
+[   0.03s] Layer =   6 | Nodes =        19 ->        15 | Cost =  471.00
+[   0.03s] Layer =   7 | Nodes =        15 ->        12 | Cost =  566.00
+[   0.03s] Layer =   8 | Nodes =        12 ->         4 | Cost =  639.00
+[   0.03s] Layer =   9 | Nodes =         4 ->         5 | Cost =  719.00
+[   0.03s] Layer =  10 | Nodes =         5 ->        21 | Cost =  779.00
+[   0.04s] Layer =  11 | Nodes =        21 ->        43 | Cost =  847.00
+[   0.04s] Layer =  12 | Nodes =        43 ->        36 | Cost =  921.00
+[   0.04s] Layer =  13 | Nodes =        36 ->        17 | Cost =  995.00
+[   0.04s] Layer =  14 | Nodes =        17 ->         9 | Cost = 1062.00
+[   0.04s] Layer =  15 | Nodes =         9 ->        14 | Cost = 1118.00
+[   0.04s] Layer =  16 | Nodes =        14 ->        51 | Cost = 1184.00
+[   0.04s] Layer =  17 | Nodes =        51 ->       136 | Cost = 1238.00
+[   0.04s] Layer =  18 | Nodes =       136 ->       218 | Cost = 1301.00
+[   0.04s] Layer =  19 | Nodes =       218 ->       227 | Cost = 1366.00
+[   0.04s] Layer =  20 | Nodes =       227 ->       147 | Cost = 1453.00
+[   0.04s] Layer =  21 | Nodes =       147 ->        67 | Cost = 1520.00
+[   0.04s] Layer =  22 | Nodes =        67 ->        27 | Cost = 1611.00
+[   0.04s] Layer =  23 | Nodes =        27 ->        11 | Cost = 1692.00
+[   0.04s] Layer =  24 | Nodes =        11 ->        12 | Cost = 1758.00
+[   0.04s] Layer =  25 | Nodes =        12 ->        18 | Cost = 1836.00
+[   0.04s] Layer =  26 | Nodes =        18 ->        22 | Cost = 1886.00
+[   0.04s] Layer =  27 | Nodes =        22 ->        25 | Cost = 1938.00
+[   0.04s] Layer =  28 | Nodes =        25 ->        72 | Cost = 1989.00
+[   0.04s] Layer =  29 | Nodes =        72 ->       244 | Cost = 2048.00
+[   0.04s] Layer =  30 | Nodes =       244 ->       579 | Cost = 2116.00
+[   0.05s] Layer =  31 | Nodes =       579 ->       895 | Cost = 2175.00
+[   0.05s] Layer =  32 | Nodes =       895 ->      1036 | Cost = 2236.00
+[   0.05s] Layer =  33 | Nodes =      1036 ->       995 | Cost = 2303.00
+[   0.05s] Layer =  34 | Nodes =       995 ->       759 | Cost = 2374.00
+[   0.05s] Layer =  35 | Nodes =       759 ->       471 | Cost = 2439.00
+[   0.05s] Layer =  36 | Nodes =       471 ->       261 | Cost = 2502.00
+[   0.05s] Layer =  37 | Nodes =       261 ->       217 | Cost = 2560.00
+[   0.06s] Layer =  38 | Nodes =       217 ->       319 | Cost = 2629.00
+[   0.06s] Layer =  39 | Nodes =       319 ->       512 | Cost = 2686.00
+[   0.06s] Layer =  40 | Nodes =       512 ->       802 | Cost = 2755.00
+[   0.06s] Layer =  41 | Nodes =       802 ->      1175 | Cost = 2816.00
+[   0.06s] Layer =  42 | Nodes =      1175 ->      1577 | Cost = 2872.00
+[   0.06s] Layer =  43 | Nodes =      1577 ->      1746 | Cost = 2935.00
+[   0.06s] Layer =  44 | Nodes =      1746 ->      1620 | Cost = 2995.00
+[   0.07s] Layer =  45 | Nodes =      1620 ->      1246 | Cost = 3066.00
+[   0.07s] Layer =  46 | Nodes =      1246 ->       834 | Cost = 3140.00
+[   0.07s] Layer =  47 | Nodes =       834 ->       526 | Cost = 3205.00
+[   0.07s] Layer =  48 | Nodes =       526 ->       285 | Cost = 3279.00
+[   0.07s] Layer =  49 | Nodes =       285 ->       127 | Cost = 3359.00
+[   0.07s] Layer =  50 | Nodes =       127 ->        46 | Cost = 3424.00
+[   0.07s] Layer =  51 | Nodes =        46 ->        33 | Cost = 3492.00
+[   0.07s] Layer =  52 | Nodes =        33 ->        36 | Cost = 3565.00
+[   0.07s] Layer =  53 | Nodes =        36 ->        26 | Cost = 3640.00
+[   0.07s] Layer =  54 | Nodes =        26 ->         7 | Cost = 3708.00
+[   0.07s] Layer =  55 | Nodes =         7 ->         1 | Cost = 3761.00
+[   0.07s] COMPLETED
+Cost = 3761.00 | Value = 1,2,3,5,6,4,8,9,7,10,12,11,13,14,15,19,20,18,16,21,22,23,17,24,25,27,26,28,30,29,34,39,31,35,36,37,32,33,40,43,38,45,44,41,49,42,48,51,50,47,52,46,55,54,53,0
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/AFG/rbg055a.tw
+
+Instance: ../data/tsptw/AFG/rbg067a.tw
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->         4 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =         4 ->        12 | Cost =   67.00
+[   0.02s] Layer =   2 | Nodes =        12 ->        12 | Cost =  138.00
+[   0.02s] Layer =   3 | Nodes =        12 ->         4 | Cost =  219.00
+[   0.02s] Layer =   4 | Nodes =         4 ->         1 | Cost =  309.00
+[   0.03s] Layer =   5 | Nodes =         1 ->         4 | Cost =  391.00
+[   0.03s] Layer =   6 | Nodes =         4 ->        10 | Cost =  453.00
+[   0.03s] Layer =   7 | Nodes =        10 ->        11 | Cost =  510.00
+[   0.03s] Layer =   8 | Nodes =        11 ->         8 | Cost =  575.00
+[   0.03s] Layer =   9 | Nodes =         8 ->        12 | Cost =  642.00
+[   0.03s] Layer =  10 | Nodes =        12 ->        14 | Cost =  709.00
+[   0.03s] Layer =  11 | Nodes =        14 ->        10 | Cost =  792.00
+[   0.03s] Layer =  12 | Nodes =        10 ->        14 | Cost =  876.00
+[   0.03s] Layer =  13 | Nodes =        14 ->        24 | Cost =  938.00
+[   0.03s] Layer =  14 | Nodes =        24 ->        33 | Cost = 1010.00
+[   0.03s] Layer =  15 | Nodes =        33 ->        30 | Cost = 1103.00
+[   0.03s] Layer =  16 | Nodes =        30 ->        25 | Cost = 1193.00
+[   0.03s] Layer =  17 | Nodes =        25 ->        19 | Cost = 1265.00
+[   0.03s] Layer =  18 | Nodes =        19 ->        15 | Cost = 1337.00
+[   0.03s] Layer =  19 | Nodes =        15 ->        12 | Cost = 1430.00
+[   0.03s] Layer =  20 | Nodes =        12 ->         4 | Cost = 1503.00
+[   0.03s] Layer =  21 | Nodes =         4 ->         5 | Cost = 1583.00
+[   0.03s] Layer =  22 | Nodes =         5 ->        21 | Cost = 1643.00
+[   0.04s] Layer =  23 | Nodes =        21 ->        43 | Cost = 1711.00
+[   0.04s] Layer =  24 | Nodes =        43 ->        36 | Cost = 1785.00
+[   0.04s] Layer =  25 | Nodes =        36 ->        17 | Cost = 1859.00
+[   0.04s] Layer =  26 | Nodes =        17 ->         9 | Cost = 1926.00
+[   0.04s] Layer =  27 | Nodes =         9 ->        14 | Cost = 1982.00
+[   0.04s] Layer =  28 | Nodes =        14 ->        51 | Cost = 2048.00
+[   0.04s] Layer =  29 | Nodes =        51 ->       136 | Cost = 2102.00
+[   0.04s] Layer =  30 | Nodes =       136 ->       218 | Cost = 2165.00
+[   0.04s] Layer =  31 | Nodes =       218 ->       227 | Cost = 2230.00
+[   0.04s] Layer =  32 | Nodes =       227 ->       147 | Cost = 2317.00
+[   0.04s] Layer =  33 | Nodes =       147 ->        67 | Cost = 2384.00
+[   0.04s] Layer =  34 | Nodes =        67 ->        27 | Cost = 2475.00
+[   0.04s] Layer =  35 | Nodes =        27 ->        11 | Cost = 2556.00
+[   0.04s] Layer =  36 | Nodes =        11 ->        12 | Cost = 2622.00
+[   0.04s] Layer =  37 | Nodes =        12 ->        18 | Cost = 2700.00
+[   0.04s] Layer =  38 | Nodes =        18 ->        22 | Cost = 2750.00
+[   0.04s] Layer =  39 | Nodes =        22 ->        25 | Cost = 2802.00
+[   0.04s] Layer =  40 | Nodes =        25 ->        72 | Cost = 2853.00
+[   0.04s] Layer =  41 | Nodes =        72 ->       244 | Cost = 2912.00
+[   0.05s] Layer =  42 | Nodes =       244 ->       579 | Cost = 2980.00
+[   0.05s] Layer =  43 | Nodes =       579 ->       895 | Cost = 3039.00
+[   0.05s] Layer =  44 | Nodes =       895 ->      1036 | Cost = 3100.00
+[   0.05s] Layer =  45 | Nodes =      1036 ->       995 | Cost = 3167.00
+[   0.05s] Layer =  46 | Nodes =       995 ->       759 | Cost = 3238.00
+[   0.05s] Layer =  47 | Nodes =       759 ->       471 | Cost = 3303.00
+[   0.05s] Layer =  48 | Nodes =       471 ->       261 | Cost = 3366.00
+[   0.06s] Layer =  49 | Nodes =       261 ->       217 | Cost = 3424.00
+[   0.06s] Layer =  50 | Nodes =       217 ->       319 | Cost = 3493.00
+[   0.06s] Layer =  51 | Nodes =       319 ->       512 | Cost = 3550.00
+[   0.06s] Layer =  52 | Nodes =       512 ->       802 | Cost = 3619.00
+[   0.06s] Layer =  53 | Nodes =       802 ->      1175 | Cost = 3680.00
+[   0.06s] Layer =  54 | Nodes =      1175 ->      1577 | Cost = 3736.00
+[   0.06s] Layer =  55 | Nodes =      1577 ->      1746 | Cost = 3799.00
+[   0.07s] Layer =  56 | Nodes =      1746 ->      1620 | Cost = 3859.00
+[   0.07s] Layer =  57 | Nodes =      1620 ->      1246 | Cost = 3930.00
+[   0.07s] Layer =  58 | Nodes =      1246 ->       834 | Cost = 4004.00
+[   0.07s] Layer =  59 | Nodes =       834 ->       526 | Cost = 4069.00
+[   0.07s] Layer =  60 | Nodes =       526 ->       285 | Cost = 4143.00
+[   0.07s] Layer =  61 | Nodes =       285 ->       127 | Cost = 4223.00
+[   0.07s] Layer =  62 | Nodes =       127 ->        46 | Cost = 4288.00
+[   0.07s] Layer =  63 | Nodes =        46 ->        33 | Cost = 4356.00
+[   0.07s] Layer =  64 | Nodes =        33 ->        36 | Cost = 4429.00
+[   0.07s] Layer =  65 | Nodes =        36 ->        26 | Cost = 4504.00
+[   0.07s] Layer =  66 | Nodes =        26 ->         7 | Cost = 4572.00
+[   0.07s] Layer =  67 | Nodes =         7 ->         1 | Cost = 4625.00
+[   0.07s] COMPLETED
+Cost = 4625.00 | Value = 1,2,3,4,5,6,8,7,11,12,10,9,13,14,15,17,18,16,20,21,19,22,23,25,26,24,27,31,32,30,28,33,34,35,29,36,37,39,38,40,41,42,44,45,46,51,43,47,50,49,52,55,48,57,56,53,61,54,60,63,62,59,64,58,67,66,65,0
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/AFG/rbg067a.tw
+
+Instance: ../data/tsptw/AFG/rbg086a.tw
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->         2 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =         2 ->         2 | Cost =   68.00
+[   0.02s] Layer =   2 | Nodes =         2 ->         1 | Cost =  162.00
+[   0.03s] Layer =   3 | Nodes =         1 ->         7 | Cost =  888.00
+[   0.03s] Layer =   4 | Nodes =         7 ->         2 | Cost =  956.00
+[   0.03s] Layer =   5 | Nodes =         2 ->         5 | Cost = 1017.00
+[   0.03s] Layer =   6 | Nodes =         5 ->         9 | Cost = 1071.00
+[   0.03s] Layer =   7 | Nodes =         9 ->        10 | Cost = 1125.00
+[   0.03s] Layer =   8 | Nodes =        10 ->        17 | Cost = 1175.00
+[   0.03s] Layer =   9 | Nodes =        17 ->        18 | Cost = 1229.00
+[   0.03s] Layer =  10 | Nodes =        18 ->        23 | Cost = 1298.00
+[   0.03s] Layer =  11 | Nodes =        23 ->        22 | Cost = 1352.00
+[   0.03s] Layer =  12 | Nodes =        22 ->        14 | Cost = 1413.00
+[   0.03s] Layer =  13 | Nodes =        14 ->         4 | Cost = 1486.00
+[   0.03s] Layer =  14 | Nodes =         4 ->         1 | Cost = 1552.00
+[   0.03s] Layer =  15 | Nodes =         1 ->         7 | Cost = 2517.00
+[   0.03s] Layer =  16 | Nodes =         7 ->        39 | Cost = 2573.00
+[   0.04s] Layer =  17 | Nodes =        39 ->       113 | Cost = 2628.00
+[   0.04s] Layer =  18 | Nodes =       113 ->       185 | Cost = 2680.00
+[   0.04s] Layer =  19 | Nodes =       185 ->       167 | Cost = 2745.00
+[   0.04s] Layer =  20 | Nodes =       167 ->        83 | Cost = 2817.00
+[   0.04s] Layer =  21 | Nodes =        83 ->        20 | Cost = 2888.00
+[   0.04s] Layer =  22 | Nodes =        20 ->         2 | Cost = 2969.00
+[   0.04s] Layer =  23 | Nodes =         2 ->         2 | Cost = 3027.00
+[   0.04s] Layer =  24 | Nodes =         2 ->         2 | Cost = 3094.00
+[   0.04s] Layer =  25 | Nodes =         2 ->         1 | Cost = 3165.00
+[   0.04s] Layer =  26 | Nodes =         1 ->         6 | Cost = 4111.00
+[   0.04s] Layer =  27 | Nodes =         6 ->        30 | Cost = 4169.00
+[   0.04s] Layer =  28 | Nodes =        30 ->        91 | Cost = 4217.00
+[   0.04s] Layer =  29 | Nodes =        91 ->       136 | Cost = 4276.00
+[   0.04s] Layer =  30 | Nodes =       136 ->       136 | Cost = 4338.00
+[   0.04s] Layer =  31 | Nodes =       136 ->        82 | Cost = 4397.00
+[   0.04s] Layer =  32 | Nodes =        82 ->        21 | Cost = 4461.00
+[   0.05s] Layer =  33 | Nodes =        21 ->         1 | Cost = 4539.00
+[   0.05s] Layer =  34 | Nodes =         1 ->         1 | Cost = 5150.00
+[   0.05s] Layer =  35 | Nodes =         1 ->         2 | Cost = 5215.00
+[   0.05s] Layer =  36 | Nodes =         2 ->         2 | Cost = 5287.00
+[   0.05s] Layer =  37 | Nodes =         2 ->         9 | Cost = 5350.00
+[   0.05s] Layer =  38 | Nodes =         9 ->        59 | Cost = 5411.00
+[   0.05s] Layer =  39 | Nodes =        59 ->       215 | Cost = 5462.00
+[   0.05s] Layer =  40 | Nodes =       215 ->       481 | Cost = 5517.00
+[   0.05s] Layer =  41 | Nodes =       481 ->       713 | Cost = 5569.00
+[   0.05s] Layer =  42 | Nodes =       713 ->       776 | Cost = 5631.00
+[   0.05s] Layer =  43 | Nodes =       776 ->       625 | Cost = 5689.00
+[   0.06s] Layer =  44 | Nodes =       625 ->       397 | Cost = 5742.00
+[   0.06s] Layer =  45 | Nodes =       397 ->       248 | Cost = 5807.00
+[   0.06s] Layer =  46 | Nodes =       248 ->       203 | Cost = 5871.00
+[   0.06s] Layer =  47 | Nodes =       203 ->       182 | Cost = 5945.00
+[   0.06s] Layer =  48 | Nodes =       182 ->       164 | Cost = 6012.00
+[   0.06s] Layer =  49 | Nodes =       164 ->       162 | Cost = 6065.00
+[   0.06s] Layer =  50 | Nodes =       162 ->       147 | Cost = 6130.00
+[   0.06s] Layer =  51 | Nodes =       147 ->       101 | Cost = 6200.00
+[   0.06s] Layer =  52 | Nodes =       101 ->        60 | Cost = 6258.00
+[   0.06s] Layer =  53 | Nodes =        60 ->        41 | Cost = 6330.00
+[   0.06s] Layer =  54 | Nodes =        41 ->        58 | Cost = 6396.00
+[   0.06s] Layer =  55 | Nodes =        58 ->       109 | Cost = 6468.00
+[   0.06s] Layer =  56 | Nodes =       109 ->       153 | Cost = 6537.00
+[   0.06s] Layer =  57 | Nodes =       153 ->       172 | Cost = 6609.00
+[   0.07s] Layer =  58 | Nodes =       172 ->       128 | Cost = 6679.00
+[   0.07s] Layer =  59 | Nodes =       128 ->        67 | Cost = 6740.00
+[   0.07s] Layer =  60 | Nodes =        67 ->        36 | Cost = 6801.00
+[   0.07s] Layer =  61 | Nodes =        36 ->        20 | Cost = 6877.00
+[   0.07s] Layer =  62 | Nodes =        20 ->        17 | Cost = 6948.00
+[   0.07s] Layer =  63 | Nodes =        17 ->        23 | Cost = 7014.00
+[   0.07s] Layer =  64 | Nodes =        23 ->        74 | Cost = 7069.00
+[   0.07s] Layer =  65 | Nodes =        74 ->       246 | Cost = 7121.00
+[   0.07s] Layer =  66 | Nodes =       246 ->       559 | Cost = 7179.00
+[   0.07s] Layer =  67 | Nodes =       559 ->       855 | Cost = 7235.00
+[   0.07s] Layer =  68 | Nodes =       855 ->      1033 | Cost = 7289.00
+[   0.07s] Layer =  69 | Nodes =      1033 ->      1097 | Cost = 7346.00
+[   0.07s] Layer =  70 | Nodes =      1097 ->       999 | Cost = 7399.00
+[   0.08s] Layer =  71 | Nodes =       999 ->       687 | Cost = 7465.00
+[   0.08s] Layer =  72 | Nodes =       687 ->       353 | Cost = 7519.00
+[   0.08s] Layer =  73 | Nodes =       353 ->       143 | Cost = 7571.00
+[   0.08s] Layer =  74 | Nodes =       143 ->        51 | Cost = 7642.00
+[   0.08s] Layer =  75 | Nodes =        51 ->        24 | Cost = 7707.00
+[   0.08s] Layer =  76 | Nodes =        24 ->        39 | Cost = 7765.00
+[   0.08s] Layer =  77 | Nodes =        39 ->        87 | Cost = 7821.00
+[   0.08s] Layer =  78 | Nodes =        87 ->       140 | Cost = 7878.00
+[   0.08s] Layer =  79 | Nodes =       140 ->       173 | Cost = 7943.00
+[   0.08s] Layer =  80 | Nodes =       173 ->       208 | Cost = 8006.00
+[   0.08s] Layer =  81 | Nodes =       208 ->       219 | Cost = 8072.00
+[   0.08s] Layer =  82 | Nodes =       219 ->       169 | Cost = 8138.00
+[   0.08s] Layer =  83 | Nodes =       169 ->        99 | Cost = 8208.00
+[   0.08s] Layer =  84 | Nodes =        99 ->        50 | Cost = 8275.00
+[   0.08s] Layer =  85 | Nodes =        50 ->        13 | Cost = 8346.00
+[   0.08s] Layer =  86 | Nodes =        13 ->         1 | Cost = 8400.00
+[   0.08s] COMPLETED
+Cost = 8400.00 | Value = 1,2,3,4,5,6,7,9,10,11,12,13,8,14,15,20,19,18,16,17,21,23,22,25,24,26,31,29,27,30,33,32,28,34,35,37,36,40,41,39,42,38,46,43,45,49,44,53,48,47,51,50,56,52,57,60,54,58,59,55,63,62,61,66,65,70,69,64,68,67,72,73,71,75,74,77,76,80,78,79,81,82,85,86,83,84,0
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/AFG/rbg086a.tw
+
+Instance: ../data/tsptw/AFG/rbg092a.tw
+GPU: True
+[   0.02s] Layer =   0 | Nodes =         1 ->         2 | Cost =    0.00
+[   0.02s] Layer =   1 | Nodes =         2 ->         2 | Cost =   64.00
+[   0.02s] Layer =   2 | Nodes =         2 ->         1 | Cost =  146.00
+[   0.02s] Layer =   3 | Nodes =         1 ->         6 | Cost = 1092.00
+[   0.03s] Layer =   4 | Nodes =         6 ->        30 | Cost = 1150.00
+[   0.03s] Layer =   5 | Nodes =        30 ->        91 | Cost = 1198.00
+[   0.03s] Layer =   6 | Nodes =        91 ->       136 | Cost = 1257.00
+[   0.03s] Layer =   7 | Nodes =       136 ->       136 | Cost = 1319.00
+[   0.03s] Layer =   8 | Nodes =       136 ->        82 | Cost = 1378.00
+[   0.03s] Layer =   9 | Nodes =        82 ->        21 | Cost = 1442.00
+[   0.03s] Layer =  10 | Nodes =        21 ->         1 | Cost = 1520.00
+[   0.03s] Layer =  11 | Nodes =         1 ->         1 | Cost = 2131.00
+[   0.03s] Layer =  12 | Nodes =         1 ->         2 | Cost = 2196.00
+[   0.03s] Layer =  13 | Nodes =         2 ->         2 | Cost = 2268.00
+[   0.03s] Layer =  14 | Nodes =         2 ->         9 | Cost = 2331.00
+[   0.03s] Layer =  15 | Nodes =         9 ->        59 | Cost = 2392.00
+[   0.03s] Layer =  16 | Nodes =        59 ->       215 | Cost = 2443.00
+[   0.03s] Layer =  17 | Nodes =       215 ->       481 | Cost = 2498.00
+[   0.04s] Layer =  18 | Nodes =       481 ->       713 | Cost = 2550.00
+[   0.04s] Layer =  19 | Nodes =       713 ->       776 | Cost = 2612.00
+[   0.04s] Layer =  20 | Nodes =       776 ->       625 | Cost = 2670.00
+[   0.04s] Layer =  21 | Nodes =       625 ->       397 | Cost = 2723.00
+[   0.04s] Layer =  22 | Nodes =       397 ->       248 | Cost = 2788.00
+[   0.04s] Layer =  23 | Nodes =       248 ->       203 | Cost = 2852.00
+[   0.04s] Layer =  24 | Nodes =       203 ->       182 | Cost = 2926.00
+[   0.04s] Layer =  25 | Nodes =       182 ->       164 | Cost = 2993.00
+[   0.04s] Layer =  26 | Nodes =       164 ->       162 | Cost = 3046.00
+[   0.04s] Layer =  27 | Nodes =       162 ->       147 | Cost = 3111.00
+[   0.04s] Layer =  28 | Nodes =       147 ->       101 | Cost = 3181.00
+[   0.05s] Layer =  29 | Nodes =       101 ->        60 | Cost = 3239.00
+[   0.05s] Layer =  30 | Nodes =        60 ->        41 | Cost = 3311.00
+[   0.05s] Layer =  31 | Nodes =        41 ->        58 | Cost = 3377.00
+[   0.05s] Layer =  32 | Nodes =        58 ->       109 | Cost = 3449.00
+[   0.05s] Layer =  33 | Nodes =       109 ->       153 | Cost = 3518.00
+[   0.05s] Layer =  34 | Nodes =       153 ->       172 | Cost = 3590.00
+[   0.05s] Layer =  35 | Nodes =       172 ->       128 | Cost = 3660.00
+[   0.05s] Layer =  36 | Nodes =       128 ->        67 | Cost = 3721.00
+[   0.05s] Layer =  37 | Nodes =        67 ->        36 | Cost = 3782.00
+[   0.05s] Layer =  38 | Nodes =        36 ->        20 | Cost = 3858.00
+[   0.05s] Layer =  39 | Nodes =        20 ->        17 | Cost = 3929.00
+[   0.05s] Layer =  40 | Nodes =        17 ->        23 | Cost = 3995.00
+[   0.05s] Layer =  41 | Nodes =        23 ->        74 | Cost = 4050.00
+[   0.05s] Layer =  42 | Nodes =        74 ->       246 | Cost = 4102.00
+[   0.05s] Layer =  43 | Nodes =       246 ->       559 | Cost = 4160.00
+[   0.06s] Layer =  44 | Nodes =       559 ->       855 | Cost = 4216.00
+[   0.06s] Layer =  45 | Nodes =       855 ->      1033 | Cost = 4270.00
+[   0.06s] Layer =  46 | Nodes =      1033 ->      1097 | Cost = 4327.00
+[   0.06s] Layer =  47 | Nodes =      1097 ->       999 | Cost = 4380.00
+[   0.06s] Layer =  48 | Nodes =       999 ->       687 | Cost = 4446.00
+[   0.06s] Layer =  49 | Nodes =       687 ->       353 | Cost = 4500.00
+[   0.06s] Layer =  50 | Nodes =       353 ->       143 | Cost = 4552.00
+[   0.06s] Layer =  51 | Nodes =       143 ->        51 | Cost = 4623.00
+[   0.07s] Layer =  52 | Nodes =        51 ->        24 | Cost = 4688.00
+[   0.07s] Layer =  53 | Nodes =        24 ->        39 | Cost = 4746.00
+[   0.07s] Layer =  54 | Nodes =        39 ->        87 | Cost = 4802.00
+[   0.07s] Layer =  55 | Nodes =        87 ->       140 | Cost = 4859.00
+[   0.07s] Layer =  56 | Nodes =       140 ->       173 | Cost = 4924.00
+[   0.07s] Layer =  57 | Nodes =       173 ->       209 | Cost = 4987.00
+[   0.07s] Layer =  58 | Nodes =       209 ->       226 | Cost = 5053.00
+[   0.07s] Layer =  59 | Nodes =       226 ->       203 | Cost = 5104.00
+[   0.07s] Layer =  60 | Nodes =       203 ->       213 | Cost = 5171.00
+[   0.07s] Layer =  61 | Nodes =       213 ->       300 | Cost = 5226.00
+[   0.07s] Layer =  62 | Nodes =       300 ->       397 | Cost = 5293.00
+[   0.07s] Layer =  63 | Nodes =       397 ->       494 | Cost = 5357.00
+[   0.07s] Layer =  64 | Nodes =       494 ->       665 | Cost = 5410.00
+[   0.08s] Layer =  65 | Nodes =       665 ->       960 | Cost = 5470.00
+[   0.08s] Layer =  66 | Nodes =       960 ->      1207 | Cost = 5537.00
+[   0.08s] Layer =  67 | Nodes =      1207 ->      1315 | Cost = 5605.00
+[   0.08s] Layer =  68 | Nodes =      1315 ->      1301 | Cost = 5673.00
+[   0.08s] Layer =  69 | Nodes =      1301 ->      1195 | Cost = 5735.00
+[   0.08s] Layer =  70 | Nodes =      1195 ->       976 | Cost = 5807.00
+[   0.09s] Layer =  71 | Nodes =       976 ->       829 | Cost = 5879.00
+[   0.09s] Layer =  72 | Nodes =       829 ->       783 | Cost = 5940.00
+[   0.09s] Layer =  73 | Nodes =       783 ->       840 | Cost = 6001.00
+[   0.09s] Layer =  74 | Nodes =       840 ->      1058 | Cost = 6060.00
+[   0.09s] Layer =  75 | Nodes =      1058 ->      1486 | Cost = 6119.00
+[   0.09s] Layer =  76 | Nodes =      1486 ->      2023 | Cost = 6176.00
+[   0.10s] Layer =  77 | Nodes =      2023 ->      2514 | Cost = 6246.00
+[   0.10s] Layer =  78 | Nodes =      2514 ->      2662 | Cost = 6301.00
+[   0.10s] Layer =  79 | Nodes =      2662 ->      2282 | Cost = 6363.00
+[   0.10s] Layer =  80 | Nodes =      2282 ->      1828 | Cost = 6430.00
+[   0.11s] Layer =  81 | Nodes =      1828 ->      1238 | Cost = 6497.00
+[   0.11s] Layer =  82 | Nodes =      1238 ->       596 | Cost = 6566.00
+[   0.11s] Layer =  83 | Nodes =       596 ->       257 | Cost = 6619.00
+[   0.11s] Layer =  84 | Nodes =       257 ->       203 | Cost = 6675.00
+[   0.11s] Layer =  85 | Nodes =       203 ->       186 | Cost = 6740.00
+[   0.11s] Layer =  86 | Nodes =       186 ->       138 | Cost = 6820.00
+[   0.11s] Layer =  87 | Nodes =       138 ->        83 | Cost = 6888.00
+[   0.11s] Layer =  88 | Nodes =        83 ->        24 | Cost = 6948.00
+[   0.11s] Layer =  89 | Nodes =        24 ->         3 | Cost = 7013.00
+[   0.11s] Layer =  90 | Nodes =         3 ->         6 | Cost = 7064.00
+[   0.11s] Layer =  91 | Nodes =         6 ->         5 | Cost = 7122.00
+[   0.12s] Layer =  92 | Nodes =         5 ->         1 | Cost = 7158.00
+[   0.12s] COMPLETED
+Cost = 7158.00 | Value = 2,1,3,8,6,4,5,7,10,9,11,12,14,13,15,17,18,16,19,23,20,22,26,21,30,25,24,28,27,33,29,34,37,31,35,36,32,40,39,38,43,42,47,46,41,45,44,49,50,48,52,51,53,55,56,58,54,59,57,61,64,62,65,63,60,67,68,76,71,69,66,84,77,70,74,73,75,72,78,81,83,80,79,86,82,88,89,87,85,92,91,90,0
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/AFG/rbg092a.tw
+
+Out of memory
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/AFG/rbg125a.tw
+
+Out of memory
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/AFG/rbg132.2.tw
+
+Out of memory
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/AFG/rbg132.tw
+
+Out of memory
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/AFG/rbg152.3.tw
+
+Out of memory
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/AFG/rbg152.tw
+
+Out of memory
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/AFG/rbg172a.tw
+
+Out of memory
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/AFG/rbg193.2.tw
+
+Out of memory
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/AFG/rbg193.tw
+
+Out of memory
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/AFG/rbg201a.tw
+
+Out of memory
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/AFG/rbg233.2.tw
+
+Out of memory
+../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/AFG/rbg233.tw
+

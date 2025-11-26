@@ -1,0 +1,1432 @@
+COMMAND: /usr/bin/time -v ../tsptw_1_bro -t 1800 -g -i ../data/tsptw/Solnon25_feasible/n21g100b10.001.txt
+Instance: ../data/tsptw/Solnon25_feasible/n21g100b10.001.txt
+GPU: True
+Width: Auto
+[   0.00s] Layer =    0 | Visited =          1 | Nodes =          1 ->          0 | MemSize =  112.00  B | Cost = ? | Batch   1/  1 | BatchSize =          1
+[   0.00s] Layer =    1 | Visited =          3 | Nodes =          2 ->          0 | MemSize =  224.00  B | Cost = ? | Batch   1/  1 | BatchSize =          2
+[   0.00s] Layer =    2 | Visited =          5 | Nodes =          2 ->          0 | MemSize =  224.00  B | Cost = ? | Batch   1/  1 | BatchSize =          2
+[   0.00s] Layer =    3 | Visited =          8 | Nodes =          3 ->          0 | MemSize =  336.00  B | Cost = ? | Batch   1/  1 | BatchSize =          3
+[   0.01s] Layer =    4 | Visited =         12 | Nodes =          4 ->          0 | MemSize =  448.00  B | Cost = ? | Batch   1/  1 | BatchSize =          4
+[   0.01s] Layer =    5 | Visited =         16 | Nodes =          4 ->          0 | MemSize =  448.00  B | Cost = ? | Batch   1/  1 | BatchSize =          4
+[   0.01s] Layer =    6 | Visited =         19 | Nodes =          3 ->          0 | MemSize =  336.00  B | Cost = ? | Batch   1/  1 | BatchSize =          3
+[   0.01s] Layer =    7 | Visited =         26 | Nodes =          7 ->          0 | MemSize =  784.00  B | Cost = ? | Batch   1/  1 | BatchSize =          7
+[   0.01s] Layer =    8 | Visited =         42 | Nodes =         16 ->          0 | MemSize =    1.75 KB | Cost = ? | Batch   1/  1 | BatchSize =         16
+[   0.01s] Layer =    9 | Visited =         58 | Nodes =         16 ->          0 | MemSize =    1.75 KB | Cost = ? | Batch   1/  1 | BatchSize =         16
+[   0.01s] Layer =   10 | Visited =         66 | Nodes =          8 ->          0 | MemSize =  896.00  B | Cost = ? | Batch   1/  1 | BatchSize =          8
+[   0.01s] Layer =   11 | Visited =         67 | Nodes =          1 ->          0 | MemSize =  112.00  B | Cost = ? | Batch   1/  1 | BatchSize =          1
+[   0.01s] Layer =   12 | Visited =         69 | Nodes =          2 ->          0 | MemSize =  224.00  B | Cost = ? | Batch   1/  1 | BatchSize =          2
+[   0.01s] Layer =   13 | Visited =         73 | Nodes =          4 ->          0 | MemSize =  448.00  B | Cost = ? | Batch   1/  1 | BatchSize =          4
+[   0.01s] Layer =   14 | Visited =         77 | Nodes =          4 ->          0 | MemSize =  448.00  B | Cost = ? | Batch   1/  1 | BatchSize =          4
+[   0.01s] Layer =   15 | Visited =         82 | Nodes =          5 ->          0 | MemSize =  560.00  B | Cost = ? | Batch   1/  1 | BatchSize =          5
+[   0.01s] Layer =   16 | Visited =         89 | Nodes =          7 ->          0 | MemSize =  784.00  B | Cost = ? | Batch   1/  1 | BatchSize =          7
+[   0.01s] Layer =   17 | Visited =         95 | Nodes =          6 ->          0 | MemSize =  672.00  B | Cost = ? | Batch   1/  1 | BatchSize =          6
+[   0.01s] Layer =   18 | Visited =         97 | Nodes =          2 ->          0 | MemSize =  224.00  B | Cost = ? | Batch   1/  1 | BatchSize =          2
+[   0.01s] Layer =   19 | Visited =         99 | Nodes =          2 ->          0 | MemSize =  224.00  B | Cost = ? | Batch   1/  1 | BatchSize =          2
+[   0.01s] Layer =   20 | Visited =        100 | Nodes =          1 ->          0 | MemSize =  112.00  B | Cost = ? | Batch   1/  1 | BatchSize =          1
+[   0.01s] SOLUTION     | Visited =        100 | Cost =  835.00 | Value = 20,8,3,17,10,16,13,11,19,4,12,9,6,7,15,18,5,14,2,1,0
+[   0.01s] COMPLETED    | Visited =        100 | Cost =  835.00 | Value = 20,8,3,17,10,16,13,11,19,4,12,9,6,7,15,18,5,14,2,1,0
+	Command being timed: "../tsptw_1_bro -t 1800 -g -i ../data/tsptw/Solnon25_feasible/n21g100b10.001.txt"
+	User time (seconds): 0.01
+	System time (seconds): 0.30
+	Percent of CPU this job got: 98%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.33
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 93696
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 25
+	Minor (reclaiming a frame) page faults: 5623
+	Voluntary context switches: 47
+	Involuntary context switches: 5
+	Swaps: 0
+	File system inputs: 8
+	File system outputs: 0
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+COMMAND: /usr/bin/time -v ../tsptw_1_bro -t 1800 -g -i ../data/tsptw/Solnon25_feasible/n21g100b10.002.txt
+Instance: ../data/tsptw/Solnon25_feasible/n21g100b10.002.txt
+GPU: True
+Width: Auto
+[   0.00s] Layer =    0 | Visited =          1 | Nodes =          1 ->          0 | MemSize =  112.00  B | Cost = ? | Batch   1/  1 | BatchSize =          1
+[   0.00s] Layer =    1 | Visited =          3 | Nodes =          2 ->          0 | MemSize =  224.00  B | Cost = ? | Batch   1/  1 | BatchSize =          2
+[   0.00s] Layer =    2 | Visited =          5 | Nodes =          2 ->          0 | MemSize =  224.00  B | Cost = ? | Batch   1/  1 | BatchSize =          2
+[   0.00s] Layer =    3 | Visited =          7 | Nodes =          2 ->          0 | MemSize =  224.00  B | Cost = ? | Batch   1/  1 | BatchSize =          2
+[   0.01s] Layer =    4 | Visited =         10 | Nodes =          3 ->          0 | MemSize =  336.00  B | Cost = ? | Batch   1/  1 | BatchSize =          3
+[   0.01s] Layer =    5 | Visited =         12 | Nodes =          2 ->          0 | MemSize =  224.00  B | Cost = ? | Batch   1/  1 | BatchSize =          2
+[   0.01s] Layer =    6 | Visited =         14 | Nodes =          2 ->          0 | MemSize =  224.00  B | Cost = ? | Batch   1/  1 | BatchSize =          2
+[   0.01s] Layer =    7 | Visited =         16 | Nodes =          2 ->          0 | MemSize =  224.00  B | Cost = ? | Batch   1/  1 | BatchSize =          2
+[   0.01s] Layer =    8 | Visited =         17 | Nodes =          1 ->          0 | MemSize =  112.00  B | Cost = ? | Batch   1/  1 | BatchSize =          1
+[   0.01s] Layer =    9 | Visited =         20 | Nodes =          3 ->          0 | MemSize =  336.00  B | Cost = ? | Batch   1/  1 | BatchSize =          3
+[   0.01s] Layer =   10 | Visited =         27 | Nodes =          7 ->          0 | MemSize =  784.00  B | Cost = ? | Batch   1/  1 | BatchSize =          7
+[   0.01s] Layer =   11 | Visited =         35 | Nodes =          8 ->          0 | MemSize =  896.00  B | Cost = ? | Batch   1/  1 | BatchSize =          8
+[   0.01s] Layer =   12 | Visited =         38 | Nodes =          3 ->          0 | MemSize =  336.00  B | Cost = ? | Batch   1/  1 | BatchSize =          3
+[   0.01s] Layer =   13 | Visited =         39 | Nodes =          1 ->          0 | MemSize =  112.00  B | Cost = ? | Batch   1/  1 | BatchSize =          1
+[   0.01s] Layer =   14 | Visited =         42 | Nodes =          3 ->          0 | MemSize =  336.00  B | Cost = ? | Batch   1/  1 | BatchSize =          3
+[   0.01s] Layer =   15 | Visited =         48 | Nodes =          6 ->          0 | MemSize =  672.00  B | Cost = ? | Batch   1/  1 | BatchSize =          6
+[   0.01s] Layer =   16 | Visited =         54 | Nodes =          6 ->          0 | MemSize =  672.00  B | Cost = ? | Batch   1/  1 | BatchSize =          6
+[   0.01s] Layer =   17 | Visited =         59 | Nodes =          5 ->          0 | MemSize =  560.00  B | Cost = ? | Batch   1/  1 | BatchSize =          5
+[   0.01s] Layer =   18 | Visited =         63 | Nodes =          4 ->          0 | MemSize =  448.00  B | Cost = ? | Batch   1/  1 | BatchSize =          4
+[   0.01s] Layer =   19 | Visited =         68 | Nodes =          5 ->          0 | MemSize =  560.00  B | Cost = ? | Batch   1/  1 | BatchSize =          5
+[   0.01s] Layer =   20 | Visited =         72 | Nodes =          4 ->          0 | MemSize =  448.00  B | Cost = ? | Batch   1/  1 | BatchSize =          4
+[   0.01s] SOLUTION     | Visited =         72 | Cost =  755.00 | Value = 2,7,16,15,13,18,9,19,20,14,10,5,6,17,3,12,8,11,4,1,0
+[   0.01s] COMPLETED    | Visited =         72 | Cost =  755.00 | Value = 2,7,16,15,13,18,9,19,20,14,10,5,6,17,3,12,8,11,4,1,0
+	Command being timed: "../tsptw_1_bro -t 1800 -g -i ../data/tsptw/Solnon25_feasible/n21g100b10.002.txt"
+	User time (seconds): 0.02
+	System time (seconds): 0.34
+	Percent of CPU this job got: 32%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:01.13
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 93696
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 20
+	Minor (reclaiming a frame) page faults: 5619
+	Voluntary context switches: 441
+	Involuntary context switches: 1
+	Swaps: 0
+	File system inputs: 8
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+COMMAND: /usr/bin/time -v ../tsptw_1_bro -t 1800 -g -i ../data/tsptw/Solnon25_feasible/n21g100b10.003.txt
+Instance: ../data/tsptw/Solnon25_feasible/n21g100b10.003.txt
+GPU: True
+Width: Auto
+[   0.00s] Layer =    0 | Visited =          1 | Nodes =          1 ->          0 | MemSize =  112.00  B | Cost = ? | Batch   1/  1 | BatchSize =          1
+[   0.00s] Layer =    1 | Visited =          3 | Nodes =          2 ->          0 | MemSize =  224.00  B | Cost = ? | Batch   1/  1 | BatchSize =          2
+[   0.00s] Layer =    2 | Visited =          5 | Nodes =          2 ->          0 | MemSize =  224.00  B | Cost = ? | Batch   1/  1 | BatchSize =          2
+[   0.00s] Layer =    3 | Visited =          6 | Nodes =          1 ->          0 | MemSize =  112.00  B | Cost = ? | Batch   1/  1 | BatchSize =          1
+[   0.01s] Layer =    4 | Visited =          7 | Nodes =          1 ->          0 | MemSize =  112.00  B | Cost = ? | Batch   1/  1 | BatchSize =          1
+[   0.01s] Layer =    5 | Visited =          9 | Nodes =          2 ->          0 | MemSize =  224.00  B | Cost = ? | Batch   1/  1 | BatchSize =          2
+[   0.01s] Layer =    6 | Visited =         13 | Nodes =          4 ->          0 | MemSize =  448.00  B | Cost = ? | Batch   1/  1 | BatchSize =          4
+[   0.01s] Layer =    7 | Visited =         18 | Nodes =          5 ->          0 | MemSize =  560.00  B | Cost = ? | Batch   1/  1 | BatchSize =          5
+[   0.01s] Layer =    8 | Visited =         22 | Nodes =          4 ->          0 | MemSize =  448.00  B | Cost = ? | Batch   1/  1 | BatchSize =          4
+[   0.01s] Layer =    9 | Visited =         24 | Nodes =          2 ->          0 | MemSize =  224.00  B | Cost = ? | Batch   1/  1 | BatchSize =          2
+[   0.01s] Layer =   10 | Visited =         26 | Nodes =          2 ->          0 | MemSize =  224.00  B | Cost = ? | Batch   1/  1 | BatchSize =          2
+[   0.01s] Layer =   11 | Visited =         28 | Nodes =          2 ->          0 | MemSize =  224.00  B | Cost = ? | Batch   1/  1 | BatchSize =          2
+[   0.01s] Layer =   12 | Visited =         30 | Nodes =          2 ->          0 | MemSize =  224.00  B | Cost = ? | Batch   1/  1 | BatchSize =          2
+[   0.01s] Layer =   13 | Visited =         32 | Nodes =          2 ->          0 | MemSize =  224.00  B | Cost = ? | Batch   1/  1 | BatchSize =          2
+[   0.01s] Layer =   14 | Visited =         33 | Nodes =          1 ->          0 | MemSize =  112.00  B | Cost = ? | Batch   1/  1 | BatchSize =          1
+[   0.01s] Layer =   15 | Visited =         36 | Nodes =          3 ->          0 | MemSize =  336.00  B | Cost = ? | Batch   1/  1 | BatchSize =          3
+[   0.01s] Layer =   16 | Visited =         39 | Nodes =          3 ->          0 | MemSize =  336.00  B | Cost = ? | Batch   1/  1 | BatchSize =          3
+[   0.01s] Layer =   17 | Visited =         43 | Nodes =          4 ->          0 | MemSize =  448.00  B | Cost = ? | Batch   1/  1 | BatchSize =          4
+[   0.01s] Layer =   18 | Visited =         47 | Nodes =          4 ->          0 | MemSize =  448.00  B | Cost = ? | Batch   1/  1 | BatchSize =          4
+[   0.01s] Layer =   19 | Visited =         49 | Nodes =          2 ->          0 | MemSize =  224.00  B | Cost = ? | Batch   1/  1 | BatchSize =          2
+[   0.01s] Layer =   20 | Visited =         51 | Nodes =          2 ->          0 | MemSize =  224.00  B | Cost = ? | Batch   1/  1 | BatchSize =          2
+[   0.01s] SOLUTION     | Visited =         51 | Cost =  753.00 | Value = 18,2,20,7,6,17,11,16,3,13,19,8,10,4,5,15,1,9,14,12,0
+[   0.01s] COMPLETED    | Visited =         51 | Cost =  753.00 | Value = 18,2,20,7,6,17,11,16,3,13,19,8,10,4,5,15,1,9,14,12,0
+	Command being timed: "../tsptw_1_bro -t 1800 -g -i ../data/tsptw/Solnon25_feasible/n21g100b10.003.txt"
+	User time (seconds): 0.02
+	System time (seconds): 0.35
+	Percent of CPU this job got: 33%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:01.12
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 93696
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 20
+	Minor (reclaiming a frame) page faults: 5620
+	Voluntary context switches: 436
+	Involuntary context switches: 5
+	Swaps: 0
+	File system inputs: 8
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+COMMAND: /usr/bin/time -v ../tsptw_1_bro -t 1800 -g -i ../data/tsptw/Solnon25_feasible/n21g100b10.004.txt
+Instance: ../data/tsptw/Solnon25_feasible/n21g100b10.004.txt
+GPU: True
+Width: Auto
+[   0.00s] Layer =    0 | Visited =          1 | Nodes =          1 ->          0 | MemSize =  112.00  B | Cost = ? | Batch   1/  1 | BatchSize =          1
+[   0.00s] Layer =    1 | Visited =          4 | Nodes =          3 ->          0 | MemSize =  336.00  B | Cost = ? | Batch   1/  1 | BatchSize =          3
+[   0.00s] Layer =    2 | Visited =         10 | Nodes =          6 ->          0 | MemSize =  672.00  B | Cost = ? | Batch   1/  1 | BatchSize =          6
+[   0.00s] Layer =    3 | Visited =         15 | Nodes =          5 ->          0 | MemSize =  560.00  B | Cost = ? | Batch   1/  1 | BatchSize =          5
+[   0.00s] Layer =    4 | Visited =         17 | Nodes =          2 ->          0 | MemSize =  224.00  B | Cost = ? | Batch   1/  1 | BatchSize =          2
+[   0.01s] Layer =    5 | Visited =         21 | Nodes =          4 ->          0 | MemSize =  448.00  B | Cost = ? | Batch   1/  1 | BatchSize =          4
+[   0.01s] Layer =    6 | Visited =         27 | Nodes =          6 ->          0 | MemSize =  672.00  B | Cost = ? | Batch   1/  1 | BatchSize =          6
+[   0.01s] Layer =    7 | Visited =         34 | Nodes =          7 ->          0 | MemSize =  784.00  B | Cost = ? | Batch   1/  1 | BatchSize =          7
+[   0.01s] Layer =    8 | Visited =         38 | Nodes =          4 ->          0 | MemSize =  448.00  B | Cost = ? | Batch   1/  1 | BatchSize =          4
+[   0.01s] Layer =    9 | Visited =         42 | Nodes =          4 ->          0 | MemSize =  448.00  B | Cost = ? | Batch   1/  1 | BatchSize =          4
+[   0.01s] Layer =   10 | Visited =         45 | Nodes =          3 ->          0 | MemSize =  336.00  B | Cost = ? | Batch   1/  1 | BatchSize =          3
+[   0.01s] Layer =   11 | Visited =         46 | Nodes =          1 ->          0 | MemSize =  112.00  B | Cost = ? | Batch   1/  1 | BatchSize =          1
+[   0.01s] Layer =   12 | Visited =         50 | Nodes =          4 ->          0 | MemSize =  448.00  B | Cost = ? | Batch   1/  1 | BatchSize =          4
+[   0.01s] Layer =   13 | Visited =         57 | Nodes =          7 ->          0 | MemSize =  784.00  B | Cost = ? | Batch   1/  1 | BatchSize =          7
+[   0.01s] Layer =   14 | Visited =         67 | Nodes =         10 ->          0 | MemSize =    1.09 KB | Cost = ? | Batch   1/  1 | BatchSize =         10
+[   0.01s] Layer =   15 | Visited =         74 | Nodes =          7 ->          0 | MemSize =  784.00  B | Cost = ? | Batch   1/  1 | BatchSize =          7
+[   0.01s] Layer =   16 | Visited =         78 | Nodes =          4 ->          0 | MemSize =  448.00  B | Cost = ? | Batch   1/  1 | BatchSize =          4
+[   0.01s] Layer =   17 | Visited =         81 | Nodes =          3 ->          0 | MemSize =  336.00  B | Cost = ? | Batch   1/  1 | BatchSize =          3
+[   0.01s] Layer =   18 | Visited =         84 | Nodes =          3 ->          0 | MemSize =  336.00  B | Cost = ? | Batch   1/  1 | BatchSize =          3
+[   0.01s] Layer =   19 | Visited =         87 | Nodes =          3 ->          0 | MemSize =  336.00  B | Cost = ? | Batch   1/  1 | BatchSize =          3
+[   0.01s] Layer =   20 | Visited =         90 | Nodes =          3 ->          0 | MemSize =  336.00  B | Cost = ? | Batch   1/  1 | BatchSize =          3
+[   0.01s] SOLUTION     | Visited =         90 | Cost =  761.00 | Value = 3,11,18,4,8,13,14,16,19,7,10,5,17,9,20,15,12,2,6,1,0
+[   0.01s] COMPLETED    | Visited =         90 | Cost =  761.00 | Value = 3,11,18,4,8,13,14,16,19,7,10,5,17,9,20,15,12,2,6,1,0
+	Command being timed: "../tsptw_1_bro -t 1800 -g -i ../data/tsptw/Solnon25_feasible/n21g100b10.004.txt"
+	User time (seconds): 0.02
+	System time (seconds): 0.34
+	Percent of CPU this job got: 32%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:01.11
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 90624
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 32
+	Minor (reclaiming a frame) page faults: 5620
+	Voluntary context switches: 444
+	Involuntary context switches: 13
+	Swaps: 0
+	File system inputs: 8
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+COMMAND: /usr/bin/time -v ../tsptw_1_bro -t 1800 -g -i ../data/tsptw/Solnon25_feasible/n21g100b10.005.txt
+Instance: ../data/tsptw/Solnon25_feasible/n21g100b10.005.txt
+GPU: True
+Width: Auto
+[   0.00s] Layer =    0 | Visited =          1 | Nodes =          1 ->          0 | MemSize =  112.00  B | Cost = ? | Batch   1/  1 | BatchSize =          1
+[   0.00s] Layer =    1 | Visited =          2 | Nodes =          1 ->          0 | MemSize =  112.00  B | Cost = ? | Batch   1/  1 | BatchSize =          1
+[   0.00s] Layer =    2 | Visited =          3 | Nodes =          1 ->          0 | MemSize =  112.00  B | Cost = ? | Batch   1/  1 | BatchSize =          1
+[   0.00s] Layer =    3 | Visited =          7 | Nodes =          4 ->          0 | MemSize =  448.00  B | Cost = ? | Batch   1/  1 | BatchSize =          4
+[   0.01s] Layer =    4 | Visited =         12 | Nodes =          5 ->          0 | MemSize =  560.00  B | Cost = ? | Batch   1/  1 | BatchSize =          5
+[   0.01s] Layer =    5 | Visited =         13 | Nodes =          1 ->          0 | MemSize =  112.00  B | Cost = ? | Batch   1/  1 | BatchSize =          1
+[   0.01s] Layer =    6 | Visited =         14 | Nodes =          1 ->          0 | MemSize =  112.00  B | Cost = ? | Batch   1/  1 | BatchSize =          1
+[   0.01s] Layer =    7 | Visited =         15 | Nodes =          1 ->          0 | MemSize =  112.00  B | Cost = ? | Batch   1/  1 | BatchSize =          1
+[   0.01s] Layer =    8 | Visited =         20 | Nodes =          5 ->          0 | MemSize =  560.00  B | Cost = ? | Batch   1/  1 | BatchSize =          5
+[   0.01s] Layer =    9 | Visited =         32 | Nodes =         12 ->          0 | MemSize =    1.31 KB | Cost = ? | Batch   1/  1 | BatchSize =         12
+[   0.01s] Layer =   10 | Visited =         48 | Nodes =         16 ->          0 | MemSize =    1.75 KB | Cost = ? | Batch   1/  1 | BatchSize =         16
+[   0.01s] Layer =   11 | Visited =         64 | Nodes =         16 ->          0 | MemSize =    1.75 KB | Cost = ? | Batch   1/  1 | BatchSize =         16
+[   0.01s] Layer =   12 | Visited =         73 | Nodes =          9 ->          0 | MemSize = 1008.00  B | Cost = ? | Batch   1/  1 | BatchSize =          9
+[   0.01s] Layer =   13 | Visited =         76 | Nodes =          3 ->          0 | MemSize =  336.00  B | Cost = ? | Batch   1/  1 | BatchSize =          3
+[   0.01s] Layer =   14 | Visited =         77 | Nodes =          1 ->          0 | MemSize =  112.00  B | Cost = ? | Batch   1/  1 | BatchSize =          1
+[   0.01s] Layer =   15 | Visited =         78 | Nodes =          1 ->          0 | MemSize =  112.00  B | Cost = ? | Batch   1/  1 | BatchSize =          1
+[   0.01s] Layer =   16 | Visited =         79 | Nodes =          1 ->          0 | MemSize =  112.00  B | Cost = ? | Batch   1/  1 | BatchSize =          1
+[   0.01s] Layer =   17 | Visited =         80 | Nodes =          1 ->          0 | MemSize =  112.00  B | Cost = ? | Batch   1/  1 | BatchSize =          1
+[   0.01s] Layer =   18 | Visited =         81 | Nodes =          1 ->          0 | MemSize =  112.00  B | Cost = ? | Batch   1/  1 | BatchSize =          1
+[   0.01s] Layer =   19 | Visited =         83 | Nodes =          2 ->          0 | MemSize =  224.00  B | Cost = ? | Batch   1/  1 | BatchSize =          2
+[   0.01s] Layer =   20 | Visited =         85 | Nodes =          2 ->          0 | MemSize =  224.00  B | Cost = ? | Batch   1/  1 | BatchSize =          2
+[   0.01s] SOLUTION     | Visited =         85 | Cost =  911.00 | Value = 19,7,4,1,17,12,14,11,2,10,3,16,5,8,15,6,18,9,13,20,0
+[   0.01s] COMPLETED    | Visited =         85 | Cost =  911.00 | Value = 19,7,4,1,17,12,14,11,2,10,3,16,5,8,15,6,18,9,13,20,0
+	Command being timed: "../tsptw_1_bro -t 1800 -g -i ../data/tsptw/Solnon25_feasible/n21g100b10.005.txt"
+	User time (seconds): 0.01
+	System time (seconds): 0.34
+	Percent of CPU this job got: 32%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:01.11
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 93696
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 22
+	Minor (reclaiming a frame) page faults: 5621
+	Voluntary context switches: 442
+	Involuntary context switches: 8
+	Swaps: 0
+	File system inputs: 8
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+COMMAND: /usr/bin/time -v ../tsptw_1_bro -t 1800 -g -i ../data/tsptw/Solnon25_feasible/n21g100b20.001.txt
+Instance: ../data/tsptw/Solnon25_feasible/n21g100b20.001.txt
+GPU: True
+Width: Auto
+[   0.00s] Layer =    0 | Visited =          1 | Nodes =          1 ->          0 | MemSize =  112.00  B | Cost = ? | Batch   1/  1 | BatchSize =          1
+[   0.00s] Layer =    1 | Visited =          4 | Nodes =          3 ->          0 | MemSize =  336.00  B | Cost = ? | Batch   1/  1 | BatchSize =          3
+[   0.00s] Layer =    2 | Visited =         11 | Nodes =          7 ->          0 | MemSize =  784.00  B | Cost = ? | Batch   1/  1 | BatchSize =          7
+[   0.00s] Layer =    3 | Visited =         23 | Nodes =         12 ->          0 | MemSize =    1.31 KB | Cost = ? | Batch   1/  1 | BatchSize =         12
+[   0.01s] Layer =    4 | Visited =         34 | Nodes =         11 ->          0 | MemSize =    1.20 KB | Cost = ? | Batch   1/  1 | BatchSize =         11
+[   0.01s] Layer =    5 | Visited =         46 | Nodes =         12 ->          0 | MemSize =    1.31 KB | Cost = ? | Batch   1/  1 | BatchSize =         12
+[   0.01s] Layer =    6 | Visited =         78 | Nodes =         32 ->          0 | MemSize =    3.50 KB | Cost = ? | Batch   1/  1 | BatchSize =         32
+[   0.01s] Layer =    7 | Visited =        147 | Nodes =         69 ->          0 | MemSize =    7.55 KB | Cost = ? | Batch   1/  1 | BatchSize =         69
+[   0.01s] Layer =    8 | Visited =        240 | Nodes =         93 ->          0 | MemSize =   10.17 KB | Cost = ? | Batch   1/  1 | BatchSize =         93
+[   0.01s] Layer =    9 | Visited =        341 | Nodes =        101 ->          0 | MemSize =   11.05 KB | Cost = ? | Batch   1/  1 | BatchSize =        101
+[   0.01s] Layer =   10 | Visited =        444 | Nodes =        103 ->          0 | MemSize =   11.27 KB | Cost = ? | Batch   1/  1 | BatchSize =        103
+[   0.01s] Layer =   11 | Visited =        505 | Nodes =         61 ->          0 | MemSize =    6.67 KB | Cost = ? | Batch   1/  1 | BatchSize =         61
+[   0.01s] Layer =   12 | Visited =        522 | Nodes =         17 ->          0 | MemSize =    1.86 KB | Cost = ? | Batch   1/  1 | BatchSize =         17
+[   0.01s] Layer =   13 | Visited =        529 | Nodes =          7 ->          0 | MemSize =  784.00  B | Cost = ? | Batch   1/  1 | BatchSize =          7
+[   0.01s] Layer =   14 | Visited =        540 | Nodes =         11 ->          0 | MemSize =    1.20 KB | Cost = ? | Batch   1/  1 | BatchSize =         11
+[   0.01s] Layer =   15 | Visited =        553 | Nodes =         13 ->          0 | MemSize =    1.42 KB | Cost = ? | Batch   1/  1 | BatchSize =         13
+[   0.01s] Layer =   16 | Visited =        565 | Nodes =         12 ->          0 | MemSize =    1.31 KB | Cost = ? | Batch   1/  1 | BatchSize =         12
+[   0.01s] Layer =   17 | Visited =        575 | Nodes =         10 ->          0 | MemSize =    1.09 KB | Cost = ? | Batch   1/  1 | BatchSize =         10
+[   0.01s] Layer =   18 | Visited =        579 | Nodes =          4 ->          0 | MemSize =  448.00  B | Cost = ? | Batch   1/  1 | BatchSize =          4
+[   0.01s] Layer =   19 | Visited =        583 | Nodes =          4 ->          0 | MemSize =  448.00  B | Cost = ? | Batch   1/  1 | BatchSize =          4
+[   0.01s] Layer =   20 | Visited =        587 | Nodes =          4 ->          0 | MemSize =  448.00  B | Cost = ? | Batch   1/  1 | BatchSize =          4
+[   0.01s] SOLUTION     | Visited =        587 | Cost =  633.00 | Value = 15,13,8,17,19,2,6,3,16,11,7,14,9,10,1,20,5,4,18,12,0
+[   0.01s] COMPLETED    | Visited =        587 | Cost =  633.00 | Value = 15,13,8,17,19,2,6,3,16,11,7,14,9,10,1,20,5,4,18,12,0
+	Command being timed: "../tsptw_1_bro -t 1800 -g -i ../data/tsptw/Solnon25_feasible/n21g100b20.001.txt"
+	User time (seconds): 0.02
+	System time (seconds): 0.34
+	Percent of CPU this job got: 32%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:01.11
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 93696
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 27
+	Minor (reclaiming a frame) page faults: 5633
+	Voluntary context switches: 447
+	Involuntary context switches: 6
+	Swaps: 0
+	File system inputs: 8
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+COMMAND: /usr/bin/time -v ../tsptw_1_bro -t 1800 -g -i ../data/tsptw/Solnon25_feasible/n21g100b20.002.txt
+Instance: ../data/tsptw/Solnon25_feasible/n21g100b20.002.txt
+GPU: True
+Width: Auto
+[   0.00s] Layer =    0 | Visited =          1 | Nodes =          1 ->          0 | MemSize =  112.00  B | Cost = ? | Batch   1/  1 | BatchSize =          1
+[   0.00s] Layer =    1 | Visited =          2 | Nodes =          1 ->          0 | MemSize =  112.00  B | Cost = ? | Batch   1/  1 | BatchSize =          1
+[   0.00s] Layer =    2 | Visited =          6 | Nodes =          4 ->          0 | MemSize =  448.00  B | Cost = ? | Batch   1/  1 | BatchSize =          4
+[   0.00s] Layer =    3 | Visited =         14 | Nodes =          8 ->          0 | MemSize =  896.00  B | Cost = ? | Batch   1/  1 | BatchSize =          8
+[   0.01s] Layer =    4 | Visited =         27 | Nodes =         13 ->          0 | MemSize =    1.42 KB | Cost = ? | Batch   1/  1 | BatchSize =         13
+[   0.01s] Layer =    5 | Visited =         56 | Nodes =         29 ->          0 | MemSize =    3.17 KB | Cost = ? | Batch   1/  1 | BatchSize =         29
+[   0.01s] Layer =    6 | Visited =         93 | Nodes =         37 ->          0 | MemSize =    4.05 KB | Cost = ? | Batch   1/  1 | BatchSize =         37
+[   0.01s] Layer =    7 | Visited =        141 | Nodes =         48 ->          0 | MemSize =    5.25 KB | Cost = ? | Batch   1/  1 | BatchSize =         48
+[   0.01s] Layer =    8 | Visited =        189 | Nodes =         48 ->          0 | MemSize =    5.25 KB | Cost = ? | Batch   1/  1 | BatchSize =         48
+[   0.01s] Layer =    9 | Visited =        236 | Nodes =         47 ->          0 | MemSize =    5.14 KB | Cost = ? | Batch   1/  1 | BatchSize =         47
+[   0.01s] Layer =   10 | Visited =        275 | Nodes =         39 ->          0 | MemSize =    4.27 KB | Cost = ? | Batch   1/  1 | BatchSize =         39
+[   0.01s] Layer =   11 | Visited =        301 | Nodes =         26 ->          0 | MemSize =    2.84 KB | Cost = ? | Batch   1/  1 | BatchSize =         26
+[   0.01s] Layer =   12 | Visited =        329 | Nodes =         28 ->          0 | MemSize =    3.06 KB | Cost = ? | Batch   1/  1 | BatchSize =         28
+[   0.01s] Layer =   13 | Visited =        360 | Nodes =         31 ->          0 | MemSize =    3.39 KB | Cost = ? | Batch   1/  1 | BatchSize =         31
+[   0.01s] Layer =   14 | Visited =        382 | Nodes =         22 ->          0 | MemSize =    2.41 KB | Cost = ? | Batch   1/  1 | BatchSize =         22
+[   0.01s] Layer =   15 | Visited =        397 | Nodes =         15 ->          0 | MemSize =    1.64 KB | Cost = ? | Batch   1/  1 | BatchSize =         15
+[   0.01s] Layer =   16 | Visited =        407 | Nodes =         10 ->          0 | MemSize =    1.09 KB | Cost = ? | Batch   1/  1 | BatchSize =         10
+[   0.01s] Layer =   17 | Visited =        419 | Nodes =         12 ->          0 | MemSize =    1.31 KB | Cost = ? | Batch   1/  1 | BatchSize =         12
+[   0.01s] Layer =   18 | Visited =        434 | Nodes =         15 ->          0 | MemSize =    1.64 KB | Cost = ? | Batch   1/  1 | BatchSize =         15
+[   0.01s] Layer =   19 | Visited =        443 | Nodes =          9 ->          0 | MemSize = 1008.00  B | Cost = ? | Batch   1/  1 | BatchSize =          9
+[   0.01s] Layer =   20 | Visited =        447 | Nodes =          4 ->          0 | MemSize =  448.00  B | Cost = ? | Batch   1/  1 | BatchSize =          4
+[   0.01s] SOLUTION     | Visited =        447 | Cost =  628.00 | Value = 12,8,19,17,1,4,6,20,10,16,14,13,15,5,9,2,7,18,3,11,0
+[   0.01s] COMPLETED    | Visited =        447 | Cost =  628.00 | Value = 12,8,19,17,1,4,6,20,10,16,14,13,15,5,9,2,7,18,3,11,0
+	Command being timed: "../tsptw_1_bro -t 1800 -g -i ../data/tsptw/Solnon25_feasible/n21g100b20.002.txt"
+	User time (seconds): 0.02
+	System time (seconds): 0.36
+	Percent of CPU this job got: 33%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:01.13
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 92160
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 27
+	Minor (reclaiming a frame) page faults: 5631
+	Voluntary context switches: 442
+	Involuntary context switches: 9
+	Swaps: 0
+	File system inputs: 8
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+COMMAND: /usr/bin/time -v ../tsptw_1_bro -t 1800 -g -i ../data/tsptw/Solnon25_feasible/n21g100b20.003.txt
+Instance: ../data/tsptw/Solnon25_feasible/n21g100b20.003.txt
+GPU: True
+Width: Auto
+[   0.00s] Layer =    0 | Visited =          1 | Nodes =          1 ->          0 | MemSize =  112.00  B | Cost = ? | Batch   1/  1 | BatchSize =          1
+[   0.00s] Layer =    1 | Visited =          6 | Nodes =          5 ->          0 | MemSize =  560.00  B | Cost = ? | Batch   1/  1 | BatchSize =          5
+[   0.00s] Layer =    2 | Visited =         18 | Nodes =         12 ->          0 | MemSize =    1.31 KB | Cost = ? | Batch   1/  1 | BatchSize =         12
+[   0.00s] Layer =    3 | Visited =         31 | Nodes =         13 ->          0 | MemSize =    1.42 KB | Cost = ? | Batch   1/  1 | BatchSize =         13
+[   0.01s] Layer =    4 | Visited =         37 | Nodes =          6 ->          0 | MemSize =  672.00  B | Cost = ? | Batch   1/  1 | BatchSize =          6
+[   0.01s] Layer =    5 | Visited =         44 | Nodes =          7 ->          0 | MemSize =  784.00  B | Cost = ? | Batch   1/  1 | BatchSize =          7
+[   0.01s] Layer =    6 | Visited =         57 | Nodes =         13 ->          0 | MemSize =    1.42 KB | Cost = ? | Batch   1/  1 | BatchSize =         13
+[   0.01s] Layer =    7 | Visited =         80 | Nodes =         23 ->          0 | MemSize =    2.52 KB | Cost = ? | Batch   1/  1 | BatchSize =         23
+[   0.01s] Layer =    8 | Visited =        119 | Nodes =         39 ->          0 | MemSize =    4.27 KB | Cost = ? | Batch   1/  1 | BatchSize =         39
+[   0.01s] Layer =    9 | Visited =        162 | Nodes =         43 ->          0 | MemSize =    4.70 KB | Cost = ? | Batch   1/  1 | BatchSize =         43
+[   0.01s] Layer =   10 | Visited =        199 | Nodes =         37 ->          0 | MemSize =    4.05 KB | Cost = ? | Batch   1/  1 | BatchSize =         37
+[   0.01s] Layer =   11 | Visited =        231 | Nodes =         32 ->          0 | MemSize =    3.50 KB | Cost = ? | Batch   1/  1 | BatchSize =         32
+[   0.01s] Layer =   12 | Visited =        253 | Nodes =         22 ->          0 | MemSize =    2.41 KB | Cost = ? | Batch   1/  1 | BatchSize =         22
+[   0.01s] Layer =   13 | Visited =        275 | Nodes =         22 ->          0 | MemSize =    2.41 KB | Cost = ? | Batch   1/  1 | BatchSize =         22
+[   0.01s] Layer =   14 | Visited =        294 | Nodes =         19 ->          0 | MemSize =    2.08 KB | Cost = ? | Batch   1/  1 | BatchSize =         19
+[   0.01s] Layer =   15 | Visited =        303 | Nodes =          9 ->          0 | MemSize = 1008.00  B | Cost = ? | Batch   1/  1 | BatchSize =          9
+[   0.01s] Layer =   16 | Visited =        308 | Nodes =          5 ->          0 | MemSize =  560.00  B | Cost = ? | Batch   1/  1 | BatchSize =          5
+[   0.01s] Layer =   17 | Visited =        315 | Nodes =          7 ->          0 | MemSize =  784.00  B | Cost = ? | Batch   1/  1 | BatchSize =          7
+[   0.01s] Layer =   18 | Visited =        323 | Nodes =          8 ->          0 | MemSize =  896.00  B | Cost = ? | Batch   1/  1 | BatchSize =          8
+[   0.01s] Layer =   19 | Visited =        329 | Nodes =          6 ->          0 | MemSize =  672.00  B | Cost = ? | Batch   1/  1 | BatchSize =          6
+[   0.01s] Layer =   20 | Visited =        331 | Nodes =          2 ->          0 | MemSize =  224.00  B | Cost = ? | Batch   1/  1 | BatchSize =          2
+[   0.01s] SOLUTION     | Visited =        331 | Cost =  747.00 | Value = 18,14,11,17,12,16,7,13,4,20,19,15,3,2,6,8,5,1,10,9,0
+[   0.01s] COMPLETED    | Visited =        331 | Cost =  747.00 | Value = 18,14,11,17,12,16,7,13,4,20,19,15,3,2,6,8,5,1,10,9,0
+	Command being timed: "../tsptw_1_bro -t 1800 -g -i ../data/tsptw/Solnon25_feasible/n21g100b20.003.txt"
+	User time (seconds): 0.02
+	System time (seconds): 0.34
+	Percent of CPU this job got: 33%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:01.10
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 90624
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 20
+	Minor (reclaiming a frame) page faults: 5628
+	Voluntary context switches: 425
+	Involuntary context switches: 6
+	Swaps: 0
+	File system inputs: 8
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+COMMAND: /usr/bin/time -v ../tsptw_1_bro -t 1800 -g -i ../data/tsptw/Solnon25_feasible/n21g100b20.004.txt
+Instance: ../data/tsptw/Solnon25_feasible/n21g100b20.004.txt
+GPU: True
+Width: Auto
+[   0.00s] Layer =    0 | Visited =          1 | Nodes =          1 ->          0 | MemSize =  112.00  B | Cost = ? | Batch   1/  1 | BatchSize =          1
+[   0.00s] Layer =    1 | Visited =          5 | Nodes =          4 ->          0 | MemSize =  448.00  B | Cost = ? | Batch   1/  1 | BatchSize =          4
+[   0.00s] Layer =    2 | Visited =         12 | Nodes =          7 ->          0 | MemSize =  784.00  B | Cost = ? | Batch   1/  1 | BatchSize =          7
+[   0.00s] Layer =    3 | Visited =         21 | Nodes =          9 ->          0 | MemSize = 1008.00  B | Cost = ? | Batch   1/  1 | BatchSize =          9
+[   0.01s] Layer =    4 | Visited =         27 | Nodes =          6 ->          0 | MemSize =  672.00  B | Cost = ? | Batch   1/  1 | BatchSize =          6
+[   0.01s] Layer =    5 | Visited =         30 | Nodes =          3 ->          0 | MemSize =  336.00  B | Cost = ? | Batch   1/  1 | BatchSize =          3
+[   0.01s] Layer =    6 | Visited =         33 | Nodes =          3 ->          0 | MemSize =  336.00  B | Cost = ? | Batch   1/  1 | BatchSize =          3
+[   0.01s] Layer =    7 | Visited =         37 | Nodes =          4 ->          0 | MemSize =  448.00  B | Cost = ? | Batch   1/  1 | BatchSize =          4
+[   0.01s] Layer =    8 | Visited =         42 | Nodes =          5 ->          0 | MemSize =  560.00  B | Cost = ? | Batch   1/  1 | BatchSize =          5
+[   0.01s] Layer =    9 | Visited =         46 | Nodes =          4 ->          0 | MemSize =  448.00  B | Cost = ? | Batch   1/  1 | BatchSize =          4
+[   0.01s] Layer =   10 | Visited =         49 | Nodes =          3 ->          0 | MemSize =  336.00  B | Cost = ? | Batch   1/  1 | BatchSize =          3
+[   0.01s] Layer =   11 | Visited =         56 | Nodes =          7 ->          0 | MemSize =  784.00  B | Cost = ? | Batch   1/  1 | BatchSize =          7
+[   0.01s] Layer =   12 | Visited =         74 | Nodes =         18 ->          0 | MemSize =    1.97 KB | Cost = ? | Batch   1/  1 | BatchSize =         18
+[   0.01s] Layer =   13 | Visited =        134 | Nodes =         60 ->          0 | MemSize =    6.56 KB | Cost = ? | Batch   1/  1 | BatchSize =         60
+[   0.01s] Layer =   14 | Visited =        249 | Nodes =        115 ->          0 | MemSize =   12.58 KB | Cost = ? | Batch   1/  1 | BatchSize =        115
+[   0.01s] Layer =   15 | Visited =        352 | Nodes =        103 ->          0 | MemSize =   11.27 KB | Cost = ? | Batch   1/  1 | BatchSize =        103
+[   0.01s] Layer =   16 | Visited =        405 | Nodes =         53 ->          0 | MemSize =    5.80 KB | Cost = ? | Batch   1/  1 | BatchSize =         53
+[   0.01s] Layer =   17 | Visited =        425 | Nodes =         20 ->          0 | MemSize =    2.19 KB | Cost = ? | Batch   1/  1 | BatchSize =         20
+[   0.01s] Layer =   18 | Visited =        430 | Nodes =          5 ->          0 | MemSize =  560.00  B | Cost = ? | Batch   1/  1 | BatchSize =          5
+[   0.01s] Layer =   19 | Visited =        431 | Nodes =          1 ->          0 | MemSize =  112.00  B | Cost = ? | Batch   1/  1 | BatchSize =          1
+[   0.01s] Layer =   20 | Visited =        432 | Nodes =          1 ->          0 | MemSize =  112.00  B | Cost = ? | Batch   1/  1 | BatchSize =          1
+[   0.01s] SOLUTION     | Visited =        432 | Cost =  705.00 | Value = 8,6,5,16,4,13,17,18,15,19,2,10,1,20,14,11,7,3,9,12,0
+[   0.01s] COMPLETED    | Visited =        432 | Cost =  705.00 | Value = 8,6,5,16,4,13,17,18,15,19,2,10,1,20,14,11,7,3,9,12,0
+	Command being timed: "../tsptw_1_bro -t 1800 -g -i ../data/tsptw/Solnon25_feasible/n21g100b20.004.txt"
+	User time (seconds): 0.02
+	System time (seconds): 0.34
+	Percent of CPU this job got: 33%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:01.12
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 90624
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 25
+	Minor (reclaiming a frame) page faults: 5634
+	Voluntary context switches: 439
+	Involuntary context switches: 5
+	Swaps: 0
+	File system inputs: 8
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+COMMAND: /usr/bin/time -v ../tsptw_1_bro -t 1800 -g -i ../data/tsptw/Solnon25_feasible/n21g100b20.005.txt
+Instance: ../data/tsptw/Solnon25_feasible/n21g100b20.005.txt
+GPU: True
+Width: Auto
+[   0.00s] Layer =    0 | Visited =          1 | Nodes =          1 ->          0 | MemSize =  112.00  B | Cost = ? | Batch   1/  1 | BatchSize =          1
+[   0.00s] Layer =    1 | Visited =          6 | Nodes =          5 ->          0 | MemSize =  560.00  B | Cost = ? | Batch   1/  1 | BatchSize =          5
+[   0.00s] Layer =    2 | Visited =         23 | Nodes =         17 ->          0 | MemSize =    1.86 KB | Cost = ? | Batch   1/  1 | BatchSize =         17
+[   0.00s] Layer =    3 | Visited =         46 | Nodes =         23 ->          0 | MemSize =    2.52 KB | Cost = ? | Batch   1/  1 | BatchSize =         23
+[   0.00s] Layer =    4 | Visited =         61 | Nodes =         15 ->          0 | MemSize =    1.64 KB | Cost = ? | Batch   1/  1 | BatchSize =         15
+[   0.01s] Layer =    5 | Visited =         68 | Nodes =          7 ->          0 | MemSize =  784.00  B | Cost = ? | Batch   1/  1 | BatchSize =          7
+[   0.01s] Layer =    6 | Visited =         77 | Nodes =          9 ->          0 | MemSize = 1008.00  B | Cost = ? | Batch   1/  1 | BatchSize =          9
+[   0.01s] Layer =    7 | Visited =         90 | Nodes =         13 ->          0 | MemSize =    1.42 KB | Cost = ? | Batch   1/  1 | BatchSize =         13
+[   0.01s] Layer =    8 | Visited =        119 | Nodes =         29 ->          0 | MemSize =    3.17 KB | Cost = ? | Batch   1/  1 | BatchSize =         29
+[   0.01s] Layer =    9 | Visited =        175 | Nodes =         56 ->          0 | MemSize =    6.12 KB | Cost = ? | Batch   1/  1 | BatchSize =         56
+[   0.01s] Layer =   10 | Visited =        250 | Nodes =         75 ->          0 | MemSize =    8.20 KB | Cost = ? | Batch   1/  1 | BatchSize =         75
+[   0.01s] Layer =   11 | Visited =        345 | Nodes =         95 ->          0 | MemSize =   10.39 KB | Cost = ? | Batch   1/  1 | BatchSize =         95
+[   0.01s] Layer =   12 | Visited =        418 | Nodes =         73 ->          0 | MemSize =    7.98 KB | Cost = ? | Batch   1/  1 | BatchSize =         73
+[   0.01s] Layer =   13 | Visited =        477 | Nodes =         59 ->          0 | MemSize =    6.45 KB | Cost = ? | Batch   1/  1 | BatchSize =         59
+[   0.01s] Layer =   14 | Visited =        537 | Nodes =         60 ->          0 | MemSize =    6.56 KB | Cost = ? | Batch   1/  1 | BatchSize =         60
+[   0.01s] Layer =   15 | Visited =        602 | Nodes =         65 ->          0 | MemSize =    7.11 KB | Cost = ? | Batch   1/  1 | BatchSize =         65
+[   0.01s] Layer =   16 | Visited =        649 | Nodes =         47 ->          0 | MemSize =    5.14 KB | Cost = ? | Batch   1/  1 | BatchSize =         47
+[   0.01s] Layer =   17 | Visited =        670 | Nodes =         21 ->          0 | MemSize =    2.30 KB | Cost = ? | Batch   1/  1 | BatchSize =         21
+[   0.01s] Layer =   18 | Visited =        678 | Nodes =          8 ->          0 | MemSize =  896.00  B | Cost = ? | Batch   1/  1 | BatchSize =          8
+[   0.01s] Layer =   19 | Visited =        691 | Nodes =         13 ->          0 | MemSize =    1.42 KB | Cost = ? | Batch   1/  1 | BatchSize =         13
+[   0.01s] Layer =   20 | Visited =        699 | Nodes =          8 ->          0 | MemSize =  896.00  B | Cost = ? | Batch   1/  1 | BatchSize =          8
+[   0.01s] SOLUTION     | Visited =        699 | Cost =  630.00 | Value = 5,3,17,2,18,10,13,4,20,12,19,14,16,6,8,7,1,11,15,9,0
+[   0.01s] COMPLETED    | Visited =        699 | Cost =  630.00 | Value = 5,3,17,2,18,10,13,4,20,12,19,14,16,6,8,7,1,11,15,9,0
+	Command being timed: "../tsptw_1_bro -t 1800 -g -i ../data/tsptw/Solnon25_feasible/n21g100b20.005.txt"
+	User time (seconds): 0.02
+	System time (seconds): 0.34
+	Percent of CPU this job got: 32%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:01.11
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 93696
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 24
+	Minor (reclaiming a frame) page faults: 5634
+	Voluntary context switches: 443
+	Involuntary context switches: 6
+	Swaps: 0
+	File system inputs: 8
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+COMMAND: /usr/bin/time -v ../tsptw_1_bro -t 1800 -g -i ../data/tsptw/Solnon25_feasible/n21g100b30.001.txt
+Instance: ../data/tsptw/Solnon25_feasible/n21g100b30.001.txt
+GPU: True
+Width: Auto
+[   0.00s] Layer =    0 | Visited =          1 | Nodes =          1 ->          0 | MemSize =  112.00  B | Cost = ? | Batch   1/  1 | BatchSize =          1
+[   0.00s] Layer =    1 | Visited =          6 | Nodes =          5 ->          0 | MemSize =  560.00  B | Cost = ? | Batch   1/  1 | BatchSize =          5
+[   0.00s] Layer =    2 | Visited =         24 | Nodes =         18 ->          0 | MemSize =    1.97 KB | Cost = ? | Batch   1/  1 | BatchSize =         18
+[   0.00s] Layer =    3 | Visited =         75 | Nodes =         51 ->          0 | MemSize =    5.58 KB | Cost = ? | Batch   1/  1 | BatchSize =         51
+[   0.01s] Layer =    4 | Visited =        166 | Nodes =         91 ->          0 | MemSize =    9.95 KB | Cost = ? | Batch   1/  1 | BatchSize =         91
+[   0.01s] Layer =    5 | Visited =        280 | Nodes =        114 ->          0 | MemSize =   12.47 KB | Cost = ? | Batch   1/  1 | BatchSize =        114
+[   0.01s] Layer =    6 | Visited =        386 | Nodes =        106 ->          0 | MemSize =   11.59 KB | Cost = ? | Batch   1/  1 | BatchSize =        106
+[   0.01s] Layer =    7 | Visited =        477 | Nodes =         91 ->          0 | MemSize =    9.95 KB | Cost = ? | Batch   1/  1 | BatchSize =         91
+[   0.01s] Layer =    8 | Visited =        605 | Nodes =        128 ->          0 | MemSize =   14.00 KB | Cost = ? | Batch   1/  1 | BatchSize =        128
+[   0.01s] Layer =    9 | Visited =        787 | Nodes =        182 ->          0 | MemSize =   19.91 KB | Cost = ? | Batch   1/  1 | BatchSize =        182
+[   0.01s] Layer =   10 | Visited =        977 | Nodes =        190 ->          0 | MemSize =   20.78 KB | Cost = ? | Batch   1/  1 | BatchSize =        190
+[   0.01s] Layer =   11 | Visited =       1211 | Nodes =        234 ->          0 | MemSize =   25.59 KB | Cost = ? | Batch   1/  1 | BatchSize =        234
+[   0.01s] Layer =   12 | Visited =       1430 | Nodes =        219 ->          0 | MemSize =   23.95 KB | Cost = ? | Batch   1/  1 | BatchSize =        219
+[   0.01s] Layer =   13 | Visited =       1581 | Nodes =        151 ->          0 | MemSize =   16.52 KB | Cost = ? | Batch   1/  1 | BatchSize =        151
+[   0.01s] Layer =   14 | Visited =       1691 | Nodes =        110 ->          0 | MemSize =   12.03 KB | Cost = ? | Batch   1/  1 | BatchSize =        110
+[   0.01s] Layer =   15 | Visited =       1793 | Nodes =        102 ->          0 | MemSize =   11.16 KB | Cost = ? | Batch   1/  1 | BatchSize =        102
+[   0.01s] Layer =   16 | Visited =       1899 | Nodes =        106 ->          0 | MemSize =   11.59 KB | Cost = ? | Batch   1/  1 | BatchSize =        106
+[   0.01s] Layer =   17 | Visited =       1996 | Nodes =         97 ->          0 | MemSize =   10.61 KB | Cost = ? | Batch   1/  1 | BatchSize =         97
+[   0.01s] Layer =   18 | Visited =       2063 | Nodes =         67 ->          0 | MemSize =    7.33 KB | Cost = ? | Batch   1/  1 | BatchSize =         67
+[   0.01s] Layer =   19 | Visited =       2100 | Nodes =         37 ->          0 | MemSize =    4.05 KB | Cost = ? | Batch   1/  1 | BatchSize =         37
+[   0.01s] Layer =   20 | Visited =       2111 | Nodes =         11 ->          0 | MemSize =    1.20 KB | Cost = ? | Batch   1/  1 | BatchSize =         11
+[   0.01s] SOLUTION     | Visited =       2111 | Cost =  491.00 | Value = 10,17,5,20,1,12,8,2,4,14,6,15,3,16,19,11,13,7,18,9,0
+[   0.01s] COMPLETED    | Visited =       2111 | Cost =  491.00 | Value = 10,17,5,20,1,12,8,2,4,14,6,15,3,16,19,11,13,7,18,9,0
+	Command being timed: "../tsptw_1_bro -t 1800 -g -i ../data/tsptw/Solnon25_feasible/n21g100b30.001.txt"
+	User time (seconds): 0.02
+	System time (seconds): 0.33
+	Percent of CPU this job got: 32%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:01.11
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 93696
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 25
+	Minor (reclaiming a frame) page faults: 5679
+	Voluntary context switches: 448
+	Involuntary context switches: 5
+	Swaps: 0
+	File system inputs: 8
+	File system outputs: 0
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+COMMAND: /usr/bin/time -v ../tsptw_1_bro -t 1800 -g -i ../data/tsptw/Solnon25_feasible/n21g100b30.002.txt
+Instance: ../data/tsptw/Solnon25_feasible/n21g100b30.002.txt
+GPU: True
+Width: Auto
+[   0.00s] Layer =    0 | Visited =          1 | Nodes =          1 ->          0 | MemSize =  112.00  B | Cost = ? | Batch   1/  1 | BatchSize =          1
+[   0.00s] Layer =    1 | Visited =          6 | Nodes =          5 ->          0 | MemSize =  560.00  B | Cost = ? | Batch   1/  1 | BatchSize =          5
+[   0.00s] Layer =    2 | Visited =         24 | Nodes =         18 ->          0 | MemSize =    1.97 KB | Cost = ? | Batch   1/  1 | BatchSize =         18
+[   0.00s] Layer =    3 | Visited =         65 | Nodes =         41 ->          0 | MemSize =    4.48 KB | Cost = ? | Batch   1/  1 | BatchSize =         41
+[   0.00s] Layer =    4 | Visited =        138 | Nodes =         73 ->          0 | MemSize =    7.98 KB | Cost = ? | Batch   1/  1 | BatchSize =         73
+[   0.01s] Layer =    5 | Visited =        280 | Nodes =        142 ->          0 | MemSize =   15.53 KB | Cost = ? | Batch   1/  1 | BatchSize =        142
+[   0.01s] Layer =    6 | Visited =        479 | Nodes =        199 ->          0 | MemSize =   21.77 KB | Cost = ? | Batch   1/  1 | BatchSize =        199
+[   0.01s] Layer =    7 | Visited =        633 | Nodes =        154 ->          0 | MemSize =   16.84 KB | Cost = ? | Batch   1/  1 | BatchSize =        154
+[   0.01s] Layer =    8 | Visited =        735 | Nodes =        102 ->          0 | MemSize =   11.16 KB | Cost = ? | Batch   1/  1 | BatchSize =        102
+[   0.01s] Layer =    9 | Visited =        866 | Nodes =        131 ->          0 | MemSize =   14.33 KB | Cost = ? | Batch   1/  1 | BatchSize =        131
+[   0.01s] Layer =   10 | Visited =       1134 | Nodes =        268 ->          0 | MemSize =   29.31 KB | Cost = ? | Batch   1/  1 | BatchSize =        268
+[   0.01s] Layer =   11 | Visited =       1616 | Nodes =        482 ->          0 | MemSize =   52.72 KB | Cost = ? | Batch   1/  1 | BatchSize =        482
+[   0.01s] Layer =   12 | Visited =       2210 | Nodes =        594 ->          0 | MemSize =   64.97 KB | Cost = ? | Batch   1/  1 | BatchSize =        594
+[   0.01s] Layer =   13 | Visited =       2732 | Nodes =        522 ->          0 | MemSize =   57.09 KB | Cost = ? | Batch   1/  1 | BatchSize =        522
+[   0.01s] Layer =   14 | Visited =       3049 | Nodes =        317 ->          0 | MemSize =   34.67 KB | Cost = ? | Batch   1/  1 | BatchSize =        317
+[   0.01s] Layer =   15 | Visited =       3178 | Nodes =        129 ->          0 | MemSize =   14.11 KB | Cost = ? | Batch   1/  1 | BatchSize =        129
+[   0.01s] Layer =   16 | Visited =       3219 | Nodes =         41 ->          0 | MemSize =    4.48 KB | Cost = ? | Batch   1/  1 | BatchSize =         41
+[   0.01s] Layer =   17 | Visited =       3250 | Nodes =         31 ->          0 | MemSize =    3.39 KB | Cost = ? | Batch   1/  1 | BatchSize =         31
+[   0.01s] Layer =   18 | Visited =       3279 | Nodes =         29 ->          0 | MemSize =    3.17 KB | Cost = ? | Batch   1/  1 | BatchSize =         29
+[   0.01s] Layer =   19 | Visited =       3295 | Nodes =         16 ->          0 | MemSize =    1.75 KB | Cost = ? | Batch   1/  1 | BatchSize =         16
+[   0.01s] Layer =   20 | Visited =       3304 | Nodes =          9 ->          0 | MemSize = 1008.00  B | Cost = ? | Batch   1/  1 | BatchSize =          9
+[   0.01s] SOLUTION     | Visited =       3304 | Cost =  620.00 | Value = 18,9,19,10,12,14,3,2,6,5,1,11,20,16,13,15,7,4,8,17,0
+[   0.01s] COMPLETED    | Visited =       3304 | Cost =  620.00 | Value = 18,9,19,10,12,14,3,2,6,5,1,11,20,16,13,15,7,4,8,17,0
+	Command being timed: "../tsptw_1_bro -t 1800 -g -i ../data/tsptw/Solnon25_feasible/n21g100b30.002.txt"
+	User time (seconds): 0.02
+	System time (seconds): 0.33
+	Percent of CPU this job got: 32%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:01.12
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 93696
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 22
+	Minor (reclaiming a frame) page faults: 5724
+	Voluntary context switches: 447
+	Involuntary context switches: 5
+	Swaps: 0
+	File system inputs: 8
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+COMMAND: /usr/bin/time -v ../tsptw_1_bro -t 1800 -g -i ../data/tsptw/Solnon25_feasible/n21g100b30.003.txt
+Instance: ../data/tsptw/Solnon25_feasible/n21g100b30.003.txt
+GPU: True
+Width: Auto
+[   0.00s] Layer =    0 | Visited =          1 | Nodes =          1 ->          0 | MemSize =  112.00  B | Cost = ? | Batch   1/  1 | BatchSize =          1
+[   0.00s] Layer =    1 | Visited =          4 | Nodes =          3 ->          0 | MemSize =  336.00  B | Cost = ? | Batch   1/  1 | BatchSize =          3
+[   0.00s] Layer =    2 | Visited =          8 | Nodes =          4 ->          0 | MemSize =  448.00  B | Cost = ? | Batch   1/  1 | BatchSize =          4
+[   0.00s] Layer =    3 | Visited =         12 | Nodes =          4 ->          0 | MemSize =  448.00  B | Cost = ? | Batch   1/  1 | BatchSize =          4
+[   0.00s] Layer =    4 | Visited =         14 | Nodes =          2 ->          0 | MemSize =  224.00  B | Cost = ? | Batch   1/  1 | BatchSize =          2
+[   0.01s] Layer =    5 | Visited =         18 | Nodes =          4 ->          0 | MemSize =  448.00  B | Cost = ? | Batch   1/  1 | BatchSize =          4
+[   0.01s] Layer =    6 | Visited =         25 | Nodes =          7 ->          0 | MemSize =  784.00  B | Cost = ? | Batch   1/  1 | BatchSize =          7
+[   0.01s] Layer =    7 | Visited =         37 | Nodes =         12 ->          0 | MemSize =    1.31 KB | Cost = ? | Batch   1/  1 | BatchSize =         12
+[   0.01s] Layer =    8 | Visited =         73 | Nodes =         36 ->          0 | MemSize =    3.94 KB | Cost = ? | Batch   1/  1 | BatchSize =         36
+[   0.01s] Layer =    9 | Visited =        138 | Nodes =         65 ->          0 | MemSize =    7.11 KB | Cost = ? | Batch   1/  1 | BatchSize =         65
+[   0.01s] Layer =   10 | Visited =        208 | Nodes =         70 ->          0 | MemSize =    7.66 KB | Cost = ? | Batch   1/  1 | BatchSize =         70
+[   0.01s] Layer =   11 | Visited =        256 | Nodes =         48 ->          0 | MemSize =    5.25 KB | Cost = ? | Batch   1/  1 | BatchSize =         48
+[   0.01s] Layer =   12 | Visited =        287 | Nodes =         31 ->          0 | MemSize =    3.39 KB | Cost = ? | Batch   1/  1 | BatchSize =         31
+[   0.01s] Layer =   13 | Visited =        317 | Nodes =         30 ->          0 | MemSize =    3.28 KB | Cost = ? | Batch   1/  1 | BatchSize =         30
+[   0.01s] Layer =   14 | Visited =        348 | Nodes =         31 ->          0 | MemSize =    3.39 KB | Cost = ? | Batch   1/  1 | BatchSize =         31
+[   0.01s] Layer =   15 | Visited =        382 | Nodes =         34 ->          0 | MemSize =    3.72 KB | Cost = ? | Batch   1/  1 | BatchSize =         34
+[   0.01s] Layer =   16 | Visited =        420 | Nodes =         38 ->          0 | MemSize =    4.16 KB | Cost = ? | Batch   1/  1 | BatchSize =         38
+[   0.01s] Layer =   17 | Visited =        462 | Nodes =         42 ->          0 | MemSize =    4.59 KB | Cost = ? | Batch   1/  1 | BatchSize =         42
+[   0.01s] Layer =   18 | Visited =        493 | Nodes =         31 ->          0 | MemSize =    3.39 KB | Cost = ? | Batch   1/  1 | BatchSize =         31
+[   0.01s] Layer =   19 | Visited =        504 | Nodes =         11 ->          0 | MemSize =    1.20 KB | Cost = ? | Batch   1/  1 | BatchSize =         11
+[   0.01s] Layer =   20 | Visited =        506 | Nodes =          2 ->          0 | MemSize =  224.00  B | Cost = ? | Batch   1/  1 | BatchSize =          2
+[   0.01s] SOLUTION     | Visited =        506 | Cost =  510.00 | Value = 9,2,4,18,3,17,12,5,8,11,6,15,13,14,1,16,10,20,7,19,0
+[   0.01s] COMPLETED    | Visited =        506 | Cost =  510.00 | Value = 9,2,4,18,3,17,12,5,8,11,6,15,13,14,1,16,10,20,7,19,0
+	Command being timed: "../tsptw_1_bro -t 1800 -g -i ../data/tsptw/Solnon25_feasible/n21g100b30.003.txt"
+	User time (seconds): 0.02
+	System time (seconds): 0.34
+	Percent of CPU this job got: 32%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:01.12
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 93696
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 32
+	Minor (reclaiming a frame) page faults: 5632
+	Voluntary context switches: 453
+	Involuntary context switches: 4
+	Swaps: 0
+	File system inputs: 8
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+COMMAND: /usr/bin/time -v ../tsptw_1_bro -t 1800 -g -i ../data/tsptw/Solnon25_feasible/n21g100b30.004.txt
+Instance: ../data/tsptw/Solnon25_feasible/n21g100b30.004.txt
+GPU: True
+Width: Auto
+[   0.00s] Layer =    0 | Visited =          1 | Nodes =          1 ->          0 | MemSize =  112.00  B | Cost = ? | Batch   1/  1 | BatchSize =          1
+[   0.00s] Layer =    1 | Visited =          9 | Nodes =          8 ->          0 | MemSize =  896.00  B | Cost = ? | Batch   1/  1 | BatchSize =          8
+[   0.00s] Layer =    2 | Visited =         54 | Nodes =         45 ->          0 | MemSize =    4.92 KB | Cost = ? | Batch   1/  1 | BatchSize =         45
+[   0.00s] Layer =    3 | Visited =        167 | Nodes =        113 ->          0 | MemSize =   12.36 KB | Cost = ? | Batch   1/  1 | BatchSize =        113
+[   0.00s] Layer =    4 | Visited =        314 | Nodes =        147 ->          0 | MemSize =   16.08 KB | Cost = ? | Batch   1/  1 | BatchSize =        147
+[   0.01s] Layer =    5 | Visited =        424 | Nodes =        110 ->          0 | MemSize =   12.03 KB | Cost = ? | Batch   1/  1 | BatchSize =        110
+[   0.01s] Layer =    6 | Visited =        482 | Nodes =         58 ->          0 | MemSize =    6.34 KB | Cost = ? | Batch   1/  1 | BatchSize =         58
+[   0.01s] Layer =    7 | Visited =        504 | Nodes =         22 ->          0 | MemSize =    2.41 KB | Cost = ? | Batch   1/  1 | BatchSize =         22
+[   0.01s] Layer =    8 | Visited =        522 | Nodes =         18 ->          0 | MemSize =    1.97 KB | Cost = ? | Batch   1/  1 | BatchSize =         18
+[   0.01s] Layer =    9 | Visited =        540 | Nodes =         18 ->          0 | MemSize =    1.97 KB | Cost = ? | Batch   1/  1 | BatchSize =         18
+[   0.01s] Layer =   10 | Visited =        581 | Nodes =         41 ->          0 | MemSize =    4.48 KB | Cost = ? | Batch   1/  1 | BatchSize =         41
+[   0.01s] Layer =   11 | Visited =        669 | Nodes =         88 ->          0 | MemSize =    9.62 KB | Cost = ? | Batch   1/  1 | BatchSize =         88
+[   0.01s] Layer =   12 | Visited =        855 | Nodes =        186 ->          0 | MemSize =   20.34 KB | Cost = ? | Batch   1/  1 | BatchSize =        186
+[   0.01s] Layer =   13 | Visited =       1269 | Nodes =        414 ->          0 | MemSize =   45.28 KB | Cost = ? | Batch   1/  1 | BatchSize =        414
+[   0.01s] Layer =   14 | Visited =       1987 | Nodes =        718 ->          0 | MemSize =   78.53 KB | Cost = ? | Batch   1/  1 | BatchSize =        718
+[   0.01s] Layer =   15 | Visited =       2901 | Nodes =        914 ->          0 | MemSize =   99.97 KB | Cost = ? | Batch   1/  1 | BatchSize =        914
+[   0.01s] Layer =   16 | Visited =       3705 | Nodes =        804 ->          0 | MemSize =   87.94 KB | Cost = ? | Batch   1/  1 | BatchSize =        804
+[   0.01s] Layer =   17 | Visited =       4160 | Nodes =        455 ->          0 | MemSize =   49.77 KB | Cost = ? | Batch   1/  1 | BatchSize =        455
+[   0.01s] Layer =   18 | Visited =       4338 | Nodes =        178 ->          0 | MemSize =   19.47 KB | Cost = ? | Batch   1/  1 | BatchSize =        178
+[   0.01s] Layer =   19 | Visited =       4396 | Nodes =         58 ->          0 | MemSize =    6.34 KB | Cost = ? | Batch   1/  1 | BatchSize =         58
+[   0.01s] Layer =   20 | Visited =       4410 | Nodes =         14 ->          0 | MemSize =    1.53 KB | Cost = ? | Batch   1/  1 | BatchSize =         14
+[   0.01s] SOLUTION     | Visited =       4410 | Cost =  531.00 | Value = 18,11,3,13,8,2,12,1,6,10,19,17,4,15,9,14,16,5,20,7,0
+[   0.01s] COMPLETED    | Visited =       4410 | Cost =  531.00 | Value = 18,11,3,13,8,2,12,1,6,10,19,17,4,15,9,14,16,5,20,7,0
+	Command being timed: "../tsptw_1_bro -t 1800 -g -i ../data/tsptw/Solnon25_feasible/n21g100b30.004.txt"
+	User time (seconds): 0.02
+	System time (seconds): 0.36
+	Percent of CPU this job got: 34%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:01.14
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 92160
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 19
+	Minor (reclaiming a frame) page faults: 5754
+	Voluntary context switches: 437
+	Involuntary context switches: 7
+	Swaps: 0
+	File system inputs: 8
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+COMMAND: /usr/bin/time -v ../tsptw_1_bro -t 1800 -g -i ../data/tsptw/Solnon25_feasible/n21g100b30.005.txt
+Instance: ../data/tsptw/Solnon25_feasible/n21g100b30.005.txt
+GPU: True
+Width: Auto
+[   0.00s] Layer =    0 | Visited =          1 | Nodes =          1 ->          0 | MemSize =  112.00  B | Cost = ? | Batch   1/  1 | BatchSize =          1
+[   0.00s] Layer =    1 | Visited =          9 | Nodes =          8 ->          0 | MemSize =  896.00  B | Cost = ? | Batch   1/  1 | BatchSize =          8
+[   0.00s] Layer =    2 | Visited =         49 | Nodes =         40 ->          0 | MemSize =    4.38 KB | Cost = ? | Batch   1/  1 | BatchSize =         40
+[   0.00s] Layer =    3 | Visited =        146 | Nodes =         97 ->          0 | MemSize =   10.61 KB | Cost = ? | Batch   1/  1 | BatchSize =         97
+[   0.01s] Layer =    4 | Visited =        266 | Nodes =        120 ->          0 | MemSize =   13.12 KB | Cost = ? | Batch   1/  1 | BatchSize =        120
+[   0.01s] Layer =    5 | Visited =        366 | Nodes =        100 ->          0 | MemSize =   10.94 KB | Cost = ? | Batch   1/  1 | BatchSize =        100
+[   0.01s] Layer =    6 | Visited =        436 | Nodes =         70 ->          0 | MemSize =    7.66 KB | Cost = ? | Batch   1/  1 | BatchSize =         70
+[   0.01s] Layer =    7 | Visited =        497 | Nodes =         61 ->          0 | MemSize =    6.67 KB | Cost = ? | Batch   1/  1 | BatchSize =         61
+[   0.01s] Layer =    8 | Visited =        566 | Nodes =         69 ->          0 | MemSize =    7.55 KB | Cost = ? | Batch   1/  1 | BatchSize =         69
+[   0.01s] Layer =    9 | Visited =        678 | Nodes =        112 ->          0 | MemSize =   12.25 KB | Cost = ? | Batch   1/  1 | BatchSize =        112
+[   0.01s] Layer =   10 | Visited =        812 | Nodes =        134 ->          0 | MemSize =   14.66 KB | Cost = ? | Batch   1/  1 | BatchSize =        134
+[   0.01s] Layer =   11 | Visited =        947 | Nodes =        135 ->          0 | MemSize =   14.77 KB | Cost = ? | Batch   1/  1 | BatchSize =        135
+[   0.01s] Layer =   12 | Visited =       1048 | Nodes =        101 ->          0 | MemSize =   11.05 KB | Cost = ? | Batch   1/  1 | BatchSize =        101
+[   0.01s] Layer =   13 | Visited =       1092 | Nodes =         44 ->          0 | MemSize =    4.81 KB | Cost = ? | Batch   1/  1 | BatchSize =         44
+[   0.01s] Layer =   14 | Visited =       1116 | Nodes =         24 ->          0 | MemSize =    2.62 KB | Cost = ? | Batch   1/  1 | BatchSize =         24
+[   0.01s] Layer =   15 | Visited =       1147 | Nodes =         31 ->          0 | MemSize =    3.39 KB | Cost = ? | Batch   1/  1 | BatchSize =         31
+[   0.01s] Layer =   16 | Visited =       1180 | Nodes =         33 ->          0 | MemSize =    3.61 KB | Cost = ? | Batch   1/  1 | BatchSize =         33
+[   0.01s] Layer =   17 | Visited =       1215 | Nodes =         35 ->          0 | MemSize =    3.83 KB | Cost = ? | Batch   1/  1 | BatchSize =         35
+[   0.01s] Layer =   18 | Visited =       1230 | Nodes =         15 ->          0 | MemSize =    1.64 KB | Cost = ? | Batch   1/  1 | BatchSize =         15
+[   0.01s] Layer =   19 | Visited =       1235 | Nodes =          5 ->          0 | MemSize =  560.00  B | Cost = ? | Batch   1/  1 | BatchSize =          5
+[   0.01s] Layer =   20 | Visited =       1239 | Nodes =          4 ->          0 | MemSize =  448.00  B | Cost = ? | Batch   1/  1 | BatchSize =          4
+[   0.01s] SOLUTION     | Visited =       1239 | Cost =  562.00 | Value = 16,17,2,9,14,19,12,15,18,8,4,20,13,11,10,1,5,6,7,3,0
+[   0.01s] COMPLETED    | Visited =       1239 | Cost =  562.00 | Value = 16,17,2,9,14,19,12,15,18,8,4,20,13,11,10,1,5,6,7,3,0
+	Command being timed: "../tsptw_1_bro -t 1800 -g -i ../data/tsptw/Solnon25_feasible/n21g100b30.005.txt"
+	User time (seconds): 0.02
+	System time (seconds): 0.34
+	Percent of CPU this job got: 33%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:01.10
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 90624
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 22
+	Minor (reclaiming a frame) page faults: 5649
+	Voluntary context switches: 429
+	Involuntary context switches: 6
+	Swaps: 0
+	File system inputs: 8
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+COMMAND: /usr/bin/time -v ../tsptw_1_bro -t 1800 -g -i ../data/tsptw/Solnon25_feasible/n21g100b40.001.txt
+Instance: ../data/tsptw/Solnon25_feasible/n21g100b40.001.txt
+GPU: True
+Width: Auto
+[   0.00s] Layer =    0 | Visited =          1 | Nodes =          1 ->          0 | MemSize =  112.00  B | Cost = ? | Batch   1/  1 | BatchSize =          1
+[   0.00s] Layer =    1 | Visited =          8 | Nodes =          7 ->          0 | MemSize =  784.00  B | Cost = ? | Batch   1/  1 | BatchSize =          7
+[   0.00s] Layer =    2 | Visited =         48 | Nodes =         40 ->          0 | MemSize =    4.38 KB | Cost = ? | Batch   1/  1 | BatchSize =         40
+[   0.00s] Layer =    3 | Visited =        180 | Nodes =        132 ->          0 | MemSize =   14.44 KB | Cost = ? | Batch   1/  1 | BatchSize =        132
+[   0.01s] Layer =    4 | Visited =        526 | Nodes =        346 ->          0 | MemSize =   37.84 KB | Cost = ? | Batch   1/  1 | BatchSize =        346
+[   0.01s] Layer =    5 | Visited =       1247 | Nodes =        721 ->          0 | MemSize =   78.86 KB | Cost = ? | Batch   1/  1 | BatchSize =        721
+[   0.01s] Layer =    6 | Visited =       2284 | Nodes =       1037 ->          0 | MemSize =  113.42 KB | Cost = ? | Batch   1/  1 | BatchSize =       1037
+[   0.01s] Layer =    7 | Visited =       3331 | Nodes =       1047 ->          0 | MemSize =  114.52 KB | Cost = ? | Batch   1/  1 | BatchSize =       1047
+[   0.01s] Layer =    8 | Visited =       4213 | Nodes =        882 ->          0 | MemSize =   96.47 KB | Cost = ? | Batch   1/  1 | BatchSize =        882
+[   0.01s] Layer =    9 | Visited =       4917 | Nodes =        704 ->          0 | MemSize =   77.00 KB | Cost = ? | Batch   1/  1 | BatchSize =        704
+[   0.01s] Layer =   10 | Visited =       5442 | Nodes =        525 ->          0 | MemSize =   57.42 KB | Cost = ? | Batch   1/  1 | BatchSize =        525
+[   0.01s] Layer =   11 | Visited =       5769 | Nodes =        327 ->          0 | MemSize =   35.77 KB | Cost = ? | Batch   1/  1 | BatchSize =        327
+[   0.01s] Layer =   12 | Visited =       5958 | Nodes =        189 ->          0 | MemSize =   20.67 KB | Cost = ? | Batch   1/  1 | BatchSize =        189
+[   0.01s] Layer =   13 | Visited =       6110 | Nodes =        152 ->          0 | MemSize =   16.62 KB | Cost = ? | Batch   1/  1 | BatchSize =        152
+[   0.01s] Layer =   14 | Visited =       6261 | Nodes =        151 ->          0 | MemSize =   16.52 KB | Cost = ? | Batch   1/  1 | BatchSize =        151
+[   0.01s] Layer =   15 | Visited =       6386 | Nodes =        125 ->          0 | MemSize =   13.67 KB | Cost = ? | Batch   1/  1 | BatchSize =        125
+[   0.01s] Layer =   16 | Visited =       6449 | Nodes =         63 ->          0 | MemSize =    6.89 KB | Cost = ? | Batch   1/  1 | BatchSize =         63
+[   0.01s] Layer =   17 | Visited =       6470 | Nodes =         21 ->          0 | MemSize =    2.30 KB | Cost = ? | Batch   1/  1 | BatchSize =         21
+[   0.01s] Layer =   18 | Visited =       6481 | Nodes =         11 ->          0 | MemSize =    1.20 KB | Cost = ? | Batch   1/  1 | BatchSize =         11
+[   0.01s] Layer =   19 | Visited =       6489 | Nodes =          8 ->          0 | MemSize =  896.00  B | Cost = ? | Batch   1/  1 | BatchSize =          8
+[   0.01s] Layer =   20 | Visited =       6495 | Nodes =          6 ->          0 | MemSize =  672.00  B | Cost = ? | Batch   1/  1 | BatchSize =          6
+[   0.01s] SOLUTION     | Visited =       6495 | Cost =  463.00 | Value = 19,20,9,16,14,15,6,13,5,7,2,17,8,10,12,11,18,4,1,3,0
+[   0.01s] COMPLETED    | Visited =       6495 | Cost =  463.00 | Value = 19,20,9,16,14,15,6,13,5,7,2,17,8,10,12,11,18,4,1,3,0
+	Command being timed: "../tsptw_1_bro -t 1800 -g -i ../data/tsptw/Solnon25_feasible/n21g100b40.001.txt"
+	User time (seconds): 0.03
+	System time (seconds): 0.34
+	Percent of CPU this job got: 33%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:01.11
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 95232
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 29
+	Minor (reclaiming a frame) page faults: 5813
+	Voluntary context switches: 437
+	Involuntary context switches: 5
+	Swaps: 0
+	File system inputs: 8
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+COMMAND: /usr/bin/time -v ../tsptw_1_bro -t 1800 -g -i ../data/tsptw/Solnon25_feasible/n21g100b40.002.txt
+Instance: ../data/tsptw/Solnon25_feasible/n21g100b40.002.txt
+GPU: True
+Width: Auto
+[   0.00s] Layer =    0 | Visited =          1 | Nodes =          1 ->          0 | MemSize =  112.00  B | Cost = ? | Batch   1/  1 | BatchSize =          1
+[   0.00s] Layer =    1 | Visited =          6 | Nodes =          5 ->          0 | MemSize =  560.00  B | Cost = ? | Batch   1/  1 | BatchSize =          5
+[   0.00s] Layer =    2 | Visited =         25 | Nodes =         19 ->          0 | MemSize =    2.08 KB | Cost = ? | Batch   1/  1 | BatchSize =         19
+[   0.00s] Layer =    3 | Visited =         81 | Nodes =         56 ->          0 | MemSize =    6.12 KB | Cost = ? | Batch   1/  1 | BatchSize =         56
+[   0.00s] Layer =    4 | Visited =        298 | Nodes =        217 ->          0 | MemSize =   23.73 KB | Cost = ? | Batch   1/  1 | BatchSize =        217
+[   0.01s] Layer =    5 | Visited =       1085 | Nodes =        787 ->          0 | MemSize =   86.08 KB | Cost = ? | Batch   1/  1 | BatchSize =        787
+[   0.01s] Layer =    6 | Visited =       2731 | Nodes =       1646 ->          0 | MemSize =  180.03 KB | Cost = ? | Batch   1/  1 | BatchSize =       1646
+[   0.01s] Layer =    7 | Visited =       4609 | Nodes =       1878 ->          0 | MemSize =  205.41 KB | Cost = ? | Batch   1/  1 | BatchSize =       1878
+[   0.01s] Layer =    8 | Visited =       5853 | Nodes =       1244 ->          0 | MemSize =  136.06 KB | Cost = ? | Batch   1/  1 | BatchSize =       1244
+[   0.01s] Layer =    9 | Visited =       6375 | Nodes =        522 ->          0 | MemSize =   57.09 KB | Cost = ? | Batch   1/  1 | BatchSize =        522
+[   0.01s] Layer =   10 | Visited =       6558 | Nodes =        183 ->          0 | MemSize =   20.02 KB | Cost = ? | Batch   1/  1 | BatchSize =        183
+[   0.01s] Layer =   11 | Visited =       6647 | Nodes =         89 ->          0 | MemSize =    9.73 KB | Cost = ? | Batch   1/  1 | BatchSize =         89
+[   0.01s] Layer =   12 | Visited =       6733 | Nodes =         86 ->          0 | MemSize =    9.41 KB | Cost = ? | Batch   1/  1 | BatchSize =         86
+[   0.01s] Layer =   13 | Visited =       6822 | Nodes =         89 ->          0 | MemSize =    9.73 KB | Cost = ? | Batch   1/  1 | BatchSize =         89
+[   0.01s] Layer =   14 | Visited =       6881 | Nodes =         59 ->          0 | MemSize =    6.45 KB | Cost = ? | Batch   1/  1 | BatchSize =         59
+[   0.01s] Layer =   15 | Visited =       6917 | Nodes =         36 ->          0 | MemSize =    3.94 KB | Cost = ? | Batch   1/  1 | BatchSize =         36
+[   0.01s] Layer =   16 | Visited =       6947 | Nodes =         30 ->          0 | MemSize =    3.28 KB | Cost = ? | Batch   1/  1 | BatchSize =         30
+[   0.01s] Layer =   17 | Visited =       6970 | Nodes =         23 ->          0 | MemSize =    2.52 KB | Cost = ? | Batch   1/  1 | BatchSize =         23
+[   0.01s] Layer =   18 | Visited =       6984 | Nodes =         14 ->          0 | MemSize =    1.53 KB | Cost = ? | Batch   1/  1 | BatchSize =         14
+[   0.01s] Layer =   19 | Visited =       6991 | Nodes =          7 ->          0 | MemSize =  784.00  B | Cost = ? | Batch   1/  1 | BatchSize =          7
+[   0.01s] Layer =   20 | Visited =       6994 | Nodes =          3 ->          0 | MemSize =  336.00  B | Cost = ? | Batch   1/  1 | BatchSize =          3
+[   0.01s] SOLUTION     | Visited =       6994 | Cost =  516.00 | Value = 15,14,18,20,4,6,9,16,7,13,10,8,3,11,17,1,19,12,2,5,0
+[   0.01s] COMPLETED    | Visited =       6994 | Cost =  516.00 | Value = 15,14,18,20,4,6,9,16,7,13,10,8,3,11,17,1,19,12,2,5,0
+	Command being timed: "../tsptw_1_bro -t 1800 -g -i ../data/tsptw/Solnon25_feasible/n21g100b40.002.txt"
+	User time (seconds): 0.01
+	System time (seconds): 0.34
+	Percent of CPU this job got: 32%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:01.12
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 95232
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 27
+	Minor (reclaiming a frame) page faults: 5824
+	Voluntary context switches: 446
+	Involuntary context switches: 5
+	Swaps: 0
+	File system inputs: 8
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+COMMAND: /usr/bin/time -v ../tsptw_1_bro -t 1800 -g -i ../data/tsptw/Solnon25_feasible/n21g100b40.003.txt
+Instance: ../data/tsptw/Solnon25_feasible/n21g100b40.003.txt
+GPU: True
+Width: Auto
+[   0.00s] Layer =    0 | Visited =          1 | Nodes =          1 ->          0 | MemSize =  112.00  B | Cost = ? | Batch   1/  1 | BatchSize =          1
+[   0.00s] Layer =    1 | Visited =         12 | Nodes =         11 ->          0 | MemSize =    1.20 KB | Cost = ? | Batch   1/  1 | BatchSize =         11
+[   0.00s] Layer =    2 | Visited =         98 | Nodes =         86 ->          0 | MemSize =    9.41 KB | Cost = ? | Batch   1/  1 | BatchSize =         86
+[   0.00s] Layer =    3 | Visited =        366 | Nodes =        268 ->          0 | MemSize =   29.31 KB | Cost = ? | Batch   1/  1 | BatchSize =        268
+[   0.01s] Layer =    4 | Visited =        828 | Nodes =        462 ->          0 | MemSize =   50.53 KB | Cost = ? | Batch   1/  1 | BatchSize =        462
+[   0.01s] Layer =    5 | Visited =       1445 | Nodes =        617 ->          0 | MemSize =   67.48 KB | Cost = ? | Batch   1/  1 | BatchSize =        617
+[   0.01s] Layer =    6 | Visited =       2274 | Nodes =        829 ->          0 | MemSize =   90.67 KB | Cost = ? | Batch   1/  1 | BatchSize =        829
+[   0.01s] Layer =    7 | Visited =       3532 | Nodes =       1258 ->          0 | MemSize =  137.59 KB | Cost = ? | Batch   1/  1 | BatchSize =       1258
+[   0.01s] Layer =    8 | Visited =       5554 | Nodes =       2022 ->          0 | MemSize =  221.16 KB | Cost = ? | Batch   1/  1 | BatchSize =       2022
+[   0.01s] Layer =    9 | Visited =       8326 | Nodes =       2772 ->          0 | MemSize =  303.19 KB | Cost = ? | Batch   1/  1 | BatchSize =       2772
+[   0.01s] Layer =   10 | Visited =      11294 | Nodes =       2968 ->          0 | MemSize =  324.62 KB | Cost = ? | Batch   1/  1 | BatchSize =       2968
+[   0.01s] Layer =   11 | Visited =      13832 | Nodes =       2538 ->          0 | MemSize =  277.59 KB | Cost = ? | Batch   1/  1 | BatchSize =       2538
+[   0.01s] Layer =   12 | Visited =      15696 | Nodes =       1864 ->          0 | MemSize =  203.88 KB | Cost = ? | Batch   1/  1 | BatchSize =       1864
+[   0.01s] Layer =   13 | Visited =      16991 | Nodes =       1295 ->          0 | MemSize =  141.64 KB | Cost = ? | Batch   1/  1 | BatchSize =       1295
+[   0.01s] Layer =   14 | Visited =      18010 | Nodes =       1019 ->          0 | MemSize =  111.45 KB | Cost = ? | Batch   1/  1 | BatchSize =       1019
+[   0.01s] Layer =   15 | Visited =      18953 | Nodes =        943 ->          0 | MemSize =  103.14 KB | Cost = ? | Batch   1/  1 | BatchSize =        943
+[   0.01s] Layer =   16 | Visited =      19774 | Nodes =        821 ->          0 | MemSize =   89.80 KB | Cost = ? | Batch   1/  1 | BatchSize =        821
+[   0.01s] Layer =   17 | Visited =      20319 | Nodes =        545 ->          0 | MemSize =   59.61 KB | Cost = ? | Batch   1/  1 | BatchSize =        545
+[   0.02s] Layer =   18 | Visited =      20575 | Nodes =        256 ->          0 | MemSize =   28.00 KB | Cost = ? | Batch   1/  1 | BatchSize =        256
+[   0.02s] Layer =   19 | Visited =      20663 | Nodes =         88 ->          0 | MemSize =    9.62 KB | Cost = ? | Batch   1/  1 | BatchSize =         88
+[   0.02s] Layer =   20 | Visited =      20680 | Nodes =         17 ->          0 | MemSize =    1.86 KB | Cost = ? | Batch   1/  1 | BatchSize =         17
+[   0.02s] SOLUTION     | Visited =      20680 | Cost =  387.00 | Value = 18,15,19,13,1,5,11,7,8,3,6,20,16,9,2,17,10,4,14,12,0
+[   0.02s] COMPLETED    | Visited =      20680 | Cost =  387.00 | Value = 18,15,19,13,1,5,11,7,8,3,6,20,16,9,2,17,10,4,14,12,0
+	Command being timed: "../tsptw_1_bro -t 1800 -g -i ../data/tsptw/Solnon25_feasible/n21g100b40.003.txt"
+	User time (seconds): 0.02
+	System time (seconds): 0.34
+	Percent of CPU this job got: 33%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:01.12
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 96768
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 30
+	Minor (reclaiming a frame) page faults: 6203
+	Voluntary context switches: 443
+	Involuntary context switches: 3
+	Swaps: 0
+	File system inputs: 8
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+COMMAND: /usr/bin/time -v ../tsptw_1_bro -t 1800 -g -i ../data/tsptw/Solnon25_feasible/n21g100b40.004.txt
+Instance: ../data/tsptw/Solnon25_feasible/n21g100b40.004.txt
+GPU: True
+Width: Auto
+[   0.00s] Layer =    0 | Visited =          1 | Nodes =          1 ->          0 | MemSize =  112.00  B | Cost = ? | Batch   1/  1 | BatchSize =          1
+[   0.00s] Layer =    1 | Visited =          9 | Nodes =          8 ->          0 | MemSize =  896.00  B | Cost = ? | Batch   1/  1 | BatchSize =          8
+[   0.00s] Layer =    2 | Visited =         43 | Nodes =         34 ->          0 | MemSize =    3.72 KB | Cost = ? | Batch   1/  1 | BatchSize =         34
+[   0.00s] Layer =    3 | Visited =         92 | Nodes =         49 ->          0 | MemSize =    5.36 KB | Cost = ? | Batch   1/  1 | BatchSize =         49
+[   0.00s] Layer =    4 | Visited =        159 | Nodes =         67 ->          0 | MemSize =    7.33 KB | Cost = ? | Batch   1/  1 | BatchSize =         67
+[   0.01s] Layer =    5 | Visited =        302 | Nodes =        143 ->          0 | MemSize =   15.64 KB | Cost = ? | Batch   1/  1 | BatchSize =        143
+[   0.01s] Layer =    6 | Visited =        522 | Nodes =        220 ->          0 | MemSize =   24.06 KB | Cost = ? | Batch   1/  1 | BatchSize =        220
+[   0.01s] Layer =    7 | Visited =        779 | Nodes =        257 ->          0 | MemSize =   28.11 KB | Cost = ? | Batch   1/  1 | BatchSize =        257
+[   0.01s] Layer =    8 | Visited =       1137 | Nodes =        358 ->          0 | MemSize =   39.16 KB | Cost = ? | Batch   1/  1 | BatchSize =        358
+[   0.01s] Layer =    9 | Visited =       1586 | Nodes =        449 ->          0 | MemSize =   49.11 KB | Cost = ? | Batch   1/  1 | BatchSize =        449
+[   0.01s] Layer =   10 | Visited =       1963 | Nodes =        377 ->          0 | MemSize =   41.23 KB | Cost = ? | Batch   1/  1 | BatchSize =        377
+[   0.01s] Layer =   11 | Visited =       2164 | Nodes =        201 ->          0 | MemSize =   21.98 KB | Cost = ? | Batch   1/  1 | BatchSize =        201
+[   0.01s] Layer =   12 | Visited =       2260 | Nodes =         96 ->          0 | MemSize =   10.50 KB | Cost = ? | Batch   1/  1 | BatchSize =         96
+[   0.01s] Layer =   13 | Visited =       2310 | Nodes =         50 ->          0 | MemSize =    5.47 KB | Cost = ? | Batch   1/  1 | BatchSize =         50
+[   0.01s] Layer =   14 | Visited =       2342 | Nodes =         32 ->          0 | MemSize =    3.50 KB | Cost = ? | Batch   1/  1 | BatchSize =         32
+[   0.01s] Layer =   15 | Visited =       2359 | Nodes =         17 ->          0 | MemSize =    1.86 KB | Cost = ? | Batch   1/  1 | BatchSize =         17
+[   0.01s] Layer =   16 | Visited =       2375 | Nodes =         16 ->          0 | MemSize =    1.75 KB | Cost = ? | Batch   1/  1 | BatchSize =         16
+[   0.01s] Layer =   17 | Visited =       2394 | Nodes =         19 ->          0 | MemSize =    2.08 KB | Cost = ? | Batch   1/  1 | BatchSize =         19
+[   0.01s] Layer =   18 | Visited =       2411 | Nodes =         17 ->          0 | MemSize =    1.86 KB | Cost = ? | Batch   1/  1 | BatchSize =         17
+[   0.01s] Layer =   19 | Visited =       2422 | Nodes =         11 ->          0 | MemSize =    1.20 KB | Cost = ? | Batch   1/  1 | BatchSize =         11
+[   0.01s] Layer =   20 | Visited =       2427 | Nodes =          5 ->          0 | MemSize =  560.00  B | Cost = ? | Batch   1/  1 | BatchSize =          5
+[   0.01s] SOLUTION     | Visited =       2427 | Cost =  515.00 | Value = 6,13,12,18,3,17,20,4,1,8,7,16,14,10,11,2,5,9,19,15,0
+[   0.01s] COMPLETED    | Visited =       2427 | Cost =  515.00 | Value = 6,13,12,18,3,17,20,4,1,8,7,16,14,10,11,2,5,9,19,15,0
+	Command being timed: "../tsptw_1_bro -t 1800 -g -i ../data/tsptw/Solnon25_feasible/n21g100b40.004.txt"
+	User time (seconds): 0.02
+	System time (seconds): 0.35
+	Percent of CPU this job got: 33%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:01.12
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 92160
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 25
+	Minor (reclaiming a frame) page faults: 5698
+	Voluntary context switches: 444
+	Involuntary context switches: 6
+	Swaps: 0
+	File system inputs: 8
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+COMMAND: /usr/bin/time -v ../tsptw_1_bro -t 1800 -g -i ../data/tsptw/Solnon25_feasible/n21g100b40.005.txt
+Instance: ../data/tsptw/Solnon25_feasible/n21g100b40.005.txt
+GPU: True
+Width: Auto
+[   0.00s] Layer =    0 | Visited =          1 | Nodes =          1 ->          0 | MemSize =  112.00  B | Cost = ? | Batch   1/  1 | BatchSize =          1
+[   0.00s] Layer =    1 | Visited =          9 | Nodes =          8 ->          0 | MemSize =  896.00  B | Cost = ? | Batch   1/  1 | BatchSize =          8
+[   0.00s] Layer =    2 | Visited =         53 | Nodes =         44 ->          0 | MemSize =    4.81 KB | Cost = ? | Batch   1/  1 | BatchSize =         44
+[   0.00s] Layer =    3 | Visited =        161 | Nodes =        108 ->          0 | MemSize =   11.81 KB | Cost = ? | Batch   1/  1 | BatchSize =        108
+[   0.01s] Layer =    4 | Visited =        319 | Nodes =        158 ->          0 | MemSize =   17.28 KB | Cost = ? | Batch   1/  1 | BatchSize =        158
+[   0.01s] Layer =    5 | Visited =        592 | Nodes =        273 ->          0 | MemSize =   29.86 KB | Cost = ? | Batch   1/  1 | BatchSize =        273
+[   0.01s] Layer =    6 | Visited =       1230 | Nodes =        638 ->          0 | MemSize =   69.78 KB | Cost = ? | Batch   1/  1 | BatchSize =        638
+[   0.01s] Layer =    7 | Visited =       2328 | Nodes =       1098 ->          0 | MemSize =  120.09 KB | Cost = ? | Batch   1/  1 | BatchSize =       1098
+[   0.01s] Layer =    8 | Visited =       3602 | Nodes =       1274 ->          0 | MemSize =  139.34 KB | Cost = ? | Batch   1/  1 | BatchSize =       1274
+[   0.01s] Layer =    9 | Visited =       4671 | Nodes =       1069 ->          0 | MemSize =  116.92 KB | Cost = ? | Batch   1/  1 | BatchSize =       1069
+[   0.01s] Layer =   10 | Visited =       5329 | Nodes =        658 ->          0 | MemSize =   71.97 KB | Cost = ? | Batch   1/  1 | BatchSize =        658
+[   0.01s] Layer =   11 | Visited =       5606 | Nodes =        277 ->          0 | MemSize =   30.30 KB | Cost = ? | Batch   1/  1 | BatchSize =        277
+[   0.01s] Layer =   12 | Visited =       5740 | Nodes =        134 ->          0 | MemSize =   14.66 KB | Cost = ? | Batch   1/  1 | BatchSize =        134
+[   0.01s] Layer =   13 | Visited =       5886 | Nodes =        146 ->          0 | MemSize =   15.97 KB | Cost = ? | Batch   1/  1 | BatchSize =        146
+[   0.01s] Layer =   14 | Visited =       6012 | Nodes =        126 ->          0 | MemSize =   13.78 KB | Cost = ? | Batch   1/  1 | BatchSize =        126
+[   0.01s] Layer =   15 | Visited =       6079 | Nodes =         67 ->          0 | MemSize =    7.33 KB | Cost = ? | Batch   1/  1 | BatchSize =         67
+[   0.01s] Layer =   16 | Visited =       6112 | Nodes =         33 ->          0 | MemSize =    3.61 KB | Cost = ? | Batch   1/  1 | BatchSize =         33
+[   0.01s] Layer =   17 | Visited =       6129 | Nodes =         17 ->          0 | MemSize =    1.86 KB | Cost = ? | Batch   1/  1 | BatchSize =         17
+[   0.01s] Layer =   18 | Visited =       6139 | Nodes =         10 ->          0 | MemSize =    1.09 KB | Cost = ? | Batch   1/  1 | BatchSize =         10
+[   0.01s] Layer =   19 | Visited =       6141 | Nodes =          2 ->          0 | MemSize =  224.00  B | Cost = ? | Batch   1/  1 | BatchSize =          2
+[   0.01s] Layer =   20 | Visited =       6143 | Nodes =          2 ->          0 | MemSize =  224.00  B | Cost = ? | Batch   1/  1 | BatchSize =          2
+[   0.01s] SOLUTION     | Visited =       6143 | Cost =  524.00 | Value = 6,18,4,20,9,8,13,11,2,15,17,3,19,10,12,16,1,7,14,5,0
+[   0.01s] COMPLETED    | Visited =       6143 | Cost =  524.00 | Value = 6,18,4,20,9,8,13,11,2,15,17,3,19,10,12,16,1,7,14,5,0
+	Command being timed: "../tsptw_1_bro -t 1800 -g -i ../data/tsptw/Solnon25_feasible/n21g100b40.005.txt"
+	User time (seconds): 0.02
+	System time (seconds): 0.34
+	Percent of CPU this job got: 33%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:01.12
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 95232
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 23
+	Minor (reclaiming a frame) page faults: 5799
+	Voluntary context switches: 435
+	Involuntary context switches: 6
+	Swaps: 0
+	File system inputs: 8
+	File system outputs: 0
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+COMMAND: /usr/bin/time -v ../tsptw_1_bro -t 1800 -g -i ../data/tsptw/Solnon25_feasible/n21g100b50.001.txt
+Instance: ../data/tsptw/Solnon25_feasible/n21g100b50.001.txt
+GPU: True
+Width: Auto
+[   0.00s] Layer =    0 | Visited =          1 | Nodes =          1 ->          0 | MemSize =  112.00  B | Cost = ? | Batch   1/  1 | BatchSize =          1
+[   0.00s] Layer =    1 | Visited =         13 | Nodes =         12 ->          0 | MemSize =    1.31 KB | Cost = ? | Batch   1/  1 | BatchSize =         12
+[   0.00s] Layer =    2 | Visited =        136 | Nodes =        123 ->          0 | MemSize =   13.45 KB | Cost = ? | Batch   1/  1 | BatchSize =        123
+[   0.00s] Layer =    3 | Visited =        705 | Nodes =        569 ->          0 | MemSize =   62.23 KB | Cost = ? | Batch   1/  1 | BatchSize =        569
+[   0.01s] Layer =    4 | Visited =       2075 | Nodes =       1370 ->          0 | MemSize =  149.84 KB | Cost = ? | Batch   1/  1 | BatchSize =       1370
+[   0.01s] Layer =    5 | Visited =       4571 | Nodes =       2496 ->          0 | MemSize =  273.00 KB | Cost = ? | Batch   1/  1 | BatchSize =       2496
+[   0.01s] Layer =    6 | Visited =       9064 | Nodes =       4493 ->          0 | MemSize =  491.42 KB | Cost = ? | Batch   1/  1 | BatchSize =       4493
+[   0.01s] Layer =    7 | Visited =      16752 | Nodes =       7688 ->          0 | MemSize =  840.88 KB | Cost = ? | Batch   1/  1 | BatchSize =       7688
+[   0.01s] Layer =    8 | Visited =      27371 | Nodes =      10619 ->          0 | MemSize =    1.13 MB | Cost = ? | Batch   1/  1 | BatchSize =      10619
+[   0.01s] Layer =    9 | Visited =      38262 | Nodes =      10891 ->          0 | MemSize =    1.16 MB | Cost = ? | Batch   1/  1 | BatchSize =      10891
+[   0.01s] Layer =   10 | Visited =      46520 | Nodes =       8258 ->          0 | MemSize =  903.22 KB | Cost = ? | Batch   1/  1 | BatchSize =       8258
+[   0.01s] Layer =   11 | Visited =      51079 | Nodes =       4559 ->          0 | MemSize =  498.64 KB | Cost = ? | Batch   1/  1 | BatchSize =       4559
+[   0.01s] Layer =   12 | Visited =      52831 | Nodes =       1752 ->          0 | MemSize =  191.62 KB | Cost = ? | Batch   1/  1 | BatchSize =       1752
+[   0.01s] Layer =   13 | Visited =      53298 | Nodes =        467 ->          0 | MemSize =   51.08 KB | Cost = ? | Batch   1/  1 | BatchSize =        467
+[   0.02s] Layer =   14 | Visited =      53416 | Nodes =        118 ->          0 | MemSize =   12.91 KB | Cost = ? | Batch   1/  1 | BatchSize =        118
+[   0.02s] Layer =   15 | Visited =      53471 | Nodes =         55 ->          0 | MemSize =    6.02 KB | Cost = ? | Batch   1/  1 | BatchSize =         55
+[   0.02s] Layer =   16 | Visited =      53514 | Nodes =         43 ->          0 | MemSize =    4.70 KB | Cost = ? | Batch   1/  1 | BatchSize =         43
+[   0.02s] Layer =   17 | Visited =      53542 | Nodes =         28 ->          0 | MemSize =    3.06 KB | Cost = ? | Batch   1/  1 | BatchSize =         28
+[   0.02s] Layer =   18 | Visited =      53560 | Nodes =         18 ->          0 | MemSize =    1.97 KB | Cost = ? | Batch   1/  1 | BatchSize =         18
+[   0.02s] Layer =   19 | Visited =      53572 | Nodes =         12 ->          0 | MemSize =    1.31 KB | Cost = ? | Batch   1/  1 | BatchSize =         12
+[   0.02s] Layer =   20 | Visited =      53576 | Nodes =          4 ->          0 | MemSize =  448.00  B | Cost = ? | Batch   1/  1 | BatchSize =          4
+[   0.02s] SOLUTION     | Visited =      53576 | Cost =  464.00 | Value = 14,7,9,2,17,8,11,4,18,12,6,16,19,13,10,20,3,5,15,1,0
+[   0.02s] COMPLETED    | Visited =      53576 | Cost =  464.00 | Value = 14,7,9,2,17,8,11,4,18,12,6,16,19,13,10,20,3,5,15,1,0
+	Command being timed: "../tsptw_1_bro -t 1800 -g -i ../data/tsptw/Solnon25_feasible/n21g100b50.001.txt"
+	User time (seconds): 0.02
+	System time (seconds): 0.37
+	Percent of CPU this job got: 34%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:01.14
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 99840
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 32
+	Minor (reclaiming a frame) page faults: 7101
+	Voluntary context switches: 436
+	Involuntary context switches: 4
+	Swaps: 0
+	File system inputs: 8
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+COMMAND: /usr/bin/time -v ../tsptw_1_bro -t 1800 -g -i ../data/tsptw/Solnon25_feasible/n21g100b50.002.txt
+Instance: ../data/tsptw/Solnon25_feasible/n21g100b50.002.txt
+GPU: True
+Width: Auto
+[   0.00s] Layer =    0 | Visited =          1 | Nodes =          1 ->          0 | MemSize =  112.00  B | Cost = ? | Batch   1/  1 | BatchSize =          1
+[   0.00s] Layer =    1 | Visited =          8 | Nodes =          7 ->          0 | MemSize =  784.00  B | Cost = ? | Batch   1/  1 | BatchSize =          7
+[   0.00s] Layer =    2 | Visited =         48 | Nodes =         40 ->          0 | MemSize =    4.38 KB | Cost = ? | Batch   1/  1 | BatchSize =         40
+[   0.00s] Layer =    3 | Visited =        179 | Nodes =        131 ->          0 | MemSize =   14.33 KB | Cost = ? | Batch   1/  1 | BatchSize =        131
+[   0.00s] Layer =    4 | Visited =        427 | Nodes =        248 ->          0 | MemSize =   27.12 KB | Cost = ? | Batch   1/  1 | BatchSize =        248
+[   0.01s] Layer =    5 | Visited =        743 | Nodes =        316 ->          0 | MemSize =   34.56 KB | Cost = ? | Batch   1/  1 | BatchSize =        316
+[   0.01s] Layer =    6 | Visited =       1048 | Nodes =        305 ->          0 | MemSize =   33.36 KB | Cost = ? | Batch   1/  1 | BatchSize =        305
+[   0.01s] Layer =    7 | Visited =       1542 | Nodes =        494 ->          0 | MemSize =   54.03 KB | Cost = ? | Batch   1/  1 | BatchSize =        494
+[   0.01s] Layer =    8 | Visited =       2705 | Nodes =       1163 ->          0 | MemSize =  127.20 KB | Cost = ? | Batch   1/  1 | BatchSize =       1163
+[   0.01s] Layer =    9 | Visited =       4849 | Nodes =       2144 ->          0 | MemSize =  234.50 KB | Cost = ? | Batch   1/  1 | BatchSize =       2144
+[   0.01s] Layer =   10 | Visited =       7793 | Nodes =       2944 ->          0 | MemSize =  322.00 KB | Cost = ? | Batch   1/  1 | BatchSize =       2944
+[   0.01s] Layer =   11 | Visited =      10578 | Nodes =       2785 ->          0 | MemSize =  304.61 KB | Cost = ? | Batch   1/  1 | BatchSize =       2785
+[   0.01s] Layer =   12 | Visited =      12309 | Nodes =       1731 ->          0 | MemSize =  189.33 KB | Cost = ? | Batch   1/  1 | BatchSize =       1731
+[   0.01s] Layer =   13 | Visited =      13059 | Nodes =        750 ->          0 | MemSize =   82.03 KB | Cost = ? | Batch   1/  1 | BatchSize =        750
+[   0.01s] Layer =   14 | Visited =      13390 | Nodes =        331 ->          0 | MemSize =   36.20 KB | Cost = ? | Batch   1/  1 | BatchSize =        331
+[   0.01s] Layer =   15 | Visited =      13590 | Nodes =        200 ->          0 | MemSize =   21.88 KB | Cost = ? | Batch   1/  1 | BatchSize =        200
+[   0.01s] Layer =   16 | Visited =      13737 | Nodes =        147 ->          0 | MemSize =   16.08 KB | Cost = ? | Batch   1/  1 | BatchSize =        147
+[   0.01s] Layer =   17 | Visited =      13841 | Nodes =        104 ->          0 | MemSize =   11.38 KB | Cost = ? | Batch   1/  1 | BatchSize =        104
+[   0.01s] Layer =   18 | Visited =      13891 | Nodes =         50 ->          0 | MemSize =    5.47 KB | Cost = ? | Batch   1/  1 | BatchSize =         50
+[   0.01s] Layer =   19 | Visited =      13906 | Nodes =         15 ->          0 | MemSize =    1.64 KB | Cost = ? | Batch   1/  1 | BatchSize =         15
+[   0.01s] Layer =   20 | Visited =      13912 | Nodes =          6 ->          0 | MemSize =  672.00  B | Cost = ? | Batch   1/  1 | BatchSize =          6
+[   0.01s] SOLUTION     | Visited =      13912 | Cost =  433.00 | Value = 13,15,10,9,12,20,5,19,17,16,7,6,2,4,1,18,8,11,14,3,0
+[   0.01s] COMPLETED    | Visited =      13912 | Cost =  433.00 | Value = 13,15,10,9,12,20,5,19,17,16,7,6,2,4,1,18,8,11,14,3,0
+	Command being timed: "../tsptw_1_bro -t 1800 -g -i ../data/tsptw/Solnon25_feasible/n21g100b50.002.txt"
+	User time (seconds): 0.02
+	System time (seconds): 0.35
+	Percent of CPU this job got: 34%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:01.11
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 95232
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 29
+	Minor (reclaiming a frame) page faults: 6012
+	Voluntary context switches: 432
+	Involuntary context switches: 3
+	Swaps: 0
+	File system inputs: 8
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+COMMAND: /usr/bin/time -v ../tsptw_1_bro -t 1800 -g -i ../data/tsptw/Solnon25_feasible/n21g100b50.003.txt
+Instance: ../data/tsptw/Solnon25_feasible/n21g100b50.003.txt
+GPU: True
+Width: Auto
+[   0.00s] Layer =    0 | Visited =          1 | Nodes =          1 ->          0 | MemSize =  112.00  B | Cost = ? | Batch   1/  1 | BatchSize =          1
+[   0.00s] Layer =    1 | Visited =          6 | Nodes =          5 ->          0 | MemSize =  560.00  B | Cost = ? | Batch   1/  1 | BatchSize =          5
+[   0.00s] Layer =    2 | Visited =         28 | Nodes =         22 ->          0 | MemSize =    2.41 KB | Cost = ? | Batch   1/  1 | BatchSize =         22
+[   0.00s] Layer =    3 | Visited =         93 | Nodes =         65 ->          0 | MemSize =    7.11 KB | Cost = ? | Batch   1/  1 | BatchSize =         65
+[   0.01s] Layer =    4 | Visited =        236 | Nodes =        143 ->          0 | MemSize =   15.64 KB | Cost = ? | Batch   1/  1 | BatchSize =        143
+[   0.01s] Layer =    5 | Visited =        463 | Nodes =        227 ->          0 | MemSize =   24.83 KB | Cost = ? | Batch   1/  1 | BatchSize =        227
+[   0.01s] Layer =    6 | Visited =        730 | Nodes =        267 ->          0 | MemSize =   29.20 KB | Cost = ? | Batch   1/  1 | BatchSize =        267
+[   0.01s] Layer =    7 | Visited =       1016 | Nodes =        286 ->          0 | MemSize =   31.28 KB | Cost = ? | Batch   1/  1 | BatchSize =        286
+[   0.01s] Layer =    8 | Visited =       1310 | Nodes =        294 ->          0 | MemSize =   32.16 KB | Cost = ? | Batch   1/  1 | BatchSize =        294
+[   0.01s] Layer =    9 | Visited =       1608 | Nodes =        298 ->          0 | MemSize =   32.59 KB | Cost = ? | Batch   1/  1 | BatchSize =        298
+[   0.01s] Layer =   10 | Visited =       2057 | Nodes =        449 ->          0 | MemSize =   49.11 KB | Cost = ? | Batch   1/  1 | BatchSize =        449
+[   0.01s] Layer =   11 | Visited =       2820 | Nodes =        763 ->          0 | MemSize =   83.45 KB | Cost = ? | Batch   1/  1 | BatchSize =        763
+[   0.01s] Layer =   12 | Visited =       3827 | Nodes =       1007 ->          0 | MemSize =  110.14 KB | Cost = ? | Batch   1/  1 | BatchSize =       1007
+[   0.01s] Layer =   13 | Visited =       4869 | Nodes =       1042 ->          0 | MemSize =  113.97 KB | Cost = ? | Batch   1/  1 | BatchSize =       1042
+[   0.01s] Layer =   14 | Visited =       5711 | Nodes =        842 ->          0 | MemSize =   92.09 KB | Cost = ? | Batch   1/  1 | BatchSize =        842
+[   0.01s] Layer =   15 | Visited =       6190 | Nodes =        479 ->          0 | MemSize =   52.39 KB | Cost = ? | Batch   1/  1 | BatchSize =        479
+[   0.01s] Layer =   16 | Visited =       6439 | Nodes =        249 ->          0 | MemSize =   27.23 KB | Cost = ? | Batch   1/  1 | BatchSize =        249
+[   0.01s] Layer =   17 | Visited =       6581 | Nodes =        142 ->          0 | MemSize =   15.53 KB | Cost = ? | Batch   1/  1 | BatchSize =        142
+[   0.01s] Layer =   18 | Visited =       6652 | Nodes =         71 ->          0 | MemSize =    7.77 KB | Cost = ? | Batch   1/  1 | BatchSize =         71
+[   0.01s] Layer =   19 | Visited =       6676 | Nodes =         24 ->          0 | MemSize =    2.62 KB | Cost = ? | Batch   1/  1 | BatchSize =         24
+[   0.01s] Layer =   20 | Visited =       6684 | Nodes =          8 ->          0 | MemSize =  896.00  B | Cost = ? | Batch   1/  1 | BatchSize =          8
+[   0.01s] SOLUTION     | Visited =       6684 | Cost =  450.00 | Value = 16,20,13,14,6,4,10,3,19,7,18,17,8,11,5,9,1,12,2,15,0
+[   0.01s] COMPLETED    | Visited =       6684 | Cost =  450.00 | Value = 16,20,13,14,6,4,10,3,19,7,18,17,8,11,5,9,1,12,2,15,0
+	Command being timed: "../tsptw_1_bro -t 1800 -g -i ../data/tsptw/Solnon25_feasible/n21g100b50.003.txt"
+	User time (seconds): 0.02
+	System time (seconds): 0.34
+	Percent of CPU this job got: 33%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:01.12
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 93696
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 25
+	Minor (reclaiming a frame) page faults: 5821
+	Voluntary context switches: 439
+	Involuntary context switches: 4
+	Swaps: 0
+	File system inputs: 8
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+COMMAND: /usr/bin/time -v ../tsptw_1_bro -t 1800 -g -i ../data/tsptw/Solnon25_feasible/n21g100b50.004.txt
+Instance: ../data/tsptw/Solnon25_feasible/n21g100b50.004.txt
+GPU: True
+Width: Auto
+[   0.00s] Layer =    0 | Visited =          1 | Nodes =          1 ->          0 | MemSize =  112.00  B | Cost = ? | Batch   1/  1 | BatchSize =          1
+[   0.00s] Layer =    1 | Visited =          8 | Nodes =          7 ->          0 | MemSize =  784.00  B | Cost = ? | Batch   1/  1 | BatchSize =          7
+[   0.00s] Layer =    2 | Visited =         33 | Nodes =         25 ->          0 | MemSize =    2.73 KB | Cost = ? | Batch   1/  1 | BatchSize =         25
+[   0.00s] Layer =    3 | Visited =        147 | Nodes =        114 ->          0 | MemSize =   12.47 KB | Cost = ? | Batch   1/  1 | BatchSize =        114
+[   0.01s] Layer =    4 | Visited =        593 | Nodes =        446 ->          0 | MemSize =   48.78 KB | Cost = ? | Batch   1/  1 | BatchSize =        446
+[   0.01s] Layer =    5 | Visited =       1711 | Nodes =       1118 ->          0 | MemSize =  122.28 KB | Cost = ? | Batch   1/  1 | BatchSize =       1118
+[   0.01s] Layer =    6 | Visited =       3667 | Nodes =       1956 ->          0 | MemSize =  213.94 KB | Cost = ? | Batch   1/  1 | BatchSize =       1956
+[   0.01s] Layer =    7 | Visited =       6495 | Nodes =       2828 ->          0 | MemSize =  309.31 KB | Cost = ? | Batch   1/  1 | BatchSize =       2828
+[   0.01s] Layer =    8 | Visited =      10550 | Nodes =       4055 ->          0 | MemSize =  443.52 KB | Cost = ? | Batch   1/  1 | BatchSize =       4055
+[   0.01s] Layer =    9 | Visited =      16656 | Nodes =       6106 ->          0 | MemSize =  667.84 KB | Cost = ? | Batch   1/  1 | BatchSize =       6106
+[   0.01s] Layer =   10 | Visited =      25626 | Nodes =       8970 ->          0 | MemSize =  981.09 KB | Cost = ? | Batch   1/  1 | BatchSize =       8970
+[   0.01s] Layer =   11 | Visited =      37084 | Nodes =      11458 ->          0 | MemSize =    1.22 MB | Cost = ? | Batch   1/  1 | BatchSize =      11458
+[   0.01s] Layer =   12 | Visited =      48673 | Nodes =      11589 ->          0 | MemSize =    1.24 MB | Cost = ? | Batch   1/  1 | BatchSize =      11589
+[   0.01s] Layer =   13 | Visited =      57646 | Nodes =       8973 ->          0 | MemSize =  981.42 KB | Cost = ? | Batch   1/  1 | BatchSize =       8973
+[   0.02s] Layer =   14 | Visited =      63080 | Nodes =       5434 ->          0 | MemSize =  594.34 KB | Cost = ? | Batch   1/  1 | BatchSize =       5434
+[   0.02s] Layer =   15 | Visited =      65863 | Nodes =       2783 ->          0 | MemSize =  304.39 KB | Cost = ? | Batch   1/  1 | BatchSize =       2783
+[   0.02s] Layer =   16 | Visited =      67199 | Nodes =       1336 ->          0 | MemSize =  146.12 KB | Cost = ? | Batch   1/  1 | BatchSize =       1336
+[   0.02s] Layer =   17 | Visited =      67812 | Nodes =        613 ->          0 | MemSize =   67.05 KB | Cost = ? | Batch   1/  1 | BatchSize =        613
+[   0.02s] Layer =   18 | Visited =      68063 | Nodes =        251 ->          0 | MemSize =   27.45 KB | Cost = ? | Batch   1/  1 | BatchSize =        251
+[   0.02s] Layer =   19 | Visited =      68150 | Nodes =         87 ->          0 | MemSize =    9.52 KB | Cost = ? | Batch   1/  1 | BatchSize =         87
+[   0.02s] Layer =   20 | Visited =      68172 | Nodes =         22 ->          0 | MemSize =    2.41 KB | Cost = ? | Batch   1/  1 | BatchSize =         22
+[   0.02s] SOLUTION     | Visited =      68172 | Cost =  375.00 | Value = 7,14,2,18,17,5,11,1,9,6,3,10,15,19,16,13,20,4,8,12,0
+[   0.02s] COMPLETED    | Visited =      68172 | Cost =  375.00 | Value = 7,14,2,18,17,5,11,1,9,6,3,10,15,19,16,13,20,4,8,12,0
+	Command being timed: "../tsptw_1_bro -t 1800 -g -i ../data/tsptw/Solnon25_feasible/n21g100b50.004.txt"
+	User time (seconds): 0.02
+	System time (seconds): 0.36
+	Percent of CPU this job got: 34%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:01.13
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 101376
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 31
+	Minor (reclaiming a frame) page faults: 7498
+	Voluntary context switches: 438
+	Involuntary context switches: 5
+	Swaps: 0
+	File system inputs: 8
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+COMMAND: /usr/bin/time -v ../tsptw_1_bro -t 1800 -g -i ../data/tsptw/Solnon25_feasible/n21g100b50.005.txt
+Instance: ../data/tsptw/Solnon25_feasible/n21g100b50.005.txt
+GPU: True
+Width: Auto
+[   0.00s] Layer =    0 | Visited =          1 | Nodes =          1 ->          0 | MemSize =  112.00  B | Cost = ? | Batch   1/  1 | BatchSize =          1
+[   0.00s] Layer =    1 | Visited =         13 | Nodes =         12 ->          0 | MemSize =    1.31 KB | Cost = ? | Batch   1/  1 | BatchSize =         12
+[   0.00s] Layer =    2 | Visited =         91 | Nodes =         78 ->          0 | MemSize =    8.53 KB | Cost = ? | Batch   1/  1 | BatchSize =         78
+[   0.00s] Layer =    3 | Visited =        298 | Nodes =        207 ->          0 | MemSize =   22.64 KB | Cost = ? | Batch   1/  1 | BatchSize =        207
+[   0.01s] Layer =    4 | Visited =        605 | Nodes =        307 ->          0 | MemSize =   33.58 KB | Cost = ? | Batch   1/  1 | BatchSize =        307
+[   0.01s] Layer =    5 | Visited =        908 | Nodes =        303 ->          0 | MemSize =   33.14 KB | Cost = ? | Batch   1/  1 | BatchSize =        303
+[   0.01s] Layer =    6 | Visited =       1156 | Nodes =        248 ->          0 | MemSize =   27.12 KB | Cost = ? | Batch   1/  1 | BatchSize =        248
+[   0.01s] Layer =    7 | Visited =       1355 | Nodes =        199 ->          0 | MemSize =   21.77 KB | Cost = ? | Batch   1/  1 | BatchSize =        199
+[   0.01s] Layer =    8 | Visited =       1556 | Nodes =        201 ->          0 | MemSize =   21.98 KB | Cost = ? | Batch   1/  1 | BatchSize =        201
+[   0.01s] Layer =    9 | Visited =       1773 | Nodes =        217 ->          0 | MemSize =   23.73 KB | Cost = ? | Batch   1/  1 | BatchSize =        217
+[   0.01s] Layer =   10 | Visited =       1982 | Nodes =        209 ->          0 | MemSize =   22.86 KB | Cost = ? | Batch   1/  1 | BatchSize =        209
+[   0.01s] Layer =   11 | Visited =       2178 | Nodes =        196 ->          0 | MemSize =   21.44 KB | Cost = ? | Batch   1/  1 | BatchSize =        196
+[   0.01s] Layer =   12 | Visited =       2353 | Nodes =        175 ->          0 | MemSize =   19.14 KB | Cost = ? | Batch   1/  1 | BatchSize =        175
+[   0.01s] Layer =   13 | Visited =       2504 | Nodes =        151 ->          0 | MemSize =   16.52 KB | Cost = ? | Batch   1/  1 | BatchSize =        151
+[   0.01s] Layer =   14 | Visited =       2616 | Nodes =        112 ->          0 | MemSize =   12.25 KB | Cost = ? | Batch   1/  1 | BatchSize =        112
+[   0.01s] Layer =   15 | Visited =       2680 | Nodes =         64 ->          0 | MemSize =    7.00 KB | Cost = ? | Batch   1/  1 | BatchSize =         64
+[   0.01s] Layer =   16 | Visited =       2714 | Nodes =         34 ->          0 | MemSize =    3.72 KB | Cost = ? | Batch   1/  1 | BatchSize =         34
+[   0.01s] Layer =   17 | Visited =       2732 | Nodes =         18 ->          0 | MemSize =    1.97 KB | Cost = ? | Batch   1/  1 | BatchSize =         18
+[   0.01s] Layer =   18 | Visited =       2743 | Nodes =         11 ->          0 | MemSize =    1.20 KB | Cost = ? | Batch   1/  1 | BatchSize =         11
+[   0.01s] Layer =   19 | Visited =       2749 | Nodes =          6 ->          0 | MemSize =  672.00  B | Cost = ? | Batch   1/  1 | BatchSize =          6
+[   0.01s] Layer =   20 | Visited =       2751 | Nodes =          2 ->          0 | MemSize =  224.00  B | Cost = ? | Batch   1/  1 | BatchSize =          2
+[   0.01s] SOLUTION     | Visited =       2751 | Cost =  470.00 | Value = 1,4,3,14,19,7,9,15,8,2,20,10,13,16,17,12,11,18,5,6,0
+[   0.01s] COMPLETED    | Visited =       2751 | Cost =  470.00 | Value = 1,4,3,14,19,7,9,15,8,2,20,10,13,16,17,12,11,18,5,6,0
+	Command being timed: "../tsptw_1_bro -t 1800 -g -i ../data/tsptw/Solnon25_feasible/n21g100b50.005.txt"
+	User time (seconds): 0.02
+	System time (seconds): 0.35
+	Percent of CPU this job got: 34%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:01.11
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 93696
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 27
+	Minor (reclaiming a frame) page faults: 5692
+	Voluntary context switches: 434
+	Involuntary context switches: 7
+	Swaps: 0
+	File system inputs: 8
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+COMMAND: /usr/bin/time -v ../tsptw_1_bro -t 1800 -g -i ../data/tsptw/Solnon25_feasible/n21g60b10.001.txt
+Instance: ../data/tsptw/Solnon25_feasible/n21g60b10.001.txt
+GPU: True
+Width: Auto
+[   0.00s] Layer =    0 | Visited =          1 | Nodes =          1 ->          0 | MemSize =  112.00  B | Cost = ? | Batch   1/  1 | BatchSize =          1
+[   0.00s] Layer =    1 | Visited =          3 | Nodes =          2 ->          0 | MemSize =  224.00  B | Cost = ? | Batch   1/  1 | BatchSize =          2
+[   0.00s] Layer =    2 | Visited =          6 | Nodes =          3 ->          0 | MemSize =  336.00  B | Cost = ? | Batch   1/  1 | BatchSize =          3
+[   0.00s] Layer =    3 | Visited =         10 | Nodes =          4 ->          0 | MemSize =  448.00  B | Cost = ? | Batch   1/  1 | BatchSize =          4
+[   0.00s] Layer =    4 | Visited =         16 | Nodes =          6 ->          0 | MemSize =  672.00  B | Cost = ? | Batch   1/  1 | BatchSize =          6
+[   0.01s] Layer =    5 | Visited =         26 | Nodes =         10 ->          0 | MemSize =    1.09 KB | Cost = ? | Batch   1/  1 | BatchSize =         10
+[   0.01s] Layer =    6 | Visited =         38 | Nodes =         12 ->          0 | MemSize =    1.31 KB | Cost = ? | Batch   1/  1 | BatchSize =         12
+[   0.01s] Layer =    7 | Visited =         42 | Nodes =          4 ->          0 | MemSize =  448.00  B | Cost = ? | Batch   1/  1 | BatchSize =          4
+[   0.01s] Layer =    8 | Visited =         46 | Nodes =          4 ->          0 | MemSize =  448.00  B | Cost = ? | Batch   1/  1 | BatchSize =          4
+[   0.01s] Layer =    9 | Visited =         55 | Nodes =          9 ->          0 | MemSize = 1008.00  B | Cost = ? | Batch   1/  1 | BatchSize =          9
+[   0.01s] Layer =   10 | Visited =         66 | Nodes =         11 ->          0 | MemSize =    1.20 KB | Cost = ? | Batch   1/  1 | BatchSize =         11
+[   0.01s] Layer =   11 | Visited =         73 | Nodes =          7 ->          0 | MemSize =  784.00  B | Cost = ? | Batch   1/  1 | BatchSize =          7
+[   0.01s] Layer =   12 | Visited =         76 | Nodes =          3 ->          0 | MemSize =  336.00  B | Cost = ? | Batch   1/  1 | BatchSize =          3
+[   0.01s] Layer =   13 | Visited =         80 | Nodes =          4 ->          0 | MemSize =  448.00  B | Cost = ? | Batch   1/  1 | BatchSize =          4
+[   0.01s] Layer =   14 | Visited =         89 | Nodes =          9 ->          0 | MemSize = 1008.00  B | Cost = ? | Batch   1/  1 | BatchSize =          9
+[   0.01s] Layer =   15 | Visited =         95 | Nodes =          6 ->          0 | MemSize =  672.00  B | Cost = ? | Batch   1/  1 | BatchSize =          6
+[   0.01s] Layer =   16 | Visited =         97 | Nodes =          2 ->          0 | MemSize =  224.00  B | Cost = ? | Batch   1/  1 | BatchSize =          2
+[   0.01s] Layer =   17 | Visited =        101 | Nodes =          4 ->          0 | MemSize =  448.00  B | Cost = ? | Batch   1/  1 | BatchSize =          4
+[   0.01s] Layer =   18 | Visited =        110 | Nodes =          9 ->          0 | MemSize = 1008.00  B | Cost = ? | Batch   1/  1 | BatchSize =          9
+[   0.01s] Layer =   19 | Visited =        121 | Nodes =         11 ->          0 | MemSize =    1.20 KB | Cost = ? | Batch   1/  1 | BatchSize =         11
+[   0.01s] Layer =   20 | Visited =        128 | Nodes =          7 ->          0 | MemSize =  784.00  B | Cost = ? | Batch   1/  1 | BatchSize =          7
+[   0.01s] SOLUTION     | Visited =        128 | Cost =  790.00 | Value = 8,5,4,6,13,7,12,3,9,15,10,20,11,19,2,14,18,16,1,17,0
+[   0.01s] COMPLETED    | Visited =        128 | Cost =  790.00 | Value = 8,5,4,6,13,7,12,3,9,15,10,20,11,19,2,14,18,16,1,17,0
+	Command being timed: "../tsptw_1_bro -t 1800 -g -i ../data/tsptw/Solnon25_feasible/n21g60b10.001.txt"
+	User time (seconds): 0.02
+	System time (seconds): 0.35
+	Percent of CPU this job got: 33%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:01.11
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 93696
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 19
+	Minor (reclaiming a frame) page faults: 5623
+	Voluntary context switches: 429
+	Involuntary context switches: 5
+	Swaps: 0
+	File system inputs: 8
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+COMMAND: /usr/bin/time -v ../tsptw_1_bro -t 1800 -g -i ../data/tsptw/Solnon25_feasible/n21g60b10.002.txt
+Instance: ../data/tsptw/Solnon25_feasible/n21g60b10.002.txt
+GPU: True
+Width: Auto
+[   0.00s] Layer =    0 | Visited =          1 | Nodes =          1 ->          0 | MemSize =  112.00  B | Cost = ? | Batch   1/  1 | BatchSize =          1
+[   0.00s] Layer =    1 | Visited =          2 | Nodes =          1 ->          0 | MemSize =  112.00  B | Cost = ? | Batch   1/  1 | BatchSize =          1
+[   0.00s] Layer =    2 | Visited =          4 | Nodes =          2 ->          0 | MemSize =  224.00  B | Cost = ? | Batch   1/  1 | BatchSize =          2
+[   0.00s] Layer =    3 | Visited =          8 | Nodes =          4 ->          0 | MemSize =  448.00  B | Cost = ? | Batch   1/  1 | BatchSize =          4
+[   0.00s] Layer =    4 | Visited =         14 | Nodes =          6 ->          0 | MemSize =  672.00  B | Cost = ? | Batch   1/  1 | BatchSize =          6
+[   0.01s] Layer =    5 | Visited =         19 | Nodes =          5 ->          0 | MemSize =  560.00  B | Cost = ? | Batch   1/  1 | BatchSize =          5
+[   0.01s] Layer =    6 | Visited =         27 | Nodes =          8 ->          0 | MemSize =  896.00  B | Cost = ? | Batch   1/  1 | BatchSize =          8
+[   0.01s] Layer =    7 | Visited =         40 | Nodes =         13 ->          0 | MemSize =    1.42 KB | Cost = ? | Batch   1/  1 | BatchSize =         13
+[   0.01s] Layer =    8 | Visited =         56 | Nodes =         16 ->          0 | MemSize =    1.75 KB | Cost = ? | Batch   1/  1 | BatchSize =         16
+[   0.01s] Layer =    9 | Visited =         66 | Nodes =         10 ->          0 | MemSize =    1.09 KB | Cost = ? | Batch   1/  1 | BatchSize =         10
+[   0.01s] Layer =   10 | Visited =         73 | Nodes =          7 ->          0 | MemSize =  784.00  B | Cost = ? | Batch   1/  1 | BatchSize =          7
+[   0.01s] Layer =   11 | Visited =         79 | Nodes =          6 ->          0 | MemSize =  672.00  B | Cost = ? | Batch   1/  1 | BatchSize =          6
+[   0.01s] Layer =   12 | Visited =         83 | Nodes =          4 ->          0 | MemSize =  448.00  B | Cost = ? | Batch   1/  1 | BatchSize =          4
+[   0.01s] Layer =   13 | Visited =         89 | Nodes =          6 ->          0 | MemSize =  672.00  B | Cost = ? | Batch   1/  1 | BatchSize =          6
+[   0.01s] Layer =   14 | Visited =         95 | Nodes =          6 ->          0 | MemSize =  672.00  B | Cost = ? | Batch   1/  1 | BatchSize =          6
+[   0.01s] Layer =   15 | Visited =         99 | Nodes =          4 ->          0 | MemSize =  448.00  B | Cost = ? | Batch   1/  1 | BatchSize =          4
+[   0.01s] Layer =   16 | Visited =        107 | Nodes =          8 ->          0 | MemSize =  896.00  B | Cost = ? | Batch   1/  1 | BatchSize =          8
+[   0.01s] Layer =   17 | Visited =        116 | Nodes =          9 ->          0 | MemSize = 1008.00  B | Cost = ? | Batch   1/  1 | BatchSize =          9
+[   0.01s] Layer =   18 | Visited =        121 | Nodes =          5 ->          0 | MemSize =  560.00  B | Cost = ? | Batch   1/  1 | BatchSize =          5
+[   0.01s] Layer =   19 | Visited =        122 | Nodes =          1 ->          0 | MemSize =  112.00  B | Cost = ? | Batch   1/  1 | BatchSize =          1
+[   0.01s] Layer =   20 | Visited =        123 | Nodes =          1 ->          0 | MemSize =  112.00  B | Cost = ? | Batch   1/  1 | BatchSize =          1
+[   0.01s] SOLUTION     | Visited =        123 | Cost =  819.00 | Value = 9,5,20,4,10,11,16,2,14,15,3,12,8,7,13,1,6,19,18,17,0
+[   0.01s] COMPLETED    | Visited =        123 | Cost =  819.00 | Value = 9,5,20,4,10,11,16,2,14,15,3,12,8,7,13,1,6,19,18,17,0
+	Command being timed: "../tsptw_1_bro -t 1800 -g -i ../data/tsptw/Solnon25_feasible/n21g60b10.002.txt"
+	User time (seconds): 0.02
+	System time (seconds): 0.34
+	Percent of CPU this job got: 33%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:01.11
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 93696
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 20
+	Minor (reclaiming a frame) page faults: 5622
+	Voluntary context switches: 435
+	Involuntary context switches: 5
+	Swaps: 0
+	File system inputs: 8
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+COMMAND: /usr/bin/time -v ../tsptw_1_bro -t 1800 -g -i ../data/tsptw/Solnon25_feasible/n21g60b10.003.txt
+Instance: ../data/tsptw/Solnon25_feasible/n21g60b10.003.txt
+GPU: True
+Width: Auto
+[   0.00s] Layer =    0 | Visited =          1 | Nodes =          1 ->          0 | MemSize =  112.00  B | Cost = ? | Batch   1/  1 | BatchSize =          1
+[   0.00s] Layer =    1 | Visited =          2 | Nodes =          1 ->          0 | MemSize =  112.00  B | Cost = ? | Batch   1/  1 | BatchSize =          1
+[   0.00s] Layer =    2 | Visited =          5 | Nodes =          3 ->          0 | MemSize =  336.00  B | Cost = ? | Batch   1/  1 | BatchSize =          3
+[   0.00s] Layer =    3 | Visited =         10 | Nodes =          5 ->          0 | MemSize =  560.00  B | Cost = ? | Batch   1/  1 | BatchSize =          5
+[   0.01s] Layer =    4 | Visited =         14 | Nodes =          4 ->          0 | MemSize =  448.00  B | Cost = ? | Batch   1/  1 | BatchSize =          4
+[   0.01s] Layer =    5 | Visited =         15 | Nodes =          1 ->          0 | MemSize =  112.00  B | Cost = ? | Batch   1/  1 | BatchSize =          1
+[   0.01s] Layer =    6 | Visited =         20 | Nodes =          5 ->          0 | MemSize =  560.00  B | Cost = ? | Batch   1/  1 | BatchSize =          5
+[   0.01s] Layer =    7 | Visited =         33 | Nodes =         13 ->          0 | MemSize =    1.42 KB | Cost = ? | Batch   1/  1 | BatchSize =         13
+[   0.01s] Layer =    8 | Visited =         52 | Nodes =         19 ->          0 | MemSize =    2.08 KB | Cost = ? | Batch   1/  1 | BatchSize =         19
+[   0.01s] Layer =    9 | Visited =         67 | Nodes =         15 ->          0 | MemSize =    1.64 KB | Cost = ? | Batch   1/  1 | BatchSize =         15
+[   0.01s] Layer =   10 | Visited =         74 | Nodes =          7 ->          0 | MemSize =  784.00  B | Cost = ? | Batch   1/  1 | BatchSize =          7
+[   0.01s] Layer =   11 | Visited =         78 | Nodes =          4 ->          0 | MemSize =  448.00  B | Cost = ? | Batch   1/  1 | BatchSize =          4
+[   0.01s] Layer =   12 | Visited =         80 | Nodes =          2 ->          0 | MemSize =  224.00  B | Cost = ? | Batch   1/  1 | BatchSize =          2
+[   0.01s] Layer =   13 | Visited =         81 | Nodes =          1 ->          0 | MemSize =  112.00  B | Cost = ? | Batch   1/  1 | BatchSize =          1
+[   0.01s] Layer =   14 | Visited =         85 | Nodes =          4 ->          0 | MemSize =  448.00  B | Cost = ? | Batch   1/  1 | BatchSize =          4
+[   0.01s] Layer =   15 | Visited =         93 | Nodes =          8 ->          0 | MemSize =  896.00  B | Cost = ? | Batch   1/  1 | BatchSize =          8
+[   0.01s] Layer =   16 | Visited =        105 | Nodes =         12 ->          0 | MemSize =    1.31 KB | Cost = ? | Batch   1/  1 | BatchSize =         12
+[   0.01s] Layer =   17 | Visited =        114 | Nodes =          9 ->          0 | MemSize = 1008.00  B | Cost = ? | Batch   1/  1 | BatchSize =          9
+[   0.01s] Layer =   18 | Visited =        119 | Nodes =          5 ->          0 | MemSize =  560.00  B | Cost = ? | Batch   1/  1 | BatchSize =          5
+[   0.01s] Layer =   19 | Visited =        124 | Nodes =          5 ->          0 | MemSize =  560.00  B | Cost = ? | Batch   1/  1 | BatchSize =          5
+[   0.01s] Layer =   20 | Visited =        127 | Nodes =          3 ->          0 | MemSize =  336.00  B | Cost = ? | Batch   1/  1 | BatchSize =          3
+[   0.01s] SOLUTION     | Visited =        127 | Cost =  931.00 | Value = 2,9,15,14,12,1,8,13,18,19,6,20,7,10,3,4,16,5,11,17,0
+[   0.01s] COMPLETED    | Visited =        127 | Cost =  931.00 | Value = 2,9,15,14,12,1,8,13,18,19,6,20,7,10,3,4,16,5,11,17,0
+	Command being timed: "../tsptw_1_bro -t 1800 -g -i ../data/tsptw/Solnon25_feasible/n21g60b10.003.txt"
+	User time (seconds): 0.02
+	System time (seconds): 0.37
+	Percent of CPU this job got: 34%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:01.13
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 95232
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 22
+	Minor (reclaiming a frame) page faults: 5621
+	Voluntary context switches: 435
+	Involuntary context switches: 3
+	Swaps: 0
+	File system inputs: 8
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+COMMAND: /usr/bin/time -v ../tsptw_1_bro -t 1800 -g -i ../data/tsptw/Solnon25_feasible/n21g60b10.004.txt
+Instance: ../data/tsptw/Solnon25_feasible/n21g60b10.004.txt
+GPU: True
+Width: Auto

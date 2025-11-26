@@ -1,0 +1,1100 @@
+COMMAND: ../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/SolomonPotvinBengio/rc_201.1.txt
+Instance: ../data/tsptw/SolomonPotvinBengio/rc_201.1.txt
+Cities: 20
+Node:  352.00 B
+GPU: True
+[   0.00s] LAYER   0
+           Fanout   19 | Parents           1 | MemSize  352.00 B
+           Batch     0 | Nodes             1 | MemSize  352.00 B           Batches   1 | Children          3 | MemSize    1.03 KB
+[   0.04s] LAYER   1
+           Fanout   18 | Parents           3 | MemSize    1.03 KB
+           Batch     0 | Nodes             3 | MemSize    1.03 KB           Batches   1 | Children          5 | MemSize    1.72 KB
+[   0.04s] LAYER   2
+           Fanout   17 | Parents           5 | MemSize    1.72 KB
+           Batch     0 | Nodes             5 | MemSize    1.72 KB           Batches   1 | Children          7 | MemSize    2.41 KB
+[   0.04s] LAYER   3
+           Fanout   16 | Parents           7 | MemSize    2.41 KB
+           Batch     0 | Nodes             7 | MemSize    2.41 KB           Batches   1 | Children          9 | MemSize    3.09 KB
+[   0.04s] LAYER   4
+           Fanout   15 | Parents           9 | MemSize    3.09 KB
+           Batch     0 | Nodes             9 | MemSize    3.09 KB           Batches   1 | Children         12 | MemSize    4.12 KB
+[   0.04s] LAYER   5
+           Fanout   14 | Parents          12 | MemSize    4.12 KB
+           Batch     0 | Nodes            12 | MemSize    4.12 KB           Batches   1 | Children         28 | MemSize    9.62 KB
+[   0.04s] LAYER   6
+           Fanout   13 | Parents          28 | MemSize    9.62 KB
+           Batch     0 | Nodes            28 | MemSize    9.62 KB           Batches   1 | Children         33 | MemSize   11.34 KB
+[   0.04s] LAYER   7
+           Fanout   12 | Parents          33 | MemSize   11.34 KB
+           Batch     0 | Nodes            33 | MemSize   11.34 KB           Batches   1 | Children         19 | MemSize    6.53 KB
+[   0.04s] LAYER   8
+           Fanout   11 | Parents          19 | MemSize    6.53 KB
+           Batch     0 | Nodes            19 | MemSize    6.53 KB           Batches   1 | Children         12 | MemSize    4.12 KB
+[   0.04s] LAYER   9
+           Fanout   10 | Parents          12 | MemSize    4.12 KB
+           Batch     0 | Nodes            12 | MemSize    4.12 KB           Batches   1 | Children         15 | MemSize    5.16 KB
+[   0.04s] LAYER  10
+           Fanout    9 | Parents          15 | MemSize    5.16 KB
+           Batch     0 | Nodes            15 | MemSize    5.16 KB           Batches   1 | Children         16 | MemSize    5.50 KB
+[   0.04s] LAYER  11
+           Fanout    8 | Parents          16 | MemSize    5.50 KB
+           Batch     0 | Nodes            16 | MemSize    5.50 KB           Batches   1 | Children         20 | MemSize    6.88 KB
+[   0.04s] LAYER  12
+           Fanout    7 | Parents          20 | MemSize    6.88 KB
+           Batch     0 | Nodes            20 | MemSize    6.88 KB           Batches   1 | Children         33 | MemSize   11.34 KB
+[   0.04s] LAYER  13
+           Fanout    6 | Parents          33 | MemSize   11.34 KB
+           Batch     0 | Nodes            33 | MemSize   11.34 KB           Batches   1 | Children         44 | MemSize   15.12 KB
+[   0.04s] LAYER  14
+           Fanout    5 | Parents          44 | MemSize   15.12 KB
+           Batch     0 | Nodes            44 | MemSize   15.12 KB           Batches   1 | Children         32 | MemSize   11.00 KB
+[   0.05s] LAYER  15
+           Fanout    4 | Parents          32 | MemSize   11.00 KB
+           Batch     0 | Nodes            32 | MemSize   11.00 KB           Batches   1 | Children         17 | MemSize    5.84 KB
+[   0.05s] LAYER  16
+           Fanout    3 | Parents          17 | MemSize    5.84 KB
+           Batch     0 | Nodes            17 | MemSize    5.84 KB           Batches   1 | Children         11 | MemSize    3.78 KB
+[   0.05s] LAYER  17
+           Fanout    2 | Parents          11 | MemSize    3.78 KB
+           Batch     0 | Nodes            11 | MemSize    3.78 KB           Batches   1 | Children          3 | MemSize    1.03 KB
+[   0.05s] LAYER  18
+           Fanout    1 | Parents           3 | MemSize    1.03 KB
+           Batch     0 | Nodes             3 | MemSize    1.03 KB           Batches   1 | Children          2 | MemSize  704.00 B
+[   0.05s] LAYER  19
+           Fanout    1 | Parents           2 | MemSize  704.00 B
+           Batch     0 | Nodes             2 | MemSize  704.00 B           Batches   1 | Children          1 | MemSize  352.00 B
+[   0.05s] LAYER  20
+           Fanout    0 | Parents           1 | MemSize  352.00 B
+           Batch     0 | Nodes             1 | MemSize  352.00 B           Batches   1 | Children          0 | MemSize    0.00 B
+[   0.05s] COMPLETED
+Cost = 4445425.00 | Value = 14,18,13,9,5,4,6,8,7,16,19,11,17,1,10,3,12,2,15,0
+
+COMMAND: ../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/SolomonPotvinBengio/rc_201.2.txt
+Instance: ../data/tsptw/SolomonPotvinBengio/rc_201.2.txt
+Cities: 26
+Node:  352.00 B
+GPU: True
+[   0.00s] LAYER   0
+           Fanout   25 | Parents           1 | MemSize  352.00 B
+           Batch     0 | Nodes             1 | MemSize  352.00 B           Batches   1 | Children          3 | MemSize    1.03 KB
+[   0.03s] LAYER   1
+           Fanout   24 | Parents           3 | MemSize    1.03 KB
+           Batch     0 | Nodes             3 | MemSize    1.03 KB           Batches   1 | Children          5 | MemSize    1.72 KB
+[   0.03s] LAYER   2
+           Fanout   23 | Parents           5 | MemSize    1.72 KB
+           Batch     0 | Nodes             5 | MemSize    1.72 KB           Batches   1 | Children          6 | MemSize    2.06 KB
+[   0.03s] LAYER   3
+           Fanout   22 | Parents           6 | MemSize    2.06 KB
+           Batch     0 | Nodes             6 | MemSize    2.06 KB           Batches   1 | Children          6 | MemSize    2.06 KB
+[   0.03s] LAYER   4
+           Fanout   21 | Parents           6 | MemSize    2.06 KB
+           Batch     0 | Nodes             6 | MemSize    2.06 KB           Batches   1 | Children         11 | MemSize    3.78 KB
+[   0.03s] LAYER   5
+           Fanout   20 | Parents          11 | MemSize    3.78 KB
+           Batch     0 | Nodes            11 | MemSize    3.78 KB           Batches   1 | Children         15 | MemSize    5.16 KB
+[   0.03s] LAYER   6
+           Fanout   19 | Parents          15 | MemSize    5.16 KB
+           Batch     0 | Nodes            15 | MemSize    5.16 KB           Batches   1 | Children         25 | MemSize    8.59 KB
+[   0.04s] LAYER   7
+           Fanout   18 | Parents          25 | MemSize    8.59 KB
+           Batch     0 | Nodes            25 | MemSize    8.59 KB           Batches   1 | Children         24 | MemSize    8.25 KB
+[   0.04s] LAYER   8
+           Fanout   17 | Parents          24 | MemSize    8.25 KB
+           Batch     0 | Nodes            24 | MemSize    8.25 KB           Batches   1 | Children         11 | MemSize    3.78 KB
+[   0.04s] LAYER   9
+           Fanout   16 | Parents          11 | MemSize    3.78 KB
+           Batch     0 | Nodes            11 | MemSize    3.78 KB           Batches   1 | Children         17 | MemSize    5.84 KB
+[   0.04s] LAYER  10
+           Fanout   15 | Parents          17 | MemSize    5.84 KB
+           Batch     0 | Nodes            17 | MemSize    5.84 KB           Batches   1 | Children         31 | MemSize   10.66 KB
+[   0.04s] LAYER  11
+           Fanout   14 | Parents          31 | MemSize   10.66 KB
+           Batch     0 | Nodes            31 | MemSize   10.66 KB           Batches   1 | Children         22 | MemSize    7.56 KB
+[   0.04s] LAYER  12
+           Fanout   13 | Parents          22 | MemSize    7.56 KB
+           Batch     0 | Nodes            22 | MemSize    7.56 KB           Batches   1 | Children          6 | MemSize    2.06 KB
+[   0.04s] LAYER  13
+           Fanout   12 | Parents           6 | MemSize    2.06 KB
+           Batch     0 | Nodes             6 | MemSize    2.06 KB           Batches   1 | Children          6 | MemSize    2.06 KB
+[   0.04s] LAYER  14
+           Fanout   11 | Parents           6 | MemSize    2.06 KB
+           Batch     0 | Nodes             6 | MemSize    2.06 KB           Batches   1 | Children          3 | MemSize    1.03 KB
+[   0.04s] LAYER  15
+           Fanout   10 | Parents           3 | MemSize    1.03 KB
+           Batch     0 | Nodes             3 | MemSize    1.03 KB           Batches   1 | Children          3 | MemSize    1.03 KB
+[   0.04s] LAYER  16
+           Fanout    9 | Parents           3 | MemSize    1.03 KB
+           Batch     0 | Nodes             3 | MemSize    1.03 KB           Batches   1 | Children          3 | MemSize    1.03 KB
+[   0.04s] LAYER  17
+           Fanout    8 | Parents           3 | MemSize    1.03 KB
+           Batch     0 | Nodes             3 | MemSize    1.03 KB           Batches   1 | Children          7 | MemSize    2.41 KB
+[   0.04s] LAYER  18
+           Fanout    7 | Parents           7 | MemSize    2.41 KB
+           Batch     0 | Nodes             7 | MemSize    2.41 KB           Batches   1 | Children         11 | MemSize    3.78 KB
+[   0.04s] LAYER  19
+           Fanout    6 | Parents          11 | MemSize    3.78 KB
+           Batch     0 | Nodes            11 | MemSize    3.78 KB           Batches   1 | Children          7 | MemSize    2.41 KB
+[   0.04s] LAYER  20
+           Fanout    5 | Parents           7 | MemSize    2.41 KB
+           Batch     0 | Nodes             7 | MemSize    2.41 KB           Batches   1 | Children         10 | MemSize    3.44 KB
+[   0.04s] LAYER  21
+           Fanout    4 | Parents          10 | MemSize    3.44 KB
+           Batch     0 | Nodes            10 | MemSize    3.44 KB           Batches   1 | Children          8 | MemSize    2.75 KB
+[   0.04s] LAYER  22
+           Fanout    3 | Parents           8 | MemSize    2.75 KB
+           Batch     0 | Nodes             8 | MemSize    2.75 KB           Batches   1 | Children          6 | MemSize    2.06 KB
+[   0.04s] LAYER  23
+           Fanout    2 | Parents           6 | MemSize    2.06 KB
+           Batch     0 | Nodes             6 | MemSize    2.06 KB           Batches   1 | Children          6 | MemSize    2.06 KB
+[   0.04s] LAYER  24
+           Fanout    1 | Parents           6 | MemSize    2.06 KB
+           Batch     0 | Nodes             6 | MemSize    2.06 KB           Batches   1 | Children          4 | MemSize    1.38 KB
+[   0.04s] LAYER  25
+           Fanout    1 | Parents           4 | MemSize    1.38 KB
+           Batch     0 | Nodes             4 | MemSize    1.38 KB           Batches   1 | Children          1 | MemSize  352.00 B
+[   0.04s] LAYER  26
+           Fanout    0 | Parents           1 | MemSize  352.00 B
+           Batch     0 | Nodes             1 | MemSize  352.00 B           Batches   1 | Children          0 | MemSize    0.00 B
+[   0.04s] COMPLETED
+Cost = 71153740.00 | Value = 13,21,10,23,9,12,5,6,8,16,19,25,17,18,1,24,2,11,7,4,3,14,20,22,15,0
+
+COMMAND: ../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/SolomonPotvinBengio/rc_201.3.txt
+Instance: ../data/tsptw/SolomonPotvinBengio/rc_201.3.txt
+Cities: 32
+Node:  352.00 B
+GPU: True
+[   0.00s] LAYER   0
+           Fanout   31 | Parents           1 | MemSize  352.00 B
+           Batch     0 | Nodes             1 | MemSize  352.00 B           Batches   1 | Children          5 | MemSize    1.72 KB
+[   0.03s] LAYER   1
+           Fanout   30 | Parents           5 | MemSize    1.72 KB
+           Batch     0 | Nodes             5 | MemSize    1.72 KB           Batches   1 | Children         15 | MemSize    5.16 KB
+[   0.03s] LAYER   2
+           Fanout   29 | Parents          15 | MemSize    5.16 KB
+           Batch     0 | Nodes            15 | MemSize    5.16 KB           Batches   1 | Children         17 | MemSize    5.84 KB
+[   0.03s] LAYER   3
+           Fanout   28 | Parents          17 | MemSize    5.84 KB
+           Batch     0 | Nodes            17 | MemSize    5.84 KB           Batches   1 | Children         14 | MemSize    4.81 KB
+[   0.03s] LAYER   4
+           Fanout   27 | Parents          14 | MemSize    4.81 KB
+           Batch     0 | Nodes            14 | MemSize    4.81 KB           Batches   1 | Children          9 | MemSize    3.09 KB
+[   0.03s] LAYER   5
+           Fanout   26 | Parents           9 | MemSize    3.09 KB
+           Batch     0 | Nodes             9 | MemSize    3.09 KB           Batches   1 | Children         11 | MemSize    3.78 KB
+[   0.03s] LAYER   6
+           Fanout   25 | Parents          11 | MemSize    3.78 KB
+           Batch     0 | Nodes            11 | MemSize    3.78 KB           Batches   1 | Children         28 | MemSize    9.62 KB
+[   0.03s] LAYER   7
+           Fanout   24 | Parents          28 | MemSize    9.62 KB
+           Batch     0 | Nodes            28 | MemSize    9.62 KB           Batches   1 | Children         37 | MemSize   12.72 KB
+[   0.03s] LAYER   8
+           Fanout   23 | Parents          37 | MemSize   12.72 KB
+           Batch     0 | Nodes            37 | MemSize   12.72 KB           Batches   1 | Children         25 | MemSize    8.59 KB
+[   0.03s] LAYER   9
+           Fanout   22 | Parents          25 | MemSize    8.59 KB
+           Batch     0 | Nodes            25 | MemSize    8.59 KB           Batches   1 | Children         18 | MemSize    6.19 KB
+[   0.03s] LAYER  10
+           Fanout   21 | Parents          18 | MemSize    6.19 KB
+           Batch     0 | Nodes            18 | MemSize    6.19 KB           Batches   1 | Children         22 | MemSize    7.56 KB
+[   0.03s] LAYER  11
+           Fanout   20 | Parents          22 | MemSize    7.56 KB
+           Batch     0 | Nodes            22 | MemSize    7.56 KB           Batches   1 | Children         24 | MemSize    8.25 KB
+[   0.03s] LAYER  12
+           Fanout   19 | Parents          24 | MemSize    8.25 KB
+           Batch     0 | Nodes            24 | MemSize    8.25 KB           Batches   1 | Children         22 | MemSize    7.56 KB
+[   0.03s] LAYER  13
+           Fanout   18 | Parents          22 | MemSize    7.56 KB
+           Batch     0 | Nodes            22 | MemSize    7.56 KB           Batches   1 | Children         29 | MemSize    9.97 KB
+[   0.04s] LAYER  14
+           Fanout   17 | Parents          29 | MemSize    9.97 KB
+           Batch     0 | Nodes            29 | MemSize    9.97 KB           Batches   1 | Children         44 | MemSize   15.12 KB
+[   0.04s] LAYER  15
+           Fanout   16 | Parents          44 | MemSize   15.12 KB
+           Batch     0 | Nodes            44 | MemSize   15.12 KB           Batches   1 | Children         67 | MemSize   23.03 KB
+[   0.04s] LAYER  16
+           Fanout   15 | Parents          67 | MemSize   23.03 KB
+           Batch     0 | Nodes            67 | MemSize   23.03 KB           Batches   1 | Children         77 | MemSize   26.47 KB
+[   0.04s] LAYER  17
+           Fanout   14 | Parents          77 | MemSize   26.47 KB
+           Batch     0 | Nodes            77 | MemSize   26.47 KB           Batches   1 | Children         31 | MemSize   10.66 KB
+[   0.04s] LAYER  18
+           Fanout   13 | Parents          31 | MemSize   10.66 KB
+           Batch     0 | Nodes            31 | MemSize   10.66 KB           Batches   1 | Children         11 | MemSize    3.78 KB
+[   0.04s] LAYER  19
+           Fanout   12 | Parents          11 | MemSize    3.78 KB
+           Batch     0 | Nodes            11 | MemSize    3.78 KB           Batches   1 | Children          6 | MemSize    2.06 KB
+[   0.04s] LAYER  20
+           Fanout   11 | Parents           6 | MemSize    2.06 KB
+           Batch     0 | Nodes             6 | MemSize    2.06 KB           Batches   1 | Children          4 | MemSize    1.38 KB
+[   0.04s] LAYER  21
+           Fanout   10 | Parents           4 | MemSize    1.38 KB
+           Batch     0 | Nodes             4 | MemSize    1.38 KB           Batches   1 | Children          5 | MemSize    1.72 KB
+[   0.04s] LAYER  22
+           Fanout    9 | Parents           5 | MemSize    1.72 KB
+           Batch     0 | Nodes             5 | MemSize    1.72 KB           Batches   1 | Children         15 | MemSize    5.16 KB
+[   0.04s] LAYER  23
+           Fanout    8 | Parents          15 | MemSize    5.16 KB
+           Batch     0 | Nodes            15 | MemSize    5.16 KB           Batches   1 | Children         20 | MemSize    6.88 KB
+[   0.04s] LAYER  24
+           Fanout    7 | Parents          20 | MemSize    6.88 KB
+           Batch     0 | Nodes            20 | MemSize    6.88 KB           Batches   1 | Children         17 | MemSize    5.84 KB
+[   0.04s] LAYER  25
+           Fanout    6 | Parents          17 | MemSize    5.84 KB
+           Batch     0 | Nodes            17 | MemSize    5.84 KB           Batches   1 | Children         15 | MemSize    5.16 KB
+[   0.04s] LAYER  26
+           Fanout    5 | Parents          15 | MemSize    5.16 KB
+           Batch     0 | Nodes            15 | MemSize    5.16 KB           Batches   1 | Children         10 | MemSize    3.44 KB
+[   0.04s] LAYER  27
+           Fanout    4 | Parents          10 | MemSize    3.44 KB
+           Batch     0 | Nodes            10 | MemSize    3.44 KB           Batches   1 | Children          3 | MemSize    1.03 KB
+[   0.04s] LAYER  28
+           Fanout    3 | Parents           3 | MemSize    1.03 KB
+           Batch     0 | Nodes             3 | MemSize    1.03 KB           Batches   1 | Children          2 | MemSize  704.00 B
+[   0.04s] LAYER  29
+           Fanout    2 | Parents           2 | MemSize  704.00 B
+           Batch     0 | Nodes             2 | MemSize  704.00 B           Batches   1 | Children          2 | MemSize  704.00 B
+[   0.04s] LAYER  30
+           Fanout    1 | Parents           2 | MemSize  704.00 B
+           Batch     0 | Nodes             2 | MemSize  704.00 B           Batches   1 | Children          2 | MemSize  704.00 B
+[   0.04s] LAYER  31
+           Fanout    1 | Parents           2 | MemSize  704.00 B
+           Batch     0 | Nodes             2 | MemSize  704.00 B           Batches   1 | Children          1 | MemSize  352.00 B
+[   0.04s] LAYER  32
+           Fanout    0 | Parents           1 | MemSize  352.00 B
+           Batch     0 | Nodes             1 | MemSize  352.00 B           Batches   1 | Children          0 | MemSize    0.00 B
+[   0.04s] COMPLETED
+Cost = 79060688.00 | Value = 12,14,15,5,17,2,30,22,27,9,10,24,7,28,19,25,26,6,8,18,3,29,20,13,11,16,1,4,21,31,23,0
+
+COMMAND: ../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/SolomonPotvinBengio/rc_201.4.txt
+Instance: ../data/tsptw/SolomonPotvinBengio/rc_201.4.txt
+Cities: 26
+Node:  352.00 B
+GPU: True
+[   0.00s] LAYER   0
+           Fanout   25 | Parents           1 | MemSize  352.00 B
+           Batch     0 | Nodes             1 | MemSize  352.00 B           Batches   1 | Children          3 | MemSize    1.03 KB
+[   0.03s] LAYER   1
+           Fanout   24 | Parents           3 | MemSize    1.03 KB
+           Batch     0 | Nodes             3 | MemSize    1.03 KB           Batches   1 | Children          5 | MemSize    1.72 KB
+[   0.03s] LAYER   2
+           Fanout   23 | Parents           5 | MemSize    1.72 KB
+           Batch     0 | Nodes             5 | MemSize    1.72 KB           Batches   1 | Children          6 | MemSize    2.06 KB
+[   0.03s] LAYER   3
+           Fanout   22 | Parents           6 | MemSize    2.06 KB
+           Batch     0 | Nodes             6 | MemSize    2.06 KB           Batches   1 | Children         11 | MemSize    3.78 KB
+[   0.04s] LAYER   4
+           Fanout   21 | Parents          11 | MemSize    3.78 KB
+           Batch     0 | Nodes            11 | MemSize    3.78 KB           Batches   1 | Children         22 | MemSize    7.56 KB
+[   0.04s] LAYER   5
+           Fanout   20 | Parents          22 | MemSize    7.56 KB
+           Batch     0 | Nodes            22 | MemSize    7.56 KB           Batches   1 | Children         22 | MemSize    7.56 KB
+[   0.04s] LAYER   6
+           Fanout   19 | Parents          22 | MemSize    7.56 KB
+           Batch     0 | Nodes            22 | MemSize    7.56 KB           Batches   1 | Children         10 | MemSize    3.44 KB
+[   0.04s] LAYER   7
+           Fanout   18 | Parents          10 | MemSize    3.44 KB
+           Batch     0 | Nodes            10 | MemSize    3.44 KB           Batches   1 | Children         11 | MemSize    3.78 KB
+[   0.04s] LAYER   8
+           Fanout   17 | Parents          11 | MemSize    3.78 KB
+           Batch     0 | Nodes            11 | MemSize    3.78 KB           Batches   1 | Children          6 | MemSize    2.06 KB
+[   0.04s] LAYER   9
+           Fanout   16 | Parents           6 | MemSize    2.06 KB
+           Batch     0 | Nodes             6 | MemSize    2.06 KB           Batches   1 | Children          3 | MemSize    1.03 KB
+[   0.04s] LAYER  10
+           Fanout   15 | Parents           3 | MemSize    1.03 KB
+           Batch     0 | Nodes             3 | MemSize    1.03 KB           Batches   1 | Children          5 | MemSize    1.72 KB
+[   0.04s] LAYER  11
+           Fanout   14 | Parents           5 | MemSize    1.72 KB
+           Batch     0 | Nodes             5 | MemSize    1.72 KB           Batches   1 | Children          5 | MemSize    1.72 KB
+[   0.04s] LAYER  12
+           Fanout   13 | Parents           5 | MemSize    1.72 KB
+           Batch     0 | Nodes             5 | MemSize    1.72 KB           Batches   1 | Children          2 | MemSize  704.00 B
+[   0.04s] LAYER  13
+           Fanout   12 | Parents           2 | MemSize  704.00 B
+           Batch     0 | Nodes             2 | MemSize  704.00 B           Batches   1 | Children          2 | MemSize  704.00 B
+[   0.04s] LAYER  14
+           Fanout   11 | Parents           2 | MemSize  704.00 B
+           Batch     0 | Nodes             2 | MemSize  704.00 B           Batches   1 | Children          7 | MemSize    2.41 KB
+[   0.04s] LAYER  15
+           Fanout   10 | Parents           7 | MemSize    2.41 KB
+           Batch     0 | Nodes             7 | MemSize    2.41 KB           Batches   1 | Children         12 | MemSize    4.12 KB
+[   0.04s] LAYER  16
+           Fanout    9 | Parents          12 | MemSize    4.12 KB
+           Batch     0 | Nodes            12 | MemSize    4.12 KB           Batches   1 | Children          7 | MemSize    2.41 KB
+[   0.04s] LAYER  17
+           Fanout    8 | Parents           7 | MemSize    2.41 KB
+           Batch     0 | Nodes             7 | MemSize    2.41 KB           Batches   1 | Children          3 | MemSize    1.03 KB
+[   0.04s] LAYER  18
+           Fanout    7 | Parents           3 | MemSize    1.03 KB
+           Batch     0 | Nodes             3 | MemSize    1.03 KB           Batches   1 | Children          3 | MemSize    1.03 KB
+[   0.04s] LAYER  19
+           Fanout    6 | Parents           3 | MemSize    1.03 KB
+           Batch     0 | Nodes             3 | MemSize    1.03 KB           Batches   1 | Children          4 | MemSize    1.38 KB
+[   0.04s] LAYER  20
+           Fanout    5 | Parents           4 | MemSize    1.38 KB
+           Batch     0 | Nodes             4 | MemSize    1.38 KB           Batches   1 | Children          9 | MemSize    3.09 KB
+[   0.04s] LAYER  21
+           Fanout    4 | Parents           9 | MemSize    3.09 KB
+           Batch     0 | Nodes             9 | MemSize    3.09 KB           Batches   1 | Children         11 | MemSize    3.78 KB
+[   0.05s] LAYER  22
+           Fanout    3 | Parents          11 | MemSize    3.78 KB
+           Batch     0 | Nodes            11 | MemSize    3.78 KB           Batches   1 | Children         15 | MemSize    5.16 KB
+[   0.05s] LAYER  23
+           Fanout    2 | Parents          15 | MemSize    5.16 KB
+           Batch     0 | Nodes            15 | MemSize    5.16 KB           Batches   1 | Children         11 | MemSize    3.78 KB
+[   0.05s] LAYER  24
+           Fanout    1 | Parents          11 | MemSize    3.78 KB
+           Batch     0 | Nodes            11 | MemSize    3.78 KB           Batches   1 | Children          4 | MemSize    1.38 KB
+[   0.05s] LAYER  25
+           Fanout    1 | Parents           4 | MemSize    1.38 KB
+           Batch     0 | Nodes             4 | MemSize    1.38 KB           Batches   1 | Children          1 | MemSize  352.00 B
+[   0.05s] LAYER  26
+           Fanout    0 | Parents           1 | MemSize  352.00 B
+           Batch     0 | Nodes             1 | MemSize  352.00 B           Batches   1 | Children          0 | MemSize    0.00 B
+[   0.05s] COMPLETED
+Cost = 7936351.00 | Value = 20,2,14,3,1,17,21,6,5,4,13,12,25,23,16,11,9,10,18,24,15,7,8,22,19,0
+
+COMMAND: ../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/SolomonPotvinBengio/rc_202.1.txt
+Instance: ../data/tsptw/SolomonPotvinBengio/rc_202.1.txt
+Cities: 33
+Node:  352.00 B
+GPU: True
+[   0.00s] LAYER   0
+           Fanout   32 | Parents           1 | MemSize  352.00 B
+           Batch     0 | Nodes             1 | MemSize  352.00 B           Batches   1 | Children         11 | MemSize    3.78 KB
+[   0.03s] LAYER   1
+           Fanout   31 | Parents          11 | MemSize    3.78 KB
+           Batch     0 | Nodes            11 | MemSize    3.78 KB           Batches   1 | Children         82 | MemSize   28.19 KB
+[   0.03s] LAYER   2
+           Fanout   30 | Parents          82 | MemSize   28.19 KB
+           Batch     0 | Nodes            82 | MemSize   28.19 KB           Batches   1 | Children        194 | MemSize   66.69 KB
+[   0.03s] LAYER   3
+           Fanout   29 | Parents         194 | MemSize   66.69 KB
+           Batch     0 | Nodes           194 | MemSize   66.69 KB           Batches   1 | Children        298 | MemSize  102.44 KB
+[   0.03s] LAYER   4
+           Fanout   28 | Parents         298 | MemSize  102.44 KB
+           Batch     0 | Nodes           298 | MemSize  102.44 KB           Batches   1 | Children        581 | MemSize  199.72 KB
+[   0.03s] LAYER   5
+           Fanout   27 | Parents         581 | MemSize  199.72 KB
+           Batch     0 | Nodes           581 | MemSize  199.72 KB           Batches   1 | Children       1197 | MemSize  411.47 KB
+[   0.03s] LAYER   6
+           Fanout   26 | Parents        1197 | MemSize  411.47 KB
+           Batch     0 | Nodes          1197 | MemSize  411.47 KB           Batches   1 | Children       2003 | MemSize  688.53 KB
+[   0.03s] LAYER   7
+           Fanout   25 | Parents        2003 | MemSize  688.53 KB
+           Batch     0 | Nodes          2003 | MemSize  688.53 KB           Batches   1 | Children       3049 | MemSize    1.02 MB
+[   0.04s] LAYER   8
+           Fanout   24 | Parents        3049 | MemSize    1.02 MB
+           Batch     0 | Nodes          3049 | MemSize    1.02 MB           Batches   1 | Children       4130 | MemSize    1.39 MB
+[   0.04s] LAYER   9
+           Fanout   23 | Parents        4130 | MemSize    1.39 MB
+           Batch     0 | Nodes          4130 | MemSize    1.39 MB           Batches   1 | Children       5021 | MemSize    1.69 MB
+[   0.05s] LAYER  10
+           Fanout   22 | Parents        5021 | MemSize    1.69 MB
+           Batch     0 | Nodes          5021 | MemSize    1.69 MB           Batches   1 | Children       6340 | MemSize    2.13 MB
+[   0.06s] LAYER  11
+           Fanout   21 | Parents        6340 | MemSize    2.13 MB
+           Batch     0 | Nodes          6340 | MemSize    2.13 MB           Batches   1 | Children       7795 | MemSize    2.62 MB
+[   0.07s] LAYER  12
+           Fanout   20 | Parents        7795 | MemSize    2.62 MB
+           Batch     0 | Nodes          7795 | MemSize    2.62 MB           Batches   1 | Children       9912 | MemSize    3.33 MB
+[   0.08s] LAYER  13
+           Fanout   19 | Parents        9912 | MemSize    3.33 MB
+           Batch     0 | Nodes          9912 | MemSize    3.33 MB           Batches   1 | Children      13449 | MemSize    4.51 MB
+[   0.09s] LAYER  14
+           Fanout   18 | Parents       13449 | MemSize    4.51 MB
+           Batch     0 | Nodes         13449 | MemSize    4.51 MB           Batches   1 | Children      16884 | MemSize    5.67 MB
+[   0.11s] LAYER  15
+           Fanout   17 | Parents       16884 | MemSize    5.67 MB
+           Batch     0 | Nodes         16884 | MemSize    5.67 MB           Batches   1 | Children      17471 | MemSize    5.86 MB
+[   0.13s] LAYER  16
+           Fanout   16 | Parents       17471 | MemSize    5.86 MB
+           Batch     0 | Nodes         17471 | MemSize    5.86 MB           Batches   1 | Children      14212 | MemSize    4.77 MB
+[   0.14s] LAYER  17
+           Fanout   15 | Parents       14212 | MemSize    4.77 MB
+           Batch     0 | Nodes         14212 | MemSize    4.77 MB           Batches   1 | Children       9810 | MemSize    3.29 MB
+[   0.15s] LAYER  18
+           Fanout   14 | Parents        9810 | MemSize    3.29 MB
+           Batch     0 | Nodes          9810 | MemSize    3.29 MB           Batches   1 | Children       5871 | MemSize    1.97 MB
+[   0.16s] LAYER  19
+           Fanout   13 | Parents        5871 | MemSize    1.97 MB
+           Batch     0 | Nodes          5871 | MemSize    1.97 MB           Batches   1 | Children       4106 | MemSize    1.38 MB
+[   0.16s] LAYER  20
+           Fanout   12 | Parents        4106 | MemSize    1.38 MB
+           Batch     0 | Nodes          4106 | MemSize    1.38 MB           Batches   1 | Children       4600 | MemSize    1.54 MB
+[   0.16s] LAYER  21
+           Fanout   11 | Parents        4600 | MemSize    1.54 MB
+           Batch     0 | Nodes          4600 | MemSize    1.54 MB           Batches   1 | Children       6768 | MemSize    2.27 MB
+[   0.17s] LAYER  22
+           Fanout   10 | Parents        6768 | MemSize    2.27 MB
+           Batch     0 | Nodes          6768 | MemSize    2.27 MB           Batches   1 | Children       8491 | MemSize    2.85 MB
+[   0.18s] LAYER  23
+           Fanout    9 | Parents        8491 | MemSize    2.85 MB
+           Batch     0 | Nodes          8491 | MemSize    2.85 MB           Batches   1 | Children       8408 | MemSize    2.82 MB
+[   0.18s] LAYER  24
+           Fanout    8 | Parents        8408 | MemSize    2.82 MB
+           Batch     0 | Nodes          8408 | MemSize    2.82 MB           Batches   1 | Children       6762 | MemSize    2.27 MB
+[   0.19s] LAYER  25
+           Fanout    7 | Parents        6762 | MemSize    2.27 MB
+           Batch     0 | Nodes          6762 | MemSize    2.27 MB           Batches   1 | Children       4715 | MemSize    1.58 MB
+[   0.19s] LAYER  26
+           Fanout    6 | Parents        4715 | MemSize    1.58 MB
+           Batch     0 | Nodes          4715 | MemSize    1.58 MB           Batches   1 | Children       2867 | MemSize  985.53 KB
+[   0.19s] LAYER  27
+           Fanout    5 | Parents        2867 | MemSize  985.53 KB
+           Batch     0 | Nodes          2867 | MemSize  985.53 KB           Batches   1 | Children       1396 | MemSize  479.88 KB
+[   0.20s] LAYER  28
+           Fanout    4 | Parents        1396 | MemSize  479.88 KB
+           Batch     0 | Nodes          1396 | MemSize  479.88 KB           Batches   1 | Children        567 | MemSize  194.91 KB
+[   0.20s] LAYER  29
+           Fanout    3 | Parents         567 | MemSize  194.91 KB
+           Batch     0 | Nodes           567 | MemSize  194.91 KB           Batches   1 | Children        202 | MemSize   69.44 KB
+[   0.20s] LAYER  30
+           Fanout    2 | Parents         202 | MemSize   69.44 KB
+           Batch     0 | Nodes           202 | MemSize   69.44 KB           Batches   1 | Children         62 | MemSize   21.31 KB
+[   0.20s] LAYER  31
+           Fanout    1 | Parents          62 | MemSize   21.31 KB
+           Batch     0 | Nodes            62 | MemSize   21.31 KB           Batches   1 | Children         15 | MemSize    5.16 KB
+[   0.20s] LAYER  32
+           Fanout    1 | Parents          15 | MemSize    5.16 KB
+           Batch     0 | Nodes            15 | MemSize    5.16 KB           Batches   1 | Children          1 | MemSize  352.00 B
+[   0.20s] LAYER  33
+           Fanout    0 | Parents           1 | MemSize  352.00 B
+           Batch     0 | Nodes             1 | MemSize  352.00 B           Batches   1 | Children          0 | MemSize    0.00 B
+[   0.20s] COMPLETED
+Cost = 77177600.00 | Value = 30,32,26,21,13,8,6,7,9,11,10,23,15,1,2,18,25,5,27,28,20,4,16,3,22,19,17,14,12,29,31,24,0
+
+COMMAND: ../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/SolomonPotvinBengio/rc_202.2.txt
+Instance: ../data/tsptw/SolomonPotvinBengio/rc_202.2.txt
+Cities: 14
+Node:  352.00 B
+GPU: True
+[   0.00s] LAYER   0
+           Fanout   13 | Parents           1 | MemSize  352.00 B
+           Batch     0 | Nodes             1 | MemSize  352.00 B           Batches   1 | Children          9 | MemSize    3.09 KB
+[   0.03s] LAYER   1
+           Fanout   12 | Parents           9 | MemSize    3.09 KB
+           Batch     0 | Nodes             9 | MemSize    3.09 KB           Batches   1 | Children         64 | MemSize   22.00 KB
+[   0.03s] LAYER   2
+           Fanout   11 | Parents          64 | MemSize   22.00 KB
+           Batch     0 | Nodes            64 | MemSize   22.00 KB           Batches   1 | Children        199 | MemSize   68.41 KB
+[   0.03s] LAYER   3
+           Fanout   10 | Parents         199 | MemSize   68.41 KB
+           Batch     0 | Nodes           199 | MemSize   68.41 KB           Batches   1 | Children        459 | MemSize  157.78 KB
+[   0.03s] LAYER   4
+           Fanout    9 | Parents         459 | MemSize  157.78 KB
+           Batch     0 | Nodes           459 | MemSize  157.78 KB           Batches   1 | Children        812 | MemSize  279.12 KB
+[   0.03s] LAYER   5
+           Fanout    8 | Parents         812 | MemSize  279.12 KB
+           Batch     0 | Nodes           812 | MemSize  279.12 KB           Batches   1 | Children       1172 | MemSize  402.88 KB
+[   0.03s] LAYER   6
+           Fanout    7 | Parents        1172 | MemSize  402.88 KB
+           Batch     0 | Nodes          1172 | MemSize  402.88 KB           Batches   1 | Children       1478 | MemSize  508.06 KB
+[   0.04s] LAYER   7
+           Fanout    6 | Parents        1478 | MemSize  508.06 KB
+           Batch     0 | Nodes          1478 | MemSize  508.06 KB           Batches   1 | Children       1723 | MemSize  592.28 KB
+[   0.04s] LAYER   8
+           Fanout    5 | Parents        1723 | MemSize  592.28 KB
+           Batch     0 | Nodes          1723 | MemSize  592.28 KB           Batches   1 | Children       1673 | MemSize  575.09 KB
+[   0.04s] LAYER   9
+           Fanout    4 | Parents        1673 | MemSize  575.09 KB
+           Batch     0 | Nodes          1673 | MemSize  575.09 KB           Batches   1 | Children       1285 | MemSize  441.72 KB
+[   0.04s] LAYER  10
+           Fanout    3 | Parents        1285 | MemSize  441.72 KB
+           Batch     0 | Nodes          1285 | MemSize  441.72 KB           Batches   1 | Children        686 | MemSize  235.81 KB
+[   0.04s] LAYER  11
+           Fanout    2 | Parents         686 | MemSize  235.81 KB
+           Batch     0 | Nodes           686 | MemSize  235.81 KB           Batches   1 | Children        211 | MemSize   72.53 KB
+[   0.04s] LAYER  12
+           Fanout    1 | Parents         211 | MemSize   72.53 KB
+           Batch     0 | Nodes           211 | MemSize   72.53 KB           Batches   1 | Children         28 | MemSize    9.62 KB
+[   0.04s] LAYER  13
+           Fanout    1 | Parents          28 | MemSize    9.62 KB
+           Batch     0 | Nodes            28 | MemSize    9.62 KB           Batches   1 | Children          1 | MemSize  352.00 B
+[   0.05s] LAYER  14
+           Fanout    0 | Parents           1 | MemSize  352.00 B
+           Batch     0 | Nodes             1 | MemSize  352.00 B           Batches   1 | Children          0 | MemSize    0.00 B
+[   0.05s] COMPLETED
+Cost = 3041418.00 | Value = 11,12,1,3,4,9,2,5,10,8,7,6,13,0
+
+COMMAND: ../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/SolomonPotvinBengio/rc_202.3.txt
+Instance: ../data/tsptw/SolomonPotvinBengio/rc_202.3.txt
+Cities: 29
+Node:  352.00 B
+GPU: True
+[   0.00s] LAYER   0
+           Fanout   28 | Parents           1 | MemSize  352.00 B
+           Batch     0 | Nodes             1 | MemSize  352.00 B           Batches   1 | Children          6 | MemSize    2.06 KB
+[   0.02s] LAYER   1
+           Fanout   27 | Parents           6 | MemSize    2.06 KB
+           Batch     0 | Nodes             6 | MemSize    2.06 KB           Batches   1 | Children         23 | MemSize    7.91 KB
+[   0.02s] LAYER   2
+           Fanout   26 | Parents          23 | MemSize    7.91 KB
+           Batch     0 | Nodes            23 | MemSize    7.91 KB           Batches   1 | Children         32 | MemSize   11.00 KB
+[   0.02s] LAYER   3
+           Fanout   25 | Parents          32 | MemSize   11.00 KB
+           Batch     0 | Nodes            32 | MemSize   11.00 KB           Batches   1 | Children         31 | MemSize   10.66 KB
+[   0.02s] LAYER   4
+           Fanout   24 | Parents          31 | MemSize   10.66 KB
+           Batch     0 | Nodes            31 | MemSize   10.66 KB           Batches   1 | Children         24 | MemSize    8.25 KB
+[   0.02s] LAYER   5
+           Fanout   23 | Parents          24 | MemSize    8.25 KB
+           Batch     0 | Nodes            24 | MemSize    8.25 KB           Batches   1 | Children         25 | MemSize    8.59 KB
+[   0.02s] LAYER   6
+           Fanout   22 | Parents          25 | MemSize    8.59 KB
+           Batch     0 | Nodes            25 | MemSize    8.59 KB           Batches   1 | Children         34 | MemSize   11.69 KB
+[   0.02s] LAYER   7
+           Fanout   21 | Parents          34 | MemSize   11.69 KB
+           Batch     0 | Nodes            34 | MemSize   11.69 KB           Batches   1 | Children         39 | MemSize   13.41 KB
+[   0.03s] LAYER   8
+           Fanout   20 | Parents          39 | MemSize   13.41 KB
+           Batch     0 | Nodes            39 | MemSize   13.41 KB           Batches   1 | Children         40 | MemSize   13.75 KB
+[   0.03s] LAYER   9
+           Fanout   19 | Parents          40 | MemSize   13.75 KB
+           Batch     0 | Nodes            40 | MemSize   13.75 KB           Batches   1 | Children         34 | MemSize   11.69 KB
+[   0.03s] LAYER  10
+           Fanout   18 | Parents          34 | MemSize   11.69 KB
+           Batch     0 | Nodes            34 | MemSize   11.69 KB           Batches   1 | Children         49 | MemSize   16.84 KB
+[   0.03s] LAYER  11
+           Fanout   17 | Parents          49 | MemSize   16.84 KB
+           Batch     0 | Nodes            49 | MemSize   16.84 KB           Batches   1 | Children         87 | MemSize   29.91 KB
+[   0.03s] LAYER  12
+           Fanout   16 | Parents          87 | MemSize   29.91 KB
+           Batch     0 | Nodes            87 | MemSize   29.91 KB           Batches   1 | Children        101 | MemSize   34.72 KB
+[   0.03s] LAYER  13
+           Fanout   15 | Parents         101 | MemSize   34.72 KB
+           Batch     0 | Nodes           101 | MemSize   34.72 KB           Batches   1 | Children         52 | MemSize   17.88 KB
+[   0.03s] LAYER  14
+           Fanout   14 | Parents          52 | MemSize   17.88 KB
+           Batch     0 | Nodes            52 | MemSize   17.88 KB           Batches   1 | Children         24 | MemSize    8.25 KB
+[   0.03s] LAYER  15
+           Fanout   13 | Parents          24 | MemSize    8.25 KB
+           Batch     0 | Nodes            24 | MemSize    8.25 KB           Batches   1 | Children         28 | MemSize    9.62 KB
+[   0.03s] LAYER  16
+           Fanout   12 | Parents          28 | MemSize    9.62 KB
+           Batch     0 | Nodes            28 | MemSize    9.62 KB           Batches   1 | Children         28 | MemSize    9.62 KB
+[   0.03s] LAYER  17
+           Fanout   11 | Parents          28 | MemSize    9.62 KB
+           Batch     0 | Nodes            28 | MemSize    9.62 KB           Batches   1 | Children         30 | MemSize   10.31 KB
+[   0.03s] LAYER  18
+           Fanout   10 | Parents          30 | MemSize   10.31 KB
+           Batch     0 | Nodes            30 | MemSize   10.31 KB           Batches   1 | Children         40 | MemSize   13.75 KB
+[   0.03s] LAYER  19
+           Fanout    9 | Parents          40 | MemSize   13.75 KB
+           Batch     0 | Nodes            40 | MemSize   13.75 KB           Batches   1 | Children         38 | MemSize   13.06 KB
+[   0.03s] LAYER  20
+           Fanout    8 | Parents          38 | MemSize   13.06 KB
+           Batch     0 | Nodes            38 | MemSize   13.06 KB           Batches   1 | Children         28 | MemSize    9.62 KB
+[   0.03s] LAYER  21
+           Fanout    7 | Parents          28 | MemSize    9.62 KB
+           Batch     0 | Nodes            28 | MemSize    9.62 KB           Batches   1 | Children         29 | MemSize    9.97 KB
+[   0.03s] LAYER  22
+           Fanout    6 | Parents          29 | MemSize    9.97 KB
+           Batch     0 | Nodes            29 | MemSize    9.97 KB           Batches   1 | Children         27 | MemSize    9.28 KB
+[   0.03s] LAYER  23
+           Fanout    5 | Parents          27 | MemSize    9.28 KB
+           Batch     0 | Nodes            27 | MemSize    9.28 KB           Batches   1 | Children         18 | MemSize    6.19 KB
+[   0.03s] LAYER  24
+           Fanout    4 | Parents          18 | MemSize    6.19 KB
+           Batch     0 | Nodes            18 | MemSize    6.19 KB           Batches   1 | Children         13 | MemSize    4.47 KB
+[   0.03s] LAYER  25
+           Fanout    3 | Parents          13 | MemSize    4.47 KB
+           Batch     0 | Nodes            13 | MemSize    4.47 KB           Batches   1 | Children         16 | MemSize    5.50 KB
+[   0.03s] LAYER  26
+           Fanout    2 | Parents          16 | MemSize    5.50 KB
+           Batch     0 | Nodes            16 | MemSize    5.50 KB           Batches   1 | Children         13 | MemSize    4.47 KB
+[   0.03s] LAYER  27
+           Fanout    1 | Parents          13 | MemSize    4.47 KB
+           Batch     0 | Nodes            13 | MemSize    4.47 KB           Batches   1 | Children          7 | MemSize    2.41 KB
+[   0.04s] LAYER  28
+           Fanout    1 | Parents           7 | MemSize    2.41 KB
+           Batch     0 | Nodes             7 | MemSize    2.41 KB           Batches   1 | Children          1 | MemSize  352.00 B
+[   0.04s] LAYER  29
+           Fanout    0 | Parents           1 | MemSize  352.00 B
+           Batch     0 | Nodes             1 | MemSize  352.00 B           Batches   1 | Children          0 | MemSize    0.00 B
+[   0.04s] COMPLETED
+Cost = 8377189.00 | Value = 14,8,11,21,5,20,19,22,24,25,10,9,12,13,28,2,1,16,15,23,17,4,3,26,6,7,27,18,0
+
+COMMAND: ../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/SolomonPotvinBengio/rc_202.4.txt
+Instance: ../data/tsptw/SolomonPotvinBengio/rc_202.4.txt
+Cities: 28
+Node:  352.00 B
+GPU: True
+[   0.00s] LAYER   0
+           Fanout   27 | Parents           1 | MemSize  352.00 B
+           Batch     0 | Nodes             1 | MemSize  352.00 B           Batches   1 | Children          9 | MemSize    3.09 KB
+[   0.02s] LAYER   1
+           Fanout   26 | Parents           9 | MemSize    3.09 KB
+           Batch     0 | Nodes             9 | MemSize    3.09 KB           Batches   1 | Children         73 | MemSize   25.09 KB
+[   0.02s] LAYER   2
+           Fanout   25 | Parents          73 | MemSize   25.09 KB
+           Batch     0 | Nodes            73 | MemSize   25.09 KB           Batches   1 | Children        246 | MemSize   84.56 KB
+[   0.02s] LAYER   3
+           Fanout   24 | Parents         246 | MemSize   84.56 KB
+           Batch     0 | Nodes           246 | MemSize   84.56 KB           Batches   1 | Children        532 | MemSize  182.88 KB
+[   0.03s] LAYER   4
+           Fanout   23 | Parents         532 | MemSize  182.88 KB
+           Batch     0 | Nodes           532 | MemSize  182.88 KB           Batches   1 | Children        974 | MemSize  334.81 KB
+[   0.03s] LAYER   5
+           Fanout   22 | Parents         974 | MemSize  334.81 KB
+           Batch     0 | Nodes           974 | MemSize  334.81 KB           Batches   1 | Children       1737 | MemSize  597.09 KB
+[   0.03s] LAYER   6
+           Fanout   21 | Parents        1737 | MemSize  597.09 KB
+           Batch     0 | Nodes          1737 | MemSize  597.09 KB           Batches   1 | Children       2640 | MemSize  907.50 KB
+[   0.03s] LAYER   7
+           Fanout   20 | Parents        2640 | MemSize  907.50 KB
+           Batch     0 | Nodes          2640 | MemSize  907.50 KB           Batches   1 | Children       3482 | MemSize    1.17 MB
+[   0.03s] LAYER   8
+           Fanout   19 | Parents        3482 | MemSize    1.17 MB
+           Batch     0 | Nodes          3482 | MemSize    1.17 MB           Batches   1 | Children       4662 | MemSize    1.57 MB
+[   0.04s] LAYER   9
+           Fanout   18 | Parents        4662 | MemSize    1.57 MB
+           Batch     0 | Nodes          4662 | MemSize    1.57 MB           Batches   1 | Children       6832 | MemSize    2.29 MB
+[   0.05s] LAYER  10
+           Fanout   17 | Parents        6832 | MemSize    2.29 MB
+           Batch     0 | Nodes          6832 | MemSize    2.29 MB           Batches   1 | Children      10594 | MemSize    3.56 MB
+[   0.06s] LAYER  11
+           Fanout   16 | Parents       10594 | MemSize    3.56 MB
+           Batch     0 | Nodes         10594 | MemSize    3.56 MB           Batches   1 | Children      14261 | MemSize    4.79 MB
+[   0.07s] LAYER  12
+           Fanout   15 | Parents       14261 | MemSize    4.79 MB
+           Batch     0 | Nodes         14261 | MemSize    4.79 MB           Batches   1 | Children      14548 | MemSize    4.88 MB
+[   0.08s] LAYER  13
+           Fanout   14 | Parents       14548 | MemSize    4.88 MB
+           Batch     0 | Nodes         14548 | MemSize    4.88 MB           Batches   1 | Children      10672 | MemSize    3.58 MB
+[   0.09s] LAYER  14
+           Fanout   13 | Parents       10672 | MemSize    3.58 MB
+           Batch     0 | Nodes         10672 | MemSize    3.58 MB           Batches   1 | Children       6117 | MemSize    2.05 MB
+[   0.10s] LAYER  15
+           Fanout   12 | Parents        6117 | MemSize    2.05 MB
+           Batch     0 | Nodes          6117 | MemSize    2.05 MB           Batches   1 | Children       4015 | MemSize    1.35 MB
+[   0.10s] LAYER  16
+           Fanout   11 | Parents        4015 | MemSize    1.35 MB
+           Batch     0 | Nodes          4015 | MemSize    1.35 MB           Batches   1 | Children       3972 | MemSize    1.33 MB
+[   0.11s] LAYER  17
+           Fanout   10 | Parents        3972 | MemSize    1.33 MB
+           Batch     0 | Nodes          3972 | MemSize    1.33 MB           Batches   1 | Children       4477 | MemSize    1.50 MB
+[   0.11s] LAYER  18
+           Fanout    9 | Parents        4477 | MemSize    1.50 MB
+           Batch     0 | Nodes          4477 | MemSize    1.50 MB           Batches   1 | Children       4737 | MemSize    1.59 MB
+[   0.12s] LAYER  19
+           Fanout    8 | Parents        4737 | MemSize    1.59 MB
+           Batch     0 | Nodes          4737 | MemSize    1.59 MB           Batches   1 | Children       4370 | MemSize    1.47 MB
+[   0.12s] LAYER  20
+           Fanout    7 | Parents        4370 | MemSize    1.47 MB
+           Batch     0 | Nodes          4370 | MemSize    1.47 MB           Batches   1 | Children       3882 | MemSize    1.30 MB
+[   0.13s] LAYER  21
+           Fanout    6 | Parents        3882 | MemSize    1.30 MB
+           Batch     0 | Nodes          3882 | MemSize    1.30 MB           Batches   1 | Children       3426 | MemSize    1.15 MB
+[   0.13s] LAYER  22
+           Fanout    5 | Parents        3426 | MemSize    1.15 MB
+           Batch     0 | Nodes          3426 | MemSize    1.15 MB           Batches   1 | Children       2632 | MemSize  904.75 KB
+[   0.13s] LAYER  23
+           Fanout    4 | Parents        2632 | MemSize  904.75 KB
+           Batch     0 | Nodes          2632 | MemSize  904.75 KB           Batches   1 | Children       1542 | MemSize  530.06 KB
+[   0.14s] LAYER  24
+           Fanout    3 | Parents        1542 | MemSize  530.06 KB
+           Batch     0 | Nodes          1542 | MemSize  530.06 KB           Batches   1 | Children        656 | MemSize  225.50 KB
+[   0.14s] LAYER  25
+           Fanout    2 | Parents         656 | MemSize  225.50 KB
+           Batch     0 | Nodes           656 | MemSize  225.50 KB           Batches   1 | Children        192 | MemSize   66.00 KB
+[   0.14s] LAYER  26
+           Fanout    1 | Parents         192 | MemSize   66.00 KB
+           Batch     0 | Nodes           192 | MemSize   66.00 KB           Batches   1 | Children         32 | MemSize   11.00 KB
+[   0.14s] LAYER  27
+           Fanout    1 | Parents          32 | MemSize   11.00 KB
+           Batch     0 | Nodes            32 | MemSize   11.00 KB           Batches   1 | Children          1 | MemSize  352.00 B
+[   0.14s] LAYER  28
+           Fanout    0 | Parents           1 | MemSize  352.00 B
+           Batch     0 | Nodes             1 | MemSize  352.00 B           Batches   1 | Children          0 | MemSize    0.00 B
+[   0.14s] COMPLETED
+Cost = 79302958.00 | Value = 24,21,8,5,4,26,14,7,13,22,19,16,18,9,23,20,2,11,17,25,3,10,6,1,12,27,15,0
+
+COMMAND: ../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/SolomonPotvinBengio/rc_203.1.txt
+Instance: ../data/tsptw/SolomonPotvinBengio/rc_203.1.txt
+Cities: 19
+Node:  352.00 B
+GPU: True
+[   0.00s] LAYER   0
+           Fanout   18 | Parents           1 | MemSize  352.00 B
+           Batch     0 | Nodes             1 | MemSize  352.00 B           Batches   1 | Children          9 | MemSize    3.09 KB
+[   0.03s] LAYER   1
+           Fanout   17 | Parents           9 | MemSize    3.09 KB
+           Batch     0 | Nodes             9 | MemSize    3.09 KB           Batches   1 | Children         72 | MemSize   24.75 KB
+[   0.03s] LAYER   2
+           Fanout   16 | Parents          72 | MemSize   24.75 KB
+           Batch     0 | Nodes            72 | MemSize   24.75 KB           Batches   1 | Children        250 | MemSize   85.94 KB
+[   0.03s] LAYER   3
+           Fanout   15 | Parents         250 | MemSize   85.94 KB
+           Batch     0 | Nodes           250 | MemSize   85.94 KB           Batches   1 | Children        395 | MemSize  135.78 KB
+[   0.03s] LAYER   4
+           Fanout   14 | Parents         395 | MemSize  135.78 KB
+           Batch     0 | Nodes           395 | MemSize  135.78 KB           Batches   1 | Children        453 | MemSize  155.72 KB
+[   0.04s] LAYER   5
+           Fanout   13 | Parents         453 | MemSize  155.72 KB
+           Batch     0 | Nodes           453 | MemSize  155.72 KB           Batches   1 | Children        971 | MemSize  333.78 KB
+[   0.04s] LAYER   6
+           Fanout   12 | Parents         971 | MemSize  333.78 KB
+           Batch     0 | Nodes           971 | MemSize  333.78 KB           Batches   1 | Children       1835 | MemSize  630.78 KB
+[   0.04s] LAYER   7
+           Fanout   11 | Parents        1835 | MemSize  630.78 KB
+           Batch     0 | Nodes          1835 | MemSize  630.78 KB           Batches   1 | Children       2535 | MemSize  871.41 KB
+[   0.04s] LAYER   8
+           Fanout   10 | Parents        2535 | MemSize  871.41 KB
+           Batch     0 | Nodes          2535 | MemSize  871.41 KB           Batches   1 | Children       2728 | MemSize  937.75 KB
+[   0.04s] LAYER   9
+           Fanout    9 | Parents        2728 | MemSize  937.75 KB
+           Batch     0 | Nodes          2728 | MemSize  937.75 KB           Batches   1 | Children       2580 | MemSize  886.88 KB
+[   0.05s] LAYER  10
+           Fanout    8 | Parents        2580 | MemSize  886.88 KB
+           Batch     0 | Nodes          2580 | MemSize  886.88 KB           Batches   1 | Children       2430 | MemSize  835.31 KB
+[   0.05s] LAYER  11
+           Fanout    7 | Parents        2430 | MemSize  835.31 KB
+           Batch     0 | Nodes          2430 | MemSize  835.31 KB           Batches   1 | Children       2275 | MemSize  782.03 KB
+[   0.05s] LAYER  12
+           Fanout    6 | Parents        2275 | MemSize  782.03 KB
+           Batch     0 | Nodes          2275 | MemSize  782.03 KB           Batches   1 | Children       1979 | MemSize  680.28 KB
+[   0.06s] LAYER  13
+           Fanout    5 | Parents        1979 | MemSize  680.28 KB
+           Batch     0 | Nodes          1979 | MemSize  680.28 KB           Batches   1 | Children       1475 | MemSize  507.03 KB
+[   0.06s] LAYER  14
+           Fanout    4 | Parents        1475 | MemSize  507.03 KB
+           Batch     0 | Nodes          1475 | MemSize  507.03 KB           Batches   1 | Children        902 | MemSize  310.06 KB
+[   0.06s] LAYER  15
+           Fanout    3 | Parents         902 | MemSize  310.06 KB
+           Batch     0 | Nodes           902 | MemSize  310.06 KB           Batches   1 | Children        460 | MemSize  158.12 KB
+[   0.06s] LAYER  16
+           Fanout    2 | Parents         460 | MemSize  158.12 KB
+           Batch     0 | Nodes           460 | MemSize  158.12 KB           Batches   1 | Children        165 | MemSize   56.72 KB
+[   0.06s] LAYER  17
+           Fanout    1 | Parents         165 | MemSize   56.72 KB
+           Batch     0 | Nodes           165 | MemSize   56.72 KB           Batches   1 | Children         28 | MemSize    9.62 KB
+[   0.06s] LAYER  18
+           Fanout    1 | Parents          28 | MemSize    9.62 KB
+           Batch     0 | Nodes            28 | MemSize    9.62 KB           Batches   1 | Children          1 | MemSize  352.00 B
+[   0.06s] LAYER  19
+           Fanout    0 | Parents           1 | MemSize  352.00 B
+           Batch     0 | Nodes             1 | MemSize  352.00 B           Batches   1 | Children          0 | MemSize    0.00 B
+[   0.06s] COMPLETED
+Cost = 45348207.00 | Value = 17,16,10,13,8,12,3,9,15,11,18,14,7,5,4,6,2,1,0
+
+COMMAND: ../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/SolomonPotvinBengio/rc_203.2.txt
+Instance: ../data/tsptw/SolomonPotvinBengio/rc_203.2.txt
+Cities: 33
+Node:  352.00 B
+GPU: True
+[   0.00s] LAYER   0
+           Fanout   32 | Parents           1 | MemSize  352.00 B
+           Batch     0 | Nodes             1 | MemSize  352.00 B           Batches   1 | Children         18 | MemSize    6.19 KB
+[   0.03s] LAYER   1
+           Fanout   31 | Parents          18 | MemSize    6.19 KB
+           Batch     0 | Nodes            18 | MemSize    6.19 KB           Batches   1 | Children        190 | MemSize   65.31 KB
+[   0.03s] LAYER   2
+           Fanout   30 | Parents         190 | MemSize   65.31 KB
+           Batch     0 | Nodes           190 | MemSize   65.31 KB           Batches   1 | Children        525 | MemSize  180.47 KB
+[   0.03s] LAYER   3
+           Fanout   29 | Parents         525 | MemSize  180.47 KB
+           Batch     0 | Nodes           525 | MemSize  180.47 KB           Batches   1 | Children        756 | MemSize  259.88 KB
+[   0.03s] LAYER   4
+           Fanout   28 | Parents         756 | MemSize  259.88 KB
+           Batch     0 | Nodes           756 | MemSize  259.88 KB           Batches   1 | Children        915 | MemSize  314.53 KB
+[   0.04s] LAYER   5
+           Fanout   27 | Parents         915 | MemSize  314.53 KB
+           Batch     0 | Nodes           915 | MemSize  314.53 KB           Batches   1 | Children       2742 | MemSize  942.56 KB
+[   0.04s] LAYER   6
+           Fanout   26 | Parents        2742 | MemSize  942.56 KB
+           Batch     0 | Nodes          2742 | MemSize  942.56 KB           Batches   1 | Children      10713 | MemSize    3.60 MB
+[   0.05s] LAYER   7
+           Fanout   25 | Parents       10713 | MemSize    3.60 MB
+           Batch     0 | Nodes         10713 | MemSize    3.60 MB           Batches   1 | Children      33710 | MemSize   11.32 MB
+[   0.07s] LAYER   8
+           Fanout   24 | Parents       33710 | MemSize   11.32 MB
+           Batch     0 | Nodes         33710 | MemSize   11.32 MB           Batches   1 | Children      81498 | MemSize   27.36 MB
+[   0.14s] LAYER   9
+           Fanout   23 | Parents       81498 | MemSize   27.36 MB
+           Batch     0 | Nodes         81498 | MemSize   27.36 MB           Batches   1 | Children     153718 | MemSize   51.60 MB
+[   0.29s] LAYER  10
+           Fanout   22 | Parents      153718 | MemSize   51.60 MB
+           Batch     0 | Nodes        153718 | MemSize   51.60 MB           Batches   1 | Children     249655 | MemSize   83.81 MB
+[   0.53s] LAYER  11
+           Fanout   21 | Parents      249655 | MemSize   83.81 MB
+           Batch     0 | Nodes        249655 | MemSize   83.81 MB           Batches   1 | Children     383035 | MemSize  128.58 MB
+[   0.89s] LAYER  12
+           Fanout   20 | Parents      383035 | MemSize  128.58 MB
+           Batch     0 | Nodes        383035 | MemSize  128.58 MB           Batches   1 | Children     568069 | MemSize  190.70 MB
+[   1.45s] LAYER  13
+           Fanout   19 | Parents      568069 | MemSize  190.70 MB
+           Batch     0 | Nodes        568069 | MemSize  190.70 MB           Batches   1 | Children     764418 | MemSize  256.61 MB
+[   2.14s] LAYER  14
+           Fanout   18 | Parents      764418 | MemSize  256.61 MB
+           Batch     0 | Nodes        764418 | MemSize  256.61 MB           Batches   1 | Children     898835 | MemSize  301.73 MB
+[   2.86s] LAYER  15
+           Fanout   17 | Parents      898835 | MemSize  301.73 MB
+           Batch     0 | Nodes        898835 | MemSize  301.73 MB           Batches   1 | Children     945463 | MemSize  317.39 MB
+[   3.70s] LAYER  16
+           Fanout   16 | Parents      945463 | MemSize  317.39 MB
+           Batch     0 | Nodes        945463 | MemSize  317.39 MB           Batches   1 | Children     945962 | MemSize  317.55 MB
+[   4.62s] LAYER  17
+           Fanout   15 | Parents      945962 | MemSize  317.55 MB
+           Batch     0 | Nodes        945962 | MemSize  317.55 MB           Batches   1 | Children     947176 | MemSize  317.96 MB
+[   4.91s] LAYER  18
+           Fanout   14 | Parents      947176 | MemSize  317.96 MB
+           Batch     0 | Nodes        947176 | MemSize  317.96 MB           Batches   1 | Children     954546 | MemSize  320.43 MB
+[   5.19s] LAYER  19
+           Fanout   13 | Parents      954546 | MemSize  320.43 MB
+           Batch     0 | Nodes        954546 | MemSize  320.43 MB           Batches   1 | Children     936732 | MemSize  314.45 MB
+[   5.43s] LAYER  20
+           Fanout   12 | Parents      936732 | MemSize  314.45 MB
+           Batch     0 | Nodes        936732 | MemSize  314.45 MB           Batches   1 | Children     854571 | MemSize  286.87 MB
+[   5.65s] LAYER  21
+           Fanout   11 | Parents      854571 | MemSize  286.87 MB
+           Batch     0 | Nodes        854571 | MemSize  286.87 MB           Batches   1 | Children     711629 | MemSize  238.89 MB
+[   5.83s] LAYER  22
+           Fanout   10 | Parents      711629 | MemSize  238.89 MB
+           Batch     0 | Nodes        711629 | MemSize  238.89 MB           Batches   1 | Children     539209 | MemSize  181.01 MB
+[   5.97s] LAYER  23
+           Fanout    9 | Parents      539209 | MemSize  181.01 MB
+           Batch     0 | Nodes        539209 | MemSize  181.01 MB           Batches   1 | Children     367265 | MemSize  123.29 MB
+[   6.07s] LAYER  24
+           Fanout    8 | Parents      367265 | MemSize  123.29 MB
+           Batch     0 | Nodes        367265 | MemSize  123.29 MB           Batches   1 | Children     219387 | MemSize   73.65 MB
+[   6.14s] LAYER  25
+           Fanout    7 | Parents      219387 | MemSize   73.65 MB
+           Batch     0 | Nodes        219387 | MemSize   73.65 MB           Batches   1 | Children     110291 | MemSize   37.02 MB
+[   6.17s] LAYER  26
+           Fanout    6 | Parents      110291 | MemSize   37.02 MB
+           Batch     0 | Nodes        110291 | MemSize   37.02 MB           Batches   1 | Children      44764 | MemSize   15.03 MB
+[   6.19s] LAYER  27
+           Fanout    5 | Parents       44764 | MemSize   15.03 MB
+           Batch     0 | Nodes         44764 | MemSize   15.03 MB           Batches   1 | Children      14229 | MemSize    4.78 MB
+[   6.20s] LAYER  28
+           Fanout    4 | Parents       14229 | MemSize    4.78 MB
+           Batch     0 | Nodes         14229 | MemSize    4.78 MB           Batches   1 | Children       3403 | MemSize    1.14 MB
+[   6.20s] LAYER  29
+           Fanout    3 | Parents        3403 | MemSize    1.14 MB
+           Batch     0 | Nodes          3403 | MemSize    1.14 MB           Batches   1 | Children        697 | MemSize  239.59 KB
+[   6.20s] LAYER  30
+           Fanout    2 | Parents         697 | MemSize  239.59 KB
+           Batch     0 | Nodes           697 | MemSize  239.59 KB           Batches   1 | Children        142 | MemSize   48.81 KB
+[   6.20s] LAYER  31
+           Fanout    1 | Parents         142 | MemSize   48.81 KB
+           Batch     0 | Nodes           142 | MemSize   48.81 KB           Batches   1 | Children         27 | MemSize    9.28 KB
+[   6.20s] LAYER  32
+           Fanout    1 | Parents          27 | MemSize    9.28 KB
+           Batch     0 | Nodes            27 | MemSize    9.28 KB           Batches   1 | Children          1 | MemSize  352.00 B
+[   6.21s] LAYER  33
+           Fanout    0 | Parents           1 | MemSize  352.00 B
+           Batch     0 | Nodes             1 | MemSize  352.00 B           Batches   1 | Children          0 | MemSize    0.00 B
+[   6.21s] COMPLETED
+Cost = 7841582.00 | Value = 28,17,13,12,10,11,26,25,21,31,27,3,8,6,14,4,30,16,7,15,5,29,19,22,23,18,20,1,2,9,24,32,0
+
+COMMAND: ../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/SolomonPotvinBengio/rc_203.3.txt
+Instance: ../data/tsptw/SolomonPotvinBengio/rc_203.3.txt
+Cities: 37
+Node:  352.00 B
+GPU: True
+[   0.00s] LAYER   0
+           Fanout   36 | Parents           1 | MemSize  352.00 B
+           Batch     0 | Nodes             1 | MemSize  352.00 B           Batches   1 | Children         21 | MemSize    7.22 KB
+[   0.02s] LAYER   1
+           Fanout   35 | Parents          21 | MemSize    7.22 KB
+           Batch     0 | Nodes            21 | MemSize    7.22 KB           Batches   1 | Children        342 | MemSize  117.56 KB
+[   0.03s] LAYER   2
+           Fanout   34 | Parents         342 | MemSize  117.56 KB
+           Batch     0 | Nodes           342 | MemSize  117.56 KB           Batches   1 | Children       2429 | MemSize  834.97 KB
+[   0.03s] LAYER   3
+           Fanout   33 | Parents        2429 | MemSize  834.97 KB
+           Batch     0 | Nodes          2429 | MemSize  834.97 KB           Batches   1 | Children      10579 | MemSize    3.55 MB
+[   0.04s] LAYER   4
+           Fanout   32 | Parents       10579 | MemSize    3.55 MB
+           Batch     0 | Nodes         10579 | MemSize    3.55 MB           Batches   1 | Children      30926 | MemSize   10.38 MB
+[   0.06s] LAYER   5
+           Fanout   31 | Parents       30926 | MemSize   10.38 MB
+           Batch     0 | Nodes         30926 | MemSize   10.38 MB           Batches   1 | Children      73006 | MemSize   24.51 MB
+[   0.12s] LAYER   6
+           Fanout   30 | Parents       73006 | MemSize   24.51 MB
+           Batch     0 | Nodes         73006 | MemSize   24.51 MB           Batches   1 | Children     161759 | MemSize   54.30 MB
+[   0.25s] LAYER   7
+           Fanout   29 | Parents      161759 | MemSize   54.30 MB
+           Batch     0 | Nodes        161759 | MemSize   54.30 MB           Batches   1 | Children     302932 | MemSize  101.69 MB
+[   0.53s] LAYER   8
+           Fanout   28 | Parents      302932 | MemSize  101.69 MB
+           Batch     0 | Nodes        302932 | MemSize  101.69 MB           Batches   1 | Children     514714 | MemSize  172.79 MB
+[   0.97s] LAYER   9
+           Fanout   27 | Parents      514714 | MemSize  172.79 MB
+           Batch     0 | Nodes        514714 | MemSize  172.79 MB           Batches   1 | Children     931287 | MemSize  312.63 MB
+[   1.75s] LAYER  10
+           Fanout   26 | Parents      931287 | MemSize  312.63 MB
+           Batch     0 | Nodes        931287 | MemSize  312.63 MB           Batches   1 | Children    1686494 | MemSize  566.14 MB
+[   3.19s] LAYER  11
+           Fanout   25 | Parents     1686494 | MemSize  566.14 MB
+           Batch     0 | Nodes       1686494 | MemSize  566.14 MB           Batches   1 | Children    2778671 | MemSize  932.78 MB
+[   5.46s] LAYER  12
+           Fanout   24 | Parents     2778671 | MemSize  932.78 MB
+           Batch     0 | Nodes       2778671 | MemSize  932.78 MB           Batches   1 | Children    4132495 | MemSize    1.35 GB
+[   8.20s] LAYER  13
+           Fanout   23 | Parents     4132495 | MemSize    1.35 GB
+           Batch     0 | Nodes       4132495 | MemSize    1.35 GB           Batches   1 | Children    5424486 | MemSize    1.78 GB
+[  11.79s] LAYER  14
+           Fanout   22 | Parents     5424486 | MemSize    1.78 GB
+           Batch     0 | Nodes       2712243 | MemSize  910.48 MB           Batch     1 | Nodes       2712243 | MemSize  910.48 MB           Batches   2 | Children    6022702 | MemSize    1.97 GB
+[  13.83s] LAYER  15
+           Fanout   21 | Parents     6022702 | MemSize    1.97 GB
+           Batch     0 | Nodes       3011351 | MemSize 1010.89 MB           Batch     1 | Nodes       3011351 | MemSize 1010.89 MB           Batches   2 | Children    7269973 | MemSize    2.38 GB
+[  15.44s] LAYER  16
+           Fanout   20 | Parents     7269973 | MemSize    2.38 GB
+           Batch     0 | Nodes       3634987 | MemSize    1.19 GB           Batch     1 | Nodes       3634986 | MemSize    1.19 GB           Batches   2 | Children    7448180 | MemSize    2.44 GB
+[  21.67s] LAYER  17
+           Fanout   19 | Parents     7448180 | MemSize    2.44 GB
+           Batch     0 | Nodes       3724090 | MemSize    1.22 GB           Batch     1 | Nodes       3724090 | MemSize    1.22 GB           Batches   2 | Children    8628108 | MemSize    2.83 GB
+[  26.08s] LAYER  18
+           Fanout   18 | Parents     8628108 | MemSize    2.83 GB
+           Batch     0 | Nodes       4314054 | MemSize    1.41 GB           Batch     1 | Nodes       4314054 | MemSize    1.41 GB           Batches   2 | Children   10960503 | MemSize    3.59 GB
+[  31.39s] LAYER  19
+           Fanout   17 | Parents    10960503 | MemSize    3.59 GB
+           Batch     0 | Nodes       5480252 | MemSize    1.80 GB           Batch     1 | Nodes       5480251 | MemSize    1.80 GB           Batches   2 | Children   13072606 | MemSize    4.29 GB
+[  39.65s] LAYER  20
+           Fanout   16 | Parents    13072606 | MemSize    4.29 GB
+           Batch     0 | Nodes       4357536 | MemSize    1.43 GB           Batch     1 | Nodes       4357536 | MemSize    1.43 GB           Batch     2 | Nodes       4357534 | MemSize    1.43 GB           Batches   3 | Children   13939407 | MemSize    4.57 GB
+[  43.91s] LAYER  21
+           Fanout   15 | Parents    13939407 | MemSize    4.57 GB
+           Batch     0 | Nodes       4646469 | MemSize    1.52 GB           Batch     1 | Nodes       4646469 | MemSize    1.52 GB           Batch     2 | Nodes       4646469 | MemSize    1.52 GB           Batches   3 | Children   16103536 | MemSize    5.28 GB
+[  48.11s] LAYER  22
+           Fanout   14 | Parents    16103536 | MemSize    5.28 GB
+           Batch     0 | Nodes       5367846 | MemSize    1.76 GB           Batch     1 | Nodes       5367846 | MemSize    1.76 GB           Batch     2 | Nodes       5367844 | MemSize    1.76 GB           Batches   3 | Children   15021878 | MemSize    4.92 GB
+[  51.95s] LAYER  23
+           Fanout   13 | Parents    15021878 | MemSize    4.92 GB
+           Batch     0 | Nodes       5007293 | MemSize    1.64 GB           Batch     1 | Nodes       5007293 | MemSize    1.64 GB           Batch     2 | Nodes       5007292 | MemSize    1.64 GB           Batches   3 | Children   12361857 | MemSize    4.05 GB
+[  54.91s] LAYER  24
+           Fanout   12 | Parents    12361857 | MemSize    4.05 GB
+           Batch     0 | Nodes       6180929 | MemSize    2.03 GB           Batch     1 | Nodes       6180928 | MemSize    2.03 GB           Batches   2 | Children    6096605 | MemSize    2.00 GB
+[  56.92s] LAYER  25
+           Fanout   11 | Parents     6096605 | MemSize    2.00 GB
+           Batch     0 | Nodes       6096605 | MemSize    2.00 GB           Batches   1 | Children    2041282 | MemSize  685.24 MB
+[  57.83s] LAYER  26
+           Fanout   10 | Parents     2041282 | MemSize  685.24 MB
+           Batch     0 | Nodes       2041282 | MemSize  685.24 MB           Batches   1 | Children    1108560 | MemSize  372.14 MB
+[  58.12s] LAYER  27
+           Fanout    9 | Parents     1108560 | MemSize  372.14 MB
+           Batch     0 | Nodes       1108560 | MemSize  372.14 MB           Batches   1 | Children     523625 | MemSize  175.78 MB
+[  58.25s] LAYER  28
+           Fanout    8 | Parents      523625 | MemSize  175.78 MB
+           Batch     0 | Nodes        523625 | MemSize  175.78 MB           Batches   1 | Children     213852 | MemSize   71.79 MB
+[  58.30s] LAYER  29
+           Fanout    7 | Parents      213852 | MemSize   71.79 MB
+           Batch     0 | Nodes        213852 | MemSize   71.79 MB           Batches   1 | Children      74294 | MemSize   24.94 MB
+[  58.32s] LAYER  30
+           Fanout    6 | Parents       74294 | MemSize   24.94 MB
+           Batch     0 | Nodes         74294 | MemSize   24.94 MB           Batches   1 | Children      21297 | MemSize    7.15 MB
+[  58.33s] LAYER  31
+           Fanout    5 | Parents       21297 | MemSize    7.15 MB
+           Batch     0 | Nodes         21297 | MemSize    7.15 MB           Batches   1 | Children       4890 | MemSize    1.64 MB
+[  58.33s] LAYER  32
+           Fanout    4 | Parents        4890 | MemSize    1.64 MB
+           Batch     0 | Nodes          4890 | MemSize    1.64 MB           Batches   1 | Children        959 | MemSize  329.66 KB
+[  58.33s] LAYER  33
+           Fanout    3 | Parents         959 | MemSize  329.66 KB
+           Batch     0 | Nodes           959 | MemSize  329.66 KB           Batches   1 | Children        244 | MemSize   83.88 KB
+[  58.34s] LAYER  34
+           Fanout    2 | Parents         244 | MemSize   83.88 KB
+           Batch     0 | Nodes           244 | MemSize   83.88 KB           Batches   1 | Children         95 | MemSize   32.66 KB
+[  58.34s] LAYER  35
+           Fanout    1 | Parents          95 | MemSize   32.66 KB
+           Batch     0 | Nodes            95 | MemSize   32.66 KB           Batches   1 | Children         39 | MemSize   13.41 KB
+[  58.34s] LAYER  36
+           Fanout    1 | Parents          39 | MemSize   13.41 KB
+           Batch     0 | Nodes            39 | MemSize   13.41 KB           Batches   1 | Children          1 | MemSize  352.00 B
+[  58.34s] LAYER  37
+           Fanout    0 | Parents           1 | MemSize  352.00 B
+           Batch     0 | Nodes             1 | MemSize  352.00 B           Batches   1 | Children          0 | MemSize    0.00 B
+[  58.34s] COMPLETED
+Cost = 81752618.00 | Value = 34,31,18,16,13,11,9,8,10,15,14,12,23,24,33,20,29,28,3,1,22,26,36,2,5,17,6,4,25,21,27,7,19,32,35,30,0
+
+COMMAND: ../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/SolomonPotvinBengio/rc_203.4.txt
+Instance: ../data/tsptw/SolomonPotvinBengio/rc_203.4.txt
+Cities: 15
+Node:  352.00 B
+GPU: True
+[   0.00s] LAYER   0
+           Fanout   14 | Parents           1 | MemSize  352.00 B
+           Batch     0 | Nodes             1 | MemSize  352.00 B           Batches   1 | Children         11 | MemSize    3.78 KB
+[   0.02s] LAYER   1
+           Fanout   13 | Parents          11 | MemSize    3.78 KB
+           Batch     0 | Nodes            11 | MemSize    3.78 KB           Batches   1 | Children        110 | MemSize   37.81 KB
+[   0.02s] LAYER   2
+           Fanout   12 | Parents         110 | MemSize   37.81 KB
+           Batch     0 | Nodes           110 | MemSize   37.81 KB           Batches   1 | Children        427 | MemSize  146.78 KB
+[   0.02s] LAYER   3
+           Fanout   11 | Parents         427 | MemSize  146.78 KB
+           Batch     0 | Nodes           427 | MemSize  146.78 KB           Batches   1 | Children       1092 | MemSize  375.38 KB
+[   0.03s] LAYER   4
+           Fanout   10 | Parents        1092 | MemSize  375.38 KB
+           Batch     0 | Nodes          1092 | MemSize  375.38 KB           Batches   1 | Children       2379 | MemSize  817.78 KB
+[   0.03s] LAYER   5
+           Fanout    9 | Parents        2379 | MemSize  817.78 KB
+           Batch     0 | Nodes          2379 | MemSize  817.78 KB           Batches   1 | Children       4442 | MemSize    1.49 MB
+[   0.03s] LAYER   6
+           Fanout    8 | Parents        4442 | MemSize    1.49 MB
+           Batch     0 | Nodes          4442 | MemSize    1.49 MB           Batches   1 | Children       6918 | MemSize    2.32 MB
+[   0.04s] LAYER   7
+           Fanout    7 | Parents        6918 | MemSize    2.32 MB
+           Batch     0 | Nodes          6918 | MemSize    2.32 MB           Batches   1 | Children       8130 | MemSize    2.73 MB
+[   0.04s] LAYER   8
+           Fanout    6 | Parents        8130 | MemSize    2.73 MB
+           Batch     0 | Nodes          8130 | MemSize    2.73 MB           Batches   1 | Children       7077 | MemSize    2.38 MB
+[   0.05s] LAYER   9
+           Fanout    5 | Parents        7077 | MemSize    2.38 MB
+           Batch     0 | Nodes          7077 | MemSize    2.38 MB           Batches   1 | Children       4501 | MemSize    1.51 MB
+[   0.06s] LAYER  10
+           Fanout    4 | Parents        4501 | MemSize    1.51 MB
+           Batch     0 | Nodes          4501 | MemSize    1.51 MB           Batches   1 | Children       2284 | MemSize  785.12 KB
+[   0.06s] LAYER  11
+           Fanout    3 | Parents        2284 | MemSize  785.12 KB
+           Batch     0 | Nodes          2284 | MemSize  785.12 KB           Batches   1 | Children        844 | MemSize  290.12 KB
+[   0.06s] LAYER  12
+           Fanout    2 | Parents         844 | MemSize  290.12 KB
+           Batch     0 | Nodes           844 | MemSize  290.12 KB           Batches   1 | Children        195 | MemSize   67.03 KB
+[   0.06s] LAYER  13
+           Fanout    1 | Parents         195 | MemSize   67.03 KB
+           Batch     0 | Nodes           195 | MemSize   67.03 KB           Batches   1 | Children         21 | MemSize    7.22 KB
+[   0.06s] LAYER  14
+           Fanout    1 | Parents          21 | MemSize    7.22 KB
+           Batch     0 | Nodes            21 | MemSize    7.22 KB           Batches   1 | Children          1 | MemSize  352.00 B
+[   0.07s] LAYER  15
+           Fanout    0 | Parents           1 | MemSize  352.00 B
+           Batch     0 | Nodes             1 | MemSize  352.00 B           Batches   1 | Children          0 | MemSize    0.00 B
+[   0.07s] COMPLETED
+Cost = 3142893.00 | Value = 11,8,1,2,3,9,10,4,12,7,6,5,14,13,0
+
+COMMAND: ../cmake-build-release-ilyin/tsptw_gpu_1_cabs -t 1200 -g -i ../data/tsptw/SolomonPotvinBengio/rc_204.1.txt
+Instance: ../data/tsptw/SolomonPotvinBengio/rc_204.1.txt
+Cities: 46
+Node:  352.00 B
+GPU: True
+[   0.00s] LAYER   0
+           Fanout   45 | Parents           1 | MemSize  352.00 B
+           Batch     0 | Nodes             1 | MemSize  352.00 B           Batches   1 | Children         34 | MemSize   11.69 KB
+[   0.02s] LAYER   1
+           Fanout   44 | Parents          34 | MemSize   11.69 KB
+           Batch     0 | Nodes            34 | MemSize   11.69 KB           Batches   1 | Children        713 | MemSize  245.09 KB
+[   0.03s] LAYER   2
+           Fanout   43 | Parents         713 | MemSize  245.09 KB
+           Batch     0 | Nodes           713 | MemSize  245.09 KB           Batches   1 | Children       4491 | MemSize    1.51 MB
+[   0.03s] LAYER   3
+           Fanout   42 | Parents        4491 | MemSize    1.51 MB
+           Batch     0 | Nodes          4491 | MemSize    1.51 MB           Batches   1 | Children      24096 | MemSize    8.09 MB
+[   0.05s] LAYER   4
+           Fanout   41 | Parents       24096 | MemSize    8.09 MB
+           Batch     0 | Nodes         24096 | MemSize    8.09 MB           Batches   1 | Children     214360 | MemSize   71.96 MB
+[   0.21s] LAYER   5
+           Fanout   40 | Parents      214360 | MemSize   71.96 MB
+           Batch     0 | Nodes        214360 | MemSize   71.96 MB           Batches   1 | Children    1586872 | MemSize  532.70 MB
+[   1.51s] LAYER   6
+           Fanout   39 | Parents     1586872 | MemSize  532.70 MB
+           Batch     0 | Nodes       1586872 | MemSize  532.70 MB           Batches   1 | Children    7991499 | MemSize    2.62 GB
+[   7.84s] LAYER   7
+           Fanout   38 | Parents     7991499 | MemSize    2.62 GB
+           Batch     0 | Nodes       1997875 | MemSize  670.67 MB           Batch     1 | Nodes       1997875 | MemSize  670.67 MB           Batch     2 | Nodes       1997875 | MemSize  670.67 MB           Batch     3 | Nodes       1997874 | MemSize  670.67 MB           Batches   4 | Children   29081045 | MemSize    9.53 GB
+[  24.99s] LAYER   8
+           Fanout   37 | Parents    29081045 | MemSize    9.53 GB
+           Batch     0 | Nodes       2643732 | MemSize  887.48 MB           Batch     1 | Nodes       2643732 | MemSize  887.48 MB           Batch     2 | Nodes       2643732 | MemSize  887.48 MB
