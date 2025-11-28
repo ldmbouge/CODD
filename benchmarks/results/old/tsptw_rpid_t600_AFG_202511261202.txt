@@ -3039,3 +3039,226 @@ New dual bound: 10784, expanded: 39790310, generated: 73384908, elapsed time: 13
 Searched with beam width 524288, expanded: 63694729, generated: 116198376, elapsed time: 248.324232316s.
 New dual bound: 10820, expanded: 63694729, generated: 116198376, elapsed time: 248.324258666s.
 New primal bound: 12138, expanded: 63694729, generated: 116198376, elapsed time: 248.32426146s.
+Searched with beam width 1048576, expanded: 100490864, generated: 181061014, elapsed time: 437.579080242s.
+New dual bound: 11519, expanded: 100490864, generated: 181061014, elapsed time: 437.57911203s.
+Searched with beam width 2097152, expanded: 120009194, generated: 224710179, elapsed time: 601.372212153s.
+Time limit reached.
+cost: 12138
+best bound: 11519
+Search time: 601.372240897s
+Expanded: 120009194
+Generated: 224710179
+Tour: 4 6 7 2 1 8 5 9 3 12 11 14 13 10 20 17 16 15 19 18 27 23 22 21 31 30 35 24 33 36 37 26 45 25 28 39 40 29 32 42 34 43 41 38 44 46 51 61 54 58 49 60 56 48 47 62 52 50 53 64 59 57 65 66 55 70 71 68 67 72 74 63 81 69 78 75 76 82 73 77 79 83 80 84 85 87 86 90 89 91 93 88 94 95 96 92 102 97 104 98 106 105 99 101 110 107 116 109 100 103 112 108 118 119 114 125 115 122 117 111 120 113 121 127 128 123 124 141 129 126 136 135 137 132 131 130 134 133 144 138 143 145 142 140 139 148 146 157 158 151 150 149 147 160 154 152 159 164 162 153 167 156 155 161 165 181 179 168 163 173 172 175 176 171 178 166 169 182 174 187 183 177 170 190 188 189 184 180 186 191 185 0
+The solution is valid.
+	Command being timed: "/home/fabio/didp-rust-models/target/release/tsptw_rpid -t 600 ../data/tsptw/AFG/rbg193.2.tw"
+	User time (seconds): 599.85
+	System time (seconds): 1.56
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 10:01.45
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 1449492
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 777739
+	Voluntary context switches: 1
+	Involuntary context switches: 1903
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 128
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+COMMAND: /usr/bin/time -v /home/fabio/didp-rust-models/target/release/tsptw_rpid -t 600 ../data/tsptw/AFG/rbg193.tw
+Preparing time: time0.007648235s
+Searched with beam width 1, expanded: 60, generated: 87, elapsed time: 0.000188765s.
+New dual bound: 10121, expanded: 60, generated: 87, elapsed time: 0.00019176s.
+Searched with beam width 2, expanded: 284, generated: 481, elapsed time: 0.000758416s.
+Searched with beam width 4, expanded: 715, generated: 1257, elapsed time: 0.001741191s.
+Searched with beam width 8, expanded: 1585, generated: 2902, elapsed time: 0.003728744s.
+New dual bound: 10136, expanded: 1585, generated: 2902, elapsed time: 0.003731648s.
+Searched with beam width 16, expanded: 3234, generated: 6048, elapsed time: 0.00761809s.
+New dual bound: 10144, expanded: 3234, generated: 6048, elapsed time: 0.007628105s.
+Searched with beam width 32, expanded: 6259, generated: 11552, elapsed time: 0.014639318s.
+New dual bound: 10146, expanded: 6259, generated: 11552, elapsed time: 0.014642522s.
+Searched with beam width 64, expanded: 11547, generated: 20871, elapsed time: 0.027198403s.
+New dual bound: 10160, expanded: 11547, generated: 20871, elapsed time: 0.027205944s.
+Searched with beam width 128, expanded: 20792, generated: 36321, elapsed time: 0.048672456s.
+New dual bound: 10171, expanded: 20792, generated: 36321, elapsed time: 0.048675601s.
+Searched with beam width 256, expanded: 48856, generated: 79227, elapsed time: 0.097153454s.
+New dual bound: 10525, expanded: 48856, generated: 79227, elapsed time: 0.097178462s.
+New primal bound: 12558, expanded: 48856, generated: 79227, elapsed time: 0.097180565s.
+Searched with beam width 512, expanded: 91957, generated: 143408, elapsed time: 0.170555873s.
+New dual bound: 10563, expanded: 91957, generated: 143408, elapsed time: 0.170565278s.
+New primal bound: 12556, expanded: 91957, generated: 143408, elapsed time: 0.170567s.
+Searched with beam width 1024, expanded: 154235, generated: 236251, elapsed time: 0.273249458s.
+New dual bound: 10833, expanded: 154235, generated: 236251, elapsed time: 0.273253684s.
+New primal bound: 12546, expanded: 154235, generated: 236251, elapsed time: 0.273255326s.
+Searched with beam width 2048, expanded: 245884, generated: 370467, elapsed time: 0.419368501s.
+New dual bound: 10852, expanded: 245884, generated: 370467, elapsed time: 0.419380699s.
+Searched with beam width 4096, expanded: 375951, generated: 558431, elapsed time: 0.621866113s.
+New dual bound: 11606, expanded: 375951, generated: 558431, elapsed time: 0.621870039s.
+New primal bound: 12535, expanded: 375951, generated: 558431, elapsed time: 0.621871081s.
+Searched with beam width 8192, expanded: 561177, generated: 819727, elapsed time: 0.910228554s.
+New dual bound: 11622, expanded: 561177, generated: 819727, elapsed time: 0.910233201s.
+Searched with beam width 16384, expanded: 812609, generated: 1161437, elapsed time: 1.320874777s.
+New dual bound: 11652, expanded: 812609, generated: 1161437, elapsed time: 1.320889138s.
+Searched with beam width 32768, expanded: 1134012, generated: 1587043, elapsed time: 1.871689152s.
+New dual bound: 11669, expanded: 1134012, generated: 1587043, elapsed time: 1.871703323s.
+Searched with beam width 65536, expanded: 1556091, generated: 2107795, elapsed time: 2.6122345510000002s.
+New dual bound: 11704, expanded: 1556091, generated: 2107795, elapsed time: 2.612250225s.
+Searched with beam width 131072, expanded: 2017688, generated: 2650386, elapsed time: 3.409390759s.
+cost: 12535
+optimal cost: 12535
+best bound: 12535
+Search time: 3.409405862s
+Expanded: 2017688
+Generated: 2650386
+Tour: 3 5 6 7 2 1 8 4 9 10 12 14 13 11 17 16 15 19 18 20 22 21 26 25 24 27 23 29 28 31 30 35 32 33 36 37 38 39 34 41 42 43 44 40 45 48 47 46 49 52 50 51 61 54 53 57 55 58 62 60 56 63 64 59 68 67 65 66 70 72 73 74 69 78 75 71 81 76 77 80 82 79 83 84 85 86 87 89 91 92 93 88 94 90 96 97 95 98 99 101 105 100 103 106 104 108 111 102 113 114 116 109 110 107 115 112 117 118 119 120 123 124 122 121 127 125 129 126 130 128 132 134 133 136 135 137 131 140 139 138 141 145 142 144 143 148 146 149 147 153 151 150 154 152 157 158 156 155 160 161 163 159 164 162 166 167 169 165 181 179 168 173 172 175 170 184 178 171 182 174 187 176 177 180 186 183 185 188 189 190 191 0
+The solution is valid.
+	Command being timed: "/home/fabio/didp-rust-models/target/release/tsptw_rpid -t 600 ../data/tsptw/AFG/rbg193.tw"
+	User time (seconds): 3.38
+	System time (seconds): 0.03
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:03.42
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 59732
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 19782
+	Voluntary context switches: 1
+	Involuntary context switches: 17
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 16
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+COMMAND: /usr/bin/time -v /home/fabio/didp-rust-models/target/release/tsptw_rpid -t 600 ../data/tsptw/AFG/rbg201a.tw
+Preparing time: time0.008652613s
+Searched with beam width 1, expanded: 142, generated: 222, elapsed time: 0.000329139s.
+New dual bound: 10759, expanded: 142, generated: 222, elapsed time: 0.000332103s.
+Searched with beam width 2, expanded: 453, generated: 815, elapsed time: 0.00099218s.
+Searched with beam width 4, expanded: 1227, generated: 2423, elapsed time: 0.002344573s.
+New primal bound: 13357, expanded: 1227, generated: 2423, elapsed time: 0.002347338s.
+Searched with beam width 8, expanded: 2784, generated: 5592, elapsed time: 0.005027467s.
+New dual bound: 10788, expanded: 2784, generated: 5592, elapsed time: 0.005029971s.
+New primal bound: 13162, expanded: 2784, generated: 5592, elapsed time: 0.005030902s.
+Searched with beam width 16, expanded: 5812, generated: 11618, elapsed time: 0.011010187s.
+New primal bound: 13100, expanded: 5812, generated: 11618, elapsed time: 0.011017938s.
+Searched with beam width 32, expanded: 11549, generated: 22320, elapsed time: 0.020884786s.
+New dual bound: 11030, expanded: 11549, generated: 22320, elapsed time: 0.020889854s.
+New primal bound: 13041, expanded: 11549, generated: 22320, elapsed time: 0.020891086s.
+Searched with beam width 64, expanded: 22220, generated: 40946, elapsed time: 0.039250214s.
+New dual bound: 11132, expanded: 22220, generated: 40946, elapsed time: 0.039271707s.
+New primal bound: 13017, expanded: 22220, generated: 40946, elapsed time: 0.039273059s.
+Searched with beam width 128, expanded: 40893, generated: 71498, elapsed time: 0.070161706s.
+New dual bound: 11154, expanded: 40893, generated: 71498, elapsed time: 0.07016441s.
+New primal bound: 12983, expanded: 40893, generated: 71498, elapsed time: 0.070165322s.
+Searched with beam width 256, expanded: 71391, generated: 118591, elapsed time: 0.120844269s.
+New dual bound: 11298, expanded: 71391, generated: 118591, elapsed time: 0.120847174s.
+New primal bound: 12961, expanded: 71391, generated: 118591, elapsed time: 0.120848115s.
+Searched with beam width 512, expanded: 120507, generated: 188787, elapsed time: 0.203135228s.
+New dual bound: 11318, expanded: 120507, generated: 188787, elapsed time: 0.203142239s.
+New primal bound: 12948, expanded: 120507, generated: 188787, elapsed time: 0.203143551s.
+Searched with beam width 1024, expanded: 190625, generated: 285097, elapsed time: 0.316885877s.
+New dual bound: 11365, expanded: 190625, generated: 285097, elapsed time: 0.316889262s.
+Searched with beam width 2048, expanded: 284252, generated: 412057, elapsed time: 0.464622203s.
+New dual bound: 12238, expanded: 284252, generated: 412057, elapsed time: 0.464626129s.
+Searched with beam width 4096, expanded: 401762, generated: 568369, elapsed time: 0.644908558s.
+New dual bound: 12254, expanded: 401762, generated: 568369, elapsed time: 0.644917461s.
+Searched with beam width 8192, expanded: 549170, generated: 761083, elapsed time: 0.866809555s.
+New dual bound: 12270, expanded: 549170, generated: 761083, elapsed time: 0.866820622s.
+Searched with beam width 16384, expanded: 736665, generated: 995460, elapsed time: 1.140321419s.
+New dual bound: 12295, expanded: 736665, generated: 995460, elapsed time: 1.140329171s.
+Searched with beam width 32768, expanded: 960616, generated: 1262598, elapsed time: 1.454520494s.
+cost: 12948
+optimal cost: 12948
+best bound: 12948
+Search time: 1.454527655s
+Expanded: 960616
+Generated: 1262598
+Tour: 2 4 5 1 7 3 8 9 6 11 13 12 14 10 15 19 17 18 16 20 21 22 23 24 25 27 26 28 29 30 32 33 34 39 31 35 36 37 38 44 41 49 42 45 40 43 48 51 50 47 52 46 55 54 53 57 56 60 59 63 65 58 66 62 61 64 67 70 71 69 68 76 73 72 74 75 78 77 81 79 80 84 85 83 82 86 92 87 90 91 88 95 94 89 93 97 96 101 100 98 99 107 110 103 102 104 106 105 111 109 108 112 114 113 116 115 120 118 119 117 124 126 123 121 125 142 127 122 129 128 134 132 133 130 135 131 151 136 140 143 138 141 139 137 145 144 149 146 147 148 152 153 150 161 156 155 154 163 157 160 158 159 168 162 166 165 164 167 171 170 169 173 172 176 177 179 174 182 183 184 175 181 180 178 187 186 188 185 189 192 190 193 191 195 194 197 198 199 196 201 200 0
+The solution is valid.
+	Command being timed: "/home/fabio/didp-rust-models/target/release/tsptw_rpid -t 600 ../data/tsptw/AFG/rbg201a.tw"
+	User time (seconds): 1.45
+	System time (seconds): 0.01
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:01.46
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 16896
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 4397
+	Voluntary context switches: 1
+	Involuntary context switches: 9
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 24
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+COMMAND: /usr/bin/time -v /home/fabio/didp-rust-models/target/release/tsptw_rpid -t 600 ../data/tsptw/AFG/rbg233.2.tw
+Preparing time: time0.012574258s
+Searched with beam width 1, expanded: 12, generated: 19, elapsed time: 0.000064187s.
+New dual bound: 12303, expanded: 12, generated: 19, elapsed time: 0.00006596s.
+Searched with beam width 2, expanded: 76, generated: 171, elapsed time: 0.000394516s.
+Searched with beam width 4, expanded: 203, generated: 519, elapsed time: 0.000989345s.
+Searched with beam width 8, expanded: 1981, generated: 5017, elapsed time: 0.005421922s.
+New primal bound: 14972, expanded: 1981, generated: 5017, elapsed time: 0.005424706s.
+Searched with beam width 16, expanded: 5484, generated: 13920, elapsed time: 0.014147854s.
+New dual bound: 12313, expanded: 5484, generated: 13920, elapsed time: 0.014150558s.
+New primal bound: 14897, expanded: 5484, generated: 13920, elapsed time: 0.01415152s.
+Searched with beam width 32, expanded: 12446, generated: 31400, elapsed time: 0.031570808s.
+New dual bound: 12321, expanded: 12446, generated: 31400, elapsed time: 0.031573952s.
+New primal bound: 14784, expanded: 12446, generated: 31400, elapsed time: 0.031574884s.
+Searched with beam width 64, expanded: 26492, generated: 67500, elapsed time: 0.067151334s.
+New dual bound: 12327, expanded: 26492, generated: 67500, elapsed time: 0.067154188s.
+New primal bound: 14701, expanded: 26492, generated: 67500, elapsed time: 0.06715521s.
+Searched with beam width 128, expanded: 54296, generated: 135459, elapsed time: 0.144179271s.
+New dual bound: 12333, expanded: 54296, generated: 135459, elapsed time: 0.144214485s.
+New primal bound: 14631, expanded: 54296, generated: 135459, elapsed time: 0.144216317s.
+Searched with beam width 256, expanded: 109013, generated: 265162, elapsed time: 0.295699234s.
+New dual bound: 12337, expanded: 109013, generated: 265162, elapsed time: 0.29570345s.
+New primal bound: 14606, expanded: 109013, generated: 265162, elapsed time: 0.295704432s.
+Searched with beam width 512, expanded: 217047, generated: 511679, elapsed time: 0.588518388s.
+New dual bound: 12351, expanded: 217047, generated: 511679, elapsed time: 0.588528012s.
+New primal bound: 14593, expanded: 217047, generated: 511679, elapsed time: 0.588529234s.
+Searched with beam width 1024, expanded: 428417, generated: 977330, elapsed time: 1.169951822s.
+New dual bound: 12358, expanded: 428417, generated: 977330, elapsed time: 1.1699590930000001s.
+New primal bound: 14565, expanded: 428417, generated: 977330, elapsed time: 1.169960495s.
+Searched with beam width 2048, expanded: 833878, generated: 1835097, elapsed time: 2.295185031s.
+New dual bound: 12378, expanded: 833878, generated: 1835097, elapsed time: 2.295199443s.
+New primal bound: 14553, expanded: 833878, generated: 1835097, elapsed time: 2.295200855s.
+Searched with beam width 4096, expanded: 1593977, generated: 3383858, elapsed time: 4.452897571s.
+New dual bound: 12510, expanded: 1593977, generated: 3383858, elapsed time: 4.452910701s.
+New primal bound: 14540, expanded: 1593977, generated: 3383858, elapsed time: 4.452912584s.
+Searched with beam width 8192, expanded: 2967435, generated: 6122014, elapsed time: 8.512926858s.
+New dual bound: 12514, expanded: 2967435, generated: 6122014, elapsed time: 8.512942672s.
+New primal bound: 14518, expanded: 2967435, generated: 6122014, elapsed time: 8.512944525s.
+Searched with beam width 16384, expanded: 5464963, generated: 10890073, elapsed time: 16.245212838s.
+New dual bound: 12518, expanded: 5464963, generated: 10890073, elapsed time: 16.245230584s.
+New primal bound: 14515, expanded: 5464963, generated: 10890073, elapsed time: 16.245232147s.
+Searched with beam width 32768, expanded: 9880371, generated: 18976140, elapsed time: 30.709999137s.
+New dual bound: 12522, expanded: 9880371, generated: 18976140, elapsed time: 30.71002084s.
+New primal bound: 14498, expanded: 9880371, generated: 18976140, elapsed time: 30.710023224s.
+Searched with beam width 65536, expanded: 17292159, generated: 32122579, elapsed time: 57.785394269s.
+New dual bound: 12526, expanded: 17292159, generated: 32122579, elapsed time: 57.785415501s.
+New primal bound: 14492, expanded: 17292159, generated: 32122579, elapsed time: 57.785417835s.

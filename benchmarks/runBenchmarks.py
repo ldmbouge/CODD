@@ -16,13 +16,13 @@ def roundUpToMultiple(x,b):
 benchmarkSet = [
      #"Dumas.txt",
      #"Langevin.txt",
-     #"Solnon25_feasible.txt",
-     #"Solnon25_infeasible.txt",
-     "SolomonPesant.txt"
-     #"SolomonPotvinBengio.txt",
-     #"AFG.txt",
-     #"GendreauDumasExtended.txt",
-     #"OhlmannThomas.txt"
+     "Solnon25_feasible.txt",
+     "Solnon25_infeasible.txt",
+     "SolomonPesant.txt",
+     "SolomonPotvinBengio.txt",
+     "AFG.txt",
+     "GendreauDumasExtended.txt",
+     "OhlmannThomas.txt"
 ]
 timeout = 10 * 60
 exe = "../tsptw_1_bro"
@@ -31,7 +31,7 @@ resultsDir  = "./results"
 # Run
 exeName = os.path.basename(exe)
 useGpu = True
-sort = False
+sort = True
 for benchmark in benchmarkSet:
     logfile = (f"{resultsDir}/{exeName}_" +
                f"t{timeout}_" +

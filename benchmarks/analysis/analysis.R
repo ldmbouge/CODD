@@ -5,8 +5,13 @@ library(scales)
 
 # Read DIPD data
 csv_list <- c(
+  "../results/tsptw_rpid_t600_AFG_202511270953.csv", 
+  "../results/tsptw_rpid_t600_GendreauDumasExtended_202511271054.csv", 
+ # "../results/tsptw_rpid_t600_OhlmannThomas_202511271937.csv", 
   "../results/tsptw_rpid_t600_Solnon25_feasible_202511252213.csv", 
-  "../results/tsptw_rpid_t600_Solnon25_infeasible_202511260948.csv"
+  "../results/tsptw_rpid_t600_Solnon25_infeasible_202511260948.csv", 
+  "../results/tsptw_rpid_t600_SolomonPesant_202511280050.csv", 
+  "../results/tsptw_rpid_t600_SolomonPotvinBengio_202511261103.csv"
 )
 tmp <- lapply(csv_list, read.csv)
 didp_data <- do.call(rbind, tmp)
@@ -15,8 +20,14 @@ didp_data$Solver <- "DIDP"
 
 # Read CODD data
 csv_list <- c(
+  "../results/tsptw_1_bro_t600_g_AFG_202511262302.csv",
+  "../results/tsptw_1_bro_t600_g_GendreauDumasExtended_202511262343.csv", 
+  #"../results/tsptw_1_bro_t600_g_OhlmannThomas_202511270542.csv", 
   "../results/tsptw_1_bro_t600_g_Solnon25_feasible_202511261450.csv", 
-  "../results/tsptw_1_bro_t600_g_Solnon25_infeasible_202511262151.csv"
+  "../results/tsptw_1_bro_t600_g_Solnon25_infeasible_202511262151.csv", 
+  "../results/tsptw_1_bro_t600_g_SolomonPesant_202511262202.csv", 
+  "../results/tsptw_1_bro_t600_g_SolomonPesant_202511280025.csv", 
+  "../results/tsptw_1_bro_t600_g_SolomonPotvinBengio_202511262215.csv"
 )
 tmp <- lapply(csv_list, read.csv)
 codd_data <- do.call(rbind, tmp)
@@ -34,12 +45,16 @@ if (nrow(mismatches) > 0){
   message("✅ All Best values match between solvers.")
 }
 
+#Normalization
+merged_data$Benchmark[merged_data$Benchmark == "Solnon25_feasible"] <- "Solnon (Feasable)"
+merged_data$Benchmark[merged_data$Benchmark == "Solnon25_infeasible"] <- "Solnon (Infeasible)"
+
 # Analisys 1
 # Solvedy by both, one solver > 1s and 
-merged_data_1 <- merged_data %>% 
+data_1 <- merged_data %>% 
   filter((Search.Time.DIDP >= 1 | Search.Time.CODD >= 1) & 
          (!Timeout.DIDP & !Timeout.CODD))
-summary_1 <- merged_data_1 %>%
+summary_1 <- data_1 %>%
   group_by(Benchmark) %>%
   summarise(
     Avg.Search.Time.DIDP = mean(Search.Time.DIDP),
@@ -51,87 +66,148 @@ summary_1$Avg.Search.Time.Ratio <- summary_1$Avg.Search.Time.DIDP / summary_1$Av
 summary_1$Avg.Nodes.Ratio <- summary_1$Avg.Nodes.DIDP / summary_1$Avg.Nodes.CODD
 write.csv(summary_1, "summary_1.csv", row.names = FALSE)
 
+# Analysis 2
+# Prepare data - include all instances, assign timeout value to unsolved
+timeout_value <- 600  # Set your actual timeout value
+data_2 <- merged_data %>%
+  pivot_longer(
+    cols = c(Search.Time.DIDP, Search.Time.CODD),
+    names_to = "Solver",
+    values_to = "Search.Time"
+  ) %>%
+  mutate(
+    Solver = ifelse(grepl("DIDP", Solver), "DIDP", "CODD"),
+    Timeout = ifelse(Solver == "DIDP", Timeout.DIDP, Timeout.CODD),
+    # Use timeout value for unsolved instances
+    Search.Time = ifelse(Timeout, timeout_value*2, Search.Time)
+  )
 
-# 1. Prepare solver specific tables
+# Plot with stat_ecdf
+# Reverse the factor order so CODD (blue) is drawn last (on top)
+data_2$Solver <- factor(data_2$Solver, levels = c("DIDP", "CODD"))
+
+# Plot with stat_ecdf
+ggplot(data_2, aes(x = Search.Time, color = Solver)) +
+  stat_ecdf(geom = "step", linewidth = 0.5, pad = TRUE) +
+  facet_wrap(~ Benchmark) +
+  coord_cartesian(xlim = c(0, timeout_value)) +
+  scale_y_continuous(limits = c(0.4, 1), labels = scales::label_percent(suffix = "")) +
+  scale_color_manual(
+    values = c( DIDP = "#CC6F3C", CODD = "#76B900"),  
+    labels = c("DIDP-Rust","CODD-GPU")) +
+  labs(x = "Time [s]", 
+       y = "Solved Instances [%]",
+       color = "Solver") +
+  theme_minimal() +
+  theme(
+    legend.position = c(0.2, 0.68),
+    legend.background = element_rect(fill = "white", color = "gray80", linewidth = 0.3),
+    legend.text = element_text(size = 8),
+    legend.title = element_blank(),
+    legend.key.size = unit(0.35, "cm"),
+    legend.spacing.y = unit(0, "pt"),
+    plot.margin = margin(0, 0, 0, 0),
+    panel.grid.minor = element_blank()
+  )
+ggsave("plot2.pdf", width = 8, height = 4, units = "in", dpi = 300)
+
 # Analysis 3 
-data_3 <- merged_data %>% filter(grepl("Solnon25_feas", Benchmark)) 
+data_3 <- merged_data %>% filter(grepl("Solnon", Benchmark)) 
+data_3 <- data_3 %>% filter(grepl("Feas", Benchmark)) 
 data_3 <- data_3 %>% filter(
   (Search.Time.DIDP >= 3 & Search.Time.CODD >= 3) & 
-  (!Timeout.DIDP | !Timeout.CODD)) 
-data_3$Search.Time.Ratio <- data_3$Search.Time.DIDP / data_3$Search.Time.CODD 
-data_3$Nodes.Ratio <- data_3$Nodes.DIDP / data_3$Nodes.CODD 
+  (!Timeout.DIDP | !Timeout.CODD)) # Important! We assume the lower cost as opt
+data_3 <- data_3 %>%
+  mutate(
+    Optimal.Cost = pmin(Best.Cost.DIDP, Best.Cost.CODD, na.rm = TRUE)
+  )
+data_3$Search.Time.Ratio <- data_3$Search.Time.DIDP / data_3$Search.Time.CODD
 
 # Prepare data for plot
 data_3_didp <- data_3 %>% transmute(
   Instance,
+  Optimal.Cost = Optimal.Cost,
   Solver = "DIDP",
+  Best.Cost = Best.Cost.DIDP,
   Best.Time = Best.Time.DIDP,
   Search.Time = Search.Time.DIDP ) 
 data_3_codd <- data_3 %>% transmute( 
   Instance,
-  Solver = "CODD", 
+  Optimal.Cost = Optimal.Cost,
+  Solver = "CODD",
+  Best.Cost = Best.Cost.CODD,
   Best.Time = Best.Time.CODD, 
   Search.Time = Search.Time.CODD ) 
 data_3_plot <- bind_rows(data_3_didp, data_3_codd)
-data_3_plot$Delta.Time <- ifelse(
-  is.na(data_3_plot$Best.Time),
-  0, 
-  data_3_plot$Search.Time - data_3_plot$Best.Time ) 
-data_3_plot$Best.Time <- ifelse(
-  is.na(data_3_plot$Best.Time), 
-  data_3_plot$Search.Time, 
-  data_3_plot$Best.Time ) 
-# Define palette with meaningful mapping
-# palette <- c(
-#   CODD.Best = "#76B900",
-#   CODD.Search = "#97EC00",
-#   DIDP.Best = "#F2800A",
-#   DIDP.Search = "#EFA94D"
-# )
+data_3_plot <- data_3_plot %>%
+  mutate(Best.Time = ifelse(
+    is.na(Best.Cost) | Best.Cost != Optimal.Cost, 
+    Search.Time, 
+    Best.Time
+  ))
+data_3_plot$Delta.Time <- data_3_plot$Search.Time - data_3_plot$Best.Time
+
 palette <- c(
-  CODD.Best = "#0072B2",      # Strong blue
-  CODD.Search = "#56B4E9",    # Light blue
-  DIDP.Best = "#D55E00",      # Vermillion/orange-red
-  DIDP.Search = "#F0A030"     # Light orange
+  # DIDP.Opt = "#D55E00",      # Vermillion/orange-red
+  # DIDP.Proof = "#F0A030",     # Light orange
+  DIDP.Opt   = "#CC6F3C",   # Deeper Rust crab tone
+  DIDP.Proof = "#F2A67A",   # Matching lighter shade
+  
+  CODD.Opt   = "#76B900",   # Official Nvidia Green
+  CODD.Proof = "#A8E65C"   # Light Nvidia Green (derived)
+  
+  # CODD.Opt = "#0072B2",      # Strong blue
+  # CODD.Proof = "#56B4E9"    # Light blue
 )
 # Reshape data for proper stacking
-data_3_stacked <- data_3_plot %>%
-  mutate(Solver_Best = paste0(Solver, ".Best"),
-         Solver_Search = paste0(Solver, ".Search")) %>%
-  select(Instance, Solver, Best.Time, Delta.Time, Solver_Best, Solver_Search)
-timeout_value <- 600  # Adjust to your actual timeout value
-ggplot(data_3_stacked, aes(x = Instance)) +
-  geom_col(aes(y = Delta.Time, fill = Solver_Search), 
-           position = position_dodge(width = 0.8), width = 0.7) +
-  geom_col(aes(y = Best.Time, fill = Solver_Best), 
-           position = position_dodge(width = 0.8), width = 0.7) +
-  geom_hline(yintercept = timeout_value, 
-             color = "red", 
-             linewidth = 0.8) +
-  annotate("text", x = 1, y = timeout_value, 
-           label = "Timeout", 
-           vjust = -0.5, 
-           hjust = 0, 
-           size = 3) +
-  scale_x_discrete(expand = expansion(add = c(0.5, 0.5))) +
-  scale_y_continuous(expand = expansion(mult = c(0, 0.05))) +
-  scale_fill_manual(values = palette,
-                    labels = c("CODD-GPU Best", "CODD-GPU Search", 
-                               "DIDP-Rust Best", "DIDP-Rust Search")) +
-  labs(x = "Instance", y = "Time [s]", fill = NULL) +
-  theme_minimal() +
-  theme(
-    axis.text.x = element_text(angle = -90, hjust = 0, vjust = 0.5, size = 8),
-    axis.text.y = element_text(size = 9),
-    axis.title.y = element_text(size = 10, margin = margin(r = 5)),
-    legend.position = c(0.1, 0.6),
-    legend.background = element_rect(fill = "white", color = "gray80", linewidth = 0.3),
-    legend.text = element_text(size = 7),
-    legend.key.size = unit(0.35, "cm"),
-    legend.spacing.y = unit(0, "pt"),
-    plot.margin = margin(4, 2, 2, 2),
-    panel.grid.major.x = element_blank(),
-    panel.grid.minor = element_blank()
+data_3_long <- data_3_plot %>%
+  select(Instance, Solver, Best.Time, Delta.Time) %>%
+  pivot_longer(
+    cols = c(Best.Time, Delta.Time),
+    names_to = "Component",
+    values_to = "Time"
+  ) %>%
+  mutate(
+    Combined = case_when(
+      Solver == "DIDP" & Component == "Best.Time" ~ "DIDP.Opt",
+      Solver == "DIDP" & Component == "Delta.Time" ~ "DIDP.Proof",
+      Solver == "CODD" & Component == "Best.Time" ~ "CODD.Opt",
+      Solver == "CODD" & Component == "Delta.Time" ~ "CODD.Proof"
+    ),
+    Combined = factor(
+      Combined,
+      levels = c("DIDP.Opt", "DIDP.Proof", "CODD.Opt", "CODD.Proof")
+    )
+  )
+ggplot(data_3_long, aes(x = Instance, y = Time, fill = Combined)) +
+  geom_bar(stat = "identity", position = position_stack(reverse = TRUE)) +
+  facet_wrap(~ Solver, scales = "free_x") +
+  scale_fill_manual(
+      values = palette,
+      labels = c(
+        "DIDP-Rust Opt", "DIDP-Rust Proof",
+        "CODD-GPU Opt", "CODD-GPU Proof")
+    ) +
+  labs(
+    x = "Instance",
+    y = "Time [s]"
   ) +
-  coord_cartesian(clip = "off") 
+    theme_minimal() +
+    theme(
+      strip.text = element_blank(),
+      axis.text.x = element_text(angle = -90, hjust = 0, vjust = 0.5, size = 8),
+      axis.text.y = element_text(size = 9),
+      axis.title.y = element_text(size = 10, margin = margin(r = 5)),
+      legend.position = c(0.12, 0.65),
+      legend.background = element_rect(fill = "white", color = "gray80", linewidth = 0.3),
+      legend.text = element_text(size = 7),
+      legend.key.size = unit(0.35, "cm"),
+      legend.spacing.y = unit(0, "pt"),
+      legend.title = element_blank(),
+      plot.margin = margin(0,0,0,0),
+      panel.grid.major.x = element_blank(),
+      panel.grid.minor = element_blank()
+    )
+
 ggsave("plot3.pdf", width = 9, height = 3, units = "in", dpi = 300)
+
