@@ -29,7 +29,7 @@ CoddOutputGrammar = Grammar("""
 class CoddOutputVisitor(NodeVisitor):
 
     def __init__ (self):
-        self.header =  ["Benchmark", "Instance", "Best Cost", "Best Time", "Proof Time", "Nodes", "Timeout"]
+        self.header =  ["Benchmark", "Instance", "Best Cost", "Best Time", "Search Time", "Nodes", "Timeout"]
         self.current_row = None
         self.rows = []
 
@@ -54,7 +54,7 @@ class CoddOutputVisitor(NodeVisitor):
 
     def visit_completed_line(self, node, visited_children):
         #[   0.01s] COMPLETED    | Visited =         72 | Cost =  755.00 | Value = 2,7,16,15,13,18,9,19,20,14,10,5,6,17,3,12,8,11,4,1,0
-        self.row["Proof Time"] = visited_children[0]
+        self.row["Search Time"] = visited_children[0]
         self.row["Nodes"]      = visited_children[2]
         self.row["Timeout"]    = False # Timeout
 
@@ -65,8 +65,8 @@ class CoddOutputVisitor(NodeVisitor):
 
     def visit_infeasable_line(self, node, visited_children):
         #[   0.00s] INFEASIBLE   | Visited =          6
-        self.row["Proof Time"] = visited_children[0]
-        self.row["Nodes"]      = visited_children[1]
+        self.row["Search Time"] = visited_children[0]
+        self.row["Nodes"]      = visited_children[2]
         self.row["Timeout"]    = False # Timeout
 
     def visit_timestamp(self, node, visited_children):

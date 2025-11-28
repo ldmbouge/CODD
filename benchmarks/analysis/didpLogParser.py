@@ -29,7 +29,7 @@ DidpOutputGrammar = Grammar("""
 class DidpOutputVisitor(NodeVisitor):
 
     def __init__ (self):
-        self.header =  ["Benchmark", "Instance", "Best Cost", "Best Time", "Proof Time", "Nodes", "Timeout"]
+        self.header =  ["Benchmark", "Instance", "Best Cost", "Best Time", "Search Time", "Nodes", "Timeout"]
         self.current_row = None
         self.rows = []
 
@@ -66,8 +66,7 @@ class DidpOutputVisitor(NodeVisitor):
 
     def visit_search_time_line(self, node, visited_children):
         #Search time: 603.090286512s
-        print(visited_children)
-        self.row["Proof Time"] = visited_children[1]
+        self.row["Search Time"] = visited_children[1]
 
     def visit_expanded_line(self, node, visited_children):
         #optimal cost: 1023
