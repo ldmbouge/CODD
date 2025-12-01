@@ -34,6 +34,21 @@ codd_data <- do.call(rbind, tmp)
 codd_data <- codd_data %>% mutate(Timeout=tolower(Timeout) == "true")
 codd_data$Solver <- "CODD"
 
+csv_list <- c(
+  "../results/tsptw_1_bro_t600_g_s_AFG_202511281915.csv",
+  "../results/tsptw_1_bro_t600_g_s_GendreauDumasExtended_202511281957.csv",
+  #"../results/tsptw_1_bro_t600_g_s_OhlmannThomas_202511290151.csv",
+  "../results/tsptw_1_bro_t600_g_s_Solnon25_feasible_202511291349.csv",
+  "../results/tsptw_1_bro_t600_g_s_Solnon25_infeasible_202511281755.csv",
+  "../results/tsptw_1_bro_t600_g_s_SolomonPesant_202511281809.csv",
+  "../results/tsptw_1_bro_t600_g_s_SolomonPotvinBengio_202511281833.csv"
+)
+tmp <- lapply(csv_list, read.csv)
+codd_sorted_data <- do.call(rbind, tmp)
+codd_sorted_data <- codd_sorted_data %>% mutate(Timeout=tolower(Timeout) == "true")
+codd_sorted_data$Solver <- "CODDS"
+
+
 # Sanity check
 merged_data <- inner_join(didp_data, codd_data, by = c("Benchmark", "Instance"), suffix = c(".DIDP", ".CODD"))
 mismatches <- merged_data %>% 
@@ -53,17 +68,31 @@ merged_data$Benchmark[merged_data$Benchmark == "Solnon25_infeasible"] <- "Solnon
 # Solvedy by both, one solver > 1s and 
 data_1 <- merged_data %>% 
   filter((Search.Time.DIDP >= 1 | Search.Time.CODD >= 1) & 
-         (!Timeout.DIDP & !Timeout.CODD))
+           (!Timeout.DIDP & !Timeout.CODD)) %>%
+  mutate(
+    Search.Time.Ratio = Search.Time.DIDP / Search.Time.CODD,
+    Nodes.Ratio = Nodes.DIDP / Nodes.CODD
+  )
+
 summary_1 <- data_1 %>%
   group_by(Benchmark) %>%
   summarise(
+    Count = n(),
     Avg.Search.Time.DIDP = mean(Search.Time.DIDP),
     Avg.Nodes.DIDP = mean(Nodes.DIDP),
     Avg.Search.Time.CODD = mean(Search.Time.CODD),
-    Avg.Nodes.CODD = mean(Nodes.CODD)
+    Avg.Nodes.CODD = mean(Nodes.CODD),
+    Avg.Search.Time.Ratio = mean(Search.Time.Ratio),
+    Avg.Search.Time.Ratio2 = Avg.Search.Time.DIDP/Avg.Search.Time.CODD,
+    Min.Search.Time.Ratio = min(Search.Time.Ratio),
+    Max.Search.Time.Ratio = max(Search.Time.Ratio),
+    StdDev.Search.Time.Ratio = sd(Search.Time.Ratio),
+    Avg.Nodes.Ratio = mean(Nodes.Ratio),
+    Min.Nodes.Ratio = min(Nodes.Ratio),
+    Max.Nodes.Ratio = max(Nodes.Ratio),
+    StdDev.Nodes.Ratio = sd(Nodes.Ratio)
   )
-summary_1$Avg.Search.Time.Ratio <- summary_1$Avg.Search.Time.DIDP / summary_1$Avg.Search.Time.CODD
-summary_1$Avg.Nodes.Ratio <- summary_1$Avg.Nodes.DIDP / summary_1$Avg.Nodes.CODD
+
 write.csv(summary_1, "summary_1.csv", row.names = FALSE)
 
 # Analysis 2
@@ -210,4 +239,48 @@ ggplot(data_3_long, aes(x = Instance, y = Time, fill = Combined)) +
     )
 
 ggsave("plot3.pdf", width = 9, height = 3, units = "in", dpi = 300)
+
+# Analisys 4
+# Sanity check
+merged_data2 <- inner_join(codd_sorted_data, codd_data, by = c("Benchmark", "Instance"), suffix = c(".CODDS", ".CODD"))
+
+#Normalization
+merged_data2$Benchmark[merged_data2$Benchmark == "Solnon25_feasible"] <- "Solnon (Feasable)"
+merged_data2$Benchmark[merged_data2$Benchmark == "Solnon25_infeasible"] <- "Solnon (Infeasible)"
+
+
+# Solvedy by both, one solver > 1s and 
+data_4 <- merged_data2 %>% 
+  filter((Search.Time.CODDS >= 1 | Search.Time.CODD >= 1) &
+           (!Timeout.CODDS & !Timeout.CODD)) %>%
+  mutate(
+    Search.Time.Ratio = Search.Time.CODDS / Search.Time.CODD,
+    Nodes.Ratio = Nodes.CODDS / Nodes.CODD
+  )
+
+data_4_better <- merged_data2 %>% 
+  filter(
+           (Timeout.CODDS != Timeout.CODD))
+
+summary_4 <- data_4 %>%
+  group_by(Benchmark) %>%
+  summarise(
+    Count = n(),
+    Avg.Search.Time.CODDS = mean(Search.Time.CODDS),
+    Avg.Nodes.CODDS = mean(Nodes.CODDS),
+    Avg.Search.Time.CODD = mean(Search.Time.CODD),
+    Avg.Nodes.CODD = mean(Nodes.CODD),
+    Avg.Search.Time.Ratio = mean(Search.Time.Ratio),
+    Min.Search.Time.Ratio = min(Search.Time.Ratio),
+    Max.Search.Time.Ratio = max(Search.Time.Ratio),
+    StdDev.Search.Time.Ratio = sd(Search.Time.Ratio),
+    Avg.Nodes.Ratio = mean(Nodes.Ratio),
+    Min.Nodes.Ratio = min(Nodes.Ratio),
+    Max.Nodes.Ratio = max(Nodes.Ratio),
+    StdDev.Nodes.Ratio = sd(Nodes.Ratio)
+  )
+
+write.csv(summary_4, "summary_4.csv", row.names = FALSE)
+
+
 

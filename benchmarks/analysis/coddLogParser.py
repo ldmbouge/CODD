@@ -60,6 +60,7 @@ class CoddOutputVisitor(NodeVisitor):
 
     def visit_timeout_line(self, node, visited_children):
         #[ 600.48s] TIMEOUT      | Visited = 9468208671
+        self.row["Search Time"] = visited_children[0]
         self.row["Nodes"] = visited_children[2]
         self.row["Timeout"]       = True
 
