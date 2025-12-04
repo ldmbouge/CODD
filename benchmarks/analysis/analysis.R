@@ -49,6 +49,18 @@ codd_sorted_data <- codd_sorted_data %>% mutate(Timeout=tolower(Timeout) == "tru
 codd_sorted_data$Solver <- "CODDS"
 
 
+csv_list <- c(
+  "../results/benchmarks_tw_single_t600_Solnon25_feasible_202512020129.csv"
+)
+tmp <- lapply(csv_list, read.csv)
+route_data <- do.call(rbind, tmp)
+route_data <- route_data %>%
+  filter(Timeout != "" & !is.na(Timeout)) %>%
+  mutate(Timeout=tolower(Timeout) == "true")
+route_data$Solver <- "ROUTE"
+
+
+
 # Sanity check
 merged_data <- inner_join(didp_data, codd_data, by = c("Benchmark", "Instance"), suffix = c(".DIDP", ".CODD"))
 mismatches <- merged_data %>% 
@@ -79,11 +91,13 @@ summary_1 <- data_1 %>%
   summarise(
     Count = n(),
     Avg.Search.Time.DIDP = mean(Search.Time.DIDP),
+    Avg.Search.Time.DIDP = mean(Search.Time.DIDP),
     Avg.Nodes.DIDP = mean(Nodes.DIDP),
     Avg.Search.Time.CODD = mean(Search.Time.CODD),
     Avg.Nodes.CODD = mean(Nodes.CODD),
     Avg.Search.Time.Ratio = mean(Search.Time.Ratio),
     Avg.Search.Time.Ratio2 = Avg.Search.Time.DIDP/Avg.Search.Time.CODD,
+    Geom.Mean.Search.Time.Ratio = exp(mean(log(Search.Time.Ratio))),
     Min.Search.Time.Ratio = min(Search.Time.Ratio),
     Max.Search.Time.Ratio = max(Search.Time.Ratio),
     StdDev.Search.Time.Ratio = sd(Search.Time.Ratio),
@@ -282,5 +296,35 @@ summary_4 <- data_4 %>%
 
 write.csv(summary_4, "summary_4.csv", row.names = FALSE)
 
+#Analisys 5
+merged_data5 <- inner_join(route_data, codd_data, by = c("Benchmark", "Instance"), suffix = c(".ROUTE", ".CODD"))
+data_5 <- merged_data5 %>% 
+  filter((Search.Time.CODD >= 10 | Search.Time.ROUTE >= 10) &
+           (!Timeout.CODD & !Timeout.ROUTE)) %>%
+  mutate(
+    Search.Time.Ratio = Search.Time.ROUTE / Search.Time.CODD,
+    Nodes.Ratio = Nodes.ROUTE / Nodes.CODD
+  )
 
 
+summary_5 <- data_5 %>%
+  group_by(Benchmark) %>%
+  summarise(
+    Count = n(),
+    Avg.Search.Time.CODD = mean(Search.Time.CODD),
+    Avg.Nodes.CODD = mean(Nodes.CODD),
+    Avg.Search.Time.ROUTE = mean(Search.Time.ROUTE),
+    Avg.Nodes.ROUTE = mean(Nodes.ROUTE),
+    Avg.Search.Time.Ratio = mean(Search.Time.Ratio),
+    Geom.Mean.Search.Time.Ratio = exp(mean(log(Search.Time.Ratio))),
+    Min.Search.Time.Ratio = min(Search.Time.Ratio),
+    Max.Search.Time.Ratio = max(Search.Time.Ratio),
+    StdDev.Search.Time.Ratio = sd(Search.Time.Ratio),
+    Geom.Mean.Nodes.Ratio = exp(mean(log(Nodes.Ratio))),
+    Avg.Nodes.Ratio = mean(Nodes.Ratio),
+    Min.Nodes.Ratio = min(Nodes.Ratio),
+    Max.Nodes.Ratio = max(Nodes.Ratio),
+    StdDev.Nodes.Ratio = sd(Nodes.Ratio)
+  )
+
+write.csv(summary_5, "summary_5.csv", row.names = FALSE)

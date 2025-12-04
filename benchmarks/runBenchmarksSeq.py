@@ -16,23 +16,26 @@ def roundUpToMultiple(x,b):
 benchmarkSet = [
      #"Dumas.txt",
      #"Langevin.txt",
-     "Solnon25_feasible.txt"
+     "Solnon25_feasible.txt",
      "Solnon25_infeasible.txt",
      "SolomonPesant.txt",
      "SolomonPotvinBengio.txt",
      "AFG.txt",
-     "GendreauDumasExtended.txt",
+     "GendreauDumasExtended.txt"
      #"OhlmannThomas.txt"
 ]
 timeout = 10 * 60
-exe = "../build/tsptw_triangleRONQ"
+exe = "../tsptw_1_bro_seq"
 resultsDir  = "./results"
 
 # Run
 exeName = os.path.basename(exe)
+useGpu = False
+sort = False
 for benchmark in benchmarkSet:
     logfile = (f"{resultsDir}/{exeName}_" +
                f"t{timeout}_" +
+               ("s_" if sort else "") +
                f"{benchmark.removesuffix('.txt')}_" +
                f"{datetime.now().strftime('%Y%m%d%H%M')}" +
                f".txt")
@@ -42,9 +45,11 @@ for benchmark in benchmarkSet:
             nCities = readFirstInt(instance)
             cmd = ["/usr/bin/time",
                    "-v",
-                   exe,
-                   instance,
-                   2,
+                   exe + "_" + str(roundUpToMultiple(nCities,64)),
+                   "-t", str(timeout),
+                   "-g" if useGpu else "",
+                   "-s" if sort else "",
+                   "-i", instance
                   ]
             cmd = [c for c in cmd if c]
             cmdStr = " ".join(str(c) for c in cmd)
