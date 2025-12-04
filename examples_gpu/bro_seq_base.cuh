@@ -179,7 +179,6 @@ int run_bro_seq(int argc,char* argv[])
             LayerHelperType::initParents(currentBatchSize, layerInfo, gAllocator);
             memcpy(layerInfo->parents,currentBatch.data(),sizeof(Node) * currentBatchSize);
             LayerHelperType::initChildren(layerInfo, gAllocator);
-            LayerHelperType::initAux(layerInfo, gAllocator);
 
             // Children
             calcChildren(

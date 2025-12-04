@@ -3,7 +3,7 @@
 
 int main(int argc,char* argv[])
 {
-    constexpr int N = 64*4;
+    constexpr int N = 64*1;
     using Model = TSPTW1<N>;
     using Node = LightNode<Model::State, Model::Labels,N>;
 

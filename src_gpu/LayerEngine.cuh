@@ -87,22 +87,22 @@ struct LayerHelper
     }
 
     static
-    gfl::i64 calcMemSize(gfl::i64 const nParents, gfl::i32 const fanout, bool gpu)
+    gfl::i64 calcMemSize(gfl::i64 const nParents, gfl::i32 const fanout, bool aux)
     {
         using namespace gfl;
 
-        i64 gpuMemSize = 0;
+        i64 memSize = 0;
 
         // initParents()
-        gpuMemSize += sizeof(Node) * nParents + StackAllocator::DefaultAlign;
+        memSize += sizeof(Node) * nParents + StackAllocator::DefaultAlign;
 
         // initChildren()
         i64 const nChildren = nParents * fanout;
-        gpuMemSize += 2 * (sizeof(Node) * nChildren + StackAllocator::DefaultAlign);
-        gpuMemSize += 2 * (sizeof(NodeInfo) * nChildren + StackAllocator::DefaultAlign);
+        memSize += 2 * (sizeof(Node) * nChildren + StackAllocator::DefaultAlign);
+        memSize += 2 * (sizeof(NodeInfo) * nChildren + StackAllocator::DefaultAlign);
 
         // initAux()
-        if (gpu)
+        if (aux)
         {
             std::size_t memSizeSort = 0;
             void *dummyTmpMem = nullptr;
@@ -115,13 +115,13 @@ struct LayerHelper
                     nChildren,
                     RepCostDecomposer{}); // Bigger key used
             CHECK_LAST_CUDA_ERROR();
-            gpuMemSize += memSizeSort;
+            memSize += memSizeSort;
         }
-        return gpuMemSize;
+        return memSize;
     }
 
     static
-    gfl::i64 getMaxParents(gfl::i32 const branchingFactor, gfl::i64 const maxMemSize, bool gpu = true)
+    gfl::i64 getMaxParents(gfl::i32 const branchingFactor, gfl::i64 const maxMemSize, bool tempSortBuffer = true)
     {
         using namespace gfl;
 
@@ -129,7 +129,7 @@ struct LayerHelper
         i64 lbParents = 0;
         i64 ubParents = 1;
 
-        while (calcMemSize(ubParents, branchingFactor, gpu) <= maxMemSize)
+        while (calcMemSize(ubParents, branchingFactor, tempSortBuffer) <= maxMemSize)
         {
             lbParents = ubParents;
             ubParents *= 2;
@@ -138,7 +138,7 @@ struct LayerHelper
         while (lbParents < ubParents)
         {
             i64 const mid = lbParents + (ubParents - lbParents + 1) / 2;
-            i64 const memSize = calcMemSize(mid, branchingFactor, gpu);
+            i64 const memSize = calcMemSize(mid, branchingFactor, tempSortBuffer);
             if (memSize <= maxMemSize) lbParents = mid;  // still fits
             else ubParents = mid - 1; // too big
         }
