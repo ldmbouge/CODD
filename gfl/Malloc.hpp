@@ -11,7 +11,7 @@
 
 namespace gfl
 {
-    template<typename T>
+    template<typename T = void>
     T * mallocStd(i64 const size) noexcept
     {
         void * memory = std::malloc(size);

@@ -87,7 +87,7 @@ struct LayerHelper
     }
 
     static
-    gfl::i64 calcGpuMemSize(gfl::i64 const nParents, gfl::i32 const fanout)
+    gfl::i64 calcMemSize(gfl::i64 const nParents, gfl::i32 const fanout, bool gpu)
     {
         using namespace gfl;
 
@@ -102,22 +102,26 @@ struct LayerHelper
         gpuMemSize += 2 * (sizeof(NodeInfo) * nChildren + StackAllocator::DefaultAlign);
 
         // initAux()
-        std::size_t memSizeSort;
-        void * dummyTmpMem = nullptr;
-        NodeInfo * dummyChildrenInfo = nullptr;
-        cub::DeviceRadixSort::SortKeys( // Initialize cubTmpMemSize
-                dummyTmpMem,
-                memSizeSort,
-                dummyChildrenInfo,
-                dummyChildrenInfo,
-                nChildren,
-                RepCostDecomposer{}); // Bigger key used
-        CHECK_LAST_CUDA_ERROR();
-        gpuMemSize += memSizeSort;
+        if (gpu)
+        {
+            std::size_t memSizeSort = 0;
+            void *dummyTmpMem = nullptr;
+            NodeInfo *dummyChildrenInfo = nullptr;
+            cub::DeviceRadixSort::SortKeys( // Initialize cubTmpMemSize
+                    dummyTmpMem,
+                    memSizeSort,
+                    dummyChildrenInfo,
+                    dummyChildrenInfo,
+                    nChildren,
+                    RepCostDecomposer{}); // Bigger key used
+            CHECK_LAST_CUDA_ERROR();
+            gpuMemSize += memSizeSort;
+        }
         return gpuMemSize;
     }
 
-    gfl::i64 getMaxParents(gfl::i32 const branchingFactor)
+    static
+    gfl::i64 getMaxParents(gfl::i32 const branchingFactor, gfl::i64 const maxMemSize, bool gpu = true)
     {
         using namespace gfl;
 
@@ -125,7 +129,7 @@ struct LayerHelper
         i64 lbParents = 0;
         i64 ubParents = 1;
 
-        while (calcGpuMemSize(ubParents, branchingFactor) <= gpuMemSize)
+        while (calcMemSize(ubParents, branchingFactor, gpu) <= maxMemSize)
         {
             lbParents = ubParents;
             ubParents *= 2;
@@ -134,8 +138,8 @@ struct LayerHelper
         while (lbParents < ubParents)
         {
             i64 const mid = lbParents + (ubParents - lbParents + 1) / 2;
-            i64 const memSize = calcGpuMemSize(mid, branchingFactor);
-            if (memSize <= gpuMemSize) lbParents = mid;  // still fits
+            i64 const memSize = calcMemSize(mid, branchingFactor, gpu);
+            if (memSize <= maxMemSize) lbParents = mid;  // still fits
             else ubParents = mid - 1; // too big
         }
         return lbParents;

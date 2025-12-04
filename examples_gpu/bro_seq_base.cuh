@@ -7,6 +7,8 @@
 #include <span>
 
 constexpr auto static ReadOnlyMemSize{256 * 1024}; // Cached in shared memory
+constexpr auto static CpuMemSize{44ll * 1024ll * 1024ll * 1024ll}; // Same size GPU memory: 48 - 4 for runtime!)
+
 inline
 void printNodeInfo(std::vector<NodeInfo> const * const nodesInfo)
 {
@@ -28,29 +30,21 @@ void printLabels(Node const & node)
 }
 
 template<typename Model, typename Node>
-int run_bro(int argc,char* argv[])
+int run_bro_seq(int argc,char* argv[])
 {
     using namespace gfl;
     using LayerHelperType = LayerHelper<Node>;
     using LayerInfoType   = LayerInfo<Node>;
     using LayerBufferType = std::vector<Node>;
 
-    // Select GPU
-    auto const gpuId = 0;
-    cudaSetDevice(gpuId);
-    cudaDeviceProp deviceProp;
-    cudaGetDeviceProperties(&deviceProp, gpuId);
-
     // Parse arguments
     i64 width = -1;
     int timeout = std::numeric_limits<int>::max(); // 68 years
-    bool gpu = false;
     bool sort = false;
     std::string instance;
     cxxopts::Options options("", "A C++ solver for DIDP models");
     options.add_options("Available")
             ("w,width", "Beam width", cxxopts::value(width))
-            ("g,gpu", "Use GPU acceleration", cxxopts::value(gpu))
             ("h,help", "Show this help message and exit")
             ("s,sort", "Sort nodes by cost", cxxopts::value(sort))
             ("i,instance", "Path to the instance file", cxxopts::value(instance))
@@ -77,28 +71,13 @@ int run_bro(int argc,char* argv[])
         exit(EXIT_SUCCESS);
     }
 
-    auto * const readOnlyMem =
-#ifdef __CUDACC__
-        mallocManaged<void>(ReadOnlyMemSize);
-#else
-        mallocStd<void>(ReadOnlyMemSize);
-#endif
-
+    auto * const readOnlyMem = mallocStd<void>(ReadOnlyMemSize);
     StackAllocator roAllocator(readOnlyMem, ReadOnlyMemSize);
     auto * const model = new (roAllocator) Model();
     Model::parseFile(model, instance, roAllocator);
 
     std::cout << "Instance: " << instance << std::endl;
-    if (not gpu)
-    {
-        std::cout << "GPU: False" << std::endl;
-    }
-    else
-    {
-        std::cout << "GPU: " <<  deviceProp.name << " (";
-        printMemSize(deviceProp.totalGlobalMem);
-        std::cout <<  " VRAM)" << std::endl;
-    }
+    std::cout << "GPU: False" << std::endl;
     std::cout << "Width: ";
     if (width <= 0)
         std::cout << "Auto" << std::endl;
@@ -110,10 +89,8 @@ int run_bro(int argc,char* argv[])
     f64 pBound = Model::worstValue();
     f64 dBound = Model::bestValue();
 
-    // GPU
-    LayerHelperType *        lh = gpu ? new LayerHelperType() : nullptr;
-    LayerInfoType *   layerInfo = gpu ? mallocManaged<LayerInfoType>(sizeof(LayerInfoType)) : nullptr;
-    StackAllocator * gAllocator = gpu ? new StackAllocator(mallocDevice(lh->gpuMemSize), lh->gpuMemSize) : nullptr;
+    LayerInfoType *   layerInfo = mallocStd<LayerInfoType>(sizeof(LayerInfoType));
+    StackAllocator * gAllocator = new StackAllocator(mallocStd(CpuMemSize), CpuMemSize);
 
     // Layers buffers
     std::vector<LayerBufferType> layers;
@@ -162,7 +139,7 @@ int run_bro(int argc,char* argv[])
 
         // Fragment
         auto & currentLayer = layers[lIdx];
-        i64 const batchSize = gfl::min<i64>(currentLayer.size(), lh->getMaxParents(labelsInfo[lIdx].nLabels, lh->gpuMemSize));
+        i64 const batchSize = gfl::min<i64>(currentLayer.size(), LayerHelperType::getMaxParents(labelsInfo[lIdx].nLabels, CpuMemSize, false));
         i64 const fragmentSize = gfl::min<i64>(currentLayer.size(), width < 0 ? batchSize : width);
         auto const fragment = std::span(currentLayer.end() - fragmentSize, fragmentSize);
         expandedNodes += fragmentSize;
@@ -200,99 +177,61 @@ int run_bro(int argc,char* argv[])
             LayerHelperType::clear(layerInfo, gAllocator);
             layerInfo->labelsInfo = labelsInfo[lIdx];
             LayerHelperType::initParents(currentBatchSize, layerInfo, gAllocator);
-            cudaMemcpyAsync(
-                    layerInfo->parents,
-                    currentBatch.data(),
-                    sizeof(Node) * currentBatchSize,
-                    cudaMemcpyHostToDevice,
-                    lh->gpuMainQueue);
-            CHECK_LAST_CUDA_ERROR();
+            memcpy(layerInfo->parents,currentBatch.data(),sizeof(Node) * currentBatchSize);
             LayerHelperType::initChildren(layerInfo, gAllocator);
             LayerHelperType::initAux(layerInfo, gAllocator);
 
             // Children
-            i32 blockSize = 32;
-            dim3 gridSize = layerInfo->nParents;
-            calcChildrenKernel<Model><<<gridSize, blockSize, 0, lh->gpuMainQueue>>>(
+            calcChildren(
                     model,
                     layerInfo,
                     pBound,
                     DDCtx);
-            CHECK_LAST_CUDA_ERROR();
-            cudaStreamSynchronize(lh->gpuMainQueue);
-            CHECK_LAST_CUDA_ERROR();
 
             i64 const nChildren = layerInfo->nChildren;
             if (nChildren > 0)
             {
                //  Representatives
-                cub::DeviceRadixSort::SortKeys(
-                        layerInfo->cubTmpMem,
-                        layerInfo->cubTmpMemSize,
-                        layerInfo->childrenInfo,
-                        layerInfo->tmpChildrenInfo,
-                        nChildren,
-                        HashDecomposer{},
-                        lh->gpuMainQueue);
-                CHECK_LAST_CUDA_ERROR();
+                auto cmpByHash = [](NodeInfo const & a, NodeInfo const & b){return a.hash < b.hash;};
+                std::sort(layerInfo->childrenInfo, layerInfo->childrenInfo + nChildren, cmpByHash);
 
-                blockSize = 128;
-                gridSize = roundUpDivPosInt<i32>(nChildren, blockSize);
-                calcRepKernel<Model><<<gridSize, blockSize, 0, lh->gpuMainQueue>>>(
+                calcRep<Model>(
                         nChildren,
                         layerInfo->children,
-                        layerInfo->tmpChildrenInfo);
-                CHECK_LAST_CUDA_ERROR();
+                        layerInfo->childrenInfo);
 
-                blockSize = 32;
-                gridSize = roundUpDivPosInt<i32>(nChildren, blockSize);
-                countRepKernel<Node><<<gridSize, blockSize, 0, lh->gpuMainQueue>>>(
+                countRep<Node>(
                         layerInfo,
-                        layerInfo->tmpChildrenInfo);
-                CHECK_LAST_CUDA_ERROR();
+                        layerInfo->childrenInfo);
 
-                if (sort)
-                    cub::DeviceRadixSort::SortKeys(
-                            layerInfo->cubTmpMem,
-                            layerInfo->cubTmpMemSize,
-                            layerInfo->tmpChildrenInfo,
-                            layerInfo->childrenInfo,
-                            nChildren,
-                            RepCostDecomposer{},
-                            lh->gpuMainQueue);
-                else
-                    cub::DeviceRadixSort::SortKeys(
-                            layerInfo->cubTmpMem,
-                            layerInfo->cubTmpMemSize,
-                            layerInfo->tmpChildrenInfo,
-                            layerInfo->childrenInfo,
-                            nChildren,
-                            RepDecomposer{},
-                            lh->gpuMainQueue);
-                CHECK_LAST_CUDA_ERROR();
+                if (sort) {
+                    auto cmpByRepCost = [](NodeInfo const &a, NodeInfo const &b)
+                    {
+                        std::pair<u32, f64> const aa = {a.isRepresented, a.boundSrcToNode};
+                        std::pair<u32, f64> const bb = {b.isRepresented, b.boundSrcToNode};
+                        return aa < bb;
+                    };
+                    std::sort(layerInfo->childrenInfo, layerInfo->childrenInfo + nChildren, cmpByRepCost);
+                }
+                else {
+                    auto cmpByRep = [](NodeInfo const &a, NodeInfo const &b)
+                    {
+                        return a.isRepresented < b.isRepresented;
+                    };
+                    std::sort(layerInfo->childrenInfo, layerInfo->childrenInfo + nChildren, cmpByRep);
+                }
 
-                swapPtrKernel<Node><<<1,1,0,lh->gpuMainQueue>>>(&layerInfo->children, &layerInfo->tmpChildren);
-                CHECK_LAST_CUDA_ERROR();
-
-                blockSize = 128;
-                gridSize = roundUpDivPosInt<i32>(nChildren, blockSize);
-                copyRepKernel<Node><<<gridSize, blockSize, 0, lh->gpuMainQueue>>>(layerInfo, sort);
-                CHECK_LAST_CUDA_ERROR();
+                swapPtr(&layerInfo->children, &layerInfo->tmpChildren);
+                copyRep(layerInfo, sort);
 
                 // Labels
-                resetLabelsInfo<Node><<<1,1,0,lh->gpuMainQueue>>>(layerInfo);
-                blockSize = 128;
-                gridSize = roundUpDivPosInt<i32>(nChildren, blockSize);
-                calcLabelsKernel<Model><<<gridSize, blockSize, 0, lh->gpuMainQueue>>>(
+                layerInfo->labelsInfo.reset();
+                calcLabels(
                         model,
                         layerInfo,
                         DDExact,
                         pBound,
                         dBound);
-                CHECK_LAST_CUDA_ERROR();
-
-                cudaStreamSynchronize(lh->gpuMainQueue);
-                CHECK_LAST_CUDA_ERROR();
             }
 
             if (layerInfo->nRepresentatives > 0)
@@ -300,12 +239,9 @@ int run_bro(int argc,char* argv[])
                 auto & nextLayer = layers[lIdx+1];
                 i64 const nextLayerOldSize = nextLayer.size();
                 nextLayer.resize(nextLayerOldSize + layerInfo->nRepresentatives);
-                cudaMemcpy(
-                        nextLayer.data() + nextLayerOldSize,
-                        layerInfo->children,
-                        sizeof(Node) * layerInfo->nRepresentatives,
-                        cudaMemcpyDeviceToHost);
-                CHECK_LAST_CUDA_ERROR();
+                memcpy(nextLayer.data() + nextLayerOldSize,
+                       layerInfo->children,
+                       sizeof(Node) * layerInfo->nRepresentatives);
 
                 labelsInfo[lIdx+1].update(layerInfo->labelsInfo);
 

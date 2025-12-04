@@ -10,14 +10,7 @@ enum DDContext : int;
 enum LocalContext : int;
 
 template <typename T>
-GFL_GLOBAL
-void swapDoubleBuffer(cub::DoubleBuffer<T> * doubleBuffer)
-{
-    doubleBuffer->selector ^= 1;
-}
-
-template <typename T>
-GFL_GLOBAL
+GFL_HOST_DEVICE
 void swapPtr(T** a, T** b)
 {
     T * tmp = *a;
@@ -25,11 +18,41 @@ void swapPtr(T** a, T** b)
     *b = tmp;
 }
 
+template <typename T>
+GFL_GLOBAL
+void swapPtrKernel(T** a, T** b)
+{
+    swapPtr(a,b);
+}
+
 template<typename Node>
 GFL_GLOBAL
 void resetLabelsInfo(LayerInfo<Node> * const layerInfo)
 {
     layerInfo->labelsInfo.reset();
+}
+
+template<typename Model, typename Node>
+void calcLabels(
+        Model const * const model,
+        LayerInfo<Node> * const layerInfo,
+        DDContext const ctx,
+        gfl::f64 pBound,
+        gfl::f64 dBound)
+{
+    using namespace gfl;
+
+    Node * const children = layerInfo->children;
+
+    for (i64 cIdx = 0; cIdx < layerInfo->nRepresentatives; cIdx += 1)
+    {
+        auto & pNode = children[cIdx];
+        pNode.labels = model->lgf(pNode.state, ctx, pBound, dBound);
+        auto [smallest,largest,count] = pNode.labels.slc();
+        layerInfo->labelsInfo.minLabel = std::min(layerInfo->labelsInfo.minLabel,smallest);
+        layerInfo->labelsInfo.maxLabel = std::max(layerInfo->labelsInfo.maxLabel,largest);
+        layerInfo->labelsInfo.nLabels  = std::max(layerInfo->labelsInfo.nLabels,count);
+    }
 }
 
 template<typename Model, typename Node>
@@ -79,6 +102,71 @@ void calcLabelsKernel(
         atomicMax(&layerInfo->labelsInfo.nLabels, labelsPerParent_s);
     }
 }
+
+template<typename Model, typename Node>
+void calcChildren(
+        Model const * const model,
+        LayerInfo<Node> * const layerInfo,
+        gfl::f64 pBound,
+        LocalContext localCtx)
+{
+    using State = typename Model::State;
+    using namespace gfl;
+
+    Node * const children = layerInfo->children;
+    NodeInfo * const childrenInfo = layerInfo->childrenInfo;
+
+    for(i64 pIdx =0; pIdx < layerInfo->nParents; pIdx += 1)
+    {
+        if (layerInfo->labelsInfo.nLabels > 0)
+        {
+            Node cNode;
+            NodeInfo cInfo;
+            Node const pNode = layerInfo->parents[pIdx];
+            for (i32 label = layerInfo->labelsInfo.minLabel; label <= layerInfo->labelsInfo.maxLabel; label += 1)
+            {
+                if (pNode.labels.contains(label))
+                {
+                    // Transition
+                    auto cState = model->stf(pNode.state, label);
+                    if (cState.has_value())
+                    {
+                        f64 cBoundSrcToNode = pNode.boundSrcToNode + model->scf(pNode.state, label);
+                        f64 cHeuristicNodeToSink;
+                        if constexpr (Model::has_local)
+                            cHeuristicNodeToSink = model->local(cState.value(), localCtx);
+                        else
+                            cHeuristicNodeToSink = 0;
+                        f64 cCost = cBoundSrcToNode + cHeuristicNodeToSink;
+                        if (Model::better(cCost, pBound))
+                        {
+                            // Node
+                            cNode.state = cState.value();
+                            cNode.boundSrcToNode = cBoundSrcToNode;
+                            memcpy(cNode.labelsSrcToNode, pNode.labelsSrcToNode, sizeof(cNode.labelsSrcToNode));
+                            cNode.labelsSrcToNode[pNode.nEdgesSrcToNode] = label;
+                            cNode.nEdgesSrcToNode = pNode.nEdgesSrcToNode + 1;
+
+                            // NodeInfo
+                            if constexpr (Model::has_dom)
+                                cInfo.hash = Model::domHash(cNode.state);
+                            else
+                                cInfo.hash = State::hash(cNode.state);
+                            cInfo.boundSrcToNode = cBoundSrcToNode;
+                            cInfo.isRepresented = 0;
+                            cInfo.idx = layerInfo->nChildren;
+                            children[cInfo.idx] = cNode;
+                            childrenInfo[cInfo.idx] = cInfo;
+
+                            layerInfo->nChildren += 1;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 
 template<typename Model, typename Node>
 GFL_GLOBAL
@@ -162,6 +250,19 @@ void calcChildrenKernel(
 //                }
             }
         }
+    }
+}
+
+template<typename Node>
+void copyRep(LayerInfo<Node> * const layerInfo, bool reverse = false)
+{
+    using namespace gfl;
+
+    for (i64 rIdx  = 0; rIdx < layerInfo->nRepresentatives; rIdx += 1)
+    {
+        i64 const cIdx = layerInfo->childrenInfo[rIdx].idx;
+        i64 const tIdx = not reverse ? rIdx : layerInfo->nRepresentatives - 1 - rIdx;
+        layerInfo->children[tIdx] = layerInfo->tmpChildren[cIdx];
     }
 }
 
@@ -314,6 +415,36 @@ void checkStatePair(NodeInfo & iInfo, typename Model::State const & iState, Node
 }
 
 template<typename Model, typename Node>
+void calcRep(gfl::i64 const nChildren, Node const * const children,  NodeInfo * const childrenInfo)
+{
+    using namespace gfl;
+
+    for (i64 i = 0; i < nChildren; i += 1) {
+        auto & iInfo = childrenInfo[i];
+        assert(0 <= iInfo.idx);
+        assert(iInfo.idx < nChildren);
+        auto const iChild = children[iInfo.idx].state;
+        for (i64 j = i + 1; j < nChildren; j += 1)
+        {
+            auto & jInfo = childrenInfo[j];
+            assert(0 <= jInfo.idx);
+            assert(jInfo.idx < nChildren);
+            auto const jChild = children[jInfo.idx].state;
+            // TODO Check both undominates
+            if (iInfo.hash == jInfo.hash)
+            {
+                checkStatePair<Model>(iInfo, iChild, jInfo, jChild);
+            }
+            else
+            {
+                break;
+            }
+        }
+    }
+}
+
+
+template<typename Model, typename Node>
 GFL_GLOBAL
 void calcRepKernel(gfl::i64 const nChildren, Node const * const children,  NodeInfo * const childrenInfo)
 {
@@ -332,6 +463,7 @@ void calcRepKernel(gfl::i64 const nChildren, Node const * const children,  NodeI
             assert(0 <= jInfo.idx);
             assert(jInfo.idx < nChildren);
             auto const jChild = children[jInfo.idx].state;
+            // TODO Check both undominates
             if (iInfo.hash == jInfo.hash)
             {
                 checkStatePair<Model>(iInfo, iChild, jInfo, jChild);
@@ -341,6 +473,17 @@ void calcRepKernel(gfl::i64 const nChildren, Node const * const children,  NodeI
                 break;
             }
         }
+    }
+}
+
+
+template<typename Node>
+void countRep(LayerInfo<Node> * const layerInfo,  NodeInfo const * const childrenInfo)
+{
+    using namespace gfl;
+    for (i64 cIdx = 0; cIdx < layerInfo->nChildren; cIdx += 1)
+    {
+        layerInfo->nRepresentatives += childrenInfo[cIdx].isRepresented == 0;
     }
 }
 
