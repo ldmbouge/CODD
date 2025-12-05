@@ -6,7 +6,7 @@ from parsimonious.nodes import NodeVisitor
 CoddOutputGrammar = Grammar("""
     output = instace_output+
     instace_output = cmd_line solution_line* status_line mem_line nl*
-    cmd_line = "COMMAND: /usr/bin/time -v ../tsptw_1_bro_" int? " -t 600" " -g"? " -s"? " -i " instance nl
+    cmd_line = "COMMAND: /usr/bin/time -v ../tsptw_1_bro_" "seq_"? int? " -t 600" " -g"? " -s"? " -i " instance nl
     instance = "../data/tsptw/" word "/" str
     solution_line   = timestamp " SOLUTION | Visited = " int " | Cost = " float " | Value = " int_list nl
     status_line = (completed_line / timeout_line / infeasable_line)
