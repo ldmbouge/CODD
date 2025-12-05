@@ -2,18 +2,18 @@ from collections import OrderedDict
 from parsimonious.grammar import Grammar
 from parsimonious.nodes import NodeVisitor
 
+
 CoddOutputGrammar = Grammar("""
     output = instace_output+
-    instace_output = header solution_line* status_line stat_line+ nl?
-    header = cmd_line instance_line line line
-    cmd_line = "COMMAND: " line
-    instance_line = "Instance: ../data/tsptw/" word "/" str nl
-    solution_line = timestamp " SOLUTION | Visited = " int " | Cost = " float " | Value = " int_list nl
+    instace_output = cmd_line solution_line* status_line mem_line nl*
+    cmd_line = "COMMAND: /usr/bin/time -v ../tsptw_1_bro_" int? " -t 600" " -g"? " -s"? " -i " instance nl
+    instance = "../data/tsptw/" word "/" str
+    solution_line   = timestamp " SOLUTION | Visited = " int " | Cost = " float " | Value = " int_list nl
     status_line = (completed_line / timeout_line / infeasable_line)
-    stat_line = line
-    completed_line = timestamp " COMPLETED | Visited = " int " | Cost = " float " | Value = " int_list nl
-    timeout_line = timestamp " TIMEOUT | Visited = " int nl
+    completed_line  = timestamp " COMPLETED | Visited = " int " | Cost = " float " | Value = " int_list nl
+    timeout_line    = timestamp " TIMEOUT | Visited = " int nl
     infeasable_line = timestamp " INFEASIBLE | Visited = " int nl
+    mem_line = "Maximum resident set size (kbytes): " int
     line = str nl
     timestamp = "[" ws? float "s]"
     int_list = int ("," int)*
@@ -29,8 +29,8 @@ CoddOutputGrammar = Grammar("""
 class CoddOutputVisitor(NodeVisitor):
 
     def __init__ (self):
-        self.header =  ["Benchmark", "Instance", "Best Cost", "Best Time", "Search Time", "Nodes", "Timeout"]
-        self.current_row = None
+        self.header =  ["Benchmark", "Instance", "Best Cost", "Best Time", "Search Time", "Nodes", "Timeout", "Memory"]
+        self.row = None
         self.rows = []
 
     def visit_output(self, node, visited_children):
@@ -41,8 +41,7 @@ class CoddOutputVisitor(NodeVisitor):
         self.rows.append(self.row.values())
         self.row = None
 
-    def visit_instance_line(self, node, visited_children):
-        # Instance: ../data/tsptw/Solnon25_feasible/n21g100b10.003.txt
+    def visit_instance(self, node, visited_children):
         self.row = OrderedDict((key, None) for key in self.header)
         self.row["Benchmark"] = visited_children[1]
         self.row["Instance"]  = visited_children[3]
@@ -69,6 +68,10 @@ class CoddOutputVisitor(NodeVisitor):
         self.row["Search Time"] = visited_children[0]
         self.row["Nodes"]      = visited_children[2]
         self.row["Timeout"]    = False # Timeout
+
+    def visit_mem_line(self, node, visited_children):
+        #Maximum resident set size (kbytes): 28267720
+        self.row["Memory"] = visited_children[1]
 
     def visit_timestamp(self, node, visited_children):
         return visited_children[2]

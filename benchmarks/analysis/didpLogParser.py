@@ -4,16 +4,17 @@ from parsimonious.nodes import NodeVisitor
 
 DidpOutputGrammar = Grammar("""
     output = instace_output+
-    instace_output = cmd_line solution_line* status_line+ nl?
-    cmd_line = "COMMAND: /usr/bin/time -v /home/fabio/didp-rust-models/target/release/tsptw_rpid -t " int ws instance_str nl
-    instance_str = "../data/tsptw/" word "/" str
+    instace_output = cmd_line solution_line* status_line+ mem_line nl*
+    cmd_line = "COMMAND: /usr/bin/time -v /home/fabio/didp-rust-models/target/release/tsptw_rpid -t 600 " instance nl
+    instance = "../data/tsptw/" word "/" str
     solution_line = "New primal bound: " int ", expanded: " int ", generated: " int ", elapsed time: " float "s." nl
-    status_line = completed_line / timeout_line / infeasable_line / search_time_line / expanded_line / line
+    status_line = completed_line / timeout_line / infeasable_line / search_time_line / expanded_line
     completed_line = "optimal cost: " int nl
     timeout_line = "Time limit reached." nl
     search_time_line = "Search time: " float "s" nl
     infeasable_line = "The problem is infeasible." nl
     expanded_line = "Expanded: " int nl
+    mem_line = "Maximum resident set size (kbytes): " int
     line = str nl
     timestamp = "[" ws? float "s]"
     int_list = int ("," int)*
@@ -29,8 +30,8 @@ DidpOutputGrammar = Grammar("""
 class DidpOutputVisitor(NodeVisitor):
 
     def __init__ (self):
-        self.header =  ["Benchmark", "Instance", "Best Cost", "Best Time", "Search Time", "Nodes", "Timeout"]
-        self.current_row = None
+        self.header =  ["Benchmark", "Instance", "Best Cost", "Best Time", "Search Time", "Nodes", "Timeout", "Memory"]
+        self.row = None
         self.rows = []
 
     def visit_output(self, node, visited_children):
@@ -41,7 +42,7 @@ class DidpOutputVisitor(NodeVisitor):
         self.rows.append(self.row.values())
         self.row = None
 
-    def visit_instance_str(self, node, visited_children):
+    def visit_instance(self, node, visited_children):
         #../data/tsptw/Solnon25_feasible/n21g100b10.003.txt
         self.row = OrderedDict((key, None) for key in self.header)
         self.row["Benchmark"] = visited_children[1]
@@ -69,8 +70,11 @@ class DidpOutputVisitor(NodeVisitor):
         self.row["Search Time"] = visited_children[1]
 
     def visit_expanded_line(self, node, visited_children):
-        #optimal cost: 1023
         self.row["Nodes"] = visited_children[1]
+
+    def visit_mem_line(self, node, visited_children):
+        #Maximum resident set size (kbytes): 28267720
+        self.row["Memory"] = visited_children[1]
 
     def visit_int_list(self, node, visited_children):
         return node.text.replace(",", "")

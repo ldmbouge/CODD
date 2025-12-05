@@ -10,13 +10,11 @@ def getFilteredLogContent(log_filepath):
     with open(log_filepath, "r") as log_file:
         lines = log_file.readlines()
 
+    toKeep = ("COMMAND", "SOLUTION", "COMPLETED", "TIMEOUT", "INFEASIBLE", "Maximum resident set size")
     filtered_lines = []
     for line in lines:
-        if "Layer =" in line:
-            continue
-        # Replace any sequence of spaces or tabs with a single space
-        squeezed_line = re.sub(r"[ \t]+", " ", line.strip())
-        filtered_lines.append(squeezed_line)
+        if any(key in line for key in toKeep)  or line.strip() == "":
+            filtered_lines.append(re.sub(r"\s+", " ", line).strip())
 
     # Join with newline characters
     return "\n".join(filtered_lines) + "\n"

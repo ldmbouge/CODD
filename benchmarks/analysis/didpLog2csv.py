@@ -10,12 +10,19 @@ def getFilteredLogContent(log_filepath):
     with open(log_filepath, "r") as log_file:
         lines = log_file.readlines()
 
-    toSkip = ("Preparing", "Searched", "dual")
+    toKeep = (
+        "COMMAND",
+        "New primal bound",
+        "optimal cost:",
+        "Time limit reached",
+        "Search time:",
+        "The problem is infeasible",
+        "Expanded:",
+        "Maximum resident set size")
     filtered_lines = []
     for line in lines:
-        if any(word in line for word in toSkip):
-            continue
-        filtered_lines.append(line.strip())
+        if any(key in line for key in toKeep)  or line.strip() == "":
+            filtered_lines.append(re.sub(r"\s+", " ", line).strip())
 
     # Join with newline characters
     return "\n".join(filtered_lines) + "\n"
