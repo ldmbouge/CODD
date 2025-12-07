@@ -4,25 +4,28 @@ import sys
 import csv
 import glob
 import re
-import didpLogParser
+import routeOptLogParser
+
 
 def getFilteredLogContent(log_filepath):
     with open(log_filepath, "r") as log_file:
         lines = log_file.readlines()
 
+    ansi_escape = re.compile(r'\x1B\[[0-9;?]*[A-Za-z]')
     toKeep = (
         "COMMAND",
-        "New primal bound",
-        "optimal cost:",
-        "Time limit reached",
-        "Reached time limit",
-        "Search time:",
-        "The problem is infeasible",
-        "Expanded:",
+        "<UB",
+        "<LB",
+        "<Elapsed",
+        "<Nodes",
         "Maximum resident set size")
     filtered_lines = []
     for line in lines:
-        if any(key in line for key in toKeep)  or line.strip() == "":
+        line = ansi_escape.sub('', line)
+        line = line.replace("1e+06", "1000000")
+        line = line.replace("1e+09", "1000000000")
+        if any(key in line for key in toKeep):
+            line = ansi_escape.sub('', line)
             filtered_lines.append(re.sub(r"\s+", " ", line).strip())
 
     # Join with newline characters
@@ -33,8 +36,8 @@ log_content = getFilteredLogContent(log_filepath)
 #print(log_content)
 
 # Parse log file
-log_tree = didpLogParser.DidpOutputGrammar.parse(log_content)
-log_data = didpLogParser.DidpOutputVisitor().visit(log_tree)
+log_tree = routeOptLogParser.RouteOptOutputGrammar.parse(log_content)
+log_data = routeOptLogParser.RouteOptOutputVisitor().visit(log_tree)
 #print(log_data)
 
 # Write statistics CSV

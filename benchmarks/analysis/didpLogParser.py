@@ -2,24 +2,28 @@ from collections import OrderedDict
 from parsimonious.grammar import Grammar
 from parsimonious.nodes import NodeVisitor
 
+#COMMAND: /usr/bin/time -v python3 /home/fabio/didp-models/tsptw/tsptw_didp.py ../data/tsptw/AFG/rbg010a.tw --config CABS --initial-beam-size 32 --threads 96 --parallel-type 0 --time-out 600
+
 DidpOutputGrammar = Grammar("""
     output = instace_output+
     instace_output = cmd_line solution_line* status_line+ mem_line nl*
-    cmd_line = "COMMAND: /usr/bin/time -v /home/fabio/didp-rust-models/target/release/tsptw_rpid -t 600 " instance nl
-    instance = "../data/tsptw/" word "/" str
-    solution_line = "New primal bound: " int ", expanded: " int ", generated: " int ", elapsed time: " float "s." nl
+    cmd_line = "COMMAND: /usr/bin/time -v " (rpid_cmd / didp_par_cmd) nl
+    rpid_cmd = "/home/fabio/didp-rust-models/target/release/tsptw_rpid -t 600 " instance
+    didp_par_cmd = "python3 /home/fabio/didp-models/tsptw/tsptw_didp.py " instance " --config CABS --initial-beam-size 32 --threads 96 --parallel-type 0 --time-out 600"
+    instance = "../data/tsptw/" word "/" word
+    solution_line = "New primal bound: " int ", expanded: " int (",  generated: " int )? ", elapsed time: " float "s."? nl
     status_line = completed_line / timeout_line / infeasable_line / search_time_line / expanded_line
     completed_line = "optimal cost: " int nl
-    timeout_line = "Time limit reached." nl
+    timeout_line = ("Time limit reached." / "Reached time limit.") nl
     search_time_line = "Search time: " float "s" nl
-    infeasable_line = "The problem is infeasible." nl
+    infeasable_line = "The problem is infeasible" "."? nl
     expanded_line = "Expanded: " int nl
     mem_line = "Maximum resident set size (kbytes): " int
     line = str nl
     timestamp = "[" ws? float "s]"
     int_list = int ("," int)*
     str = ~"."+
-    word = ~"[a-zA-Z0-9_]"+
+    word = (~"[a-zA-Z0-9_]" / ".")+
     value = float / int
     int = ~"[-+]"? ~"[0-9]"+
     float = int "." int ("e" int)?
@@ -49,6 +53,7 @@ class DidpOutputVisitor(NodeVisitor):
         self.row["Instance"]  = visited_children[3]
 
     def visit_solution_line(self, node, visited_children):
+        # New primal bound: 671, expanded: 87, elapsed time: 0.00395282
         # New primal bound: 720, expanded: 996825, generated: 2176106, elapsed time: 1.529058793s.
         self.row["Best Time"] = visited_children[7]
         self.row["Best Cost"] = visited_children[1]

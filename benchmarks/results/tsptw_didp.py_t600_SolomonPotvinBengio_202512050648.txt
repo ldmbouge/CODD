@@ -1,0 +1,2098 @@
+COMMAND: /usr/bin/time -v python3 /home/fabio/didp-models/tsptw/tsptw_didp.py ../data/tsptw/SolomonPotvinBengio/rc_201.1.txt --config CABS --initial-beam-size 32 --threads 96 --parallel-type 0 --time-out 600
+Solver: CABS from DIDPPy v0.10.0
+Searched with beam size: 32, threads: 96, kept: 11, sent: 282
+Searched with beam size: 32, expanded: 144, elapsed time: 0.00998735
+New dual bound: 3617039, expanded: 144, elapsed time: 0.009989363
+New primal bound: 4445425, expanded: 144, elapsed time: 0.009991055
+Searched with beam size: 64, threads: 96, kept: 6, sent: 306
+Searched with beam size: 64, expanded: 309, elapsed time: 0.019209794
+Searched with beam size: 128, threads: 96, kept: 6, sent: 343
+Searched with beam size: 128, expanded: 490, elapsed time: 0.058887622
+New dual bound: 3633067, expanded: 490, elapsed time: 0.058890596
+Searched with beam size: 256, threads: 96, kept: 7, sent: 487
+Searched with beam size: 256, expanded: 745, elapsed time: 0.067884715
+New dual bound: 3958588, expanded: 745, elapsed time: 0.067886247
+Searched with beam size: 512, threads: 96, kept: 7, sent: 506
+Searched with beam size: 512, expanded: 1010, elapsed time: 0.076203263
+Search time: 0.076205997s
+Expanded: 1010
+Generated: 1094
+14 18 13 9 5 4 6 8 7 16 19 11 17 1 10 3 12 2 15
+best bound: 4445425
+cost: 4445425
+optimal cost: 4445425
+The solution is valid.
+	Command being timed: "python3 /home/fabio/didp-models/tsptw/tsptw_didp.py ../data/tsptw/SolomonPotvinBengio/rc_201.1.txt --config CABS --initial-beam-size 32 --threads 96 --parallel-type 0 --time-out 600"
+	User time (seconds): 4.99
+	System time (seconds): 0.16
+	Percent of CPU this job got: 5159%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.10
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 15360
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 6013
+	Voluntary context switches: 1876
+	Involuntary context switches: 273
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+COMMAND: /usr/bin/time -v python3 /home/fabio/didp-models/tsptw/tsptw_didp.py ../data/tsptw/SolomonPotvinBengio/rc_201.2.txt --config CABS --initial-beam-size 32 --threads 96 --parallel-type 0 --time-out 600
+Solver: CABS from DIDPPy v0.10.0
+Searched with beam size: 32, threads: 96, kept: 5, sent: 181
+Searched with beam size: 32, expanded: 121, elapsed time: 0.003803025
+New dual bound: 46952579, expanded: 121, elapsed time: 0.003807933
+New primal bound: 71431360, expanded: 121, elapsed time: 0.00381282
+Searched with beam size: 64, threads: 96, kept: 3, sent: 184
+Searched with beam size: 64, expanded: 245, elapsed time: 0.009849531
+Searched with beam size: 128, threads: 96, kept: 2, sent: 190
+Searched with beam size: 128, expanded: 372, elapsed time: 0.018641775
+New dual bound: 48233879, expanded: 372, elapsed time: 0.018643428
+New primal bound: 71153740, expanded: 372, elapsed time: 0.018667634
+Searched with beam size: 256, threads: 96, kept: 2, sent: 305
+Searched with beam size: 256, expanded: 576, elapsed time: 0.048176727
+New dual bound: 52633279, expanded: 576, elapsed time: 0.04817853
+Searched with beam size: 512, threads: 96, kept: 4, sent: 372
+Searched with beam size: 512, expanded: 826, elapsed time: 0.056641096
+Search time: 0.056642608s
+Expanded: 826
+Generated: 900
+13 21 10 23 9 12 5 6 8 16 19 25 17 18 1 24 2 11 7 4 3 14 20 22 15
+best bound: 71153740
+cost: 71153740
+optimal cost: 71153740
+The solution is valid.
+	Command being timed: "python3 /home/fabio/didp-models/tsptw/tsptw_didp.py ../data/tsptw/SolomonPotvinBengio/rc_201.2.txt --config CABS --initial-beam-size 32 --threads 96 --parallel-type 0 --time-out 600"
+	User time (seconds): 3.86
+	System time (seconds): 0.19
+	Percent of CPU this job got: 5013%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.08
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 18432
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 6125
+	Voluntary context switches: 1907
+	Involuntary context switches: 270
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+COMMAND: /usr/bin/time -v python3 /home/fabio/didp-models/tsptw/tsptw_didp.py ../data/tsptw/SolomonPotvinBengio/rc_201.3.txt --config CABS --initial-beam-size 32 --threads 96 --parallel-type 0 --time-out 600
+Solver: CABS from DIDPPy v0.10.0
+Searched with beam size: 32, threads: 96, kept: 14, sent: 472
+Searched with beam size: 32, expanded: 248, elapsed time: 0.003871539
+New dual bound: 50395716, expanded: 248, elapsed time: 0.003874103
+New primal bound: 79078097, expanded: 248, elapsed time: 0.003875535
+Searched with beam size: 64, threads: 96, kept: 7, sent: 518
+Searched with beam size: 64, expanded: 524, elapsed time: 0.012088073
+New dual bound: 50902826, expanded: 524, elapsed time: 0.012090797
+Searched with beam size: 128, threads: 96, kept: 9, sent: 575
+Searched with beam size: 128, expanded: 830, elapsed time: 0.021713716
+Searched with beam size: 256, threads: 96, kept: 17, sent: 1023
+Searched with beam size: 256, expanded: 1330, elapsed time: 0.0308832
+New dual bound: 54178795, expanded: 1330, elapsed time: 0.030884882
+New primal bound: 79060688, expanded: 1330, elapsed time: 0.030911703
+Searched with beam size: 512, threads: 96, kept: 21, sent: 1197
+Searched with beam size: 512, expanded: 1920, elapsed time: 0.049653889
+New dual bound: 62121486, expanded: 1920, elapsed time: 0.049655742
+Searched with beam size: 1024, threads: 96, kept: 21, sent: 1219
+Searched with beam size: 1024, expanded: 2524, elapsed time: 0.070572084
+Search time: 0.070574007s
+Expanded: 2524
+Generated: 2778
+12 14 15 5 17 2 30 22 27 9 10 24 7 28 19 25 26 6 8 18 3 29 20 13 11 16 1 4 21 31 23
+best bound: 79060688
+cost: 79060688
+optimal cost: 79060688
+The solution is valid.
+	Command being timed: "python3 /home/fabio/didp-models/tsptw/tsptw_didp.py ../data/tsptw/SolomonPotvinBengio/rc_201.3.txt --config CABS --initial-beam-size 32 --threads 96 --parallel-type 0 --time-out 600"
+	User time (seconds): 4.82
+	System time (seconds): 0.20
+	Percent of CPU this job got: 5190%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.09
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 16896
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 6351
+	Voluntary context switches: 2388
+	Involuntary context switches: 366
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+COMMAND: /usr/bin/time -v python3 /home/fabio/didp-models/tsptw/tsptw_didp.py ../data/tsptw/SolomonPotvinBengio/rc_201.4.txt --config CABS --initial-beam-size 32 --threads 96 --parallel-type 0 --time-out 600
+Solver: CABS from DIDPPy v0.10.0
+Searched with beam size: 32, threads: 96, kept: 2, sent: 234
+Searched with beam size: 32, expanded: 138, elapsed time: 0.003394549
+New dual bound: 5182441, expanded: 138, elapsed time: 0.003396331
+New primal bound: 8064237, expanded: 138, elapsed time: 0.003397693
+Searched with beam size: 64, threads: 96, kept: 2, sent: 245
+Searched with beam size: 64, expanded: 288, elapsed time: 0.013713309
+New primal bound: 8040647, expanded: 288, elapsed time: 0.013754722
+Searched with beam size: 128, threads: 96, kept: 1, sent: 252
+Searched with beam size: 128, expanded: 447, elapsed time: 0.022708068
+Searched with beam size: 256, threads: 96, kept: 1, sent: 303
+Searched with beam size: 256, expanded: 644, elapsed time: 0.03126082
+New dual bound: 5877949, expanded: 644, elapsed time: 0.031262983
+New primal bound: 7936351, expanded: 644, elapsed time: 0.031337616
+Searched with beam size: 512, threads: 96, kept: 1, sent: 296
+Searched with beam size: 512, expanded: 844, elapsed time: 0.050592838
+Search time: 0.050594791s
+Expanded: 844
+Generated: 886
+20 2 14 3 1 17 21 6 5 4 13 12 25 23 16 11 9 10 18 24 15 7 8 22 19
+best bound: 7936351
+cost: 7936351
+optimal cost: 7936351
+The solution is valid.
+	Command being timed: "python3 /home/fabio/didp-models/tsptw/tsptw_didp.py ../data/tsptw/SolomonPotvinBengio/rc_201.4.txt --config CABS --initial-beam-size 32 --threads 96 --parallel-type 0 --time-out 600"
+	User time (seconds): 3.28
+	System time (seconds): 0.11
+	Percent of CPU this job got: 4356%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.07
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 13824
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 6195
+	Voluntary context switches: 1927
+	Involuntary context switches: 337
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 16
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+COMMAND: /usr/bin/time -v python3 /home/fabio/didp-models/tsptw/tsptw_didp.py ../data/tsptw/SolomonPotvinBengio/rc_202.1.txt --config CABS --initial-beam-size 32 --threads 96 --parallel-type 0 --time-out 600
+Solver: CABS from DIDPPy v0.10.0
+Searched with beam size: 32, threads: 96, kept: 80, sent: 2423
+Searched with beam size: 32, expanded: 725, elapsed time: 0.004150611
+New dual bound: 51809678, expanded: 725, elapsed time: 0.004152273
+New primal bound: 78819159, expanded: 725, elapsed time: 0.004153605
+Searched with beam size: 64, threads: 96, kept: 60, sent: 3832
+Searched with beam size: 64, expanded: 1768, elapsed time: 0.009486053
+Searched with beam size: 128, threads: 96, kept: 81, sent: 7650
+Searched with beam size: 128, expanded: 4049, elapsed time: 0.019570769
+Searched with beam size: 256, threads: 96, kept: 156, sent: 15759
+Searched with beam size: 256, expanded: 8756, elapsed time: 0.042728858
+New dual bound: 52753358, expanded: 8756, elapsed time: 0.04273069
+New primal bound: 77608189, expanded: 8756, elapsed time: 0.042780536
+Searched with beam size: 512, threads: 96, kept: 317, sent: 30524
+Searched with beam size: 512, expanded: 17639, elapsed time: 0.055758153
+New dual bound: 54041318, expanded: 17639, elapsed time: 0.055759745
+New primal bound: 77589479, expanded: 17639, elapsed time: 0.055794938
+Searched with beam size: 1024, threads: 96, kept: 613, sent: 59224
+Searched with beam size: 1024, expanded: 34855, elapsed time: 0.10506669
+New dual bound: 54532378, expanded: 34855, elapsed time: 0.105068433
+New primal bound: 77300179, expanded: 34855, elapsed time: 0.105144077
+Searched with beam size: 2048, threads: 96, kept: 1162, sent: 111528
+Searched with beam size: 2048, expanded: 68672, elapsed time: 0.141081123
+New dual bound: 55459508, expanded: 68672, elapsed time: 0.141084117
+New primal bound: 77287500, expanded: 68672, elapsed time: 0.141146341
+Searched with beam size: 4096, threads: 96, kept: 1999, sent: 188672
+Searched with beam size: 4096, expanded: 130971, elapsed time: 0.179227366
+New dual bound: 59064058, expanded: 130971, elapsed time: 0.179228999
+New primal bound: 77177600, expanded: 130971, elapsed time: 0.17928971
+Searched with beam size: 8192, threads: 96, kept: 3172, sent: 290990
+Searched with beam size: 8192, expanded: 237196, elapsed time: 0.247494609
+New dual bound: 61007737, expanded: 237196, elapsed time: 0.247496412
+Searched with beam size: 16384, threads: 96, kept: 4537, sent: 411953
+Searched with beam size: 16384, expanded: 397784, elapsed time: 0.357089712
+New dual bound: 63695918, expanded: 397784, elapsed time: 0.357091324
+Searched with beam size: 32768, threads: 96, kept: 4619, sent: 418912
+Searched with beam size: 32768, expanded: 563236, elapsed time: 0.438336064
+Search time: 0.438337736s
+Expanded: 563236
+Generated: 708685
+30 32 26 21 13 8 6 7 9 11 10 23 15 1 2 18 25 5 27 28 20 4 16 3 22 19 17 14 12 29 31 24
+best bound: 77177600
+cost: 77177600
+optimal cost: 77177600
+The solution is valid.
+	Command being timed: "python3 /home/fabio/didp-models/tsptw/tsptw_didp.py ../data/tsptw/SolomonPotvinBengio/rc_202.1.txt --config CABS --initial-beam-size 32 --threads 96 --parallel-type 0 --time-out 600"
+	User time (seconds): 36.32
+	System time (seconds): 1.26
+	Percent of CPU this job got: 7997%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.47
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 24576
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 11420
+	Voluntary context switches: 27233
+	Involuntary context switches: 2409
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 16
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+COMMAND: /usr/bin/time -v python3 /home/fabio/didp-models/tsptw/tsptw_didp.py ../data/tsptw/SolomonPotvinBengio/rc_202.2.txt --config CABS --initial-beam-size 32 --threads 96 --parallel-type 0 --time-out 600
+Solver: CABS from DIDPPy v0.10.0
+Searched with beam size: 32, threads: 96, kept: 27, sent: 1096
+Searched with beam size: 32, expanded: 319, elapsed time: 0.006538019
+New dual bound: 2372994, expanded: 319, elapsed time: 0.006542576
+New primal bound: 3096898, expanded: 319, elapsed time: 0.006545901
+Searched with beam size: 64, threads: 96, kept: 17, sent: 1326
+Searched with beam size: 64, expanded: 739, elapsed time: 0.011349129
+Searched with beam size: 128, threads: 96, kept: 29, sent: 2249
+Searched with beam size: 128, expanded: 1533, elapsed time: 0.018481985
+New dual bound: 2386971, expanded: 1533, elapsed time: 0.018483468
+New primal bound: 3080750, expanded: 1533, elapsed time: 0.01849819
+Searched with beam size: 256, threads: 96, kept: 42, sent: 4015
+Searched with beam size: 256, expanded: 3113, elapsed time: 0.025449463
+New dual bound: 2405969, expanded: 3113, elapsed time: 0.025451316
+New primal bound: 3041418, expanded: 3113, elapsed time: 0.025466288
+Searched with beam size: 512, threads: 96, kept: 57, sent: 5304
+Searched with beam size: 512, expanded: 5725, elapsed time: 0.035958891
+New dual bound: 2556249, expanded: 5725, elapsed time: 0.035960593
+Searched with beam size: 1024, threads: 96, kept: 70, sent: 6123
+Searched with beam size: 1024, expanded: 9168, elapsed time: 0.047509813
+New dual bound: 2879104, expanded: 9168, elapsed time: 0.047511415
+Searched with beam size: 2048, threads: 96, kept: 71, sent: 6167
+Searched with beam size: 2048, expanded: 12670, elapsed time: 0.059920964
+Search time: 0.059924149s
+Expanded: 12670
+Generated: 13908
+11 12 1 3 4 9 2 5 10 8 7 6 13
+best bound: 3041418
+cost: 3041418
+optimal cost: 3041418
+The solution is valid.
+	Command being timed: "python3 /home/fabio/didp-models/tsptw/tsptw_didp.py ../data/tsptw/SolomonPotvinBengio/rc_202.2.txt --config CABS --initial-beam-size 32 --threads 96 --parallel-type 0 --time-out 600"
+	User time (seconds): 3.53
+	System time (seconds): 0.16
+	Percent of CPU this job got: 4350%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.08
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 16896
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 6280
+	Voluntary context switches: 2645
+	Involuntary context switches: 399
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+COMMAND: /usr/bin/time -v python3 /home/fabio/didp-models/tsptw/tsptw_didp.py ../data/tsptw/SolomonPotvinBengio/rc_202.3.txt --config CABS --initial-beam-size 32 --threads 96 --parallel-type 0 --time-out 600
+Solver: CABS from DIDPPy v0.10.0
+Searched with beam size: 32, threads: 96, kept: 15, sent: 470
+Searched with beam size: 32, expanded: 279, elapsed time: 0.00344164
+New dual bound: 5178468, expanded: 279, elapsed time: 0.003443533
+New primal bound: 8440244, expanded: 279, elapsed time: 0.003444945
+Searched with beam size: 64, threads: 96, kept: 14, sent: 737
+Searched with beam size: 64, expanded: 700, elapsed time: 0.009359751
+New dual bound: 5210938, expanded: 700, elapsed time: 0.0093654
+New primal bound: 8377189, expanded: 700, elapsed time: 0.009398239
+Searched with beam size: 128, threads: 96, kept: 10, sent: 912
+Searched with beam size: 128, expanded: 1227, elapsed time: 0.018748897
+New dual bound: 5251649, expanded: 1227, elapsed time: 0.018751751
+Searched with beam size: 256, threads: 96, kept: 13, sent: 1277
+Searched with beam size: 256, expanded: 1973, elapsed time: 0.033934189
+New dual bound: 5258827, expanded: 1973, elapsed time: 0.033937064
+Searched with beam size: 512, threads: 96, kept: 13, sent: 1560
+Searched with beam size: 512, expanded: 2861, elapsed time: 0.067832295
+New dual bound: 6555947, expanded: 2861, elapsed time: 0.067833977
+Searched with beam size: 1024, threads: 96, kept: 13, sent: 1607
+Searched with beam size: 1024, expanded: 3777, elapsed time: 0.076920065
+Search time: 0.076921858s
+Expanded: 3777
+Generated: 4060
+14 8 11 21 5 20 19 22 24 25 10 9 12 13 28 2 1 16 15 23 17 4 3 26 6 7 27 18
+best bound: 8377189
+cost: 8377189
+optimal cost: 8377189
+The solution is valid.
+	Command being timed: "python3 /home/fabio/didp-models/tsptw/tsptw_didp.py ../data/tsptw/SolomonPotvinBengio/rc_202.3.txt --config CABS --initial-beam-size 32 --threads 96 --parallel-type 0 --time-out 600"
+	User time (seconds): 5.57
+	System time (seconds): 0.16
+	Percent of CPU this job got: 5364%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.10
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 15360
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 6316
+	Voluntary context switches: 2334
+	Involuntary context switches: 408
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+COMMAND: /usr/bin/time -v python3 /home/fabio/didp-models/tsptw/tsptw_didp.py ../data/tsptw/SolomonPotvinBengio/rc_202.4.txt --config CABS --initial-beam-size 32 --threads 96 --parallel-type 0 --time-out 600
+Solver: CABS from DIDPPy v0.10.0
+Searched with beam size: 32, threads: 96, kept: 36, sent: 1140
+Searched with beam size: 32, expanded: 353, elapsed time: 0.003133504
+New dual bound: 50708655, expanded: 353, elapsed time: 0.003135287
+Searched with beam size: 64, threads: 96, kept: 32, sent: 2295
+Searched with beam size: 64, expanded: 1041, elapsed time: 0.007891753
+New dual bound: 51066545, expanded: 1041, elapsed time: 0.00789657
+Searched with beam size: 128, threads: 96, kept: 44, sent: 4244
+Searched with beam size: 128, expanded: 2403, elapsed time: 0.015597655
+Searched with beam size: 256, threads: 96, kept: 110, sent: 9816
+Searched with beam size: 256, expanded: 5788, elapsed time: 0.0288052
+New dual bound: 52084597, expanded: 5788, elapsed time: 0.028807343
+New primal bound: 79849718, expanded: 5788, elapsed time: 0.028809066
+Searched with beam size: 512, threads: 96, kept: 237, sent: 21409
+Searched with beam size: 512, expanded: 13483, elapsed time: 0.052933815
+New dual bound: 54283666, expanded: 13483, elapsed time: 0.052935588
+Searched with beam size: 1024, threads: 96, kept: 465, sent: 45485
+Searched with beam size: 1024, expanded: 29880, elapsed time: 0.06792206
+New dual bound: 56515396, expanded: 29880, elapsed time: 0.067925365
+New primal bound: 79302958, expanded: 29880, elapsed time: 0.067962271
+Searched with beam size: 2048, threads: 96, kept: 841, sent: 84075
+Searched with beam size: 2048, expanded: 60711, elapsed time: 0.151614507
+New dual bound: 59987946, expanded: 60711, elapsed time: 0.151626605
+Searched with beam size: 4096, threads: 96, kept: 1403, sent: 138319
+Searched with beam size: 4096, expanded: 113287, elapsed time: 0.191138102
+New dual bound: 62905547, expanded: 113287, elapsed time: 0.191142759
+Searched with beam size: 8192, threads: 96, kept: 2081, sent: 201843
+Searched with beam size: 8192, expanded: 193409, elapsed time: 0.245389278
+New dual bound: 64589938, expanded: 193409, elapsed time: 0.245393484
+Searched with beam size: 16384, threads: 96, kept: 2467, sent: 237044
+Searched with beam size: 16384, expanded: 293701, elapsed time: 0.307063319
+New dual bound: 67925167, expanded: 293701, elapsed time: 0.307065382
+Searched with beam size: 32768, threads: 96, kept: 2476, sent: 237351
+Searched with beam size: 32768, expanded: 394391, elapsed time: 0.356856649
+Search time: 0.356859163s
+Expanded: 394391
+Generated: 476279
+24 21 8 5 4 26 14 7 13 22 19 16 18 9 23 20 2 11 17 25 3 10 6 1 12 27 15
+best bound: 79302958
+cost: 79302958
+optimal cost: 79302958
+The solution is valid.
+	Command being timed: "python3 /home/fabio/didp-models/tsptw/tsptw_didp.py ../data/tsptw/SolomonPotvinBengio/rc_202.4.txt --config CABS --initial-beam-size 32 --threads 96 --parallel-type 0 --time-out 600"
+	User time (seconds): 28.77
+	System time (seconds): 1.20
+	Percent of CPU this job got: 7784%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.38
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 23040
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 10690
+	Voluntary context switches: 20821
+	Involuntary context switches: 1847
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 16
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+COMMAND: /usr/bin/time -v python3 /home/fabio/didp-models/tsptw/tsptw_didp.py ../data/tsptw/SolomonPotvinBengio/rc_203.1.txt --config CABS --initial-beam-size 32 --threads 96 --parallel-type 0 --time-out 600
+Solver: CABS from DIDPPy v0.10.0
+Searched with beam size: 32, threads: 96, kept: 30, sent: 1133
+Searched with beam size: 32, expanded: 369, elapsed time: 0.009269345
+New dual bound: 30984317, expanded: 369, elapsed time: 0.009271117
+New primal bound: 48693462, expanded: 369, elapsed time: 0.009272539
+Searched with beam size: 64, threads: 96, kept: 34, sent: 2357
+Searched with beam size: 64, expanded: 1137, elapsed time: 0.01689117
+New primal bound: 45893062, expanded: 1137, elapsed time: 0.016927415
+Searched with beam size: 128, threads: 96, kept: 32, sent: 3968
+Searched with beam size: 128, expanded: 2431, elapsed time: 0.043562006
+New primal bound: 45348207, expanded: 2431, elapsed time: 0.043628156
+Searched with beam size: 256, threads: 96, kept: 70, sent: 7475
+Searched with beam size: 256, expanded: 5073, elapsed time: 0.051412978
+New dual bound: 32320351, expanded: 5073, elapsed time: 0.05141465
+Searched with beam size: 512, threads: 96, kept: 125, sent: 14040
+Searched with beam size: 512, expanded: 10241, elapsed time: 0.071451032
+New dual bound: 33288151, expanded: 10241, elapsed time: 0.071452695
+Searched with beam size: 1024, threads: 96, kept: 215, sent: 23081
+Searched with beam size: 1024, expanded: 19320, elapsed time: 0.086263071
+New dual bound: 35137227, expanded: 19320, elapsed time: 0.086264644
+Searched with beam size: 2048, threads: 96, kept: 291, sent: 32433
+Searched with beam size: 2048, expanded: 33302, elapsed time: 0.106832389
+New dual bound: 37096607, expanded: 33302, elapsed time: 0.106834742
+Searched with beam size: 4096, threads: 96, kept: 318, sent: 35842
+Searched with beam size: 4096, expanded: 49819, elapsed time: 0.127802481
+New dual bound: 42313948, expanded: 49819, elapsed time: 0.127804234
+Searched with beam size: 8192, threads: 96, kept: 318, sent: 35872
+Searched with beam size: 8192, expanded: 66380, elapsed time: 0.140677303
+Search time: 0.140684064s
+Expanded: 66380
+Generated: 77296
+17 16 10 13 8 12 3 9 15 11 18 14 7 5 4 6 2 1
+best bound: 45348207
+cost: 45348207
+optimal cost: 45348207
+The solution is valid.
+	Command being timed: "python3 /home/fabio/didp-models/tsptw/tsptw_didp.py ../data/tsptw/SolomonPotvinBengio/rc_203.1.txt --config CABS --initial-beam-size 32 --threads 96 --parallel-type 0 --time-out 600"
+	User time (seconds): 10.01
+	System time (seconds): 0.34
+	Percent of CPU this job got: 6132%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.16
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 13824
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 7235
+	Voluntary context switches: 5537
+	Involuntary context switches: 886
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 16
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+COMMAND: /usr/bin/time -v python3 /home/fabio/didp-models/tsptw/tsptw_didp.py ../data/tsptw/SolomonPotvinBengio/rc_203.2.txt --config CABS --initial-beam-size 32 --threads 96 --parallel-type 0 --time-out 600
+Solver: CABS from DIDPPy v0.10.0
+Searched with beam size: 32, threads: 96, kept: 136, sent: 3979
+Searched with beam size: 32, expanded: 835, elapsed time: 0.004201989
+New dual bound: 5433436, expanded: 835, elapsed time: 0.004205885
+New primal bound: 7926753, expanded: 835, elapsed time: 0.004210632
+Searched with beam size: 64, threads: 96, kept: 138, sent: 7540
+Searched with beam size: 64, expanded: 2445, elapsed time: 0.011010125
+New primal bound: 7920298, expanded: 2445, elapsed time: 0.011046159
+Searched with beam size: 128, threads: 96, kept: 135, sent: 14774
+Searched with beam size: 128, expanded: 5594, elapsed time: 0.032138426
+New dual bound: 5474353, expanded: 5594, elapsed time: 0.032141
+New primal bound: 7859110, expanded: 5594, elapsed time: 0.032177845
+Searched with beam size: 256, threads: 96, kept: 302, sent: 30264
+Searched with beam size: 256, expanded: 12085, elapsed time: 0.067246549
+New dual bound: 5528783, expanded: 12085, elapsed time: 0.067248632
+Searched with beam size: 512, threads: 96, kept: 618, sent: 60700
+Searched with beam size: 512, expanded: 25147, elapsed time: 0.080972207
+New dual bound: 5687160, expanded: 25147, elapsed time: 0.080973819
+New primal bound: 7841582, expanded: 25147, elapsed time: 0.081001921
+Searched with beam size: 1024, threads: 96, kept: 1226, sent: 118261
+Searched with beam size: 1024, expanded: 50335, elapsed time: 0.130298322
+New dual bound: 5934245, expanded: 50335, elapsed time: 0.130300174
+Searched with beam size: 2048, threads: 96, kept: 2336, sent: 221083
+Searched with beam size: 2048, expanded: 97881, elapsed time: 0.16521147
+New dual bound: 6180219, expanded: 97881, elapsed time: 0.165213153
+Searched with beam size: 4096, threads: 96, kept: 4292, sent: 406634
+Searched with beam size: 4096, expanded: 187858, elapsed time: 0.235640239
+New dual bound: 6242391, expanded: 187858, elapsed time: 0.235642141
+Searched with beam size: 8192, threads: 96, kept: 7870, sent: 751867
+Searched with beam size: 8192, expanded: 358895, elapsed time: 0.360424119
+New dual bound: 6295773, expanded: 358895, elapsed time: 0.360425992
+Searched with beam size: 16384, threads: 96, kept: 14517, sent: 1384649
+Searched with beam size: 16384, expanded: 685020, elapsed time: 0.485974458
+New dual bound: 6377262, expanded: 685020, elapsed time: 0.485976111
+Searched with beam size: 32768, threads: 96, kept: 27660, sent: 2614158
+Searched with beam size: 32768, expanded: 1307192, elapsed time: 0.701034043
+New dual bound: 6468651, expanded: 1307192, elapsed time: 0.701036417
+Searched with beam size: 65536, threads: 96, kept: 51931, sent: 4876374
+Searched with beam size: 65536, expanded: 2481309, elapsed time: 1.12187112
+New dual bound: 6588483, expanded: 2481309, elapsed time: 1.121873724
+Searched with beam size: 131072, threads: 96, kept: 93600, sent: 8861370
+Searched with beam size: 131072, expanded: 4657901, elapsed time: 1.872260855
+New dual bound: 6735420, expanded: 4657901, elapsed time: 1.872263459
+Searched with beam size: 262144, threads: 96, kept: 166359, sent: 15729047
+Searched with beam size: 262144, expanded: 8601075, elapsed time: 3.214042854
+New dual bound: 6952248, expanded: 8601075, elapsed time: 3.21404686
+Searched with beam size: 524288, threads: 96, kept: 280743, sent: 26585233
+Searched with beam size: 524288, expanded: 15353673, elapsed time: 5.536650301
+New dual bound: 7210494, expanded: 15353673, elapsed time: 5.536653866
+Searched with beam size: 1048576, threads: 96, kept: 367298, sent: 34799846
+Searched with beam size: 1048576, expanded: 24972398, elapsed time: 8.650122338
+Search time: 8.650126294s
+Expanded: 24972398
+Generated: 34446470
+28 17 13 12 10 11 26 25 21 31 27 3 8 6 14 4 30 16 7 15 5 29 19 22 23 18 20 1 2 9 24 32
+best bound: 7841582
+cost: 7841582
+optimal cost: 7841582
+The solution is valid.
+	Command being timed: "python3 /home/fabio/didp-models/tsptw/tsptw_didp.py ../data/tsptw/SolomonPotvinBengio/rc_203.2.txt --config CABS --initial-beam-size 32 --threads 96 --parallel-type 0 --time-out 600"
+	User time (seconds): 787.73
+	System time (seconds): 9.75
+	Percent of CPU this job got: 9125%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:08.73
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 719016
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 478735
+	Voluntary context switches: 1033539
+	Involuntary context switches: 31147
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 40
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+COMMAND: /usr/bin/time -v python3 /home/fabio/didp-models/tsptw/tsptw_didp.py ../data/tsptw/SolomonPotvinBengio/rc_203.3.txt --config CABS --initial-beam-size 32 --threads 96 --parallel-type 0 --time-out 600
+Solver: CABS from DIDPPy v0.10.0
+Searched with beam size: 32, threads: 96, kept: 142, sent: 4061
+Searched with beam size: 32, expanded: 895, elapsed time: 0.006914436
+New dual bound: 61486408, expanded: 895, elapsed time: 0.006921407
+Searched with beam size: 64, threads: 96, kept: 125, sent: 8007
+Searched with beam size: 64, expanded: 2538, elapsed time: 0.016377724
+Searched with beam size: 128, threads: 96, kept: 178, sent: 16537
+Searched with beam size: 128, expanded: 5901, elapsed time: 0.033481025
+Searched with beam size: 256, threads: 96, kept: 330, sent: 33292
+Searched with beam size: 256, expanded: 13300, elapsed time: 0.058564102
+New dual bound: 61584938, expanded: 13300, elapsed time: 0.058568048
+Searched with beam size: 512, threads: 96, kept: 697, sent: 66112
+Searched with beam size: 512, expanded: 27715, elapsed time: 0.114824945
+New dual bound: 62776718, expanded: 27715, elapsed time: 0.114827419
+New primal bound: 82755499, expanded: 27715, elapsed time: 0.114829873
+Searched with beam size: 1024, threads: 96, kept: 1342, sent: 130133
+Searched with beam size: 1024, expanded: 57139, elapsed time: 0.149117017
+New dual bound: 63114608, expanded: 57139, elapsed time: 0.149120111
+Searched with beam size: 2048, threads: 96, kept: 2707, sent: 257709
+Searched with beam size: 2048, expanded: 116028, elapsed time: 0.241770064
+New dual bound: 63325638, expanded: 116028, elapsed time: 0.241772958
+New primal bound: 82120649, expanded: 116028, elapsed time: 0.241862774
+Searched with beam size: 4096, threads: 96, kept: 5266, sent: 499837
+Searched with beam size: 4096, expanded: 232132, elapsed time: 0.309817214
+New dual bound: 63705688, expanded: 232132, elapsed time: 0.309819647
+Searched with beam size: 8192, threads: 96, kept: 10260, sent: 973623
+Searched with beam size: 8192, expanded: 460459, elapsed time: 0.408434341
+New dual bound: 64033578, expanded: 460459, elapsed time: 0.408437046
+Searched with beam size: 16384, threads: 96, kept: 19660, sent: 1880880
+Searched with beam size: 16384, expanded: 904774, elapsed time: 0.617462596
+New dual bound: 64700228, expanded: 904774, elapsed time: 0.617464309
+Searched with beam size: 32768, threads: 96, kept: 38603, sent: 3679440
+Searched with beam size: 32768, expanded: 1767287, elapsed time: 0.944010057
+New dual bound: 65829628, expanded: 1767287, elapsed time: 0.944013633
+New primal bound: 81993599, expanded: 1767287, elapsed time: 0.944665317
+Searched with beam size: 65536, threads: 96, kept: 74120, sent: 7087856
+Searched with beam size: 65536, expanded: 3418915, elapsed time: 1.564533429
+New dual bound: 66990418, expanded: 3418915, elapsed time: 1.564536774
+Searched with beam size: 131072, threads: 96, kept: 138599, sent: 13269052
+Searched with beam size: 131072, expanded: 6554255, elapsed time: 2.696198451
+New dual bound: 69528468, expanded: 6554255, elapsed time: 2.696201576
+New primal bound: 81752618, expanded: 6554255, elapsed time: 2.696619567
+Searched with beam size: 262144, threads: 96, kept: 252663, sent: 24155121
+Searched with beam size: 262144, expanded: 12435952, elapsed time: 4.829781399
+New dual bound: 72223428, expanded: 12435952, elapsed time: 4.829784464
+Searched with beam size: 524288, threads: 96, kept: 468555, sent: 44608903
+Searched with beam size: 524288, expanded: 23358035, elapsed time: 8.894664386
+New dual bound: 73318278, expanded: 23358035, elapsed time: 8.894668402
+Searched with beam size: 1048576, threads: 96, kept: 824360, sent: 78338120
+Searched with beam size: 1048576, expanded: 43187375, elapsed time: 16.272463779
+New dual bound: 74908698, expanded: 43187375, elapsed time: 16.272467645
+Searched with beam size: 2097152, threads: 96, kept: 1353439, sent: 128432836
+Searched with beam size: 2097152, expanded: 78524213, elapsed time: 28.9016911
+New dual bound: 76793858, expanded: 78524213, elapsed time: 28.901696077
+Searched with beam size: 4194304, threads: 96, kept: 1910582, sent: 181420680
+Searched with beam size: 4194304, expanded: 138604028, elapsed time: 48.196669013
+New dual bound: 79448888, expanded: 138604028, elapsed time: 48.196676505
+Searched with beam size: 8388608, threads: 96, kept: 1996885, sent: 189655806
+Searched with beam size: 8388608, expanded: 206484863, elapsed time: 69.178840145
+Search time: 69.178847255s
+Expanded: 206484863
+Generated: 277023830
+34 31 18 16 13 11 9 8 10 15 14 12 23 24 33 20 29 28 3 1 22 26 36 2 5 17 6 4 25 21 27 7 19 32 35 30
+best bound: 81752618
+cost: 81752618
+optimal cost: 81752618
+The solution is valid.
+	Command being timed: "python3 /home/fabio/didp-models/tsptw/tsptw_didp.py ../data/tsptw/SolomonPotvinBengio/rc_203.3.txt --config CABS --initial-beam-size 32 --threads 96 --parallel-type 0 --time-out 600"
+	User time (seconds): 6280.70
+	System time (seconds): 58.04
+	Percent of CPU this job got: 9125%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 1:09.46
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 3802408
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 2915934
+	Voluntary context switches: 7929818
+	Involuntary context switches: 310899
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 64
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+COMMAND: /usr/bin/time -v python3 /home/fabio/didp-models/tsptw/tsptw_didp.py ../data/tsptw/SolomonPotvinBengio/rc_203.4.txt --config CABS --initial-beam-size 32 --threads 96 --parallel-type 0 --time-out 600
+Solver: CABS from DIDPPy v0.10.0
+Searched with beam size: 32, threads: 96, kept: 71, sent: 1851
+Searched with beam size: 32, expanded: 374, elapsed time: 0.004889948
+New dual bound: 2792674, expanded: 374, elapsed time: 0.004896779
+New primal bound: 3161895, expanded: 374, elapsed time: 0.004902077
+Searched with beam size: 64, threads: 96, kept: 28, sent: 1546
+Searched with beam size: 64, expanded: 871, elapsed time: 0.013216819
+Searched with beam size: 128, threads: 96, kept: 24, sent: 2398
+Searched with beam size: 128, expanded: 1748, elapsed time: 0.027171985
+New dual bound: 2807128, expanded: 1748, elapsed time: 0.027174799
+New primal bound: 3142893, expanded: 1748, elapsed time: 0.027204384
+Searched with beam size: 256, threads: 96, kept: 42, sent: 3874
+Searched with beam size: 256, expanded: 3384, elapsed time: 0.038450957
+New dual bound: 2839937, expanded: 3384, elapsed time: 0.03845294
+Searched with beam size: 512, threads: 96, kept: 68, sent: 5873
+Searched with beam size: 512, expanded: 6287, elapsed time: 0.054274846
+New dual bound: 2896091, expanded: 6287, elapsed time: 0.054276739
+Searched with beam size: 1024, threads: 96, kept: 81, sent: 7272
+Searched with beam size: 1024, expanded: 10421, elapsed time: 0.070610799
+New dual bound: 2967547, expanded: 10421, elapsed time: 0.070612491
+Searched with beam size: 2048, threads: 96, kept: 83, sent: 7374
+Searched with beam size: 2048, expanded: 14684, elapsed time: 0.078428421
+Search time: 0.078429973s
+Expanded: 14684
+Generated: 16416
+11 8 1 2 3 9 10 4 12 7 6 5 14 13
+best bound: 3142893
+cost: 3142893
+optimal cost: 3142893
+The solution is valid.
+	Command being timed: "python3 /home/fabio/didp-models/tsptw/tsptw_didp.py ../data/tsptw/SolomonPotvinBengio/rc_203.4.txt --config CABS --initial-beam-size 32 --threads 96 --parallel-type 0 --time-out 600"
+	User time (seconds): 5.01
+	System time (seconds): 0.28
+	Percent of CPU this job got: 5246%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.10
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 15360
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 6221
+	Voluntary context switches: 2633
+	Involuntary context switches: 618
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 16
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+COMMAND: /usr/bin/time -v python3 /home/fabio/didp-models/tsptw/tsptw_didp.py ../data/tsptw/SolomonPotvinBengio/rc_204.1.txt --config CABS --initial-beam-size 32 --threads 96 --parallel-type 0 --time-out 600
+Solver: CABS from DIDPPy v0.10.0
+Searched with beam size: 32, threads: 96, kept: 378, sent: 10696
+Searched with beam size: 32, expanded: 1096, elapsed time: 0.006251686
+New dual bound: 67846615, expanded: 1096, elapsed time: 0.006255622
+Searched with beam size: 64, threads: 96, kept: 391, sent: 21945
+Searched with beam size: 64, expanded: 3361, elapsed time: 0.015261809
+Searched with beam size: 128, threads: 96, kept: 547, sent: 48822
+Searched with beam size: 128, expanded: 8421, elapsed time: 0.065583844
+New dual bound: 68315982, expanded: 8421, elapsed time: 0.065585416
+New primal bound: 93433274, expanded: 8421, elapsed time: 0.065586888
+Searched with beam size: 256, threads: 96, kept: 950, sent: 82888
+Searched with beam size: 256, expanded: 16992, elapsed time: 0.094136276
+New dual bound: 68441985, expanded: 16992, elapsed time: 0.094137868
+Searched with beam size: 512, threads: 96, kept: 1766, sent: 166971
+Searched with beam size: 512, expanded: 35550, elapsed time: 0.128034494
+New dual bound: 68983085, expanded: 35550, elapsed time: 0.128036147
+Searched with beam size: 1024, threads: 96, kept: 3454, sent: 328287
+Searched with beam size: 1024, expanded: 74976, elapsed time: 0.177452072
+New dual bound: 69603442, expanded: 74976, elapsed time: 0.177453704
+New primal bound: 93043465, expanded: 74976, elapsed time: 0.177539213
+Searched with beam size: 2048, threads: 96, kept: 6691, sent: 639070
+Searched with beam size: 2048, expanded: 147155, elapsed time: 0.2841258
+New dual bound: 70267902, expanded: 147155, elapsed time: 0.284127623
+New primal bound: 92773175, expanded: 147155, elapsed time: 0.2841718
+Searched with beam size: 4096, threads: 96, kept: 13373, sent: 1266006
+Searched with beam size: 4096, expanded: 281146, elapsed time: 0.399140792
+New dual bound: 70524352, expanded: 281146, elapsed time: 0.399149085
+Searched with beam size: 8192, threads: 96, kept: 27885, sent: 2641907
+Searched with beam size: 8192, expanded: 541954, elapsed time: 0.610240403
+New dual bound: 70763902, expanded: 541954, elapsed time: 0.610243398
+Searched with beam size: 16384, threads: 96, kept: 56885, sent: 5380270
+Searched with beam size: 16384, expanded: 1096519, elapsed time: 1.006746535
+New dual bound: 71068794, expanded: 1096519, elapsed time: 1.006748438
+Searched with beam size: 32768, threads: 96, kept: 116520, sent: 11035519
+Searched with beam size: 32768, expanded: 2270079, elapsed time: 1.782437336
+New dual bound: 71422291, expanded: 2270079, elapsed time: 1.78243994
+New primal bound: 87898015, expanded: 2270079, elapsed time: 1.782500111
+Searched with beam size: 65536, threads: 96, kept: 229627, sent: 21723441
+Searched with beam size: 65536, expanded: 4532985, elapsed time: 3.277809113
+New dual bound: 71828415, expanded: 4532985, elapsed time: 3.277812879
+Searched with beam size: 131072, threads: 96, kept: 453172, sent: 42921724
+Searched with beam size: 131072, expanded: 8972094, elapsed time: 6.289244477
+New dual bound: 72292965, expanded: 8972094, elapsed time: 6.289248934
+Searched with beam size: 262144, threads: 96, kept: 871611, sent: 82659506
+Searched with beam size: 262144, expanded: 17713825, elapsed time: 12.444699526
+New dual bound: 72762441, expanded: 17713825, elapsed time: 12.444706206
+New primal bound: 87864015, expanded: 17713825, elapsed time: 12.44479466
+Searched with beam size: 524288, threads: 96, kept: 1683267, sent: 159745182
+Searched with beam size: 524288, expanded: 34846416, elapsed time: 24.40827754
+New dual bound: 73247452, expanded: 34846416, elapsed time: 24.408284931
+Searched with beam size: 1048576, threads: 96, kept: 3235758, sent: 307144575
+Searched with beam size: 1048576, expanded: 68605125, elapsed time: 48.186406471
+New dual bound: 73763025, expanded: 68605125, elapsed time: 48.186413312
+Searched with beam size: 2097152, threads: 96, kept: 6069546, sent: 576386290
+Searched with beam size: 2097152, expanded: 134947032, elapsed time: 93.041186573
+New dual bound: 74350251, expanded: 134947032, elapsed time: 93.041191049
+Searched with beam size: 4194304, threads: 96, kept: 11649025, sent: 1106022147
+Searched with beam size: 4194304, expanded: 265241816, elapsed time: 180.693519351
+New dual bound: 74913753, expanded: 265241816, elapsed time: 180.693522826
+Searched with beam size: 8388608, threads: 96, kept: 22545042, sent: 2140811122
+Searched with beam size: 8388608, expanded: 522143485, elapsed time: 351.681501463
+New dual bound: 75519114, expanded: 522143485, elapsed time: 351.681508523
+Searched with beam size: 16777216, threads: 96, kept: 33022792, sent: 3136049007
+Searched with beam size: 16777216, expanded: 833947525, elapsed time: 609.780432578
+Reached time limit.
+Search time: 609.780444025s
+Expanded: 833947525
+Generated: 2215946857
+40 42 43 44 28 41 33 32 31 22 24 23 20 16 15 17 18 19 21 34 30 39 7 26 25 4 3 1 2 5 6 35 38 9 27 11 10 8 36 29 37 14 13 12 45
+best bound: 75519114
+cost: 87864015
+The solution is valid.
+	Command being timed: "python3 /home/fabio/didp-models/tsptw/tsptw_didp.py ../data/tsptw/SolomonPotvinBengio/rc_204.1.txt --config CABS --initial-beam-size 32 --threads 96 --parallel-type 0 --time-out 600"
+	User time (seconds): 56003.29
+	System time (seconds): 370.37
+	Percent of CPU this job got: 9224%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 10:11.14
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 30034332
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 15908320
+	Voluntary context switches: 57198149
+	Involuntary context switches: 510758
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 96
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+COMMAND: /usr/bin/time -v python3 /home/fabio/didp-models/tsptw/tsptw_didp.py ../data/tsptw/SolomonPotvinBengio/rc_204.2.txt --config CABS --initial-beam-size 32 --threads 96 --parallel-type 0 --time-out 600
+Solver: CABS from DIDPPy v0.10.0
+Searched with beam size: 32, threads: 96, kept: 298, sent: 8582
+Searched with beam size: 32, expanded: 909, elapsed time: 0.005581716
+New dual bound: 51431252, expanded: 909, elapsed time: 0.005586303
+New primal bound: 74309043, expanded: 909, elapsed time: 0.005589938
+Searched with beam size: 64, threads: 96, kept: 308, sent: 17436
+Searched with beam size: 64, expanded: 2759, elapsed time: 0.040324454
+New primal bound: 70699002, expanded: 2759, elapsed time: 0.040358846
+Searched with beam size: 128, threads: 96, kept: 374, sent: 34490
+Searched with beam size: 128, expanded: 6390, elapsed time: 0.051710673
+New dual bound: 51516373, expanded: 6390, elapsed time: 0.051712445
+New primal bound: 67121613, expanded: 6390, elapsed time: 0.051744624
+Searched with beam size: 256, threads: 96, kept: 728, sent: 66332
+Searched with beam size: 256, expanded: 13557, elapsed time: 0.127246212
+New dual bound: 51660412, expanded: 13557, elapsed time: 0.127248004
+New primal bound: 66791814, expanded: 13557, elapsed time: 0.127299963
+Searched with beam size: 512, threads: 96, kept: 1394, sent: 130967
+Searched with beam size: 512, expanded: 28025, elapsed time: 0.189917399
+New dual bound: 52411198, expanded: 28025, elapsed time: 0.189919452
+New primal bound: 66452484, expanded: 28025, elapsed time: 0.189988126
+Searched with beam size: 1024, threads: 96, kept: 2624, sent: 249668
+Searched with beam size: 1024, expanded: 56417, elapsed time: 0.249015726
+New dual bound: 52654302, expanded: 56417, elapsed time: 0.249017579
+Searched with beam size: 2048, threads: 96, kept: 4972, sent: 477192
+Searched with beam size: 2048, expanded: 112410, elapsed time: 0.341882819
+New dual bound: 53167143, expanded: 112410, elapsed time: 0.341886074
+Searched with beam size: 4096, threads: 96, kept: 9498, sent: 923786
+Searched with beam size: 4096, expanded: 223384, elapsed time: 0.417044183
+New dual bound: 53390371, expanded: 223384, elapsed time: 0.417046346
+Searched with beam size: 8192, threads: 96, kept: 18636, sent: 1793925
+Searched with beam size: 8192, expanded: 443100, elapsed time: 0.54128368
+New dual bound: 53701278, expanded: 443100, elapsed time: 0.541285573
+New primal bound: 66325593, expanded: 443100, elapsed time: 0.541387907
+Searched with beam size: 16384, threads: 96, kept: 35361, sent: 3379715
+Searched with beam size: 16384, expanded: 869541, elapsed time: 0.75737204
+New dual bound: 54035922, expanded: 869541, elapsed time: 0.757376757
+Searched with beam size: 32768, threads: 96, kept: 68559, sent: 6499334
+Searched with beam size: 32768, expanded: 1703799, elapsed time: 1.169139938
+New dual bound: 54412481, expanded: 1703799, elapsed time: 1.169142201
+Searched with beam size: 65536, threads: 96, kept: 131209, sent: 12457054
+Searched with beam size: 65536, expanded: 3342060, elapsed time: 1.948212656
+New dual bound: 54868348, expanded: 3342060, elapsed time: 1.9482156000000002
+New primal bound: 66215882, expanded: 3342060, elapsed time: 1.94828171
+Searched with beam size: 131072, threads: 96, kept: 245243, sent: 23237498
+Searched with beam size: 131072, expanded: 6498748, elapsed time: 3.459268984
+New dual bound: 55421812, expanded: 6498748, elapsed time: 3.4592718590000002
+Searched with beam size: 262144, threads: 96, kept: 468429, sent: 44423261
+Searched with beam size: 262144, expanded: 12649924, elapsed time: 6.484094984
+New dual bound: 56014293, expanded: 12649924, elapsed time: 6.48409879
+Searched with beam size: 524288, threads: 96, kept: 872672, sent: 82918786
+Searched with beam size: 524288, expanded: 24549447, elapsed time: 12.264074297
+New dual bound: 56621258, expanded: 24549447, elapsed time: 12.264078002
+Searched with beam size: 1048576, threads: 96, kept: 1633633, sent: 155161640
+Searched with beam size: 1048576, expanded: 47432605, elapsed time: 23.592983239
+New dual bound: 57212587, expanded: 47432605, elapsed time: 23.59300424
+Searched with beam size: 2097152, threads: 96, kept: 3021803, sent: 287106060
+Searched with beam size: 2097152, expanded: 91460020, elapsed time: 45.519714827
+New dual bound: 57791322, expanded: 91460020, elapsed time: 45.519718773
+Searched with beam size: 4194304, threads: 96, kept: 5586036, sent: 530575271
+Searched with beam size: 4194304, expanded: 175320076, elapsed time: 87.363122612
+New dual bound: 58454702, expanded: 175320076, elapsed time: 87.363129973
+Searched with beam size: 8388608, threads: 96, kept: 10142233, sent: 963380124
+Searched with beam size: 8388608, expanded: 334010437, elapsed time: 164.250297552
+New dual bound: 59250009, expanded: 334010437, elapsed time: 164.250301418
+Searched with beam size: 16777216, threads: 96, kept: 18345771, sent: 1742791650
+Searched with beam size: 16777216, expanded: 632518915, elapsed time: 312.816948791
+New dual bound: 60150088, expanded: 632518915, elapsed time: 312.816952397
+Searched with beam size: 33554432, threads: 96, kept: 33065021, sent: 3140870377
+Searched with beam size: 33554432, expanded: 1168754576, elapsed time: 604.839961896
+Reached time limit.
+Search time: 604.839974445s
+Expanded: 1168754576
+Generated: 2258186609
+29 21 22 17 20 25 11 13 8 7 12 9 10 18 3 6 4 5 15 32 2 27 19 30 23 26 14 24 31 28 1 16
+best bound: 60150088
+cost: 66215882
+The solution is valid.
+	Command being timed: "python3 /home/fabio/didp-models/tsptw/tsptw_didp.py ../data/tsptw/SolomonPotvinBengio/rc_204.2.txt --config CABS --initial-beam-size 32 --threads 96 --parallel-type 0 --time-out 600"
+	User time (seconds): 51208.14
+	System time (seconds): 586.15
+	Percent of CPU this job got: 8535%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 10:06.78
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 38612504
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 22118383
+	Voluntary context switches: 95479270
+	Involuntary context switches: 1536143
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 88
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+COMMAND: /usr/bin/time -v python3 /home/fabio/didp-models/tsptw/tsptw_didp.py ../data/tsptw/SolomonPotvinBengio/rc_204.3.txt --config CABS --initial-beam-size 32 --threads 96 --parallel-type 0 --time-out 600
+Solver: CABS from DIDPPy v0.10.0
+Searched with beam size: 32, threads: 96, kept: 197, sent: 6117
+Searched with beam size: 32, expanded: 673, elapsed time: 0.007064187
+New dual bound: 3861992, expanded: 673, elapsed time: 0.007067743
+New primal bound: 4672185, expanded: 673, elapsed time: 0.007069916
+Searched with beam size: 64, threads: 96, kept: 158, sent: 10268
+Searched with beam size: 64, expanded: 1921, elapsed time: 0.013446464
+New dual bound: 3874480, expanded: 1921, elapsed time: 0.013449198
+Searched with beam size: 128, threads: 96, kept: 228, sent: 23011
+Searched with beam size: 128, expanded: 4404, elapsed time: 0.045000686
+Searched with beam size: 256, threads: 96, kept: 443, sent: 45403
+Searched with beam size: 256, expanded: 9310, elapsed time: 0.065436093
+New dual bound: 3948982, expanded: 9310, elapsed time: 0.065438617
+Searched with beam size: 512, threads: 96, kept: 903, sent: 89761
+Searched with beam size: 512, expanded: 18998, elapsed time: 0.078104711
+New dual bound: 3987615, expanded: 18998, elapsed time: 0.078107125
+Searched with beam size: 1024, threads: 96, kept: 1819, sent: 175715
+Searched with beam size: 1024, expanded: 37953, elapsed time: 0.117564493
+New dual bound: 4030445, expanded: 37953, elapsed time: 0.117566856
+New primal bound: 4639058, expanded: 37953, elapsed time: 0.117623111
+Searched with beam size: 2048, threads: 96, kept: 3472, sent: 344260
+Searched with beam size: 2048, expanded: 74920, elapsed time: 0.178081551
+New dual bound: 4070688, expanded: 74920, elapsed time: 0.178085006
+Searched with beam size: 4096, threads: 96, kept: 6791, sent: 663076
+Searched with beam size: 4096, expanded: 147299, elapsed time: 0.258939263
+New dual bound: 4109604, expanded: 147299, elapsed time: 0.258940996
+New primal bound: 4619286, expanded: 147299, elapsed time: 0.258971222
+Searched with beam size: 8192, threads: 96, kept: 12801, sent: 1236095
+Searched with beam size: 8192, expanded: 285796, elapsed time: 0.34603253
+New dual bound: 4145783, expanded: 285796, elapsed time: 0.346035455
+Searched with beam size: 16384, threads: 96, kept: 23974, sent: 2302497
+Searched with beam size: 16384, expanded: 554769, elapsed time: 0.479581863
+New dual bound: 4187745, expanded: 554769, elapsed time: 0.479587151
+Searched with beam size: 32768, threads: 96, kept: 43922, sent: 4176187
+Searched with beam size: 32768, expanded: 1071868, elapsed time: 0.755155268
+New dual bound: 4233513, expanded: 1071868, elapsed time: 0.75515701
+New primal bound: 4601596, expanded: 1071868, elapsed time: 0.755393958
+Searched with beam size: 65536, threads: 96, kept: 74521, sent: 7084338
+Searched with beam size: 65536, expanded: 2048552, elapsed time: 1.175118219
+New dual bound: 4276669, expanded: 2048552, elapsed time: 1.175120883
+New primal bound: 4550315, expanded: 2048552, elapsed time: 1.175208405
+Searched with beam size: 131072, threads: 96, kept: 101924, sent: 9694651
+Searched with beam size: 131072, expanded: 3833801, elapsed time: 1.8549964989999999
+New dual bound: 4317906, expanded: 3833801, elapsed time: 1.854999013
+Searched with beam size: 262144, threads: 96, kept: 162021, sent: 15366784
+Searched with beam size: 262144, expanded: 7163225, elapsed time: 3.090702232
+New dual bound: 4360527, expanded: 7163225, elapsed time: 3.090704586
+Searched with beam size: 524288, threads: 96, kept: 251565, sent: 23923340
+Searched with beam size: 524288, expanded: 13193631, elapsed time: 5.15638372
+New dual bound: 4404514, expanded: 13193631, elapsed time: 5.156387136
+Searched with beam size: 1048576, threads: 96, kept: 373413, sent: 35530105
+Searched with beam size: 1048576, expanded: 23779289, elapsed time: 8.52066228
+New dual bound: 4452880, expanded: 23779289, elapsed time: 8.520669491
+Searched with beam size: 2097152, threads: 96, kept: 482412, sent: 45895386
+Searched with beam size: 2097152, expanded: 40844548, elapsed time: 13.423996323
+New dual bound: 4509495, expanded: 40844548, elapsed time: 13.424000088
+Searched with beam size: 4194304, threads: 96, kept: 504453, sent: 47995610
+Searched with beam size: 4194304, expanded: 61026328, elapsed time: 18.892814407
+Search time: 18.892822159s
+Expanded: 61026328
+Generated: 75549088
+22 21 16 15 9 6 4 2 1 3 5 7 8 10 14 12 19 13 20 17 11 18 23
+best bound: 4550315
+cost: 4550315
+optimal cost: 4550315
+The solution is valid.
+	Command being timed: "python3 /home/fabio/didp-models/tsptw/tsptw_didp.py ../data/tsptw/SolomonPotvinBengio/rc_204.3.txt --config CABS --initial-beam-size 32 --threads 96 --parallel-type 0 --time-out 600"
+	User time (seconds): 1694.45
+	System time (seconds): 20.82
+	Percent of CPU this job got: 8998%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:19.06
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 2025620
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 1530092
+	Voluntary context switches: 1953520
+	Involuntary context switches: 92435
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 48
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+COMMAND: /usr/bin/time -v python3 /home/fabio/didp-models/tsptw/tsptw_didp.py ../data/tsptw/SolomonPotvinBengio/rc_205.1.txt --config CABS --initial-beam-size 32 --threads 96 --parallel-type 0 --time-out 600
+Solver: CABS from DIDPPy v0.10.0
+Searched with beam size: 32, threads: 96, kept: 9, sent: 266
+Searched with beam size: 32, expanded: 136, elapsed time: 0.012064415
+New dual bound: 26049659, expanded: 136, elapsed time: 0.01206789
+New primal bound: 34320948, expanded: 136, elapsed time: 0.012081191
+Searched with beam size: 64, threads: 96, kept: 7, sent: 170
+Searched with beam size: 64, expanded: 252, elapsed time: 0.017421232
+Searched with beam size: 128, threads: 96, kept: 5, sent: 210
+Searched with beam size: 128, expanded: 402, elapsed time: 0.041894001
+Searched with beam size: 256, threads: 96, kept: 5, sent: 245
+Searched with beam size: 256, expanded: 584, elapsed time: 0.049017628
+New dual bound: 33624589, expanded: 584, elapsed time: 0.049019251
+Searched with beam size: 512, threads: 96, kept: 5, sent: 252
+Searched with beam size: 512, expanded: 772, elapsed time: 0.05612477
+Search time: 0.056126272s
+Expanded: 772
+Generated: 821
+12 11 1 3 6 8 9 7 4 2 5 10 13
+best bound: 34320948
+cost: 34320948
+optimal cost: 34320948
+The solution is valid.
+	Command being timed: "python3 /home/fabio/didp-models/tsptw/tsptw_didp.py ../data/tsptw/SolomonPotvinBengio/rc_205.1.txt --config CABS --initial-beam-size 32 --threads 96 --parallel-type 0 --time-out 600"
+	User time (seconds): 3.25
+	System time (seconds): 0.12
+	Percent of CPU this job got: 4169%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.08
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 15360
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 6064
+	Voluntary context switches: 1693
+	Involuntary context switches: 200
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 16
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+COMMAND: /usr/bin/time -v python3 /home/fabio/didp-models/tsptw/tsptw_didp.py ../data/tsptw/SolomonPotvinBengio/rc_205.2.txt --config CABS --initial-beam-size 32 --threads 96 --parallel-type 0 --time-out 600
+Solver: CABS from DIDPPy v0.10.0
+Searched with beam size: 32, threads: 96, kept: 14, sent: 552
+Searched with beam size: 32, expanded: 238, elapsed time: 0.002585848
+New dual bound: 5098091, expanded: 238, elapsed time: 0.002590826
+Searched with beam size: 64, threads: 96, kept: 13, sent: 891
+Searched with beam size: 64, expanded: 665, elapsed time: 0.007457061
+New dual bound: 5161320, expanded: 665, elapsed time: 0.007458613
+Searched with beam size: 128, threads: 96, kept: 13, sent: 1757
+Searched with beam size: 128, expanded: 1464, elapsed time: 0.015836917
+New primal bound: 7843847, expanded: 1464, elapsed time: 0.015838559
+Searched with beam size: 256, threads: 96, kept: 31, sent: 3471
+Searched with beam size: 256, expanded: 3192, elapsed time: 0.029904108
+New dual bound: 5943146, expanded: 3192, elapsed time: 0.029905761
+New primal bound: 7559257, expanded: 3192, elapsed time: 0.02991862
+Searched with beam size: 512, threads: 96, kept: 47, sent: 5433
+Searched with beam size: 512, expanded: 6000, elapsed time: 0.052090252
+New dual bound: 6179391, expanded: 6000, elapsed time: 0.052091874
+Searched with beam size: 1024, threads: 96, kept: 66, sent: 6823
+Searched with beam size: 1024, expanded: 9635, elapsed time: 0.061243526
+New dual bound: 6414993, expanded: 9635, elapsed time: 0.061245119
+Searched with beam size: 2048, threads: 96, kept: 67, sent: 6998
+Searched with beam size: 2048, expanded: 13388, elapsed time: 0.070302809
+Search time: 0.070304592s
+Expanded: 13388
+Generated: 14859
+12 17 22 4 3 1 11 9 6 7 23 14 24 25 10 13 8 16 15 19 26 21 2 5 18 20
+best bound: 7559257
+cost: 7559257
+optimal cost: 7559257
+The solution is valid.
+	Command being timed: "python3 /home/fabio/didp-models/tsptw/tsptw_didp.py ../data/tsptw/SolomonPotvinBengio/rc_205.2.txt --config CABS --initial-beam-size 32 --threads 96 --parallel-type 0 --time-out 600"
+	User time (seconds): 4.68
+	System time (seconds): 0.27
+	Percent of CPU this job got: 5214%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.09
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 18432
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 6597
+	Voluntary context switches: 2967
+	Involuntary context switches: 300
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+COMMAND: /usr/bin/time -v python3 /home/fabio/didp-models/tsptw/tsptw_didp.py ../data/tsptw/SolomonPotvinBengio/rc_205.3.txt --config CABS --initial-beam-size 32 --threads 96 --parallel-type 0 --time-out 600
+Solver: CABS from DIDPPy v0.10.0
+Searched with beam size: 32, threads: 96, kept: 78, sent: 3030
+Searched with beam size: 32, expanded: 753, elapsed time: 0.004217234
+New dual bound: 5959207, expanded: 753, elapsed time: 0.004219407
+Searched with beam size: 64, threads: 96, kept: 82, sent: 5577
+Searched with beam size: 64, expanded: 2158, elapsed time: 0.010875207
+Searched with beam size: 128, threads: 96, kept: 86, sent: 8090
+Searched with beam size: 128, expanded: 4413, elapsed time: 0.020807019
+New dual bound: 5995052, expanded: 4413, elapsed time: 0.020810915
+Searched with beam size: 256, threads: 96, kept: 188, sent: 17498
+Searched with beam size: 256, expanded: 9460, elapsed time: 0.034857666
+New dual bound: 6065762, expanded: 9460, elapsed time: 0.034859228
+Searched with beam size: 512, threads: 96, kept: 371, sent: 35199
+Searched with beam size: 512, expanded: 19818, elapsed time: 0.072820104
+New dual bound: 6125474, expanded: 19818, elapsed time: 0.072822858
+New primal bound: 8250584, expanded: 19818, elapsed time: 0.07282444
+Searched with beam size: 1024, threads: 96, kept: 659, sent: 60571
+Searched with beam size: 1024, expanded: 38483, elapsed time: 0.119994526
+New dual bound: 6322772, expanded: 38483, elapsed time: 0.119996639
+Searched with beam size: 2048, threads: 96, kept: 1004, sent: 96667
+Searched with beam size: 2048, expanded: 69623, elapsed time: 0.157519162
+New dual bound: 6461060, expanded: 69623, elapsed time: 0.157521346
+Searched with beam size: 4096, threads: 96, kept: 1752, sent: 168147
+Searched with beam size: 4096, expanded: 126844, elapsed time: 0.206768911
+New dual bound: 6656463, expanded: 126844, elapsed time: 0.206770734
+Searched with beam size: 8192, threads: 96, kept: 3039, sent: 296548
+Searched with beam size: 8192, expanded: 230573, elapsed time: 0.25752135
+New dual bound: 6780579, expanded: 230573, elapsed time: 0.257523133
+Searched with beam size: 16384, threads: 96, kept: 4984, sent: 480996
+Searched with beam size: 16384, expanded: 401642, elapsed time: 0.350201171
+New dual bound: 6972019, expanded: 401642, elapsed time: 0.350203074
+Searched with beam size: 32768, threads: 96, kept: 6911, sent: 652483
+Searched with beam size: 32768, expanded: 636547, elapsed time: 0.470605646
+New dual bound: 7436249, expanded: 636547, elapsed time: 0.470607379
+Searched with beam size: 65536, threads: 96, kept: 6916, sent: 653489
+Searched with beam size: 65536, expanded: 872010, elapsed time: 0.596501822
+Search time: 0.596506639s
+Expanded: 872010
+Generated: 1089743
+23 19 29 22 28 33 30 8 9 16 24 26 27 6 5 2 7 15 4 3 1 20 32 18 14 13 12 31 17 10 25 11 21 34
+best bound: 8250584
+cost: 8250584
+optimal cost: 8250584
+The solution is valid.
+	Command being timed: "python3 /home/fabio/didp-models/tsptw/tsptw_didp.py ../data/tsptw/SolomonPotvinBengio/rc_205.3.txt --config CABS --initial-beam-size 32 --threads 96 --parallel-type 0 --time-out 600"
+	User time (seconds): 50.27
+	System time (seconds): 1.80
+	Percent of CPU this job got: 8332%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.62
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 30720
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 17720
+	Voluntary context switches: 34254
+	Involuntary context switches: 2577
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+COMMAND: /usr/bin/time -v python3 /home/fabio/didp-models/tsptw/tsptw_didp.py ../data/tsptw/SolomonPotvinBengio/rc_205.4.txt --config CABS --initial-beam-size 32 --threads 96 --parallel-type 0 --time-out 600
+Solver: CABS from DIDPPy v0.10.0
+Searched with beam size: 32, threads: 96, kept: 18, sent: 573
+Searched with beam size: 32, expanded: 252, elapsed time: 0.008352284
+New dual bound: 51260320, expanded: 252, elapsed time: 0.008355398
+Searched with beam size: 64, threads: 96, kept: 18, sent: 954
+Searched with beam size: 64, expanded: 692, elapsed time: 0.014111779
+New primal bound: 77319700, expanded: 692, elapsed time: 0.014115595
+Searched with beam size: 128, threads: 96, kept: 15, sent: 1489
+Searched with beam size: 128, expanded: 1330, elapsed time: 0.024542334
+New dual bound: 51794870, expanded: 1330, elapsed time: 0.024544958
+Searched with beam size: 256, threads: 96, kept: 25, sent: 2401
+Searched with beam size: 256, expanded: 2439, elapsed time: 0.032913797
+New dual bound: 52372589, expanded: 2439, elapsed time: 0.032915369
+Searched with beam size: 512, threads: 96, kept: 42, sent: 3720
+Searched with beam size: 512, expanded: 4265, elapsed time: 0.044694713
+New dual bound: 54487230, expanded: 4265, elapsed time: 0.044696766
+New primal bound: 76047039, expanded: 4265, elapsed time: 0.044759942
+Searched with beam size: 1024, threads: 96, kept: 49, sent: 4311
+Searched with beam size: 1024, expanded: 6425, elapsed time: 0.063924578
+New dual bound: 56380929, expanded: 6425, elapsed time: 0.063927633
+Searched with beam size: 2048, threads: 96, kept: 50, sent: 4415
+Searched with beam size: 2048, expanded: 8652, elapsed time: 0.080256613
+Search time: 0.080258246s
+Expanded: 8652
+Generated: 9906
+8 5 9 16 21 15 6 4 7 17 20 24 27 23 2 13 22 3 14 18 1 12 10 11 26 25 19
+best bound: 76047039
+cost: 76047039
+optimal cost: 76047039
+The solution is valid.
+	Command being timed: "python3 /home/fabio/didp-models/tsptw/tsptw_didp.py ../data/tsptw/SolomonPotvinBengio/rc_205.4.txt --config CABS --initial-beam-size 32 --threads 96 --parallel-type 0 --time-out 600"
+	User time (seconds): 5.17
+	System time (seconds): 0.23
+	Percent of CPU this job got: 4966%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.10
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 16896
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 6386
+	Voluntary context switches: 2934
+	Involuntary context switches: 501
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+COMMAND: /usr/bin/time -v python3 /home/fabio/didp-models/tsptw/tsptw_didp.py ../data/tsptw/SolomonPotvinBengio/rc_206.1.txt --config CABS --initial-beam-size 32 --threads 96 --parallel-type 0 --time-out 600
+Solver: CABS from DIDPPy v0.10.0
+Searched with beam size: 32, threads: 96, kept: 1, sent: 17
+Searched with beam size: 32, expanded: 13, elapsed time: 0.003028788
+New dual bound: 1178478, expanded: 13, elapsed time: 0.003030611
+New primal bound: 1178478, expanded: 13, elapsed time: 0.003034056
+Search time: 0.003034056s
+Expanded: 13
+Generated: 14
+2 1 3
+best bound: 1178478
+cost: 1178478
+optimal cost: 1178478
+The solution is valid.
+	Command being timed: "python3 /home/fabio/didp-models/tsptw/tsptw_didp.py ../data/tsptw/SolomonPotvinBengio/rc_206.1.txt --config CABS --initial-beam-size 32 --threads 96 --parallel-type 0 --time-out 600"
+	User time (seconds): 0.06
+	System time (seconds): 0.02
+	Percent of CPU this job got: 358%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.02
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 13824
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 2249
+	Voluntary context switches: 137
+	Involuntary context switches: 1
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+COMMAND: /usr/bin/time -v python3 /home/fabio/didp-models/tsptw/tsptw_didp.py ../data/tsptw/SolomonPotvinBengio/rc_206.2.txt --config CABS --initial-beam-size 32 --threads 96 --parallel-type 0 --time-out 600
+Solver: CABS from DIDPPy v0.10.0
+Searched with beam size: 32, threads: 96, kept: 65, sent: 1854
+Searched with beam size: 32, expanded: 513, elapsed time: 0.003553601
+New dual bound: 58085337, expanded: 513, elapsed time: 0.003557908
+Searched with beam size: 64, threads: 96, kept: 53, sent: 3265
+Searched with beam size: 64, expanded: 1452, elapsed time: 0.009825301
+New dual bound: 58233177, expanded: 1452, elapsed time: 0.009826723
+Searched with beam size: 128, threads: 96, kept: 75, sent: 5851
+Searched with beam size: 128, expanded: 3319, elapsed time: 0.0250021
+Searched with beam size: 256, threads: 96, kept: 161, sent: 14238
+Searched with beam size: 256, expanded: 8086, elapsed time: 0.048493416
+New dual bound: 59007207, expanded: 8086, elapsed time: 0.048495369
+New primal bound: 85154387, expanded: 8086, elapsed time: 0.048496941
+Searched with beam size: 512, threads: 96, kept: 390, sent: 35401
+Searched with beam size: 512, expanded: 19599, elapsed time: 0.082645575
+New dual bound: 59829076, expanded: 19599, elapsed time: 0.082648589
+New primal bound: 83313298, expanded: 19599, elapsed time: 0.082684674
+Searched with beam size: 1024, threads: 96, kept: 711, sent: 64960
+Searched with beam size: 1024, expanded: 41986, elapsed time: 0.128341001
+New dual bound: 60915687, expanded: 41986, elapsed time: 0.128342643
+New primal bound: 82805908, expanded: 41986, elapsed time: 0.128412799
+Searched with beam size: 2048, threads: 96, kept: 1166, sent: 111230
+Searched with beam size: 2048, expanded: 81728, elapsed time: 0.156495354
+New dual bound: 63263827, expanded: 81728, elapsed time: 0.156496976
+Searched with beam size: 4096, threads: 96, kept: 1749, sent: 164223
+Searched with beam size: 4096, expanded: 142778, elapsed time: 0.217975007
+New dual bound: 65860926, expanded: 142778, elapsed time: 0.21797661
+Searched with beam size: 8192, threads: 96, kept: 1913, sent: 181058
+Searched with beam size: 8192, expanded: 210816, elapsed time: 0.256539055
+New dual bound: 71776086, expanded: 210816, elapsed time: 0.256540718
+Searched with beam size: 16384, threads: 96, kept: 1913, sent: 181095
+Searched with beam size: 16384, expanded: 278867, elapsed time: 0.313257732
+Search time: 0.313259445s
+Expanded: 278867
+Generated: 343971
+34 35 27 19 20 26 15 18 22 9 7 4 23 29 28 14 5 13 8 16 30 31 1 2 3 36 17 21 6 10 24 11 12 32 33 25
+best bound: 82805908
+cost: 82805908
+optimal cost: 82805908
+The solution is valid.
+	Command being timed: "python3 /home/fabio/didp-models/tsptw/tsptw_didp.py ../data/tsptw/SolomonPotvinBengio/rc_206.2.txt --config CABS --initial-beam-size 32 --threads 96 --parallel-type 0 --time-out 600"
+	User time (seconds): 25.93
+	System time (seconds): 0.76
+	Percent of CPU this job got: 7762%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.34
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 18432
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 8445
+	Voluntary context switches: 14162
+	Involuntary context switches: 1222
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+COMMAND: /usr/bin/time -v python3 /home/fabio/didp-models/tsptw/tsptw_didp.py ../data/tsptw/SolomonPotvinBengio/rc_206.3.txt --config CABS --initial-beam-size 32 --threads 96 --parallel-type 0 --time-out 600
+Solver: CABS from DIDPPy v0.10.0
+Searched with beam size: 32, threads: 96, kept: 33, sent: 1186
+Searched with beam size: 32, expanded: 460, elapsed time: 0.003408162
+New dual bound: 4177946, expanded: 460, elapsed time: 0.003410996
+New primal bound: 6326403, expanded: 460, elapsed time: 0.003412348
+Searched with beam size: 64, threads: 96, kept: 37, sent: 2708
+Searched with beam size: 64, expanded: 1369, elapsed time: 0.008879762
+New dual bound: 4336350, expanded: 1369, elapsed time: 0.008881324
+Searched with beam size: 128, threads: 96, kept: 53, sent: 5084
+Searched with beam size: 128, expanded: 3087, elapsed time: 0.022330892
+New primal bound: 6042421, expanded: 3087, elapsed time: 0.022366206
+Searched with beam size: 256, threads: 96, kept: 105, sent: 9576
+Searched with beam size: 256, expanded: 6503, elapsed time: 0.045905654
+New dual bound: 4397946, expanded: 6503, elapsed time: 0.045908599
+New primal bound: 5879165, expanded: 6503, elapsed time: 0.045953126
+Searched with beam size: 512, threads: 96, kept: 187, sent: 18577
+Searched with beam size: 512, expanded: 13088, elapsed time: 0.055706749
+New dual bound: 4472279, expanded: 13088, elapsed time: 0.055708371
+New primal bound: 5755465, expanded: 13088, elapsed time: 0.055732898
+Searched with beam size: 1024, threads: 96, kept: 345, sent: 33738
+Searched with beam size: 1024, expanded: 25160, elapsed time: 0.104885209
+New dual bound: 4566068, expanded: 25160, elapsed time: 0.104887052
+New primal bound: 5744180, expanded: 25160, elapsed time: 0.104919852
+Searched with beam size: 2048, threads: 96, kept: 604, sent: 54674
+Searched with beam size: 2048, expanded: 45748, elapsed time: 0.139072593
+New dual bound: 4721682, expanded: 45748, elapsed time: 0.139074435
+Searched with beam size: 4096, threads: 96, kept: 789, sent: 75593
+Searched with beam size: 4096, expanded: 76176, elapsed time: 0.177310878
+New dual bound: 4937485, expanded: 76176, elapsed time: 0.177312691
+Searched with beam size: 8192, threads: 96, kept: 884, sent: 85492
+Searched with beam size: 8192, expanded: 111776, elapsed time: 0.211641056
+New dual bound: 5459653, expanded: 111776, elapsed time: 0.211642648
+Searched with beam size: 16384, threads: 96, kept: 884, sent: 85503
+Searched with beam size: 16384, expanded: 147383, elapsed time: 0.244341681
+Search time: 0.244343294s
+Expanded: 147383
+Generated: 179204
+22 6 4 2 3 5 8 18 17 20 21 12 10 11 13 16 23 24 9 1 7 14 15 19
+best bound: 5744180
+cost: 5744180
+optimal cost: 5744180
+The solution is valid.
+	Command being timed: "python3 /home/fabio/didp-models/tsptw/tsptw_didp.py ../data/tsptw/SolomonPotvinBengio/rc_206.3.txt --config CABS --initial-beam-size 32 --threads 96 --parallel-type 0 --time-out 600"
+	User time (seconds): 19.35
+	System time (seconds): 0.78
+	Percent of CPU this job got: 7377%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.27
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 13824
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 8295
+	Voluntary context switches: 10806
+	Involuntary context switches: 1584
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+COMMAND: /usr/bin/time -v python3 /home/fabio/didp-models/tsptw/tsptw_didp.py ../data/tsptw/SolomonPotvinBengio/rc_206.4.txt --config CABS --initial-beam-size 32 --threads 96 --parallel-type 0 --time-out 600
+Solver: CABS from DIDPPy v0.10.0
+Searched with beam size: 32, threads: 96, kept: 91, sent: 2372
+Searched with beam size: 32, expanded: 614, elapsed time: 0.004553763
+New dual bound: 56618767, expanded: 614, elapsed time: 0.004557759
+Searched with beam size: 64, threads: 96, kept: 76, sent: 3915
+Searched with beam size: 64, expanded: 1639, elapsed time: 0.017192336
+New dual bound: 56908257, expanded: 1639, elapsed time: 0.017197193
+Searched with beam size: 128, threads: 96, kept: 49, sent: 7436
+Searched with beam size: 128, expanded: 3875, elapsed time: 0.054912638
+Searched with beam size: 256, threads: 96, kept: 129, sent: 14647
+Searched with beam size: 256, expanded: 8683, elapsed time: 0.086177093
+New dual bound: 58007641, expanded: 8683, elapsed time: 0.086178855
+Searched with beam size: 512, threads: 96, kept: 300, sent: 30110
+Searched with beam size: 512, expanded: 19511, elapsed time: 0.102003594
+New dual bound: 58338400, expanded: 19511, elapsed time: 0.102005096
+New primal bound: 83371601, expanded: 19511, elapsed time: 0.102006578
+Searched with beam size: 1024, threads: 96, kept: 581, sent: 56413
+Searched with beam size: 1024, expanded: 40371, elapsed time: 0.13604127
+New dual bound: 59412690, expanded: 40371, elapsed time: 0.136045566
+Searched with beam size: 2048, threads: 96, kept: 1477, sent: 143516
+Searched with beam size: 2048, expanded: 89400, elapsed time: 0.18066734
+New dual bound: 61395161, expanded: 89400, elapsed time: 0.180669163
+New primal bound: 83167015, expanded: 89400, elapsed time: 0.180791287
+Searched with beam size: 4096, threads: 96, kept: 2934, sent: 270680
+Searched with beam size: 4096, expanded: 178255, elapsed time: 0.238896791
+New dual bound: 63501646, expanded: 178255, elapsed time: 0.238898734
+Searched with beam size: 8192, threads: 96, kept: 4350, sent: 405358
+Searched with beam size: 8192, expanded: 315109, elapsed time: 0.332041014
+New dual bound: 65219836, expanded: 315109, elapsed time: 0.332042857
+Searched with beam size: 16384, threads: 96, kept: 4749, sent: 449211
+Searched with beam size: 16384, expanded: 468188, elapsed time: 0.431175561
+New dual bound: 71051577, expanded: 468188, elapsed time: 0.431177313
+Searched with beam size: 32768, threads: 96, kept: 4749, sent: 449284
+Searched with beam size: 32768, expanded: 621297, elapsed time: 0.52073805
+Search time: 0.520740153s
+Expanded: 621297
+Generated: 775419
+2 18 5 10 11 20 13 12 9 36 32 26 35 31 21 29 28 30 7 6 8 19 3 17 15 16 22 34 33 25 23 37 27 1 4 24 14
+best bound: 83167015
+cost: 83167015
+optimal cost: 83167015
+The solution is valid.
+	Command being timed: "python3 /home/fabio/didp-models/tsptw/tsptw_didp.py ../data/tsptw/SolomonPotvinBengio/rc_206.4.txt --config CABS --initial-beam-size 32 --threads 96 --parallel-type 0 --time-out 600"
+	User time (seconds): 44.30
+	System time (seconds): 1.22
+	Percent of CPU this job got: 8262%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.55
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 19968
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 10743
+	Voluntary context switches: 26959
+	Involuntary context switches: 2134
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 16
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+COMMAND: /usr/bin/time -v python3 /home/fabio/didp-models/tsptw/tsptw_didp.py ../data/tsptw/SolomonPotvinBengio/rc_207.1.txt --config CABS --initial-beam-size 32 --threads 96 --parallel-type 0 --time-out 600
+Solver: CABS from DIDPPy v0.10.0
+Searched with beam size: 32, threads: 96, kept: 150, sent: 4867
+Searched with beam size: 32, expanded: 899, elapsed time: 0.004494824
+New dual bound: 5228252, expanded: 899, elapsed time: 0.004500242
+New primal bound: 7516430, expanded: 899, elapsed time: 0.004503416
+Searched with beam size: 64, threads: 96, kept: 133, sent: 9227
+Searched with beam size: 64, expanded: 2571, elapsed time: 0.016260116
+New dual bound: 5271225, expanded: 2571, elapsed time: 0.016263862
+Searched with beam size: 128, threads: 96, kept: 180, sent: 16873
+Searched with beam size: 128, expanded: 5772, elapsed time: 0.03039444
+New primal bound: 7452648, expanded: 5772, elapsed time: 0.030423253
+Searched with beam size: 256, threads: 96, kept: 363, sent: 35279
+Searched with beam size: 256, expanded: 12423, elapsed time: 0.07279735
+New dual bound: 5423198, expanded: 12423, elapsed time: 0.07280444
+New primal bound: 7382615, expanded: 12423, elapsed time: 0.072844671
+Searched with beam size: 512, threads: 96, kept: 716, sent: 67567
+Searched with beam size: 512, expanded: 25474, elapsed time: 0.095645103
+New dual bound: 5439312, expanded: 25474, elapsed time: 0.095646965
+New primal bound: 7369095, expanded: 25474, elapsed time: 0.095684692
+Searched with beam size: 1024, threads: 96, kept: 1363, sent: 130718
+Searched with beam size: 1024, expanded: 51577, elapsed time: 0.135136232
+New dual bound: 5488802, expanded: 51577, elapsed time: 0.135138736
+New primal bound: 7326829, expanded: 51577, elapsed time: 0.135210484
+Searched with beam size: 2048, threads: 96, kept: 2651, sent: 245361
+Searched with beam size: 2048, expanded: 101894, elapsed time: 0.203006293
+New dual bound: 5547787, expanded: 101894, elapsed time: 0.203007986
+Searched with beam size: 4096, threads: 96, kept: 4858, sent: 447800
+Searched with beam size: 4096, expanded: 197877, elapsed time: 0.275710992
+New dual bound: 5645270, expanded: 197877, elapsed time: 0.275716811
+Searched with beam size: 8192, threads: 96, kept: 8629, sent: 814474
+Searched with beam size: 8192, expanded: 379695, elapsed time: 0.378116523
+New dual bound: 5759014, expanded: 379695, elapsed time: 0.378119357
+Searched with beam size: 16384, threads: 96, kept: 15283, sent: 1460608
+Searched with beam size: 16384, expanded: 718809, elapsed time: 0.517324699
+New dual bound: 5881804, expanded: 718809, elapsed time: 0.517327373
+Searched with beam size: 32768, threads: 96, kept: 26784, sent: 2564920
+Searched with beam size: 32768, expanded: 1340254, elapsed time: 0.78177395
+New dual bound: 5999830, expanded: 1340254, elapsed time: 0.781776895
+Searched with beam size: 65536, threads: 96, kept: 45064, sent: 4297312
+Searched with beam size: 65536, expanded: 2442015, elapsed time: 1.192150844
+New dual bound: 6097959, expanded: 2442015, elapsed time: 1.192153127
+Searched with beam size: 131072, threads: 96, kept: 76783, sent: 7316107
+Searched with beam size: 131072, expanded: 4398400, elapsed time: 1.888381321
+New dual bound: 6256271, expanded: 4398400, elapsed time: 1.888386208
+Searched with beam size: 262144, threads: 96, kept: 119989, sent: 11463100
+Searched with beam size: 262144, expanded: 7547916, elapsed time: 3.017242897
+New dual bound: 6484110, expanded: 7547916, elapsed time: 3.017245731
+Searched with beam size: 524288, threads: 96, kept: 142112, sent: 13567682
+Searched with beam size: 524288, expanded: 11489995, elapsed time: 4.37261352
+New dual bound: 7269196, expanded: 11489995, elapsed time: 4.372617296
+Searched with beam size: 1048576, threads: 96, kept: 142112, sent: 13567686
+Searched with beam size: 1048576, expanded: 15432079, elapsed time: 5.696980894
+Search time: 5.69698432s
+Expanded: 15432079
+Generated: 20594891
+32 33 26 14 12 11 13 16 25 30 27 1 4 6 2 19 5 21 29 24 20 17 10 9 15 31 3 7 18 8 28 22 23
+best bound: 7326829
+cost: 7326829
+optimal cost: 7326829
+The solution is valid.
+	Command being timed: "python3 /home/fabio/didp-models/tsptw/tsptw_didp.py ../data/tsptw/SolomonPotvinBengio/rc_207.1.txt --config CABS --initial-beam-size 32 --threads 96 --parallel-type 0 --time-out 600"
+	User time (seconds): 516.88
+	System time (seconds): 6.05
+	Percent of CPU this job got: 9091%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:05.75
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 295160
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 275766
+	Voluntary context switches: 560790
+	Involuntary context switches: 18032
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 32
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+COMMAND: /usr/bin/time -v python3 /home/fabio/didp-models/tsptw/tsptw_didp.py ../data/tsptw/SolomonPotvinBengio/rc_207.2.txt --config CABS --initial-beam-size 32 --threads 96 --parallel-type 0 --time-out 600
+Solver: CABS from DIDPPy v0.10.0
+Searched with beam size: 32, threads: 96, kept: 101, sent: 2937
+Searched with beam size: 32, expanded: 335, elapsed time: 0.003621764
+New dual bound: 48080590, expanded: 335, elapsed time: 0.003623857
+Searched with beam size: 64, threads: 96, kept: 84, sent: 5256
+Searched with beam size: 64, expanded: 969, elapsed time: 0.017619661
+New dual bound: 48089860, expanded: 969, elapsed time: 0.017623717
+Searched with beam size: 128, threads: 96, kept: 118, sent: 10148
+Searched with beam size: 128, expanded: 2313, elapsed time: 0.032490398
+Searched with beam size: 256, threads: 96, kept: 222, sent: 18868
+Searched with beam size: 256, expanded: 4823, elapsed time: 0.06133855
+New dual bound: 48392170, expanded: 4823, elapsed time: 0.061340132
+Searched with beam size: 512, threads: 96, kept: 388, sent: 34850
+Searched with beam size: 512, expanded: 9696, elapsed time: 0.071597646
+New dual bound: 48818260, expanded: 9696, elapsed time: 0.07160022
+Searched with beam size: 1024, threads: 96, kept: 801, sent: 75458
+Searched with beam size: 1024, expanded: 24277, elapsed time: 0.10485306
+New dual bound: 49135570, expanded: 24277, elapsed time: 0.104854642
+New primal bound: 80302951, expanded: 24277, elapsed time: 0.104856145
+Searched with beam size: 2048, threads: 96, kept: 1435, sent: 134565
+Searched with beam size: 2048, expanded: 50419, elapsed time: 0.140903108
+New dual bound: 49629291, expanded: 50419, elapsed time: 0.14090495
+Searched with beam size: 4096, threads: 96, kept: 2552, sent: 239279
+Searched with beam size: 4096, expanded: 100652, elapsed time: 0.20829688
+New dual bound: 50141896, expanded: 100652, elapsed time: 0.208298673
+Searched with beam size: 8192, threads: 96, kept: 4603, sent: 434024
+Searched with beam size: 8192, expanded: 199375, elapsed time: 0.271176629
+New dual bound: 50891777, expanded: 199375, elapsed time: 0.271178993
+New primal bound: 79738762, expanded: 199375, elapsed time: 0.271258994
+Searched with beam size: 16384, threads: 96, kept: 8192, sent: 781551
+Searched with beam size: 16384, expanded: 391231, elapsed time: 0.360076076
+New dual bound: 51582671, expanded: 391231, elapsed time: 0.360077689
+Searched with beam size: 32768, threads: 96, kept: 14550, sent: 1381704
+Searched with beam size: 32768, expanded: 749039, elapsed time: 0.509514425
+New dual bound: 52425876, expanded: 749039, elapsed time: 0.509516187
+New primal bound: 73489482, expanded: 749039, elapsed time: 0.50984233
+Searched with beam size: 65536, threads: 96, kept: 25572, sent: 2447076
+Searched with beam size: 65536, expanded: 1415469, elapsed time: 0.782547621
+New dual bound: 53559241, expanded: 1415469, elapsed time: 0.782550105
+New primal bound: 71391621, expanded: 1415469, elapsed time: 0.78269925
+Searched with beam size: 131072, threads: 96, kept: 45239, sent: 4315465
+Searched with beam size: 131072, expanded: 2677349, elapsed time: 1.2456392809999999
+New dual bound: 54935356, expanded: 2677349, elapsed time: 1.245663798
+New primal bound: 70390881, expanded: 2677349, elapsed time: 1.245785532
+Searched with beam size: 262144, threads: 96, kept: 80153, sent: 7627833
+Searched with beam size: 262144, expanded: 5088160, elapsed time: 2.06510341
+New dual bound: 56942360, expanded: 5088160, elapsed time: 2.065106555
+New primal bound: 70125110, expanded: 5088160, elapsed time: 2.065237904
+Searched with beam size: 524288, threads: 96, kept: 128066, sent: 12189499
+Searched with beam size: 524288, expanded: 9012902, elapsed time: 3.3940757440000002
+New dual bound: 60785230, expanded: 9012902, elapsed time: 3.394080471
+Searched with beam size: 1048576, threads: 96, kept: 135769, sent: 12936311
+Searched with beam size: 1048576, expanded: 13277511, elapsed time: 4.84322478
+Search time: 4.84323191s
+Expanded: 13277511
+Generated: 16812466
+18 9 13 6 14 21 17 7 22 1 3 2 23 19 12 11 10 8 26 25 16 30 5 4 29 20 15 27 28 24
+best bound: 70125110
+cost: 70125110
+optimal cost: 70125110
+The solution is valid.
+	Command being timed: "python3 /home/fabio/didp-models/tsptw/tsptw_didp.py ../data/tsptw/SolomonPotvinBengio/rc_207.2.txt --config CABS --initial-beam-size 32 --threads 96 --parallel-type 0 --time-out 600"
+	User time (seconds): 433.77
+	System time (seconds): 5.93
+	Percent of CPU this job got: 8960%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:04.90
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 401436
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 306331
+	Voluntary context switches: 475025
+	Involuntary context switches: 21443
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 32
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+COMMAND: /usr/bin/time -v python3 /home/fabio/didp-models/tsptw/tsptw_didp.py ../data/tsptw/SolomonPotvinBengio/rc_207.3.txt --config CABS --initial-beam-size 32 --threads 96 --parallel-type 0 --time-out 600
+Solver: CABS from DIDPPy v0.10.0
+Searched with beam size: 32, threads: 96, kept: 127, sent: 3655
+Searched with beam size: 32, expanded: 820, elapsed time: 0.005866517
+New dual bound: 48979059, expanded: 820, elapsed time: 0.005869562
+New primal bound: 69202329, expanded: 820, elapsed time: 0.005871004
+Searched with beam size: 64, threads: 96, kept: 57, sent: 3747
+Searched with beam size: 64, expanded: 1720, elapsed time: 0.015279966
+Searched with beam size: 128, threads: 96, kept: 95, sent: 8054
+Searched with beam size: 128, expanded: 3598, elapsed time: 0.043643035
+New dual bound: 49132349, expanded: 3598, elapsed time: 0.043644978
+Searched with beam size: 256, threads: 96, kept: 168, sent: 16184
+Searched with beam size: 256, expanded: 7531, elapsed time: 0.052666914
+New dual bound: 49397139, expanded: 7531, elapsed time: 0.052668637
+Searched with beam size: 512, threads: 96, kept: 373, sent: 34978
+Searched with beam size: 512, expanded: 16928, elapsed time: 0.086705442
+New dual bound: 50019189, expanded: 16928, elapsed time: 0.086707365
+Searched with beam size: 1024, threads: 96, kept: 713, sent: 65493
+Searched with beam size: 1024, expanded: 35497, elapsed time: 0.128247791
+New dual bound: 50469269, expanded: 35497, elapsed time: 0.128249533
+Searched with beam size: 2048, threads: 96, kept: 1993, sent: 190136
+Searched with beam size: 2048, expanded: 89235, elapsed time: 0.176952856
+New dual bound: 51498169, expanded: 89235, elapsed time: 0.176954799
+New primal bound: 68439978, expanded: 89235, elapsed time: 0.176996512
+Searched with beam size: 4096, threads: 96, kept: 3686, sent: 350771
+Searched with beam size: 4096, expanded: 192520, elapsed time: 0.237207478
+New dual bound: 52486397, expanded: 192520, elapsed time: 0.23720936
+Searched with beam size: 8192, threads: 96, kept: 7673, sent: 726041
+Searched with beam size: 8192, expanded: 396921, elapsed time: 0.330541427
+New dual bound: 53214558, expanded: 396921, elapsed time: 0.3305432
+Searched with beam size: 16384, threads: 96, kept: 14974, sent: 1413124
+Searched with beam size: 16384, expanded: 795557, elapsed time: 0.481122553
+New dual bound: 53969299, expanded: 795557, elapsed time: 0.481125387
+New primal bound: 68240428, expanded: 795557, elapsed time: 0.481180991
+Searched with beam size: 32768, threads: 96, kept: 28178, sent: 2643073
+Searched with beam size: 32768, expanded: 1555736, elapsed time: 0.725717386
+New dual bound: 54871499, expanded: 1555736, elapsed time: 0.7257203
+Searched with beam size: 65536, threads: 96, kept: 52284, sent: 4894413
+Searched with beam size: 65536, expanded: 2980956, elapsed time: 1.2106962270000001
+New dual bound: 56005639, expanded: 2980956, elapsed time: 1.21069831
+Searched with beam size: 131072, threads: 96, kept: 92738, sent: 8741885
+Searched with beam size: 131072, expanded: 5556748, elapsed time: 2.035087082
+New dual bound: 57167489, expanded: 5556748, elapsed time: 2.035091409
+Searched with beam size: 262144, threads: 96, kept: 159041, sent: 14986649
+Searched with beam size: 262144, expanded: 10022752, elapsed time: 3.546566067
+New dual bound: 58922378, expanded: 10022752, elapsed time: 3.54776561
+Searched with beam size: 524288, threads: 96, kept: 267969, sent: 25261678
+Searched with beam size: 524288, expanded: 17527810, elapsed time: 6.163047588
+New dual bound: 62189808, expanded: 17527810, elapsed time: 6.163054719
+Searched with beam size: 1048576, threads: 96, kept: 359912, sent: 33970212
+Searched with beam size: 1048576, expanded: 28173388, elapsed time: 9.795755034999999
+New dual bound: 65945889, expanded: 28173388, elapsed time: 9.795768365
+Searched with beam size: 2097152, threads: 96, kept: 362807, sent: 34251541
+Searched with beam size: 2097152, expanded: 39122668, elapsed time: 13.481173383
+Search time: 13.481177489s
+Expanded: 39122668
+Generated: 50569369
+2 16 5 24 21 13 15 11 9 10 12 26 25 30 31 27 29 18 28 20 32 4 17 3 1 14 7 6 8 19 23 22
+best bound: 68240428
+cost: 68240428
+optimal cost: 68240428
+The solution is valid.
+	Command being timed: "python3 /home/fabio/didp-models/tsptw/tsptw_didp.py ../data/tsptw/SolomonPotvinBengio/rc_207.3.txt --config CABS --initial-beam-size 32 --threads 96 --parallel-type 0 --time-out 600"
+	User time (seconds): 1225.04
+	System time (seconds): 12.36
+	Percent of CPU this job got: 9121%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:13.56
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 711508
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 579018
+	Voluntary context switches: 1381067
+	Involuntary context switches: 55611
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 40
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+COMMAND: /usr/bin/time -v python3 /home/fabio/didp-models/tsptw/tsptw_didp.py ../data/tsptw/SolomonPotvinBengio/rc_207.4.txt --config CABS --initial-beam-size 32 --threads 96 --parallel-type 0 --time-out 600
+Solver: CABS from DIDPPy v0.10.0
+Searched with beam size: 32, threads: 96, kept: 5, sent: 120
+Searched with beam size: 32, expanded: 58, elapsed time: 0.006201663
+New dual bound: 1099043, expanded: 58, elapsed time: 0.006205148
+New primal bound: 1196388, expanded: 58, elapsed time: 0.006207412
+Searched with beam size: 64, threads: 96, kept: 0, sent: 56
+Searched with beam size: 64, expanded: 101, elapsed time: 0.014066551
+Searched with beam size: 128, threads: 96, kept: 0, sent: 61
+Searched with beam size: 128, expanded: 150, elapsed time: 0.020485082
+New dual bound: 1105248, expanded: 150, elapsed time: 0.020488667
+Searched with beam size: 256, threads: 96, kept: 0, sent: 64
+Searched with beam size: 256, expanded: 207, elapsed time: 0.026435245
+New dual bound: 1149910, expanded: 207, elapsed time: 0.026437619
+Searched with beam size: 512, threads: 96, kept: 0, sent: 64
+Searched with beam size: 512, expanded: 265, elapsed time: 0.034132509
+Search time: 0.034136045s
+Expanded: 265
+Generated: 289
+5 3 2 4 1
+best bound: 1196388
+cost: 1196388
+optimal cost: 1196388
+The solution is valid.
+	Command being timed: "python3 /home/fabio/didp-models/tsptw/tsptw_didp.py ../data/tsptw/SolomonPotvinBengio/rc_207.4.txt --config CABS --initial-beam-size 32 --threads 96 --parallel-type 0 --time-out 600"
+	User time (seconds): 1.49
+	System time (seconds): 0.10
+	Percent of CPU this job got: 2755%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.05
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 15360
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 5559
+	Voluntary context switches: 1532
+	Involuntary context switches: 144
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+COMMAND: /usr/bin/time -v python3 /home/fabio/didp-models/tsptw/tsptw_didp.py ../data/tsptw/SolomonPotvinBengio/rc_208.1.txt --config CABS --initial-beam-size 32 --threads 96 --parallel-type 0 --time-out 600
+Solver: CABS from DIDPPy v0.10.0
+Searched with beam size: 32, threads: 96, kept: 78, sent: 2675
+Searched with beam size: 32, expanded: 351, elapsed time: 0.005436717
+New dual bound: 59867850, expanded: 351, elapsed time: 0.005441344
+Searched with beam size: 64, threads: 96, kept: 117, sent: 7335
+Searched with beam size: 64, expanded: 1087, elapsed time: 0.011282463
+Searched with beam size: 128, threads: 96, kept: 137, sent: 14143
+Searched with beam size: 128, expanded: 2671, elapsed time: 0.031696137
+New dual bound: 60016837, expanded: 2671, elapsed time: 0.031699041
+Searched with beam size: 256, threads: 96, kept: 309, sent: 31457
+Searched with beam size: 256, expanded: 5838, elapsed time: 0.06149085
+New dual bound: 60781046, expanded: 5838, elapsed time: 0.061493604
+Searched with beam size: 512, threads: 96, kept: 682, sent: 64768
+Searched with beam size: 512, expanded: 12178, elapsed time: 0.073491569
+New dual bound: 61177956, expanded: 12178, elapsed time: 0.073493471
+Searched with beam size: 1024, threads: 96, kept: 1341, sent: 127421
+Searched with beam size: 1024, expanded: 25234, elapsed time: 0.125373255
+New dual bound: 61593266, expanded: 25234, elapsed time: 0.125379034
+Searched with beam size: 2048, threads: 96, kept: 2452, sent: 240987
+Searched with beam size: 2048, expanded: 50708, elapsed time: 0.161263051
+New dual bound: 61959096, expanded: 50708, elapsed time: 0.161266025
+Searched with beam size: 4096, threads: 96, kept: 4743, sent: 461365
+Searched with beam size: 4096, expanded: 101218, elapsed time: 0.221557793
+New dual bound: 62285656, expanded: 101218, elapsed time: 0.221559836
+Searched with beam size: 8192, threads: 96, kept: 9120, sent: 885803
+Searched with beam size: 8192, expanded: 202751, elapsed time: 0.313412017
+New dual bound: 62538075, expanded: 202751, elapsed time: 0.31341401
+Searched with beam size: 16384, threads: 96, kept: 17575, sent: 1711855
+Searched with beam size: 16384, expanded: 403138, elapsed time: 0.466604219
+New dual bound: 62790055, expanded: 403138, elapsed time: 0.466606222
+Searched with beam size: 32768, threads: 96, kept: 32736, sent: 3129299
+Searched with beam size: 32768, expanded: 817892, elapsed time: 0.735609658
+New dual bound: 63074955, expanded: 817892, elapsed time: 0.735611661
+Searched with beam size: 65536, threads: 96, kept: 62520, sent: 5938547
+Searched with beam size: 65536, expanded: 1688542, elapsed time: 1.255541499
+New dual bound: 63384916, expanded: 1688542, elapsed time: 1.255544133
+Searched with beam size: 131072, threads: 96, kept: 122676, sent: 11622862
+Searched with beam size: 131072, expanded: 3440358, elapsed time: 2.302187393
+New dual bound: 63737445, expanded: 3440358, elapsed time: 2.30219232
+Searched with beam size: 262144, threads: 96, kept: 224878, sent: 21341372
+Searched with beam size: 262144, expanded: 6803343, elapsed time: 4.321146191
+New dual bound: 64098636, expanded: 6803343, elapsed time: 4.321149135
+Searched with beam size: 524288, threads: 96, kept: 425371, sent: 40445213
+Searched with beam size: 524288, expanded: 13682785, elapsed time: 8.272623937
+New dual bound: 64492345, expanded: 13682785, elapsed time: 8.272627643
+New primal bound: 86383112, expanded: 13682785, elapsed time: 8.272629886
+Searched with beam size: 1048576, threads: 96, kept: 855231, sent: 81214220
+Searched with beam size: 1048576, expanded: 28510519, elapsed time: 16.338406099
+New dual bound: 64923500, expanded: 28510519, elapsed time: 16.3384132
+New primal bound: 84416322, expanded: 28510519, elapsed time: 16.338509696
+Searched with beam size: 2097152, threads: 96, kept: 1500799, sent: 142416060
+Searched with beam size: 2097152, expanded: 56381592, elapsed time: 31.36546376
+New dual bound: 65407520, expanded: 56381592, elapsed time: 31.365467716
+Searched with beam size: 4194304, threads: 96, kept: 2744639, sent: 260337330
+Searched with beam size: 4194304, expanded: 110169118, elapsed time: 60.400274615
+New dual bound: 65940025, expanded: 110169118, elapsed time: 60.400277609
+New primal bound: 83783812, expanded: 110169118, elapsed time: 60.400579476
+Searched with beam size: 8388608, threads: 96, kept: 4708525, sent: 447055935
+Searched with beam size: 8388608, expanded: 208949050, elapsed time: 112.007702496
+New dual bound: 66569600, expanded: 208949050, elapsed time: 112.007709937
+New primal bound: 83587322, expanded: 208949050, elapsed time: 112.007849618
+Searched with beam size: 16777216, threads: 96, kept: 8590135, sent: 815813869
+Searched with beam size: 16777216, expanded: 412835148, elapsed time: 212.599629749
+New dual bound: 67377616, expanded: 412835148, elapsed time: 212.59963691
+New primal bound: 79360610, expanded: 412835148, elapsed time: 212.599722699
+Searched with beam size: 33554432, threads: 96, kept: 16380680, sent: 1556676386
+Searched with beam size: 33554432, expanded: 879096654, elapsed time: 423.137299468
+New dual bound: 68458705, expanded: 879096654, elapsed time: 423.137303284
+New primal bound: 78924790, expanded: 879096654, elapsed time: 423.137365408
+Searched with beam size: 67108864, threads: 96, kept: 16868911, sent: 1602175261
+Searched with beam size: 67108864, expanded: 1175977823, elapsed time: 645.660849807
+Reached time limit.
+Search time: 645.660860383s
+Expanded: 1175977823
+Generated: 2192975071
+24 37 29 26 6 4 1 2 17 30 31 21 27 32 9 10 11 12 13 16 23 35 34 33 18 19 7 5 3 15 14 8 28 20 36 25 22
+best bound: 68458705
+cost: 78924790
+The solution is valid.
+	Command being timed: "python3 /home/fabio/didp-models/tsptw/tsptw_didp.py ../data/tsptw/SolomonPotvinBengio/rc_208.1.txt --config CABS --initial-beam-size 32 --threads 96 --parallel-type 0 --time-out 600"
+	User time (seconds): 54669.12
+	System time (seconds): 588.95
+	Percent of CPU this job got: 8516%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 10:48.84
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 70983460
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 38009761
+	Voluntary context switches: 64789249
+	Involuntary context switches: 2464816
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 128
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+COMMAND: /usr/bin/time -v python3 /home/fabio/didp-models/tsptw/tsptw_didp.py ../data/tsptw/SolomonPotvinBengio/rc_208.2.txt --config CABS --initial-beam-size 32 --threads 96 --parallel-type 0 --time-out 600
+Solver: CABS from DIDPPy v0.10.0
+Searched with beam size: 32, threads: 96, kept: 92, sent: 2979
+Searched with beam size: 32, expanded: 352, elapsed time: 0.004409073
+New dual bound: 44361000, expanded: 352, elapsed time: 0.004412909
+Searched with beam size: 64, threads: 96, kept: 97, sent: 5632
+Searched with beam size: 64, expanded: 1050, elapsed time: 0.029729248
+New dual bound: 44397284, expanded: 1050, elapsed time: 0.029732974
+Searched with beam size: 128, threads: 96, kept: 145, sent: 12951
+Searched with beam size: 128, expanded: 2790, elapsed time: 0.038960409
+Searched with beam size: 256, threads: 96, kept: 273, sent: 24064
+Searched with beam size: 256, expanded: 6156, elapsed time: 0.091132401
+New dual bound: 45166550, expanded: 6156, elapsed time: 0.091136317
+Searched with beam size: 512, threads: 96, kept: 584, sent: 51044
+Searched with beam size: 512, expanded: 13048, elapsed time: 0.106849382
+New dual bound: 45735259, expanded: 13048, elapsed time: 0.106852106
+Searched with beam size: 1024, threads: 96, kept: 1096, sent: 101598
+Searched with beam size: 1024, expanded: 26659, elapsed time: 0.148516613
+New dual bound: 46006330, expanded: 26659, elapsed time: 0.148519227
+Searched with beam size: 2048, threads: 96, kept: 1989, sent: 193720
+Searched with beam size: 2048, expanded: 53344, elapsed time: 0.193723248
+New dual bound: 46252469, expanded: 53344, elapsed time: 0.19373759
+Searched with beam size: 4096, threads: 96, kept: 4021, sent: 383801
+Searched with beam size: 4096, expanded: 107574, elapsed time: 0.235058727
+New dual bound: 46578830, expanded: 107574, elapsed time: 0.235060359
+New primal bound: 66251338, expanded: 107574, elapsed time: 0.235061771
+Searched with beam size: 8192, threads: 96, kept: 8253, sent: 779609
+Searched with beam size: 8192, expanded: 215205, elapsed time: 0.313261491
+New dual bound: 46940564, expanded: 215205, elapsed time: 0.313263163
+Searched with beam size: 16384, threads: 96, kept: 15524, sent: 1471583
+Searched with beam size: 16384, expanded: 432633, elapsed time: 0.432316641
+New dual bound: 47390129, expanded: 432633, elapsed time: 0.432319325
+New primal bound: 64691159, expanded: 432633, elapsed time: 0.432389271
+Searched with beam size: 32768, threads: 96, kept: 31003, sent: 2933392
+Searched with beam size: 32768, expanded: 879809, elapsed time: 0.647266009
+New dual bound: 47826390, expanded: 879809, elapsed time: 0.647267952
+New primal bound: 62010119, expanded: 879809, elapsed time: 0.647310076
+Searched with beam size: 65536, threads: 96, kept: 62508, sent: 5913973
+Searched with beam size: 65536, expanded: 1772747, elapsed time: 1.066661066
+New dual bound: 48224524, expanded: 1772747, elapsed time: 1.066666123
+New primal bound: 59884949, expanded: 1772747, elapsed time: 1.066978907
+Searched with beam size: 131072, threads: 96, kept: 113888, sent: 10781226
+Searched with beam size: 131072, expanded: 3477138, elapsed time: 1.869678286
+New dual bound: 48610684, expanded: 3477138, elapsed time: 1.869682533
+Searched with beam size: 262144, threads: 96, kept: 216228, sent: 20520989
+Searched with beam size: 262144, expanded: 6827279, elapsed time: 3.444752502
+New dual bound: 49047984, expanded: 6827279, elapsed time: 3.444756087
+New primal bound: 59606059, expanded: 6827279, elapsed time: 3.444807195
+Searched with beam size: 524288, threads: 96, kept: 391893, sent: 37184346
+Searched with beam size: 524288, expanded: 13375429, elapsed time: 6.369788759
+New dual bound: 49577140, expanded: 13375429, elapsed time: 6.369792535
+New primal bound: 59507928, expanded: 13375429, elapsed time: 6.369852966
+Searched with beam size: 1048576, threads: 96, kept: 751396, sent: 71295663
+Searched with beam size: 1048576, expanded: 27533790, elapsed time: 12.266065177
+New dual bound: 50239044, expanded: 27533790, elapsed time: 12.266072608
+New primal bound: 53377970, expanded: 27533790, elapsed time: 12.266894835
+Searched with beam size: 2097152, threads: 96, kept: 666020, sent: 63215000
+Searched with beam size: 2097152, expanded: 46323318, elapsed time: 19.011379275
+New dual bound: 51111329, expanded: 46323318, elapsed time: 19.011383151
+Searched with beam size: 4194304, threads: 96, kept: 935873, sent: 88794695
+Searched with beam size: 4194304, expanded: 79276376, elapsed time: 29.548097502
+New dual bound: 52208258, expanded: 79276376, elapsed time: 29.548101268
+Searched with beam size: 8388608, threads: 96, kept: 1092695, sent: 103659122
+Searched with beam size: 8388608, expanded: 126077931, elapsed time: 42.979960037
+Search time: 42.979967278s
+Expanded: 126077931
+Generated: 172223861
+19 24 18 17 4 1 2 3 20 21 11 9 8 6 5 7 10 13 14 12 16 23 15 28 26 27 22 25
+best bound: 53377970
+cost: 53377970
+optimal cost: 53377970
+The solution is valid.
+	Command being timed: "python3 /home/fabio/didp-models/tsptw/tsptw_didp.py ../data/tsptw/SolomonPotvinBengio/rc_208.2.txt --config CABS --initial-beam-size 32 --threads 96 --parallel-type 0 --time-out 600"
+	User time (seconds): 3873.38
+	System time (seconds): 43.99
+	Percent of CPU this job got: 9046%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:43.30
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 4676908
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 3199813
+	Voluntary context switches: 4843607
+	Involuntary context switches: 201607
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 80
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
+COMMAND: /usr/bin/time -v python3 /home/fabio/didp-models/tsptw/tsptw_didp.py ../data/tsptw/SolomonPotvinBengio/rc_208.3.txt --config CABS --initial-beam-size 32 --threads 96 --parallel-type 0 --time-out 600
+Solver: CABS from DIDPPy v0.10.0
+Searched with beam size: 32, threads: 96, kept: 137, sent: 4073
+Searched with beam size: 32, expanded: 351, elapsed time: 0.005847721
+New dual bound: 5193563, expanded: 351, elapsed time: 0.005852778
+Searched with beam size: 64, threads: 96, kept: 127, sent: 6603
+Searched with beam size: 64, expanded: 1069, elapsed time: 0.012781518
+Searched with beam size: 128, threads: 96, kept: 245, sent: 20202
+Searched with beam size: 128, expanded: 2859, elapsed time: 0.037672565
+New dual bound: 5215386, expanded: 2859, elapsed time: 0.037674428
+Searched with beam size: 256, threads: 96, kept: 498, sent: 41779
+Searched with beam size: 256, expanded: 6420, elapsed time: 0.047611917
+New dual bound: 5275172, expanded: 6420, elapsed time: 0.047613639
+Searched with beam size: 512, threads: 96, kept: 976, sent: 83281
+Searched with beam size: 512, expanded: 13483, elapsed time: 0.07498768
+New dual bound: 5317460, expanded: 13483, elapsed time: 0.074989602
+Searched with beam size: 1024, threads: 96, kept: 1997, sent: 180970
+Searched with beam size: 1024, expanded: 34777, elapsed time: 0.139679528
+New dual bound: 5334931, expanded: 34777, elapsed time: 0.139682462
+Searched with beam size: 2048, threads: 96, kept: 3851, sent: 356422
+Searched with beam size: 2048, expanded: 80477, elapsed time: 0.223152916
+New dual bound: 5361380, expanded: 80477, elapsed time: 0.223156251
+New primal bound: 6619926, expanded: 80477, elapsed time: 0.223157673
+Searched with beam size: 4096, threads: 96, kept: 7685, sent: 713456
+Searched with beam size: 4096, expanded: 172894, elapsed time: 0.323004452
+New dual bound: 5383292, expanded: 172894, elapsed time: 0.323006595
+New primal bound: 6553863, expanded: 172894, elapsed time: 0.323112716
+Searched with beam size: 8192, threads: 96, kept: 14986, sent: 1396069
+Searched with beam size: 8192, expanded: 346844, elapsed time: 0.452126612
+New dual bound: 5406355, expanded: 346844, elapsed time: 0.452129406
+New primal bound: 6537376, expanded: 346844, elapsed time: 0.452239804
+Searched with beam size: 16384, threads: 96, kept: 29477, sent: 2760516
+Searched with beam size: 16384, expanded: 689716, elapsed time: 0.654342773
+New dual bound: 5433216, expanded: 689716, elapsed time: 0.654345578
+New primal bound: 6511548, expanded: 689716, elapsed time: 0.654427712
+Searched with beam size: 32768, threads: 96, kept: 57001, sent: 5338105
+Searched with beam size: 32768, expanded: 1357984, elapsed time: 1.046610951
+New dual bound: 5461589, expanded: 1357984, elapsed time: 1.046612984
+Searched with beam size: 65536, threads: 96, kept: 109345, sent: 10343369
+Searched with beam size: 65536, expanded: 2658059, elapsed time: 1.778525395
+New dual bound: 5495807, expanded: 2658059, elapsed time: 1.778530252
+New primal bound: 6509534, expanded: 2658059, elapsed time: 1.7786078600000002
+Searched with beam size: 131072, threads: 96, kept: 218939, sent: 20734371
+Searched with beam size: 131072, expanded: 5366340, elapsed time: 3.260311401
+New dual bound: 5530352, expanded: 5366340, elapsed time: 3.2603144459999998
+New primal bound: 6413077, expanded: 5366340, elapsed time: 3.260371933
+Searched with beam size: 262144, threads: 96, kept: 429243, sent: 40675579
+Searched with beam size: 262144, expanded: 10777584, elapsed time: 6.344781267
+New dual bound: 5569111, expanded: 10777584, elapsed time: 6.344799144
+Searched with beam size: 524288, threads: 96, kept: 811378, sent: 76920145
+Searched with beam size: 524288, expanded: 21390265, elapsed time: 12.432739971
+New dual bound: 5606619, expanded: 21390265, elapsed time: 12.432744568
+Searched with beam size: 1048576, threads: 96, kept: 1578955, sent: 149975851
+Searched with beam size: 1048576, expanded: 42154462, elapsed time: 24.332411419
+New dual bound: 5640365, expanded: 42154462, elapsed time: 24.332416196
+Searched with beam size: 2097152, threads: 96, kept: 3090807, sent: 293609018
+Searched with beam size: 2097152, expanded: 82841675, elapsed time: 48.35430272
+New dual bound: 5671960, expanded: 82841675, elapsed time: 48.354306375
+New primal bound: 6403984, expanded: 82841675, elapsed time: 48.354382871
+Searched with beam size: 4194304, threads: 96, kept: 5824237, sent: 553521172
+Searched with beam size: 4194304, expanded: 159956869, elapsed time: 93.797090235
+New dual bound: 5703814, expanded: 159956869, elapsed time: 93.797097286
+New primal bound: 6345842, expanded: 159956869, elapsed time: 93.797181473
+Searched with beam size: 8388608, threads: 96, kept: 10994925, sent: 1044542523
+Searched with beam size: 8388608, expanded: 305751965, elapsed time: 181.453069262
+New dual bound: 5736956, expanded: 305751965, elapsed time: 181.453076363
+New primal bound: 6344383, expanded: 305751965, elapsed time: 181.453426233
+Searched with beam size: 16777216, threads: 96, kept: 20496907, sent: 1947115300
+Searched with beam size: 16777216, expanded: 584679963, elapsed time: 353.755142676
+New dual bound: 5772929, expanded: 584679963, elapsed time: 353.755149636
+Searched with beam size: 33554432, threads: 96, kept: 29921397, sent: 2842596707
+Searched with beam size: 33554432, expanded: 868382226, elapsed time: 617.102943336
+Reached time limit.
+Search time: 617.102955434s
+Expanded: 868382226
+Generated: 2287834697
+33 2 18 7 30 28 29 22 34 21 31 24 32 9 10 11 13 15 16 17 20 14 12 25 6 8 19 4 5 3 1 27 35 23 26
+best bound: 5772929
+cost: 6344383
+The solution is valid.
+	Command being timed: "python3 /home/fabio/didp-models/tsptw/tsptw_didp.py ../data/tsptw/SolomonPotvinBengio/rc_208.3.txt --config CABS --initial-beam-size 32 --threads 96 --parallel-type 0 --time-out 600"
+	User time (seconds): 51174.26
+	System time (seconds): 603.68
+	Percent of CPU this job got: 8359%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 10:19.42
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 55130652
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 28371361
+	Voluntary context switches: 82872628
+	Involuntary context switches: 1647033
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 112
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+

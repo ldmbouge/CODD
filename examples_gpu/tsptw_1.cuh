@@ -15,9 +15,21 @@ struct TSPTW1 : TSPTWBase
     struct State
     {
         Set U;
-        int e;
-        int t;
-        int hops;
+        short e;
+        short t;
+        short hops;
+
+        GFL_HOST_DEVICE
+        State() : U(), e(0), t(0), hops(0)
+        {}
+
+        GFL_HOST_DEVICE
+        State(Set const & U, int e, int t, int hops)
+                : U(U)
+                , e(static_cast<short>(e))
+                , t(static_cast<short>(t))
+                , hops(static_cast<short>(hops))
+        {}
 
         GFL_HOST_DEVICE
         static bool equal(State const & s1, State const & s2) noexcept

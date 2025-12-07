@@ -158,6 +158,13 @@ namespace gfl
     }
 
     // Bits
+    GFL_HOST_DEVICE inline
+    u32 xor64to32(u64 const x)
+    {
+        u32 const * const ptr = (u32*) &x;
+        return ptr[0] ^ ptr[1];
+    }
+
     template <typename T>
     GFL_HOST_DEVICE constexpr
     i32 popcount(T x);

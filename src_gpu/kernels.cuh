@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cub/cub.cuh>
+#include <curand_kernel.h>
 
 #include "Utils.hpp"
 #include "LayerInfo.cuh"
@@ -23,6 +24,16 @@ GFL_GLOBAL
 void swapPtrKernel(T** a, T** b)
 {
     swapPtr(a,b);
+}
+
+template<typename Node>
+GFL_GLOBAL
+void prepareForChildrenKernel(LayerInfo<Node> * const layerInfo)
+{
+    if (layerInfo->nParents != layerInfo->nRepresentatives)
+    printf("Parent filtering (%ld): %10ld -> %10ld\n", layerInfo->nParents - layerInfo->nRepresentatives, layerInfo->nParents,layerInfo->nRepresentatives);
+    layerInfo->nParents = layerInfo->nRepresentatives;
+    layerInfo->nRepresentatives = 0;
 }
 
 template<typename Node>
@@ -146,12 +157,13 @@ void calcChildren(
                             memcpy(cNode.labelsSrcToNode, pNode.labelsSrcToNode, sizeof(cNode.labelsSrcToNode));
                             cNode.labelsSrcToNode[pNode.nEdgesSrcToNode] = label;
                             cNode.nEdgesSrcToNode = pNode.nEdgesSrcToNode + 1;
+                            if constexpr (Model::has_dom)
+                                cNode.hash = Model::domHash(cNode.state);
+                            else
+                                cNode.hash = State::hash(cNode.state);
 
                             // NodeInfo
-                            if constexpr (Model::has_dom)
-                                cInfo.hash = Model::domHash(cNode.state);
-                            else
-                                cInfo.hash = State::hash(cNode.state);
+                            cInfo.hash = cNode.hash;
                             cInfo.boundSrcToNode = cBoundSrcToNode;
                             cInfo.isRepresented = 0;
                             cInfo.idx = layerInfo->nChildren;
@@ -167,6 +179,25 @@ void calcChildren(
     }
 }
 
+template<typename Node>
+GFL_GLOBAL
+void shuffleRepKernel(
+        gfl::i64 const nNodes,
+        NodeInfo * const nodesInfo)
+{
+    using namespace gfl;
+
+    i64 const rIdx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (rIdx < nNodes)
+    {
+        // Initialize RNG state
+        curandState state;
+        curand_init(nodesInfo[rIdx].hash, rIdx, 0, &state);
+
+        // Generate random key
+        nodesInfo[rIdx].isRepresented = curand(&state) * (1-nodesInfo[rIdx].isRepresented);
+    }
+}
 
 template<typename Model, typename Node>
 GFL_GLOBAL
@@ -220,9 +251,9 @@ void calcChildrenKernel(
 
                         // NodeInfo
                         if constexpr (Model::has_dom)
-                            cInfo.hash = Model::domHash(cNode.state);
+                            cInfo.hash = xor64to32(Model::domHash(cNode.state));
                         else
-                            cInfo.hash = State::hash(cNode.state);
+                            cInfo.hash = xor64to32(State::hash(cNode.state));
                         cInfo.boundSrcToNode = cBoundSrcToNode;
                         cInfo.isRepresented = 0;
                     }
@@ -269,18 +300,56 @@ void copyRep(LayerInfo<Node> * const layerInfo, bool reverse = false)
 
 template<typename Node>
 GFL_GLOBAL
-void copyRepKernel(LayerInfo<Node> * const layerInfo, bool reverse = false)
+void copyRepKernel(
+    gfl::i64 const * const nNodes,
+    NodeInfo const * const nodesInfo,
+    Node const * const src,
+    Node * const dst,
+    bool reverse = false)
 {
     using namespace gfl;
 
     i64 const rIdx = blockIdx.x * blockDim.x + threadIdx.x;
-    if (rIdx < layerInfo->nRepresentatives)
+    if (rIdx < *nNodes)
     {
-        i64 const cIdx = layerInfo->childrenInfo[rIdx].idx;
-        i64 const tIdx = not reverse ? rIdx : layerInfo->nRepresentatives - 1 - rIdx;
-        layerInfo->children[tIdx] = layerInfo->tmpChildren[cIdx];
+        i64 const cIdx = nodesInfo[rIdx].idx;
+        i64 const tIdx = not reverse ? rIdx : *nNodes - 1 - rIdx;
+        dst[tIdx] = src[cIdx];
     }
 }
+
+template<typename T>
+GFL_GLOBAL
+void copyKernel(
+        gfl::i64 const * n,
+        T const * const src,
+        T * const dst)
+{
+    using namespace gfl;
+
+    i64 const rIdx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (rIdx < *n)
+    {
+        dst[rIdx] = src[rIdx];
+    }
+}
+
+template<typename Model, typename Node>
+GFL_GLOBAL
+void resetInfoKernel(gfl::i64 const nNodes, Node const * const nodes, NodeInfo * const info)
+{
+    using namespace gfl;
+
+    i64 cBegin,cEnd;
+    getBeginEnd(cBegin, cEnd, blockIdx.x, gridDim.x, nNodes);
+    for (i64 i = cBegin + threadIdx.x; i < cEnd; i += blockDim.x) {
+        info[i].hash = nodes[i].hash;
+        info[i].idx = i;
+        info[i].isRepresented = 0;
+        info[i].boundSrcToNode = nodes[i].boundSrcToNode;
+    }
+}
+
 
 template<typename Model, typename Node>
 GFL_GLOBAL
@@ -444,25 +513,26 @@ void calcRep(gfl::i64 const nChildren, Node const * const children,  NodeInfo * 
 }
 
 
+
 template<typename Model, typename Node>
 GFL_GLOBAL
-void calcRepKernel(gfl::i64 const nChildren, Node const * const children,  NodeInfo * const childrenInfo)
+void calcRepKernel(gfl::i64 const nNodes, Node const * const nodes,  NodeInfo * const nodesInfo)
 {
     using namespace gfl;
 
     i64 cBegin,cEnd;
-    getBeginEnd(cBegin,cEnd,blockIdx.x,gridDim.x,nChildren);
+    getBeginEnd(cBegin,cEnd,blockIdx.x,gridDim.x,nNodes);
     for (i64 i = cBegin + threadIdx.x; i < cEnd; i += blockDim.x) {
-        auto & iInfo = childrenInfo[i];
+        auto & iInfo = nodesInfo[i];
         assert(0 <= iInfo.idx);
-        assert(iInfo.idx < nChildren);
-        auto const iChild = children[iInfo.idx].state;
-        for (i64 j = i + 1; j < nChildren; j += 1)
+        assert(iInfo.idx < nNodes);
+        auto const iChild = nodes[iInfo.idx].state;
+        for (i64 j = i + 1; j < nNodes; j += 1)
         {
-            auto & jInfo = childrenInfo[j];
+            auto & jInfo = nodesInfo[j];
             assert(0 <= jInfo.idx);
-            assert(jInfo.idx < nChildren);
-            auto const jChild = children[jInfo.idx].state;
+            assert(jInfo.idx < nNodes);
+            auto const jChild = nodes[jInfo.idx].state;
             // TODO Check both undominates
             if (iInfo.hash == jInfo.hash)
             {
@@ -489,22 +559,23 @@ void countRep(LayerInfo<Node> * const layerInfo,  NodeInfo const * const childre
 
 template<typename Node>
 GFL_GLOBAL
-void countRepKernel(LayerInfo<Node> * const layerInfo,  NodeInfo const * const childrenInfo)
+void countRepKernel(gfl::i64 const nNodes, NodeInfo const * const nodesInfo, gfl::i64 * nRep)
+
 {
     using namespace gfl;
 
     i64 const cIdx = blockIdx.x * blockDim.x + threadIdx.x;
-    if (cIdx < layerInfo->nChildren)
+    if (cIdx < nNodes)
     {
         u32 const maskActiveThreads = __activemask();
-        bool isRepresentative = childrenInfo[cIdx].isRepresented == 0;
+        bool isRepresentative = nodesInfo[cIdx].isRepresented == 0;
         u32 const maskRepresentatives = __ballot_sync(maskActiveThreads, isRepresentative);
         i32 const nRepresentatives = popcount(maskRepresentatives);
         if (nRepresentatives > 0)
         {
             if (laneIdx() == 0)
             {
-                atomicAdd((ull *) &layerInfo->nRepresentatives, (ull) nRepresentatives);
+                atomicAdd((ull *) nRep, (ull) nRepresentatives);
             }
         }
     }
@@ -514,6 +585,7 @@ void countRepKernel(LayerInfo<Node> * const layerInfo,  NodeInfo const * const c
 GFL_DEVICE inline
 void printNodeInfo(NodeInfo const & childInfo)
 {
+    if(childInfo.isRepresented)
     printf("HASH = %lu, IDX = %ld, IS_REP = %d\n",
            childInfo.hash,
            childInfo.idx,
@@ -522,12 +594,12 @@ void printNodeInfo(NodeInfo const & childInfo)
 
 template<typename Node>
 GFL_GLOBAL
-void printChildrenInfo(LayerInfo<Node> * layerInfo)
+void printInfo(gfl::i64 const * const nNodes, NodeInfo const * info)
 {
-    printf("--- (%d)\n", layerInfo->nChildren);
-    for(auto cIdx = 0; cIdx < layerInfo->nChildren; cIdx += 1)
+    printf("--- (%llu)\n", *nNodes);
+    for(auto cIdx = 0; cIdx < *nNodes; cIdx += 1)
     {
-        auto const & childInfo = layerInfo->childrenInfo[cIdx];
+        auto const & childInfo = info[cIdx];
         printNodeInfo(childInfo);
     }
 }

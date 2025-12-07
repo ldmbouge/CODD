@@ -7,13 +7,13 @@
 #include <Types.hpp>
 
 template<typename State, typename Labels, int N>
-struct alignas(16) LightNode
+struct LightNode
 {
     State state;
     Labels labels;
     gfl::f64 boundSrcToNode;
     gfl::u8 nEdgesSrcToNode;
-    gfl::u8 labelsSrcToNode[gfl::roundUpToMultiple<int>(N,64)];
+    gfl::u8 labelsSrcToNode[N];
 
     GFL_HOST_DEVICE
     LightNode() noexcept {};
@@ -31,7 +31,7 @@ struct alignas(16) LightNode
     LightNode(LightNode const & other) noexcept {memcpy(this,&other,sizeof(LightNode));};
 };
 
-struct alignas(16) NodeInfo
+struct NodeInfo
 {
     gfl::u64 hash;
     gfl::i64 idx;
@@ -155,5 +155,23 @@ struct RepCostDecomposer
     gfl::tuple<gfl::u32&,gfl::f64&> operator()(NodeInfo & nodeInfo) const
     {
         return {nodeInfo.isRepresented,nodeInfo.boundSrcToNode};
+    }
+};
+
+struct RepHashDecomposer
+{
+    GFL_HOST_DEVICE
+    gfl::tuple<gfl::u32&, gfl::u64&> operator()(NodeInfo & nodeInfo) const
+    {
+        return {nodeInfo.isRepresented, nodeInfo.hash};
+    }
+};
+
+struct RepCostHashDecomposer
+{
+    GFL_HOST_DEVICE
+    gfl::tuple<gfl::u32&,gfl::f64&,gfl::u64&> operator()(NodeInfo & nodeInfo) const
+    {
+        return {nodeInfo.isRepresented,nodeInfo.boundSrcToNode,nodeInfo.hash};
     }
 };

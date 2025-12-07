@@ -118,12 +118,14 @@ int run_bro(int argc,char* argv[])
     // Layers buffers
     std::vector<LayerBufferType> layers;
     std::vector<LabelsInfo>      labelsInfo;
+    std::vector<i64>             offloadSize;
 
     // Initialize first layer
     auto const rState = model->initial();
     auto const rLabels = model->lgf(rState, DDExact, pBound, dBound);
     layers.emplace_back().emplace_back(rState,rLabels);
     labelsInfo.emplace_back(rLabels.slc());
+    offloadSize.push_back(0);
 
     // Let's goo!
     auto const start = RuntimeMonitor::cputime();
@@ -132,7 +134,7 @@ int run_bro(int argc,char* argv[])
     bool newSolution = false;
     auto const isLayerEmpty = [](LayerBufferType const &l) { return l.empty(); };
     auto const isQueueEmpty = [&layers,&isLayerEmpty]{return std::all_of(layers.begin(), layers.end(), isLayerEmpty); };
-    auto const lastNotEmpty = [&layers] {
+    auto const deepestNotEmpty = [&layers] {
         for (i32 i = layers.size() - 1; i >= 0; i -= 1)
         {
            if (not layers[i].empty())
@@ -142,8 +144,40 @@ int run_bro(int argc,char* argv[])
         }
         return -1;
     };
+    auto const deepestNotEmptyAbove = [&layers] (i32 const lIdx) {
+        for (i32 i = lIdx - 1; i >= 0; i -= 1)
+        {
+            if (not layers[i].empty())
+            {
+                return i;
+            }
+        }
+        return -1;
+    };
+    auto const shallowestNotEmpty = [&layers, &deepestNotEmpty] {
+        for (i32 i = 0; i < layers.size(); i += 1)
+        {
+            if (not layers[i].empty())
+            {
+                return i;
+            }
+        }
+        return -1;
+    };
+    auto const shallowestNotEmptyBelow = [&layers, &deepestNotEmpty](i32 const lIdx) {
+        for (i32 i = lIdx+1; i < layers.size(); i += 1)
+        {
+            if (not layers[i].empty())
+            {
+                return i;
+            }
+        }
+        return -1;
+    };
+    i64 iteration = 0;
     while (not isQueueEmpty())
     {
+        iteration += 1;
         if (RuntimeMonitor::elapsedSeconds(start) > timeout)
         {
             interrupted = true;
@@ -151,21 +185,44 @@ int run_bro(int argc,char* argv[])
         }
         newSolution = false;
 
+        // Find the right layer to expand
+        i32 const dne = deepestNotEmpty();
+        i32 lIdx = dne;
+//        if ((iteration / layers.size()) % 3 == 0)
+//        {
+//            lIdx = shallowestNotEmpty();
+//
+//            while (lIdx != dne)
+//            {
+//                // The current layer is big enough to fully load the GPU
+//                // (i.e., maximize filtering) but the next it is not.
+//                if (layers[lIdx].size() >= offloadSize[lIdx] and
+//                        layers[lIdx+1].size() > 0  and layers[lIdx+1].size() <= offloadSize[lIdx+1])
+//                {
+//                    printf("Triggered!\n");
+//                    break;
+//                }
+//                lIdx = shallowestNotEmptyBelow(lIdx);
+//            }
+//        }
+
         // Grow number of layers on demand
-        i32 const lIdx = lastNotEmpty();
         assert(lIdx >= 0);
         if (lIdx == layers.size() - 1)
         {
             layers.emplace_back();
             labelsInfo.emplace_back();
+            offloadSize.push_back(0);
         }
 
         // Fragment
         auto & currentLayer = layers[lIdx];
-        i64 const batchSize = gfl::min<i64>(currentLayer.size(), lh->getMaxParents(labelsInfo[lIdx].nLabels, lh->gpuMemSize));
-        i64 const fragmentSize = gfl::min<i64>(currentLayer.size(), width < 0 ? batchSize : width);
+        i64 const maxBatchSize = lh->getMaxParents(labelsInfo[lIdx].nLabels, lh->gpuMemSize);
+        i64 const batchSize = gfl::min<i64>(currentLayer.size(), maxBatchSize);
+        i64 const fragmentSize = gfl::min<i64>(currentLayer.size(), width < 0 ? batchSize: width);
         auto const fragment = std::span(currentLayer.end() - fragmentSize, fragmentSize);
         expandedNodes += fragmentSize;
+        offloadSize[lIdx] = std::max(offloadSize[lIdx],maxBatchSize);
 
         // Batching
         i32 const nBatches = roundUpDivPosInt<i32>(fragmentSize, batchSize);
@@ -181,7 +238,7 @@ int run_bro(int argc,char* argv[])
                    lIdx,
                    expandedNodes,
                    currentLayer.size(),
-                   currentLayer.size()-currentBatchSize);
+                   currentLayer.size()-fragmentSize);
             printf( " | MemSize = ");
             printMemSize(sizeof(Node) * currentLayer.size());
             printf( " | Cost = ");
@@ -210,9 +267,12 @@ int run_bro(int argc,char* argv[])
             LayerHelperType::initChildren(layerInfo, gAllocator);
             LayerHelperType::initAux(layerInfo, gAllocator);
 
+            i32 blockSize;
+            dim3 gridSize;
+
             // Children
-            i32 blockSize = 32;
-            dim3 gridSize = layerInfo->nParents;
+            blockSize = 32;
+            gridSize = layerInfo->nParents;
             calcChildrenKernel<Model><<<gridSize, blockSize, 0, lh->gpuMainQueue>>>(
                     model,
                     layerInfo,
@@ -247,11 +307,13 @@ int run_bro(int argc,char* argv[])
                 blockSize = 32;
                 gridSize = roundUpDivPosInt<i32>(nChildren, blockSize);
                 countRepKernel<Node><<<gridSize, blockSize, 0, lh->gpuMainQueue>>>(
-                        layerInfo,
-                        layerInfo->tmpChildrenInfo);
+                        nChildren,
+                        layerInfo->tmpChildrenInfo,
+                        &layerInfo->nRepresentatives);
                 CHECK_LAST_CUDA_ERROR();
 
                 if (sort)
+                {
                     cub::DeviceRadixSort::SortKeys(
                             layerInfo->cubTmpMem,
                             layerInfo->cubTmpMemSize,
@@ -260,7 +322,13 @@ int run_bro(int argc,char* argv[])
                             nChildren,
                             RepCostDecomposer{},
                             lh->gpuMainQueue);
+                }
                 else
+                {
+//                    blockSize = 128;
+//                    gridSize = roundUpDivPosInt<i32>(nChildren, blockSize);
+//                    shuffleRepKernel<Node><<<gridSize, blockSize, 0, lh->gpuMainQueue>>>(nChildren,layerInfo->tmpChildrenInfo);
+//                    cub::DeviceRadixSort::SortKeysDescending(
                     cub::DeviceRadixSort::SortKeys(
                             layerInfo->cubTmpMem,
                             layerInfo->cubTmpMemSize,
@@ -269,14 +337,20 @@ int run_bro(int argc,char* argv[])
                             nChildren,
                             RepDecomposer{},
                             lh->gpuMainQueue);
-                CHECK_LAST_CUDA_ERROR();
-
-                swapPtrKernel<Node><<<1,1,0,lh->gpuMainQueue>>>(&layerInfo->children, &layerInfo->tmpChildren);
+                }
                 CHECK_LAST_CUDA_ERROR();
 
                 blockSize = 128;
                 gridSize = roundUpDivPosInt<i32>(nChildren, blockSize);
-                copyRepKernel<Node><<<gridSize, blockSize, 0, lh->gpuMainQueue>>>(layerInfo, sort);
+                copyRepKernel<Node><<<gridSize, blockSize, 0, lh->gpuMainQueue>>>(
+                        &layerInfo->nRepresentatives,
+                        layerInfo->childrenInfo,
+                        layerInfo->children,
+                        layerInfo->tmpChildren,
+                        true);
+                CHECK_LAST_CUDA_ERROR();
+
+                swapPtrKernel<Node><<<1,1,0,lh->gpuMainQueue>>>(&layerInfo->children, &layerInfo->tmpChildren);
                 CHECK_LAST_CUDA_ERROR();
 
                 // Labels
@@ -324,21 +398,18 @@ int run_bro(int argc,char* argv[])
                     }
                     nextLayer.resize(nextLayerOldSize);
                 }
-                if (sort and nextLayerOldSize > 0)
+                if (nextLayerOldSize > 0 and sort)
                 {
                     // Reverse because we work on the tail of the vector
-                    auto cmpByCost = [](Node const & a, Node const & b){return not Model::betterEq(a.boundSrcToNode,b.boundSrcToNode);};
+                    auto const cmpByCost = [](Node const & a, Node const & b){return not Model::betterEq(a.boundSrcToNode, b.boundSrcToNode);};
                     //assert(std::is_sorted(nextLayer.data() + nextLayerOldSize, nextLayer.data() + nextLayer.size(), cmpByCost));
                     std::inplace_merge(nextLayer.data(), nextLayer.data() + nextLayerOldSize, nextLayer.data() + nextLayer.size(), cmpByCost);
-                    assert(std::is_sorted(nextLayer.begin(), nextLayer.end(), cmpByCost));
+                    //assert(std::is_sorted(nextLayer.begin(), nextLayer.end(), cmpByCost));
                 }
-//                    for(Node const & n : nextLayer)
-//                    {
-//                        printf("%7.2f ", n.boundSrcToNode);
-//                    }
-//                    printf("\n");
-//                fflush(stdout);
+                nextLayer.reserve(currentLayer.size());;
             }
+
+
         }
         currentLayer.resize(currentLayer.size() - fragmentSize);
 
