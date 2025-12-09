@@ -2,7 +2,6 @@ library(dplyr)
 library(tidyr)
 library(ggplot2)
 library(scales)
-library(tikzDevice)
 
 # Input
 
@@ -93,6 +92,7 @@ csv_list <- c(
 tmp <- lapply(csv_list, read.csv)
 route_data <- do.call(rbind, tmp)
 route_data <- route_data %>% 
+  filter(Timeout != "" & !is.na(Timeout)) %>% 
   filter(!(Benchmark == "SolomonPotvinBengio" & Instance == "rc_201.4.txt")) %>% # Solver bugged
   mutate(Timeout=tolower(Timeout) == "true")
 route_data$Solver <- "ROUTEOPT"
@@ -130,41 +130,28 @@ if (nrow(mismatches) > 0) {
   message("✅ All Best.Cost values match across all solvers (DIDP, CADDS-GPU, CADDS-GPU-SORTED, ROUTEOPT).")
 }
 
-filter_solvers_list <- c(
-  "DIDP-RUST", 
-  "DIDP-PAR",
-  "CADDS-GPU", 
-  "CADDS-SEQ", 
-  "CADDS-GPU-SORTED"
-)
-
-display_solvers_list <- c(
-  "DIDP-RUST", 
-  "DIDP-PAR",
-  "CADDS-GPU", 
-  "CADDS-SEQ", 
-  "CADDS-GPU-SORTED",
-  "ROUTEOPT"
-)
-
 # Comparison
 names(all_data)
 
-benchmarks_info <- all_data %>%
-  select(Benchmark, Instance) %>%
-  distinct() %>%
-  group_by(Benchmark) %>%
-  summarise(
-    n_instances = n(),
-    .groups = "drop"
-  )
-
-common_instances <- all_data %>% 
-  filter(!Timeout) %>% 
-  group_by(Benchmark, Instance) %>% 
-  filter(all(filter_solvers_list %in% Solver)) %>%  # every solver appears at least once
-  select(Benchmark, Instance) %>%
+# Step 1: Find active solvers (those who solved at least one instance)
+active_solvers <- all_data %>%
+  filter(!Timeout) %>%
+  select(Benchmark, Solver) %>%
   distinct()
+
+# Step 2: Count how many active solvers per benchmark
+n_active_solvers <- active_solvers %>%
+  group_by(Benchmark) %>%
+  summarise(n_active = n(), .groups = "drop")
+
+# Step 3: Find instances solved by ALL active solvers
+common_instances <- all_data %>%
+  filter(!Timeout) %>%
+  group_by(Benchmark, Instance) %>%
+  summarise(n_solvers_solved = n_distinct(Solver), .groups = "drop") %>%
+  left_join(n_active_solvers, by = "Benchmark") %>%
+  filter(n_solvers_solved == n_active) %>%
+  select(Benchmark, Instance)
 
 # Step 4: Find specific instances (NOT solved by all active solvers)
 specific_instances <- all_data %>%
@@ -172,46 +159,16 @@ specific_instances <- all_data %>%
   select(Benchmark, Instance) %>%
   distinct()
 
-# Step 5: Statistics for COMMON instances
-# Statistics for COMMON instances (using display solvers only)
-stats_common <- all_data %>%
-  filter(!Timeout) %>%
-  semi_join(common_instances, by = c("Benchmark", "Instance")) %>%
-  group_by(Benchmark, Solver) %>%
-  summarise(
-    n_solved = n(),
-    # Time statistics
-    sum_time = sum(Search.Time),
-    min_time = min(Search.Time),
-    max_time = max(Search.Time),
-    mean_time = mean(Search.Time),
-    stddev_time = sd(Search.Time),
-    geom_mean_time = exp(mean(log(Search.Time))),
-    
-    # Memory statistics
-    sum_memory = sum(Memory),
-    min_memory = min(Memory),
-    max_memory = max(Memory),
-    mean_memory = mean(Memory),
-    stddev_memory = sd(Memory),
-    geom_mean_memory = exp(mean(log(Memory))),
-    
-    # Nodes statistics
-    sum_nodes = sum(Nodes),
-    min_nodes = min(Nodes),
-    max_nodes = max(Nodes),
-    mean_nodes = mean(Nodes),
-    stddev_nodes = sd(Nodes),
-    geom_mean_nodes = exp(mean(log(Nodes))),
-    .groups = "drop"
-  ) %>%
-  complete(Solver = display_solvers_list, Benchmark) %>%
-  arrange(Benchmark, Solver)
+# Create all possible Solver-Benchmark combinations
+all_combinations <- all_data %>%
+  select(Benchmark) %>%
+  distinct() %>%
+  cross_join(all_data %>% select(Solver) %>% distinct())
 
-# Step 6: Statistics for SPECIFIC instances
-stats_specific <- all_data %>%
+# Step 5: Statistics for COMMON instances
+stats_common <- all_data %>%
+  inner_join(common_instances, by = c("Benchmark", "Instance")) %>%
   filter(!Timeout) %>%
-  semi_join(specific_instances, by = c("Benchmark", "Instance")) %>%
   group_by(Benchmark,Solver) %>%
   summarise(
     n_solved = n(),
@@ -239,7 +196,46 @@ stats_specific <- all_data %>%
     stddev_nodes = sd(Nodes),
     geom_mean_nodes = exp(mean(log(Nodes))),
     .groups = "drop"
-  )
+  ) %>%
+  # Add ALL combinations (including inactive solvers)
+  right_join(all_combinations, by = c("Solver", "Benchmark")) %>%
+  arrange(Benchmark,Solver)
+
+# Step 6: Statistics for SPECIFIC instances
+stats_specific <- all_data %>%
+  inner_join(specific_instances, by = c("Benchmark", "Instance")) %>%
+  filter(!Timeout) %>%
+  group_by(Benchmark,Solver) %>%
+  summarise(
+    n_solved = n(),
+    # Time statistics
+    sum_time = sum(Search.Time),
+    min_time = min(Search.Time),
+    max_time = max(Search.Time),
+    mean_time = mean(Search.Time),
+    stddev_time = sd(Search.Time),
+    geom_mean_time = exp(mean(log(Search.Time))),
+    
+    # Memory statistics
+    sum_memory = sum(Memory),
+    min_memory = min(Memory),
+    max_memory = max(Memory),
+    mean_memory = mean(Memory),
+    stddev_memory = sd(Memory),
+    geom_mean_memory = exp(mean(log(Memory))),
+    
+    # Nodes statistics
+    sum_nodes = sum(Nodes),
+    min_nodes = min(Nodes),
+    max_nodes = max(Nodes),
+    mean_nodes = mean(Nodes),
+    stddev_nodes = sd(Nodes),
+    geom_mean_nodes = exp(mean(log(Nodes))),
+    .groups = "drop"
+  ) %>%
+  # Add ALL combinations (including inactive solvers)
+  right_join(all_combinations, by = c("Solver", "Benchmark")) %>%
+  arrange(Benchmark,Solver)
 
 # Rounds and save to CSV
 temp <- stats_common %>%
@@ -262,114 +258,4 @@ temp <- stats_specific %>%
   mutate(across(where(is.numeric), ~round(., 2))) %>%
   mutate(Benchmark = ifelse(duplicated(Benchmark), "", Benchmark))
 write.csv(temp, "stats_specific_instances.csv", row.names = FALSE,quote = FALSE, na = "")
-
-# Add this to the end of your existing R script
-# Add this to the end of your existing R script
-
-# Set timeout value
-timeout_value <- 600
-
-# Prepare data - include ALL instances from all_data
-# Assign timeout value to unsolved (NA or Timeout=TRUE)
-performance_data <- all_data %>%
-  select(Benchmark, Solver, Instance, Search.Time, Timeout) %>%
-  mutate(
-    # Use 2x timeout for unsolved: either NA or Timeout=TRUE
-    Search.Time = ifelse(is.na(Search.Time) | Timeout, timeout_value * 2, Search.Time)
-  )
-
-performance_data <- performance_data %>%
-  mutate(
-    Solver = case_when(
-      Solver == "DIDP-RUST" ~ "RIDP",
-      Solver == "DIDP-PAR" ~ "DIDP-Parallel",
-      Solver == "CADDS-GPU" ~ "CADDS-GPU",
-      Solver == "CADDS-SEQ" ~ "CADDS-Sequential",
-      Solver == "CADDS-GPU-SORTED" ~ "CADDS-GPU-Greedy",
-      Solver == "ROUTEOPT" ~ "RouteOpt",
-      TRUE ~ Solver
-    )
-  ) %>%
-  mutate(
-    Benchmark = case_when(
-      Benchmark == "Solnon25_feasible" ~ "Solnon (Feasible)",
-      Benchmark == "Solnon25_infeasible" ~ "Solnon (Infeasible)",
-      Benchmark == "SolomonPotvinBengio" ~ "Solomon-Potvin-Bengio",
-      Benchmark == "GendreauDumasExtended" ~ "Gendreau-Dumas-Extended",
-      Benchmark == "SolomonPesant" ~ "Solomon-Pesant",
-      TRUE ~ Benchmark
-    )
-  )
-
-performance_data <- performance_data %>%
-  mutate(
-    Solver_plot = factor(Solver, levels = rev(sort(unique(Solver))))
-  )
-solver_colors <- c(
-  "RIDP"             = "#d73027",  # red (Rust)
-  "DIDP-Parallel"    = "#fdd835",  # yellow (Python style)
-  "CADDS-GPU"        = "#1b7837",  # dark green
-  "CADDS-Sequential" = "#0071c5",  # Intel blue
-  "CADDS-GPU-Greedy" = "#a6d96a",  # light green
-  "RouteOpt"         = "#984ea3"   # purple
-)
-
-solver_linetypes <- c(
-  "RIDP"             = "31",      # solid line
-  "DIDP-Parallel"    = "31",         # 4 on, 2 off
-  "CADDS-GPU"        = "solid",         # 1 on, 3 off (dotted)
-  "CADDS-Sequential" = "solid",       # 1 on, 3 off, 4 on, 3 off
-  "CADDS-GPU-Greedy" = "solid",         # 7 on, 3 off (long dash)
-  "RouteOpt"         = "11"        # 2 on, 2 off, 6 on, 2 off
-)
-
-
-# Plot with stat_ecdf - now with both color and linetype aesthetics
-p <- ggplot(performance_data, aes(x = Search.Time, color = Solver_plot, linetype = Solver_plot)) +
-  stat_ecdf(geom = "step", linewidth = 0.75, pad = TRUE) +
-  facet_wrap(~ Benchmark, ncol = 2) +
-  coord_cartesian(xlim = c(0, timeout_value)) +
-  scale_y_continuous(limits = c(0.5, 1), labels = scales::label_percent(suffix = "")) +
-  labs(x = "Time [s]", 
-       y = "Solved Instances [\\%]",
-       color = "Solver",
-       linetype = "Solver") +
-  scale_color_manual(
-    values = solver_colors,
-    breaks = levels(performance_data$Solver_plot),
-    labels = levels(performance_data$Solver_plot)
-  ) +
-  scale_linetype_manual(
-    values = solver_linetypes,
-    breaks = levels(performance_data$Solver_plot),
-    labels = levels(performance_data$Solver_plot)
-  ) +
-  guides(
-    color = guide_legend(reverse = TRUE),
-    linetype = guide_legend(reverse = TRUE)
-  ) +
-  theme_minimal() +
-  theme(
-    legend.position = c(0.322, 0.828),
-    legend.background = element_rect(fill = "white", color = "gray80", linewidth = 0.3),
-    legend.text = element_text(size = 6),
-    legend.title = element_blank(),
-    legend.key.width = unit(10, "pt"),
-    legend.key.height = unit(8, "pt"),
-    legend.key.spacing.x = unit(0, "pt"),
-    legend.key.spacing.y = unit(0, "pt"),
-    legend.spacing.y = unit(0, "pt"),
-    legend.spacing.x = unit(0, "pt"),
-    legend.margin = margin(t = 2, r = 2, b = 2, l = 2, unit = "pt"),
-    plot.margin = margin(0, 0, 0, 0),
-    panel.grid.minor = element_blank()
-  )
-p
-k <- 2.5
-h <-2.2
-w <-2
-ggsave("ecdf_plot.pdf", plot = p, width = k * w, height = k*h, units = "in", dpi = 300)
-tikz("ecdf_plot.tikz", width = k * w, height = k*h, standAlone = FALSE)
-print(p)
-dev.off()
 

@@ -18,6 +18,8 @@ def getFilteredLogContent(log_filepath):
         "<LB",
         "<Elapsed",
         "<Nodes",
+        "non-zero status",
+        "terminated by",
         "Maximum resident set size")
     filtered_lines = []
     for line in lines:
@@ -26,7 +28,13 @@ def getFilteredLogContent(log_filepath):
         line = line.replace("1e+09", "1000000000")
         if any(key in line for key in toKeep):
             line = ansi_escape.sub('', line)
-            filtered_lines.append(re.sub(r"\s+", " ", line).strip())
+            line = re.sub(r"\s+", " ", line).strip()
+            if 'Command exited' in line and not line.startswith('Command exited'):
+                line = line[line.index('Command exited'):]
+            if 'Command terminated' in line and not line.startswith('Command terminated'):
+                line = line[line.index('Command terminated'):]
+            if line != "":
+                filtered_lines.append(line)
 
     # Join with newline characters
     return "\n".join(filtered_lines) + "\n"

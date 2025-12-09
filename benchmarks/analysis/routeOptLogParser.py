@@ -20,10 +20,12 @@ RouteOptOutputGrammar = Grammar("""
     lb_line = "<LB=" ws? float ">" nl
     search_time_line = "<Elapsed Time=" ws? float ">" nl
     expanded_line = "<Nodes Explored=" ws? int ">" nl
-    solution_line = ub_line / lb_line / search_time_line / expanded_line
+    solution_line = ub_line / lb_line / search_time_line / expanded_line / timeout_line
+    timeout_line    = ("Command exited with non-zero status" / "Command terminated by signal") rotl
     mem_line = "Maximum resident set size (kbytes): " int nl
     line = str nl
     str = ~"."+
+    rotl = (str / " ")+ nl
     word = ~"[a-zA-Z0-9_]"+
     value = float / int
     int = ~"[-+]"? ~"[0-9]"+
@@ -66,7 +68,7 @@ class RouteOptOutputVisitor(NodeVisitor):
         if self.lb == self.ub:
             self.row["Best Cost"] = self.lb
             self.row["Timeout"] = False
-        else
+        else:
             self.row["Timeout"] = True
 
     def visit_search_time_line(self, node, visited_children):
@@ -80,6 +82,9 @@ class RouteOptOutputVisitor(NodeVisitor):
     def visit_mem_line(self, node, visited_children):
         #Maximum resident set size (kbytes): 28267720
         self.row["Memory"] = visited_children[1]
+
+    def visit_timeout_line(self, node, visited_children):
+        self.row["Timeout"]       = True
 
     def visit_int_list(self, node, visited_children):
         return node.text.replace(",", "")

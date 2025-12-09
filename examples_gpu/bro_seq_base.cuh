@@ -7,7 +7,7 @@
 #include <span>
 
 constexpr auto static ReadOnlyMemSize{256 * 1024}; // Cached in shared memory
-constexpr auto static CpuMemSize{44ll * 1024ll * 1024ll * 1024ll}; // Same size GPU memory: 48 - 4 for runtime!)
+constexpr auto static CpuMemSize{128ll * 1024ll * 1024ll * 1024ll}; // Same size GPU memory: 48 - 4 for runtime!)
 
 inline
 void printNodeInfo(std::vector<NodeInfo> const * const nodesInfo)
