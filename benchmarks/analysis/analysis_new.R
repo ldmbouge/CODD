@@ -100,11 +100,11 @@ route_data$Solver <- "ROUTEOPT"
 ## Read CODD-BB data
 csv_list <- c(
   "../results/tsptw_mst_triangleRO1_t600_AFG_202512081615.csv",
- # "../results/tsptw_mst_triangleRO1_t600_GendreauDumasExtended_202512082057.csv",
+  "../results/tsptw_mst_triangleRO1_t600_GendreauDumasExtended_202512082057.csv",
   "../results/tsptw_mst_triangleRO1_t600_Solnon25_feasible_202512071458.csv",
   "../results/tsptw_mst_triangleRO1_t600_Solnon25_infeasible_202512081021.csv",
-  "../results/tsptw_mst_triangleRO1_t600_SolomonPesant_202512081443.csv"
-  #"../results/tsptw_mst_triangleRO1_t600_SolomonPotvinBengio_202512081615.csv"
+  "../results/tsptw_mst_triangleRO1_t600_SolomonPesant_202512081443.csv",
+  "../results/tsptw_mst_triangleRO1_t600_SolomonPotvinBengio_202512091812.csv"
 
 )
 tmp <- lapply(csv_list, read.csv)
@@ -164,8 +164,23 @@ display_solvers_list <- c(
   "CODD-BB-MST"
 )
 
+solver_order <- c(
+  "CADDS-GPU",
+  "CADDS-GPU-SORTED",
+  "CADDS-SEQ", 
+  "DIDP-PAR",
+  "DIDP-RUST", 
+  "CODD-BB-MST",
+  "ROUTEOPT"
+)
+
 # Comparison
 names(all_data)
+
+all_data <- all_data %>%
+  mutate(
+    Solver = factor(Solver, levels = solver_order)
+  )
 
 benchmarks_info <- all_data %>%
   select(Benchmark, Instance) %>%
@@ -223,40 +238,7 @@ stats_common <- all_data %>%
     .groups = "drop"
   ) %>%
   complete(Solver = display_solvers_list, Benchmark) %>%
-  arrange(Benchmark, Solver)
-
-# Step 6: Statistics for SPECIFIC instances
-stats_specific <- all_data %>%
-  filter(!Timeout) %>%
-  semi_join(specific_instances, by = c("Benchmark", "Instance")) %>%
-  group_by(Benchmark,Solver) %>%
-  summarise(
-    n_solved = n(),
-    # Time statistics
-    sum_time = sum(Search.Time),
-    min_time = min(Search.Time),
-    max_time = max(Search.Time),
-    mean_time = mean(Search.Time),
-    stddev_time = sd(Search.Time),
-    geom_mean_time = exp(mean(log(Search.Time))),
-    
-    # Memory statistics
-    sum_memory = sum(Memory),
-    min_memory = min(Memory),
-    max_memory = max(Memory),
-    mean_memory = mean(Memory),
-    stddev_memory = sd(Memory),
-    geom_mean_memory = exp(mean(log(Memory))),
-    
-    # Nodes statistics
-    sum_nodes = sum(Nodes),
-    min_nodes = min(Nodes),
-    max_nodes = max(Nodes),
-    mean_nodes = mean(Nodes),
-    stddev_nodes = sd(Nodes),
-    geom_mean_nodes = exp(mean(log(Nodes))),
-    .groups = "drop"
-  )
+  arrange(Benchmark, factor(Solver, levels = solver_order))
 
 # Rounds and save to CSV
 temp <- stats_common %>%
@@ -280,55 +262,42 @@ temp <- stats_specific %>%
   mutate(Benchmark = ifelse(duplicated(Benchmark), "", Benchmark))
 write.csv(temp, "stats_specific_instances.csv", row.names = FALSE,quote = FALSE, na = "")
 
-# Add this to the end of your existing R script
-# Add this to the end of your existing R script
 
 # Set timeout value
 timeout_value <- 600
 
-# Prepare data - include ALL instances from all_data
-# Assign timeout value to unsolved (NA or Timeout=TRUE)
-performance_data <- all_data %>%
-  select(Benchmark, Solver, Instance, Search.Time, Timeout) %>%
-  mutate(
-    # Use 2x timeout for unsolved: either NA or Timeout=TRUE
-    Search.Time = ifelse(is.na(Search.Time) | Timeout, timeout_value * 2, Search.Time)
+normalize_solver <- function(x) {
+  case_when(
+    x == "DIDP-RUST"        ~ "RIDP",
+    x == "DIDP-PAR"         ~ "DIDP-Parallel",
+    x == "CADDS-GPU"        ~ "CADDS-GPU",
+    x == "CADDS-SEQ"        ~ "CADDS-Sequential",
+    x == "CADDS-GPU-SORTED" ~ "CADDS-GPU-Greedy",
+    x == "ROUTEOPT"         ~ "RouteOpt",
+    x == "CODD-BB-MST"      ~ "CODD-BnB-MST",
+    TRUE                    ~ x
   )
+}
 
-performance_data <- performance_data %>%
-  mutate(
-    Solver = case_when(
-      Solver == "DIDP-RUST" ~ "RIDP",
-      Solver == "DIDP-PAR" ~ "DIDP-Parallel",
-      Solver == "CADDS-GPU" ~ "CADDS-GPU",
-      Solver == "CADDS-SEQ" ~ "CADDS-Sequential",
-      Solver == "CADDS-GPU-SORTED" ~ "CADDS-GPU-Greedy",
-      Solver == "ROUTEOPT" ~ "RouteOpt",
-      TRUE ~ Solver
-    )
-  ) %>%
-  mutate(
-    Benchmark = case_when(
-      Benchmark == "Solnon25_feasible" ~ "Solnon (Feasible)",
-      Benchmark == "Solnon25_infeasible" ~ "Solnon (Infeasible)",
-      Benchmark == "SolomonPotvinBengio" ~ "Solomon-Potvin-Bengio",
-      Benchmark == "GendreauDumasExtended" ~ "Gendreau-Dumas-Extended",
-      Benchmark == "SolomonPesant" ~ "Solomon-Pesant",
-      TRUE ~ Benchmark
-    )
+normalize_benchmark <- function(x) {
+  case_when(
+    x == "Solnon25_feasible"     ~ "Solnon (Feasible)",
+    x == "Solnon25_infeasible"   ~ "Solnon (Infeasible)",
+    x == "SolomonPotvinBengio"   ~ "Solomon-Potvin-Bengio",
+    x == "GendreauDumasExtended" ~ "Gendreau-Dumas-Extended",
+    x == "SolomonPesant"         ~ "Solomon-Pesant",
+    TRUE                         ~ x
   )
+}
 
-performance_data <- performance_data %>%
-  mutate(
-    Solver_plot = factor(Solver, levels = rev(sort(unique(Solver))))
-  )
 solver_colors <- c(
   "RIDP"             = "#d73027",  # red (Rust)
   "DIDP-Parallel"    = "#fdd835",  # yellow (Python style)
   "CADDS-GPU"        = "#1b7837",  # dark green
   "CADDS-Sequential" = "#0071c5",  # Intel blue
   "CADDS-GPU-Greedy" = "#a6d96a",  # light green
-  "RouteOpt"         = "#984ea3"   # purple
+  "RouteOpt"         = "#984ea3",  # purple
+  "CODD-BnB-MST"     = "#00bfc4"   # cyan
 )
 
 solver_linetypes <- c(
@@ -337,8 +306,22 @@ solver_linetypes <- c(
   "CADDS-GPU"        = "solid",         # 1 on, 3 off (dotted)
   "CADDS-Sequential" = "solid",       # 1 on, 3 off, 4 on, 3 off
   "CADDS-GPU-Greedy" = "solid",         # 7 on, 3 off (long dash)
-  "RouteOpt"         = "11"        # 2 on, 2 off, 6 on, 2 off
+  "RouteOpt"         = "11",        # 2 on, 2 off, 6 on, 2 off
+  "CODD-BnB-MST"     = "1131"   # cyan
 )
+
+solver_order_norm <- normalize_solver(solver_order)
+
+performance_data <- all_data %>%
+  select(Benchmark, Solver, Instance, Search.Time, Timeout) %>%
+  mutate(
+    Search.Time = ifelse(is.na(Search.Time) | Timeout, timeout_value * 2, Search.Time),
+    Solver      = normalize_solver(Solver),
+    Solver      = factor(Solver, levels = solver_order_norm),
+    Solver_plot = factor(Solver, levels = rev(solver_order_norm)),
+    Benchmark   = normalize_benchmark(Benchmark)
+  )
+
 
 
 # Plot with stat_ecdf - now with both color and linetype aesthetics
@@ -371,7 +354,7 @@ p <- ggplot(performance_data, aes(x = Search.Time, color = Solver_plot, linetype
     legend.background = element_rect(fill = "white", color = "gray80", linewidth = 0.3),
     legend.text = element_text(size = 6),
     legend.title = element_blank(),
-    legend.key.width = unit(10, "pt"),
+    legend.key.width = unit(14, "pt"),
     legend.key.height = unit(8, "pt"),
     legend.key.spacing.x = unit(0, "pt"),
     legend.key.spacing.y = unit(0, "pt"),
