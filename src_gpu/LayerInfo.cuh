@@ -11,6 +11,8 @@ struct LightNode
 {
     State state;
     Labels labels;
+    gfl::u64 hash;
+    gfl::u32 isRepresented;
     gfl::f64 boundSrcToNode;
     gfl::u8 nEdgesSrcToNode;
     gfl::u8 labelsSrcToNode[N];
@@ -22,13 +24,11 @@ struct LightNode
     LightNode(State const & s, Labels const & l) noexcept :
             state(s),
             labels(l),
+            hash(0),
+            isRepresented(0),
             boundSrcToNode(0),
             nEdgesSrcToNode(0)
         {};
-
-
-    GFL_HOST_DEVICE
-    LightNode(LightNode const & other) noexcept {memcpy(this,&other,sizeof(LightNode));};
 };
 
 struct NodeInfo
@@ -97,9 +97,9 @@ struct LayerInfo
     gfl::i64 nChildren;
     gfl::i64 nRepresentatives;
     Node * children;
-    Node * tmpChildren;
-    NodeInfo * childrenInfo;
-    NodeInfo * tmpChildrenInfo;
+    //Node * tmpChildren;
+    //NodeInfo * childrenInfo;
+    //NodeInfo * tmpChildrenInfo;
 
     // Aux
     std::size_t cubTmpMemSize;
@@ -113,9 +113,9 @@ struct LayerInfo
         nChildren = 0;
         nRepresentatives = 0;
         children = nullptr;
-        tmpChildren = nullptr;
-        childrenInfo = nullptr;
-        tmpChildrenInfo = nullptr;
+//        tmpChildren = nullptr;
+//        childrenInfo = nullptr;
+//        tmpChildrenInfo = nullptr;
         cubTmpMemSize = 0;
         cubTmpMem = nullptr;
     }
@@ -139,6 +139,27 @@ struct HashDecomposer
         return {nodeInfo.hash};
     }
 };
+
+struct CmpNodeByHash
+{
+    template <typename Node>
+    GFL_HOST_DEVICE
+    bool operator()(const Node &lhs, const Node &rhs)
+    {
+        return lhs.hash < rhs.hash;
+    }
+};
+
+struct CmpNodeByRep
+{
+    template <typename Node>
+    GFL_HOST_DEVICE
+    bool operator()(const Node &lhs, const Node &rhs)
+    {
+        return lhs.isRepresented < rhs.isRepresented;
+    }
+};
+
 
 struct RepDecomposer
 {

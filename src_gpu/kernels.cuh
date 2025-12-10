@@ -211,7 +211,7 @@ void calcChildrenKernel(
     using namespace gfl;
 
     Node * const children = layerInfo->children;
-    NodeInfo * const childrenInfo = layerInfo->childrenInfo;
+    //NodeInfo * const childrenInfo = layerInfo->childrenInfo;
 
     assert(blockDim.x == warpSize);
 
@@ -223,6 +223,7 @@ void calcChildrenKernel(
         Node const pNode = layerInfo->parents[pIdx];
         for (i32 label = layerInfo->labelsInfo.minLabel + laneIdx(); label <= layerInfo->labelsInfo.maxLabel; label += warpSize)
         {
+
             u32 const maskActiveThreads = __activemask();
             i32 haveChild = 0;
             if (pNode.labels.contains(label))
@@ -244,18 +245,16 @@ void calcChildrenKernel(
 
                         // Node
                         cNode.state = cState.value();
+                        cNode.isRepresented = 0;
                         cNode.boundSrcToNode = cBoundSrcToNode;
                         memcpy(cNode.labelsSrcToNode, pNode.labelsSrcToNode, sizeof(cNode.labelsSrcToNode));
                         cNode.labelsSrcToNode[pNode.nEdgesSrcToNode] = label;
                         cNode.nEdgesSrcToNode = pNode.nEdgesSrcToNode + 1;
-
-                        // NodeInfo
                         if constexpr (Model::has_dom)
-                            cInfo.hash = xor64to32(Model::domHash(cNode.state));
+                            cNode.hash = Model::domHash(cNode.state);
                         else
-                            cInfo.hash = xor64to32(State::hash(cNode.state));
-                        cInfo.boundSrcToNode = cBoundSrcToNode;
-                        cInfo.isRepresented = 0;
+                            cNode.hash = State::hash(cNode.state);
+
                     }
                 }
             }
@@ -270,9 +269,8 @@ void calcChildrenKernel(
                 {
                     u32 const maskThreadsBefore = maskFilledThrough<u32>(laneIdx());
                     i64 const offset = popcount(maskThreadsWithChild & maskThreadsBefore);
-                    cInfo.idx = nChildrenInGlobal + offset;
-                    children[cInfo.idx] = cNode;
-                    childrenInfo[cInfo.idx] = cInfo;
+                    i64 const cIdx = nChildrenInGlobal + offset;
+                    children[cIdx] = cNode;
                 }
 
 //                if (laneIdx() == 1)
@@ -484,6 +482,36 @@ void checkStatePair(NodeInfo & iInfo, typename Model::State const & iState, Node
 }
 
 template<typename Model, typename Node>
+GFL_HOST_DEVICE
+void checkNodesPair(Node & iNode, Node & jNode)
+{
+    using namespace gfl;
+
+    if (Model::State::equal(iNode.state, jNode.state))
+    {
+        if (Model::betterEq(iNode.boundSrcToNode, jNode.boundSrcToNode))
+        {
+            jNode.isRepresented = 1;
+        }
+        else
+        {
+            iNode.isRepresented = 1;
+        }
+    }
+    if constexpr (Model::has_dom)
+    {
+        if (Model::betterEq(iNode.boundSrcToNode, jNode.boundSrcToNode) and Model::dom(iNode.state, jNode.state))
+        {
+            jNode.isRepresented = 1;
+        }
+        else if (Model::betterEq(jNode.boundSrcToNode, iNode.boundSrcToNode) and Model::dom(jNode.state, iNode.state))
+        {
+            iNode.isRepresented = 1;
+        }
+    }
+}
+
+template<typename Model, typename Node>
 void calcRep(gfl::i64 const nChildren, Node const * const children,  NodeInfo * const childrenInfo)
 {
     using namespace gfl;
@@ -546,6 +574,32 @@ void calcRepKernel(gfl::i64 const nNodes, Node const * const nodes,  NodeInfo * 
     }
 }
 
+template<typename Model, typename Node>
+GFL_GLOBAL
+void calcRepKernel(gfl::i64 const nNodes, Node * const nodes)
+{
+    using namespace gfl;
+
+    i64 cBegin,cEnd;
+    getBeginEnd(cBegin,cEnd,blockIdx.x,gridDim.x,nNodes);
+    for (i64 i = cBegin + threadIdx.x; i < cEnd; i += blockDim.x) {
+        auto & iChild = nodes[i];
+        for (i64 j = i + 1; j < nNodes; j += 1)
+        {
+            auto & jChild = nodes[j];
+            // TODO Check both undominates
+            if (iChild.hash == jChild.hash)
+            {
+                checkNodesPair<Model,Node>(iChild, jChild);
+            }
+            else
+            {
+                break;
+            }
+        }
+    }
+}
+
 
 template<typename Node>
 void countRep(LayerInfo<Node> * const layerInfo,  NodeInfo const * const childrenInfo)
@@ -569,6 +623,30 @@ void countRepKernel(gfl::i64 const nNodes, NodeInfo const * const nodesInfo, gfl
     {
         u32 const maskActiveThreads = __activemask();
         bool isRepresentative = nodesInfo[cIdx].isRepresented == 0;
+        u32 const maskRepresentatives = __ballot_sync(maskActiveThreads, isRepresentative);
+        i32 const nRepresentatives = popcount(maskRepresentatives);
+        if (nRepresentatives > 0)
+        {
+            if (laneIdx() == 0)
+            {
+                atomicAdd((ull *) nRep, (ull) nRepresentatives);
+            }
+        }
+    }
+}
+
+template<typename Node>
+GFL_GLOBAL
+void countRepKernel(gfl::i64 const nNodes, Node const * const nodes, gfl::i64 * nRep)
+
+{
+    using namespace gfl;
+
+    i64 const cIdx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (cIdx < nNodes)
+    {
+        u32 const maskActiveThreads = __activemask();
+        bool isRepresentative = nodes[cIdx].isRepresented == 0;
         u32 const maskRepresentatives = __ballot_sync(maskActiveThreads, isRepresentative);
         i32 const nRepresentatives = popcount(maskRepresentatives);
         if (nRepresentatives > 0)

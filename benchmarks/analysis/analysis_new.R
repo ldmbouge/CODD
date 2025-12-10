@@ -97,6 +97,21 @@ route_data <- route_data %>%
   mutate(Timeout=tolower(Timeout) == "true")
 route_data$Solver <- "ROUTEOPT"
 
+## Read CODD-BB data
+csv_list <- c(
+  "../results/tsptw_mst_triangleRO1_t600_AFG_202512081615.csv",
+ # "../results/tsptw_mst_triangleRO1_t600_GendreauDumasExtended_202512082057.csv",
+  "../results/tsptw_mst_triangleRO1_t600_Solnon25_feasible_202512071458.csv",
+  "../results/tsptw_mst_triangleRO1_t600_Solnon25_infeasible_202512081021.csv",
+  "../results/tsptw_mst_triangleRO1_t600_SolomonPesant_202512081443.csv"
+  #"../results/tsptw_mst_triangleRO1_t600_SolomonPotvinBengio_202512081615.csv"
+
+)
+tmp <- lapply(csv_list, read.csv)
+codd_bb_data <- do.call(rbind, tmp)
+codd_bb_data <- codd_bb_data %>% mutate(Timeout=tolower(Timeout) == "true")
+codd_bb_data$Solver <- "CODD-BB-MST"
+
 # Combine all datasets
 all_data <- bind_rows(
   didp_data,
@@ -104,7 +119,8 @@ all_data <- bind_rows(
   cadds_data,
   cadds_seq_data,
   cadds_sorted_data,
-  route_data
+  route_data,
+  codd_bb_data
 )
 
 
@@ -144,7 +160,8 @@ display_solvers_list <- c(
   "CADDS-GPU", 
   "CADDS-SEQ", 
   "CADDS-GPU-SORTED",
-  "ROUTEOPT"
+  "ROUTEOPT",
+  "CODD-BB-MST"
 )
 
 # Comparison
