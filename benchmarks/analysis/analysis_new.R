@@ -119,8 +119,8 @@ all_data <- bind_rows(
   cadds_data,
   cadds_seq_data,
   cadds_sorted_data,
-  route_data,
-  codd_bb_data
+  route_data
+ # codd_bb_data
 )
 
 
@@ -160,8 +160,8 @@ display_solvers_list <- c(
   "CADDS-GPU", 
   "CADDS-SEQ", 
   "CADDS-GPU-SORTED",
-  "ROUTEOPT",
-  "CODD-BB-MST"
+  "ROUTEOPT"
+#  "CODD-BB-MST"
 )
 
 solver_order <- c(
@@ -170,7 +170,7 @@ solver_order <- c(
   "CADDS-SEQ", 
   "DIDP-PAR",
   "DIDP-RUST", 
-  "CODD-BB-MST",
+#  "CODD-BB-MST",
   "ROUTEOPT"
 )
 
@@ -268,7 +268,7 @@ timeout_value <- 600
 
 normalize_solver <- function(x) {
   case_when(
-    x == "DIDP-RUST"        ~ "RIDP",
+    x == "DIDP-RUST"        ~ "RPID",
     x == "DIDP-PAR"         ~ "DIDP-Parallel",
     x == "CADDS-GPU"        ~ "CADDS-GPU",
     x == "CADDS-SEQ"        ~ "CADDS-Sequential",
@@ -291,7 +291,7 @@ normalize_benchmark <- function(x) {
 }
 
 solver_colors <- c(
-  "RIDP"             = "#d73027",  # red (Rust)
+  "RPID"             = "#d73027",  # red (Rust)
   "DIDP-Parallel"    = "#fdd835",  # yellow (Python style)
   "CADDS-GPU"        = "#1b7837",  # dark green
   "CADDS-Sequential" = "#0071c5",  # Intel blue
@@ -301,7 +301,7 @@ solver_colors <- c(
 )
 
 solver_linetypes <- c(
-  "RIDP"             = "31",      # solid line
+  "RPID"             = "31",      # solid line
   "DIDP-Parallel"    = "31",         # 4 on, 2 off
   "CADDS-GPU"        = "solid",         # 1 on, 3 off (dotted)
   "CADDS-Sequential" = "solid",       # 1 on, 3 off, 4 on, 3 off
@@ -366,7 +366,7 @@ p <- ggplot(performance_data, aes(x = Search.Time, color = Solver_plot, linetype
   )
 p
 k <- 2.5
-h <-2.2
+h <-2.4
 w <-2
 ggsave("ecdf_plot.pdf", plot = p, width = k * w, height = k*h, units = "in", dpi = 300)
 tikz("ecdf_plot.tikz", width = k * w, height = k*h, standAlone = FALSE)

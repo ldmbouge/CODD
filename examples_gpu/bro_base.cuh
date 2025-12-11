@@ -250,7 +250,12 @@ int run_bro(int argc,char* argv[])
             {
                 printf("?");
             }
-            printf(" | Batch %3d/%3d | BatchSize = %10ld\n", bIdx+1, nBatches, currentBatchSize);
+            i64 qSize = 0;
+            for(auto const & l : layers)
+            {
+                qSize += l.size();
+            }
+            printf(" | Batch %3d/%3d | BatchSize = %10ld | Q = %10ld\n", bIdx+1, nBatches, currentBatchSize,qSize);
             fflush(stdout);
 
             // Init
