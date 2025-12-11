@@ -28,7 +28,7 @@ void printLabels(Node const & node)
 }
 
 template<typename Model, typename Node>
-int run_bro_low_mem(int argc,char* argv[])
+int run_cadds_relaxed(int argc,char* argv[])
 {
     using namespace gfl;
     using LayerHelperType = LayerHelper<Node>;
@@ -36,7 +36,7 @@ int run_bro_low_mem(int argc,char* argv[])
     using LayerBufferType = std::vector<Node>;
 
     // Select GPU
-    auto const gpuId = 1;
+    auto const gpuId = 0;
     cudaSetDevice(gpuId);
     cudaDeviceProp deviceProp;
     cudaGetDeviceProperties(&deviceProp, gpuId);
@@ -250,7 +250,12 @@ int run_bro_low_mem(int argc,char* argv[])
             {
                 printf("?");
             }
-            printf(" | Batch %3d/%3d | BatchSize = %10ld\n", bIdx+1, nBatches, currentBatchSize);
+            i64 qSize = 0;
+            for(auto const & l : layers)
+            {
+                qSize += l.size();
+            }
+            printf(" | Batch %3d/%3d | BatchSize = %10ld | Q = %10ld\n", bIdx+1, nBatches, currentBatchSize,qSize);
             fflush(stdout);
 
             // Init
@@ -285,45 +290,43 @@ int run_bro_low_mem(int argc,char* argv[])
             i64 const nChildren = layerInfo->nChildren;
             if (nChildren > 0)
             {
-                //  Representatives
-                cub::DeviceMergeSort::SortKeys(
+               //  Representatives
+                cub::DeviceRadixSort::SortKeys(
                         layerInfo->cubTmpMem,
                         layerInfo->cubTmpMemSize,
-                        layerInfo->children,
+                        layerInfo->childrenInfo,
+                        layerInfo->tmpChildrenInfo,
                         nChildren,
-                        CmpNodeByHash(),
+                        HashDecomposer{},
                         lh->gpuMainQueue);
-                CHECK_LAST_CUDA_ERROR();
-                cudaStreamSynchronize(lh->gpuMainQueue);
                 CHECK_LAST_CUDA_ERROR();
 
                 blockSize = 128;
                 gridSize = roundUpDivPosInt<i32>(nChildren, blockSize);
                 calcRepKernel<Model><<<gridSize, blockSize, 0, lh->gpuMainQueue>>>(
                         nChildren,
-                        layerInfo->children);
-                CHECK_LAST_CUDA_ERROR();
-                cudaStreamSynchronize(lh->gpuMainQueue);
+                        layerInfo->children,
+                        layerInfo->tmpChildrenInfo);
                 CHECK_LAST_CUDA_ERROR();
 
                 blockSize = 32;
                 gridSize = roundUpDivPosInt<i32>(nChildren, blockSize);
                 countRepKernel<Node><<<gridSize, blockSize, 0, lh->gpuMainQueue>>>(
                         nChildren,
-                        layerInfo->children,
+                        layerInfo->tmpChildrenInfo,
                         &layerInfo->nRepresentatives);
                 CHECK_LAST_CUDA_ERROR();
 
                 if (sort)
                 {
-                    cub::DeviceMergeSort::SortKeys(
-                        layerInfo->cubTmpMem,
-                        layerInfo->cubTmpMemSize,
-                        layerInfo->children,
-                        nChildren,
-                        CmpNodeByHash(),
-                        lh->gpuMainQueue);
-                    CHECK_LAST_CUDA_ERROR();
+                    cub::DeviceRadixSort::SortKeys(
+                            layerInfo->cubTmpMem,
+                            layerInfo->cubTmpMemSize,
+                            layerInfo->tmpChildrenInfo,
+                            layerInfo->childrenInfo,
+                            nChildren,
+                            RepCostDecomposer{},
+                            lh->gpuMainQueue);
                 }
                 else
                 {
@@ -331,15 +334,28 @@ int run_bro_low_mem(int argc,char* argv[])
 //                    gridSize = roundUpDivPosInt<i32>(nChildren, blockSize);
 //                    shuffleRepKernel<Node><<<gridSize, blockSize, 0, lh->gpuMainQueue>>>(nChildren,layerInfo->tmpChildrenInfo);
 //                    cub::DeviceRadixSort::SortKeysDescending(
-                    cub::DeviceMergeSort::SortKeys(
+                    cub::DeviceRadixSort::SortKeys(
                             layerInfo->cubTmpMem,
                             layerInfo->cubTmpMemSize,
-                            layerInfo->children,
+                            layerInfo->tmpChildrenInfo,
+                            layerInfo->childrenInfo,
                             nChildren,
-                            CmpNodeByRep(),
+                            RepDecomposer{},
                             lh->gpuMainQueue);
-                    CHECK_LAST_CUDA_ERROR();
                 }
+                CHECK_LAST_CUDA_ERROR();
+
+                blockSize = 128;
+                gridSize = roundUpDivPosInt<i32>(nChildren, blockSize);
+                copyRepKernel<Node><<<gridSize, blockSize, 0, lh->gpuMainQueue>>>(
+                        &layerInfo->nRepresentatives,
+                        layerInfo->childrenInfo,
+                        layerInfo->children,
+                        layerInfo->tmpChildren,
+                        true);
+                CHECK_LAST_CUDA_ERROR();
+
+                swapPtrKernel<Node><<<1,1,0,lh->gpuMainQueue>>>(&layerInfo->children, &layerInfo->tmpChildren);
                 CHECK_LAST_CUDA_ERROR();
 
                 // Labels
