@@ -63,10 +63,10 @@ struct LayerHelper
         i32 const nChildren = layerInfo->nParents * layerInfo->labelsInfo.nLabels;
 
         layerInfo->children = allocator->allocateArray<Node>(nChildren);
-//        layerInfo->tmpChildren = allocator->allocateArray<Node>(nChildren);
-//
-//        layerInfo->childrenInfo = allocator->allocateArray<NodeInfo>(nChildren);
-//        layerInfo->tmpChildrenInfo =  allocator->allocateArray<NodeInfo>(nChildren);
+        layerInfo->tmpChildren = allocator->allocateArray<Node>(nChildren);
+
+        layerInfo->childrenInfo = allocator->allocateArray<NodeInfo>(nChildren);
+        layerInfo->tmpChildrenInfo =  allocator->allocateArray<NodeInfo>(nChildren);
     }
 
     static
@@ -75,12 +75,13 @@ struct LayerHelper
         using namespace gfl;
 
         auto const nChildren = layerInfo->nParents * layerInfo->labelsInfo.nLabels;
-        cub::DeviceMergeSort::SortKeys( // Initialize cubTmpMemSize
+        cub::DeviceRadixSort::SortKeys( // Initialize cubTmpMemSize
                 layerInfo->cubTmpMem,
                 layerInfo->cubTmpMemSize,
-                layerInfo->children,
+                layerInfo->childrenInfo,
+                layerInfo->tmpChildrenInfo,
                 nChildren,
-                CmpNodeByHash()); // Bigger key used
+                DummyDecomposer64{}); // Bigger key used
         CHECK_LAST_CUDA_ERROR();
         layerInfo->cubTmpMem = allocator->allocate<gfl::u8>(layerInfo->cubTmpMemSize, 16);
     }
@@ -97,21 +98,22 @@ struct LayerHelper
 
         // initChildren()
         i64 const nChildren = nParents * fanout;
-        memSize += (sizeof(Node) * nChildren + StackAllocator::DefaultAlign);
-        //memSize += 2 * (sizeof(NodeInfo) * nChildren + StackAllocator::DefaultAlign);
+        memSize += 2 * (sizeof(Node) * nChildren + StackAllocator::DefaultAlign);
+        memSize += 2 * (sizeof(NodeInfo) * nChildren + StackAllocator::DefaultAlign);
 
         // initAux()
         if (aux)
         {
             std::size_t memSizeSort = 0;
-            void * dummyTmpMem = nullptr;
-            Node * dummyNodes = nullptr;
-            cub::DeviceMergeSort::SortKeys( // Initialize cubTmpMemSize
+            void *dummyTmpMem = nullptr;
+            NodeInfo *dummyChildrenInfo = nullptr;
+            cub::DeviceRadixSort::SortKeys( // Initialize cubTmpMemSize
                     dummyTmpMem,
                     memSizeSort,
-                    dummyNodes,
+                    dummyChildrenInfo,
+                    dummyChildrenInfo,
                     nChildren,
-                    CmpNodeByHash()); // Bigger key used
+                    RepCostDecomposer{}); // Bigger key used
             CHECK_LAST_CUDA_ERROR();
             memSize += memSizeSort;
         }

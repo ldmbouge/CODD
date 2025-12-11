@@ -7,12 +7,10 @@
 #include <Types.hpp>
 
 template<typename State, typename Labels, int N>
-struct LightNode
+struct alignas(16) LightNode
 {
     State state;
     Labels labels;
-    gfl::u64 hash;
-    gfl::u32 isRepresented;
     gfl::f64 boundSrcToNode;
     gfl::u8 nEdgesSrcToNode;
     gfl::u8 labelsSrcToNode[N];
@@ -24,14 +22,12 @@ struct LightNode
     LightNode(State const & s, Labels const & l) noexcept :
             state(s),
             labels(l),
-            hash(0),
-            isRepresented(0),
             boundSrcToNode(0),
             nEdgesSrcToNode(0)
         {};
 };
 
-struct NodeInfo
+struct alignas(16) NodeInfo
 {
     gfl::u64 hash;
     gfl::i64 idx;
@@ -97,9 +93,9 @@ struct LayerInfo
     gfl::i64 nChildren;
     gfl::i64 nRepresentatives;
     Node * children;
-    //Node * tmpChildren;
-    //NodeInfo * childrenInfo;
-    //NodeInfo * tmpChildrenInfo;
+    Node * tmpChildren;
+    NodeInfo * childrenInfo;
+    NodeInfo * tmpChildrenInfo;
 
     // Aux
     std::size_t cubTmpMemSize;
@@ -113,11 +109,22 @@ struct LayerInfo
         nChildren = 0;
         nRepresentatives = 0;
         children = nullptr;
-//        tmpChildren = nullptr;
-//        childrenInfo = nullptr;
-//        tmpChildrenInfo = nullptr;
+        tmpChildren = nullptr;
+        childrenInfo = nullptr;
+        tmpChildrenInfo = nullptr;
         cubTmpMemSize = 0;
         cubTmpMem = nullptr;
+    }
+};
+
+
+struct DummyDecomposer64
+{
+    GFL_HOST_DEVICE
+    gfl::tuple<gfl::u64&> operator()(NodeInfo &) const
+    {
+        gfl::u64 tmp = 0;
+        return {tmp};
     }
 };
 
