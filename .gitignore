@@ -9,3 +9,4 @@ release/**
 comp
 .idea/**
 cmake-build-*/
+benchmarks/analysis/.R*
