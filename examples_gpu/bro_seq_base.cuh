@@ -220,7 +220,7 @@ int run_bro_seq(int argc,char* argv[])
                     std::sort(layerInfo->childrenInfo, layerInfo->childrenInfo + nChildren, cmpByRep);
                 }
 
-                swapPtr(&layerInfo->children, &layerInfo->tmpNodes);
+                swapPtr(&layerInfo->children, &layerInfo->tmpChildren);
                 copyRep(layerInfo, sort);
 
                 // Labels

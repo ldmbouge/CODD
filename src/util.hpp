@@ -332,6 +332,8 @@ public:
       return *this;
    }
    constexpr unsigned short nbWords() const noexcept { return nbw;}
+
+   GFL_HOST_DEVICE
    constexpr unsigned short largestPossible() const noexcept { return nbw*64;}
    void clear() noexcept {
       for(short i=0;i < nbw;i++)

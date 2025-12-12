@@ -188,23 +188,23 @@ int run_bro(int argc,char* argv[])
         // Find the right layer to expand
         i32 const dne = deepestNotEmpty();
         i32 lIdx = dne;
-//        if ((iteration / layers.size()) % 3 == 0)
-//        {
-//            lIdx = shallowestNotEmpty();
-//
-//            while (lIdx != dne)
-//            {
-//                // The current layer is big enough to fully load the GPU
-//                // (i.e., maximize filtering) but the next it is not.
-//                if (layers[lIdx].size() >= offloadSize[lIdx] and
-//                        layers[lIdx+1].size() > 0  and layers[lIdx+1].size() <= offloadSize[lIdx+1])
-//                {
-//                    printf("Triggered!\n");
-//                    break;
-//                }
-//                lIdx = shallowestNotEmptyBelow(lIdx);
-//            }
-//        }
+        if ((iteration / layers.size()) % 3 == 0)
+        {
+            lIdx = shallowestNotEmpty();
+
+            while (lIdx != dne)
+            {
+                // The current layer is big enough to fully load the GPU
+                // (i.e., maximize filtering) but the next it is not.
+                if (layers[lIdx].size() >= offloadSize[lIdx] and
+                        layers[lIdx+1].size() > 0  and layers[lIdx+1].size() <= offloadSize[lIdx+1])
+                {
+                    printf("Triggered!\n");
+                    break;
+                }
+                lIdx = shallowestNotEmptyBelow(lIdx);
+            }
+        }
 
         // Grow number of layers on demand
         assert(lIdx >= 0);

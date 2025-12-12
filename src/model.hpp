@@ -47,6 +47,7 @@ concept HasMerge =
     requires(M const & m, S const & s)
     {
         { m.smf(s,s) } -> std::same_as<gfl::optional<S>>;
+        { m.ssf(s,s) } -> std::same_as<gfl::f32>;
     };
 
 template<typename M, typename S>

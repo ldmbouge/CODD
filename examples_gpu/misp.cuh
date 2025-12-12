@@ -77,7 +77,8 @@ struct Misp : MispBase<N>
             Set out = s.sel;
             out.remove(s.n);   // remove n from state
             if (l) out.diffWith(MispBase<N>::adj[s.n]); // remove neighbors of n from state (when taking n -- label==1 -- )
-            return State{out, out.empty() ? MispBase<N>::nNodes : s.n + 1}; // build state accordingly
+           // return State{out, out.empty() ? MispBase<N>::nNodes : s.n + 1}; // build state accordingly
+            return State{out, s.n + 1}; // build state accordingly
         }
     }
 
@@ -94,7 +95,19 @@ struct Misp : MispBase<N>
     constexpr static double bestValue() noexcept { return std::numeric_limits<double>::max(); }
     constexpr static double worstValue() noexcept { return std::numeric_limits<double>::lowest(); } // lowest() instead of min() because double
 
-    constexpr static bool has_merge = false;
+    constexpr static bool has_merge = true;
+    GFL_HOST_DEVICE
+    gfl::optional<State> smf(State const & s1, State const & s2) const noexcept
+    {
+        return State{s1.sel | s2.sel,std::min(s1.n,s2.n)};
+    };
+    // State similarity function
+    GFL_HOST_DEVICE
+    gfl::f32 ssf(State const & s1, State const & s2) const noexcept
+    {
+        return static_cast<gfl::f32>(s1.sel.interWith(s2.sel).size()) / static_cast<gfl::f32>(s1.sel.largestPossible());
+    };
+
 
     constexpr static bool has_local = true;
     GFL_HOST_DEVICE

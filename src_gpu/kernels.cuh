@@ -157,13 +157,12 @@ void calcChildren(
                             memcpy(cNode.labelsSrcToNode, pNode.labelsSrcToNode, sizeof(cNode.labelsSrcToNode));
                             cNode.labelsSrcToNode[pNode.nEdgesSrcToNode] = label;
                             cNode.nEdgesSrcToNode = pNode.nEdgesSrcToNode + 1;
-                            if constexpr (Model::has_dom)
-                                cNode.hash = Model::domHash(cNode.state);
-                            else
-                                cNode.hash = State::hash(cNode.state);
 
                             // NodeInfo
-                            cInfo.hash = cNode.hash;
+                            if constexpr (Model::has_dom)
+                                cInfo.hash = Model::domHash(cNode.state);
+                            else
+                                cInfo.hash = State::hash(cNode.state);
                             cInfo.boundSrcToNode = cBoundSrcToNode;
                             cInfo.isRepresented = 0;
                             cInfo.idx = layerInfo->nChildren;
