@@ -122,7 +122,7 @@ struct Misp : MispBase<N>
         return s.sel.size() - MispBase<N>::minAdj;
     }
 
-    constexpr static bool has_dom = true;
+    constexpr static bool has_dom = false;
     GFL_HOST_DEVICE
     static bool dom(State const & s1, State const & s2) noexcept
     {
@@ -136,8 +136,8 @@ struct Misp : MispBase<N>
     static std::size_t domHash(State const & s) noexcept
     {
         std::size_t seed = 0;
-        hash_combine(seed, static_cast<std::size_t>(s.n));
-        hash_combine(seed, gfl::roundUpToMultiple<std::size_t>(s.sel.size(),2));
+        //hash_combine(seed, static_cast<std::size_t>(s.n));
+        //hash_combine(seed, gfl::roundUpToMultiple<std::size_t>(s.sel.size(),2));
         return seed;
     }
     GFL_HOST_DEVICE

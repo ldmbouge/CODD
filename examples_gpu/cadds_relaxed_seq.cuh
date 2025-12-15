@@ -22,6 +22,71 @@ void printNodeInfo(std::vector<NodeInfo> const * const nodesInfo)
     }
 }
 
+template <typename Model, typename LayerInfoType>
+void filterChildren(LayerInfoType * layerInfo, bool sort)
+{
+    using namespace gfl;
+
+    i64 const & nChildren = layerInfo->nChildren;
+    auto cmpByHash = [](NodeInfo const & a, NodeInfo const & b){return a.hash < b.hash;};
+    std::sort(
+        layerInfo->childrenInfo,
+        layerInfo->childrenInfo + nChildren,
+        cmpByHash);
+
+    calcRep<Model>(
+                nChildren,
+                layerInfo->children,
+                layerInfo->childrenInfo);
+
+    countRep<Node>(
+                layerInfo,
+                layerInfo->childrenInfo);
+
+    if (sort) {
+        auto cmpByRepCost = [](NodeInfo const &a, NodeInfo const &b)
+        {
+            std::pair<u32, f64> const aa = {a.isRepresented, a.boundSrcToNode};
+            std::pair<u32, f64> const bb = {b.isRepresented, b.boundSrcToNode};
+            return aa < bb;
+        };
+        std::sort(
+            layerInfo->childrenInfo,
+            layerInfo->childrenInfo + nChildren,
+            cmpByRepCost);
+    }
+    else {
+        auto cmpByRep = [](NodeInfo const &a, NodeInfo const &b)
+        {
+            return a.isRepresented < b.isRepresented;
+        };
+        std::sort(
+            layerInfo->childrenInfo,
+            layerInfo->childrenInfo + nChildren,
+            cmpByRep);
+    }
+
+    swapPtr(&layerInfo->children, &layerInfo->tmpChildren);
+
+    copyRep(layerInfo, sort);
+}
+
+template <typename Model, typename LayerInfoType>
+void calcMergeScore(LayerInfoType * layerInfo)
+{
+    using namespace gfl;
+    i64 const n = countOrderedPairs(layerInfo->nChildren);
+    for(i64 i = 0; i < layerInfo->nChildren - 1; i += 1)
+    {
+        for(i64 j = i+1; j < layerInfo->nChildren; j += 1)
+        {
+            i64 const pairIdx = pairToIdx(i,j,n);
+            f32 const pairScore =
+            layerInfo->mergeInfo[pairIdx] = MergeInfo(i,j,pairScore);
+        }
+    }
+}
+
 template<typename Node>
 void printLabels(Node const & node)
 {
@@ -30,7 +95,7 @@ void printLabels(Node const & node)
 }
 
 template<typename Model, typename Node>
-int run_bro_seq(int argc,char* argv[])
+int run_cadds_relaxed_seq(int argc,char* argv[])
 {
     using namespace gfl;
     using LayerHelperType = LayerHelper<Node>;
@@ -158,7 +223,7 @@ int run_bro_seq(int argc,char* argv[])
                    lIdx,
                    expandedNodes,
                    currentLayer.size(),
-                   currentLayer.size()-currentBatchSize);
+                   currentLayer.size()-fragmentSize);
             printf( " | MemSize = ");
             printMemSize(sizeof(Node) * currentLayer.size());
             printf( " | Cost = ");
@@ -170,7 +235,12 @@ int run_bro_seq(int argc,char* argv[])
             {
                 printf("?");
             }
-            printf(" | Batch %3d/%3d | BatchSize = %10ld\n", bIdx+1, nBatches, currentBatchSize);
+            i64 qSize = 0;
+            for (auto const & l : layers)
+            {
+                qSize += l.size();
+            }
+            printf(" | Batch %3d/%3d | BatchSize = %10ld | Q = %10ld\n", bIdx+1, nBatches, currentBatchSize, qSize);
             fflush(stdout);
 
             // Init
@@ -180,48 +250,68 @@ int run_bro_seq(int argc,char* argv[])
             memcpy(layerInfo->parents,currentBatch.data(),sizeof(Node) * currentBatchSize);
             LayerHelperType::initChildren(layerInfo, gAllocator);
 
-            // Children
-            calcChildren(
-                    model,
-                    layerInfo,
-                    pBound,
-                    DDCtx);
+            // ### Algorithm
+            // // 1) Given $n$ roots, construct $d$, the relaxed MDD.
+            // 1.1) Backup the roots (see 3)
+            // 1.2) Calculate children
+            // 1.3) If no children, set the worst possible dual bound and go to 2)
+            // 1.4) If solution layer, save the best dual bound and go to 2)
+            // 1.5) Filter children by eq/dom
+            // 1.6) Merge children until $nChildren <= nParents$
+            // 1.6.1) Calculate $(c_i, c_j, mergeScore)$ for each i < j <= nChildren,
+            // 1.6.2) Score triplet by score
+            // 1.6.3) Sequentially merge (nChildren - nParen) valid tuples.
+            //        A tuple is valid if its nodes hans not already been merged.
+            // 1.7) Parents <- Children and go to 1.2)
 
-            i64 const nChildren = layerInfo->nChildren;
-            if (nChildren > 0)
+            // 2) If $dualBound(d) > primalBound$ return no children, otherwise go to 3).
+
+            // 3) Calculate the children of the $n$ roots and return them.
+            // 3.1) Restore the roots
+            // 3.2) Calculate children
+            // 3.3) Filter children by eq/dom
+            // 3.4) Set dual bound of each child.
+            // 3.5) Return the children.
+            // ###
+
+            // 1.1) Backup the roots (see 3)
+            memcpy(layerInfo->tmpParents,layerInfo->parents,sizeof(Node) * layerInfo->nParents);
+
+            while (true)
             {
-               //  Representatives
-                auto cmpByHash = [](NodeInfo const & a, NodeInfo const & b){return a.hash < b.hash;};
-                std::sort(layerInfo->childrenInfo, layerInfo->childrenInfo + nChildren, cmpByHash);
+                // 1.2) Calculate children
+                calcChildren(model,layerInfo,pBound,DDCtx);
 
-                calcRep<Model>(
-                        nChildren,
-                        layerInfo->children,
-                        layerInfo->childrenInfo);
-
-                countRep<Node>(
-                        layerInfo,
-                        layerInfo->childrenInfo);
-
-                if (sort) {
-                    auto cmpByRepCost = [](NodeInfo const &a, NodeInfo const &b)
-                    {
-                        std::pair<u32, f64> const aa = {a.isRepresented, a.boundSrcToNode};
-                        std::pair<u32, f64> const bb = {b.isRepresented, b.boundSrcToNode};
-                        return aa < bb;
-                    };
-                    std::sort(layerInfo->childrenInfo, layerInfo->childrenInfo + nChildren, cmpByRepCost);
-                }
-                else {
-                    auto cmpByRep = [](NodeInfo const &a, NodeInfo const &b)
-                    {
-                        return a.isRepresented < b.isRepresented;
-                    };
-                    std::sort(layerInfo->childrenInfo, layerInfo->childrenInfo + nChildren, cmpByRep);
+                // 1.3) If no children, set the worst possible dual bound and go to 2)
+                if (layerInfo->nChildren == 0)
+                {
+                    layerInfo->dBound = model->worstValue();
+                    break;
                 }
 
-                swapPtr(&layerInfo->children, &layerInfo->tmpChildren);
-                copyRep(layerInfo, sort);
+                // 1.4) If solution layer, save the best dual bound and go to 2)
+                if (model->isTarget(layerInfo->children[0]))
+                {
+                    for (i64 cIdx = 0; cIdx < layerInfo->nChildren; cIdx += 1)
+                    {
+                        i64 const cBound = layerInfo->children[cIdx].boundSrcToNode;
+                        layerInfo->dBound = model->isBetter(cBound, layerInfo->dBound) ? cBound: layerInfo->dBound;
+                    }
+                    break;
+                }
+                // 1.5) Filter children by eq/dom
+                filterChildren<Model,LayerInfoType>(layerInfo,sort);
+                // Todo update nChildren with nRepresentatives
+                calcMergeScore(layerInfo);
+
+                // 1.6) Merge children until $nChildren <= nParents$
+                    // 1.6.1) Calculate $(c_i, c_j, mergeScore)$ for each i < j <= nChildren,
+                    // 1.6.2) Score triplet by score
+                    // 1.6.3) Sequentially merge (nChildren - nParen) valid tuples.
+                }
+            }
+
+
 
                 // Labels
                 layerInfo->labelsInfo.reset();

@@ -70,6 +70,18 @@ struct LayerHelper
     }
 
     static
+    void initSim(LayerInfoType * layerInfo, gfl::StackAllocator * allocator) noexcept
+    {
+        using namespace gfl;
+
+        i32 const nChildren = layerInfo->nParents * layerInfo->labelsInfo.nLabels;
+        i64 const nPairs = countOrderedPairs(nChildren);
+
+        layerInfo->simInfo = allocator->allocateArray<MergeInfo>(nPairs);
+        layerInfo->tmpSimInfo = allocator->allocateArray<MergeInfo>(nPairs);
+    }
+
+    static
     void initAux(LayerInfoType * layerInfo, gfl::StackAllocator * allocator) noexcept
     {
         using namespace gfl;
@@ -87,7 +99,7 @@ struct LayerHelper
     }
 
     static
-    gfl::i64 calcMemSize(gfl::i64 const nParents, gfl::i32 const fanout, bool aux)
+    gfl::i64 calcMemSize(gfl::i64 const nParents, gfl::i32 const fanout, bool aux, bool sim)
     {
         using namespace gfl;
 
@@ -100,6 +112,11 @@ struct LayerHelper
         i64 const nChildren = nParents * fanout;
         memSize += 2 * (sizeof(Node) * nChildren + StackAllocator::DefaultAlign);
         memSize += 2 * (sizeof(NodeInfo) * nChildren + StackAllocator::DefaultAlign);
+
+        if (sim)
+        {
+            memSize += 2 * (sizeof(MergeInfo) * countOrderedPairs(nChildren) + StackAllocator::DefaultAlign);
+        }
 
         // initAux()
         if (aux)
@@ -144,5 +161,4 @@ struct LayerHelper
         }
         return lbParents;
     }
-
 };

@@ -38,6 +38,23 @@ struct alignas(16) NodeInfo
     NodeInfo() noexcept {};
 };
 
+struct alignas(16) MergeInfo
+{
+    gfl::i32 aIdx;
+    gfl::i32 bIdx;
+    gfl::f32 score;
+    gfl::u32 isRepresented;
+
+    GFL_HOST_DEVICE
+    MergeInfo() noexcept {};
+    MergeInfo(gfl::i32 const i, gfl::i32 const j, gfl::f32 const s) noexcept :
+        aIdx(i),
+        bIdx(j),
+        score(s),
+        isRepresented(0)
+        {};
+};
+
 struct LabelsInfo
 {
     // Labels
@@ -86,7 +103,9 @@ struct LayerInfo
     // Parents
     gfl::i64 nParents;
     Node * parents;
+    Node * tmpParents;
 
+    gfl::f64 dBound;
     LabelsInfo labelsInfo;
 
     // Children
@@ -94,8 +113,11 @@ struct LayerInfo
     gfl::i64 nRepresentatives;
     Node * children;
     Node * tmpChildren;
+    // TODO Make union NodeInfo - SimInfo to save space
     NodeInfo * childrenInfo;
     NodeInfo * tmpChildrenInfo;
+    MergeInfo * mergeInfo;
+    MergeInfo * tmpMergeInfo;
 
     // Aux
     std::size_t cubTmpMemSize;
@@ -105,6 +127,8 @@ struct LayerInfo
     {
         nParents = 0;
         parents = nullptr;
+        tmpParents = nullptr;
+        dBound = 0;
         labelsInfo = LabelsInfo();
         nChildren = 0;
         nRepresentatives = 0;

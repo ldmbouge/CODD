@@ -151,10 +151,52 @@ namespace gfl
     }
 
     template <typename TOut, typename TIn1, typename TIn2, typename... TRest>
-    GFL_HOST_DEVICE constexpr TOut max(TIn1 const a, TIn2 const b, TRest const... rest)
+    GFL_HOST_DEVICE constexpr
+    TOut max(TIn1 const a, TIn2 const b, TRest const... rest)
     {
         TOut const ab = max<TOut>(a, b);
         return max<TOut>(ab, rest...);
+    }
+
+    // Ordered pairs
+    template <typename T>
+    GFL_HOST_DEVICE constexpr
+    T countOrderedPairs(T const n)
+    {
+        return n * (n + 1) / 2;
+    }
+
+    template <typename T>
+    GFL_HOST_DEVICE constexpr
+    T offsetFor(T const i, T const n)
+    {
+        // Number of pairs with first element < i
+        // Pairs starting with 0: (0,1),(0,2),...,(0,n-1) -> n-1 -> n-0-1
+        // Pairs starting with 1: (1,2),(1,3),...,(1,n-1) -> n-2 -> n-1-1
+        // Pairs starting with 2: (2,3),(2,4),...,(2,n-1) -> n-3 -> n-2- 1
+        // ...
+        // Sum for 0 < i < n-1 of (n-i-1) -> i*(2*n-i-1)/2;
+        return i * (2 * n - i - 1) / 2;
+    }
+
+    template <typename T>
+    GFL_HOST_DEVICE constexpr
+    T pairToIdx(T const i, T const j, T const n)
+    {
+        return offsetFor(i, n) + (j - i - 1);
+    }
+
+    template <typename T>
+    GFL_HOST_DEVICE constexpr
+    tuple<T,T> idxToPair(T const idx, T const n)
+    {
+        // Since offsetFor(i,n) <= idx < offsetFor(i+1,n) and offsetFor(i,n) = i*(2*n-i-1)/2
+        // We solve i*(2*n-i-1)/2 = idx
+        T const b = 2 * n - 1;
+        T const s = floor(sqrt(b * b - 8 * idx));
+        T const i = (b - s) / 2;
+        T const j = i + 1 + (idx - offsetFor(i, n));
+        return {i,j};
     }
 
     // Bits
