@@ -14,7 +14,20 @@ template <typename T>
 GFL_HOST_DEVICE
 void swapPtr(T** a, T** b)
 {
+    assert(a != nullptr);
+    assert(b != nullptr);
     T * tmp = *a;
+    *a = *b;
+    *b = tmp;
+}
+
+template <typename T>
+GFL_HOST_DEVICE
+void swapVal(T* a, T* b)
+{
+    assert(a != nullptr);
+    assert(b != nullptr);
+    T tmp = *a;
     *a = *b;
     *b = tmp;
 }

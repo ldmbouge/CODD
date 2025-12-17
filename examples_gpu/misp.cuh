@@ -97,9 +97,9 @@ struct Misp : MispBase<N>
 
     constexpr static bool has_merge = true;
     GFL_HOST_DEVICE
-    gfl::optional<State> smf(State const & s1, State const & s2) const noexcept
+    State smf(State const & s1, State const & s2) const noexcept
     {
-        return State{s1.sel | s2.sel,std::min(s1.n,s2.n)};
+        return State{s1.sel | s2.sel,min(s1.n,s2.n)};
     };
     // State similarity function
     GFL_HOST_DEVICE

@@ -32,27 +32,15 @@ struct alignas(16) NodeInfo
     gfl::u64 hash;
     gfl::i64 idx;
     gfl::u32 isRepresented;
-    gfl::f64 boundSrcToNode;
+    union
+    {
+        gfl::f64 boundSrcToNode;
+        gfl::f64 score;
+    };
+
 
     GFL_HOST_DEVICE
     NodeInfo() noexcept {};
-};
-
-struct alignas(16) MergeInfo
-{
-    gfl::i32 aIdx;
-    gfl::i32 bIdx;
-    gfl::f32 score;
-    gfl::u32 isRepresented;
-
-    GFL_HOST_DEVICE
-    MergeInfo() noexcept {};
-    MergeInfo(gfl::i32 const i, gfl::i32 const j, gfl::f32 const s) noexcept :
-        aIdx(i),
-        bIdx(j),
-        score(s),
-        isRepresented(0)
-        {};
 };
 
 struct LabelsInfo

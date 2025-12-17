@@ -67,24 +67,84 @@ void filterChildren(LayerInfoType * layerInfo, bool sort)
     }
 
     swapPtr(&layerInfo->children, &layerInfo->tmpChildren);
+}
 
-    copyRep(layerInfo, sort);
+template <typename State>
+float getStateSim(State const & a, State const & b)
+{
+    using namespace gfl;
+    return 0.0;
+}
+
+template <typename State>
+float getScore(State const & sBase, State const & sToEval)
+{
+    using namespace gfl;
+    f64 const cBase = sBase.boundSrcToNode;
+    f64 const cDiff = sToEval.boundSrcToNode - cBase;  // Cost difference
+    f64 const sSim = getStateSim(sBase,sToEval);   // State similarity between 0.0 and 1.0, 0.0 <-> identical
+    f64 const alpha = 1.0;                             // Scaling factor, default at 1.0
+
+    //TODO Check branchless version
+
+    if (cDiff < cBase * 0.1)           // Very similar cost, ignore the cost component
+        return cBase * (alpha + sSim); // The more different is the state the better
+
+    if (sSim < 0.1)                     // Very similar states, ignore state difference
+        return cBase + (alpha * cDiff); // The smaller the cost difference the better
+
+    return cBase + (alpha * cDiff * sSim); // The more the state is different, the more we "discount" the cost difference
 }
 
 template <typename Model, typename LayerInfoType>
-void calcMergeScore(LayerInfoType * layerInfo)
+void mergeChildren(LayerInfoType * layerInfo, gfl::i32 const width)
 {
+    // 1) Set $score(s) = cost(s)$ for each state $s$.
+    // 2) Sort the states by increasing score.
+    // 3) Divide the array of sorted states in chunks.
+    // 4) For each chunk $C = [s_1,s_2,...,s_k]$:
+    // 4.1) $s_1$ is the best state in the chunk by cost.
+    // 4.2) Set $score(s_i) to promote (within the chunk) states with low cost that are different from $s_1$.
+    // 5) Sort the states by increasing score. // This should promote (globally) heterogeneous states with low cost.
+    // 6) Keep the best $w-1$ states, and merge all the others in 1 state.
     using namespace gfl;
-    i64 const n = countOrderedPairs(layerInfo->nChildren);
-    for(i64 i = 0; i < layerInfo->nChildren - 1; i += 1)
+
+    for(i64 i = 0; i < layerInfo->nChildren; i += 1)
     {
-        for(i64 j = i+1; j < layerInfo->nChildren; j += 1)
+        i64 const cIdx = layerInfo->childrenInfo[i].idx;
+        layerInfo->childrenInfo[i].score = layerInfo->children[cIdx].boundSrcToNode;
+    }
+
+    auto cmpByScore = [](NodeInfo const &a, NodeInfo const &b) { return a.score < b.score; };
+    std::sort(layerInfo->childrenInfo, layerInfo->childrenInfo + layerInfo->nChildren, cmpByScore);
+
+    i64 const nChunks = width;
+    for (i32 chkIdx = 0; chkIdx < nChunks; chkIdx += 1)
+    {
+        i64 chkBegin, chkEnd;
+        getBeginEnd(chkBegin,chkEnd,chkIdx, nChunks,layerInfo->nParents);
+        i64 const baseIdx = layerInfo.childrenInfo[chkBegin].idx;
+        auto const & sBase = layerInfo->children[baseIdx].state;
+        for (i64 cIdx = chkBegin + 1; cIdx < chkEnd; cIdx += 1)
         {
-            i64 const pairIdx = pairToIdx(i,j,n);
-            f32 const pairScore =
-            layerInfo->mergeInfo[pairIdx] = MergeInfo(i,j,pairScore);
+            i64 const toEvalIdx = layerInfo.childrenInfo[cIdx].idx;
+            auto const & sToEval = layerInfo->children[toEvalIdx];
+            layerInfo->childrenInfo[cIdx].score = getScore(sBase,sToEval);
         }
     }
+
+    std::sort(layerInfo->childrenInfo, layerInfo->childrenInfo + layerInfo->nChildren, cmpByScore);
+
+    i64 const baseIdx = layerInfo->childrenInfo[width-1].idx;
+    auto & nBase = layerInfo->children[baseIdx];
+    for (i64 cIdx = width; cIdx < layerInfo->nChildren; cIdx += 1)
+    {
+        i64 const toMergeIdx = layerInfo->childrenInfo[cIdx].idx;
+        auto const & nToMerge = layerInfo->children[toMergeIdx];
+        nBase.state = Model::smf(nBase.state, nToMerge.state);
+        // TODO Update the cost
+    }
+    // TODO trim the number of children
 }
 
 template<typename Node>
@@ -258,11 +318,6 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
             // 1.4) If solution layer, save the best dual bound and go to 2)
             // 1.5) Filter children by eq/dom
             // 1.6) Merge children until $nChildren <= nParents$
-            // 1.6.1) Calculate $(c_i, c_j, mergeScore)$ for each i < j <= nChildren,
-            // 1.6.2) Score triplet by score
-            // 1.6.3) Sequentially merge (nChildren - nParen) valid tuples.
-            //        A tuple is valid if its nodes hans not already been merged.
-            // 1.7) Parents <- Children and go to 1.2)
 
             // 2) If $dualBound(d) > primalBound$ return no children, otherwise go to 3).
 
@@ -300,9 +355,10 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
                     break;
                 }
                 // 1.5) Filter children by eq/dom
-                filterChildren<Model,LayerInfoType>(layerInfo,sort);
-                // Todo update nChildren with nRepresentatives
-                calcMergeScore(layerInfo);
+                filterChildren(layerInfo,sort);
+
+                layerInfo->nChildren = layerInfo->nRepresentatives;
+                mergeChildren(layerInfo);
 
                 // 1.6) Merge children until $nChildren <= nParents$
                     // 1.6.1) Calculate $(c_i, c_j, mergeScore)$ for each i < j <= nChildren,
