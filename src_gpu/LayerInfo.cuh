@@ -12,6 +12,8 @@ struct alignas(16) LightNode
     State state;
     Labels labels;
     gfl::f64 boundSrcToNode;
+    gfl::f64 dualBound;
+    gfl::u8 isNotExact;
     gfl::u8 nEdgesSrcToNode;
     gfl::u8 labelsSrcToNode[N];
 
@@ -22,6 +24,7 @@ struct alignas(16) LightNode
     LightNode(State const & s, Labels const & l) noexcept :
             state(s),
             labels(l),
+            isNotExact(0),
             boundSrcToNode(0),
             nEdgesSrcToNode(0)
         {};

@@ -16,6 +16,7 @@
 #include "util.hpp"
 #include "msort.hpp"
 #include "pool.hpp"
+#include "ctx.hpp"
 #include <atomic>
 
 #include "RuntimeMonitor.hpp"
@@ -93,8 +94,6 @@ public:
    typedef std::shared_ptr<AbstractNodeAllocator> Ptr;   
 };
 
-enum LocalContext : int { BBCtx, DDCtx, DDInit };
-enum DDContext : int { DDRelaxed,DDRestricted,DDExact};
 
 class AbstractDD {
 protected:

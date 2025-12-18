@@ -4,21 +4,20 @@
 
 namespace gfl
 {
-
     template<typename T>
     class Vector
     {
         protected:
             T * data;
-            i32 size;
-            i32 capacity;
+            i64 size;
+            i64 capacity;
 
         public:
-            GFL_HOST_DEVICE Vector(T * data, i32 capacity) noexcept;
-            GFL_HOST_DEVICE Vector(StackAllocator & allocator, i32 capacity) noexcept;
+            GFL_HOST_DEVICE Vector(T * data, i64 capacity) noexcept;
+            GFL_HOST_DEVICE Vector(StackAllocator & allocator, i64 capacity) noexcept;
             GFL_HOST_DEVICE T * getData() const noexcept {return data;}
-            GFL_HOST_DEVICE i32 getSize() const noexcept {return size;}
-            GFL_HOST_DEVICE i32 getCapacity() const noexcept {return capacity;}
+            GFL_HOST_DEVICE i64 getSize() const noexcept {return size;}
+            GFL_HOST_DEVICE i64 getCapacity() const noexcept {return capacity;}
             GFL_HOST_DEVICE T * at(i32 index) const noexcept;
             GFL_HOST_DEVICE T * begin() const noexcept {return at(0);};
             GFL_HOST_DEVICE T * end() const noexcept {return at(size - 1) + 1;}

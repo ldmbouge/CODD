@@ -51,7 +51,28 @@ void filterChildren(LayerInfoType * layerInfo, bool sort)
             return aa < bb;
         };
         std::sort(
-            layerInfo->childrenInfo,
+            layerInfo->childrenI using namespace gfl;
+
+    i64 const & nChildren = layerInfo->nChildren;
+    auto cmpByHash = [](NodeInfo const & a, NodeInfo const & b){return a.hash < b.hash;};
+    std::sort(
+        layerInfo->childrenInfo,
+        layerInfo->childrenInfo + nChildren,
+        cmpByHash);
+
+    calcRep<Model>(
+                nChildren,
+                layerInfo->children,
+                layerInfo->childrenInfo);
+
+    countRep<Node>(
+                layerInfo,
+                layerInfo->childrenInfo);
+
+    if (sort) {
+        auto cmpByRepCost = [](NodeInfo const &a, NodeInfo const &b)
+        {
+            std::pair<u32, f64> constnfo,
             layerInfo->childrenInfo + nChildren,
             cmpByRepCost);
     }
@@ -137,14 +158,16 @@ void mergeChildren(LayerInfoType * layerInfo, gfl::i32 const width)
 
     i64 const baseIdx = layerInfo->childrenInfo[width-1].idx;
     auto & nBase = layerInfo->children[baseIdx];
+    nBase.isNotExact = 1;
     for (i64 cIdx = width; cIdx < layerInfo->nChildren; cIdx += 1)
     {
         i64 const toMergeIdx = layerInfo->childrenInfo[cIdx].idx;
         auto const & nToMerge = layerInfo->children[toMergeIdx];
         nBase.state = Model::smf(nBase.state, nToMerge.state);
-        // TODO Update the cost
+        nBase.boundSrcToNode = Model::better(nBase.boundSrcToNode, nToMerge.boundSrcToNode) ?
+                                    nToMerge.boundSrcToNode :
+                                    nBase.boundSrcToNode;
     }
-    // TODO trim the number of children
 }
 
 template<typename Node>
@@ -317,7 +340,8 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
             // 1.3) If no children, set the worst possible dual bound and go to 2)
             // 1.4) If solution layer, save the best dual bound and go to 2)
             // 1.5) Filter children by eq/dom
-            // 1.6) Merge children until $nChildren <= nParents$
+            // 1.6) Merge children until $nChildren <= width$
+            // 1.7) Parents <- Children and go to 1.2)
 
             // 2) If $dualBound(d) > primalBound$ return no children, otherwise go to 3).
 
@@ -350,22 +374,34 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
                     for (i64 cIdx = 0; cIdx < layerInfo->nChildren; cIdx += 1)
                     {
                         i64 const cBound = layerInfo->children[cIdx].boundSrcToNode;
-                        layerInfo->dBound = model->isBetter(cBound, layerInfo->dBound) ? cBound: layerInfo->dBound;
+                        layerInfo->dBound = model->isBetter(cBound, layerInfo->dBound) ?
+                                            cBound:
+                                            layerInfo->dBound;
                     }
                     break;
                 }
                 // 1.5) Filter children by eq/dom
                 filterChildren(layerInfo,sort);
 
+                // 1.6) Merge children
                 layerInfo->nChildren = layerInfo->nRepresentatives;
-                mergeChildren(layerInfo);
-
-                // 1.6) Merge children until $nChildren <= nParents$
-                    // 1.6.1) Calculate $(c_i, c_j, mergeScore)$ for each i < j <= nChildren,
-                    // 1.6.2) Score triplet by score
-                    // 1.6.3) Sequentially merge (nChildren - nParen) valid tuples.
+                if (layerInfo->nChildren > width)
+                {
+                    mergeChildren(layerInfo, width);
+                    layerInfo->nChildren = width;
                 }
+
+                // 1.7) Parents <- Children and go to 1.2)
+                copyNodes(&layerInfo->nChildren, layerInfo->parents, layerInfo->children, layerInfo->childrenInfo);
+                layerInfo->nParents = layerInfo->nChildren;
+                layerInfo->nChildren = 0;
+                layerInfo->nRepresentatives = 0;
             }
+
+            // 2) If $dualBound(d) > primalBound$ return no children, otherwise go to 3).
+            if (layerInfo->dBound > pBound)
+            {
+
 
 
 

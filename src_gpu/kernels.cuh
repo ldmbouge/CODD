@@ -168,6 +168,7 @@ void calcChildren(
                             cNode.state = cState.value();
                             cNode.boundSrcToNode = cBoundSrcToNode;
                             memcpy(cNode.labelsSrcToNode, pNode.labelsSrcToNode, sizeof(cNode.labelsSrcToNode));
+                            cNode.isNotExact = 0;
                             cNode.labelsSrcToNode[pNode.nEdgesSrcToNode] = label;
                             cNode.nEdgesSrcToNode = pNode.nEdgesSrcToNode + 1;
 
@@ -307,6 +308,18 @@ void copyRep(LayerInfo<Node> * const layerInfo, bool reverse = false)
         i64 const cIdx = layerInfo->childrenInfo[rIdx].idx;
         i64 const tIdx = not reverse ? rIdx : layerInfo->nRepresentatives - 1 - rIdx;
         layerInfo->children[tIdx] = layerInfo->tmpChildren[cIdx];
+    }
+}
+
+template<typename Node>
+void copyNodes(gfl::i64 const * const nNodes, Node * const dst,  Node const * const src, NodeInfo const * const nodesInfo)
+{
+    using namespace gfl;
+
+    for (i64 i = 0; i < *nNodes; i += 1)
+    {
+        i64 const nIdx = nodesInfo[i].idx;
+        dst[i] = src[nIdx];
     }
 }
 
