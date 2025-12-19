@@ -130,7 +130,7 @@ void calcLabelsKernel(
 template<typename Model, typename Node>
 void calcChildren(
         Model const * const model,
-        LayerInfo<Node> * const layerInfo,
+        BatchInfo<Node> * const layerInfo,
         gfl::f64 pBound,
         LocalContext localCtx)
 {
@@ -140,7 +140,7 @@ void calcChildren(
     Node * const children = layerInfo->children;
     NodeInfo * const childrenInfo = layerInfo->childrenInfo;
 
-    for(i64 pIdx =0; pIdx < layerInfo->nParents; pIdx += 1)
+    for(i64 pIdx = 0; pIdx < layerInfo->nParents; pIdx += 1)
     {
         if (layerInfo->labelsInfo.nLabels > 0)
         {
@@ -177,8 +177,8 @@ void calcChildren(
                                 cInfo.hash = Model::domHash(cNode.state);
                             else
                                 cInfo.hash = State::hash(cNode.state);
-                            cInfo.boundSrcToNode = cBoundSrcToNode;
-                            cInfo.isRepresented = 0;
+                            cInfo.score = 0;
+                            cInfo.flag = 0;
                             cInfo.idx = layerInfo->nChildren;
                             children[cInfo.idx] = cNode;
                             childrenInfo[cInfo.idx] = cInfo;

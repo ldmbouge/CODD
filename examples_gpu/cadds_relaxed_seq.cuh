@@ -1,5 +1,5 @@
 #include "codd.hpp"
-#include "LayerEngine.cuh"
+#include "BatchEngine.cuh"
 #include <StackAllocator.hpp>
 #include <cxxopts.hpp>
 #include <Malloc.hpp>
@@ -181,7 +181,7 @@ template<typename Model, typename Node>
 int run_cadds_relaxed_seq(int argc,char* argv[])
 {
     using namespace gfl;
-    using LayerHelperType = LayerHelper<Node>;
+    using LayerHelperType = BatchInfoHelper<Node>;
     using LayerInfoType   = LayerInfo<Node>;
     using LayerBufferType = std::vector<Node>;
 

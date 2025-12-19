@@ -101,11 +101,18 @@ struct Misp : MispBase<N>
     {
         return State{s1.sel | s2.sel,min(s1.n,s2.n)};
     };
+    State smf(State const & s1, State const & s2) const noexcept
+    {
+        return State{s1.sel | s2.sel,min(s1.n,s2.n)};
+    };
     // State similarity function
     GFL_HOST_DEVICE
     gfl::f32 ssf(State const & s1, State const & s2) const noexcept
     {
-        return static_cast<gfl::f32>(s1.sel.interWith(s2.sel).size()) / static_cast<gfl::f32>(s1.sel.largestPossible());
+        gfl::f32 n = 0.0;
+        gfl::f32 mean = 0.0;
+        sim_combine(mean,n,s1.sel.iou(s2));
+        return mean;
     };
 
 

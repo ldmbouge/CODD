@@ -1,40 +1,23 @@
+#pragma once
+
 #include "codd.hpp"
-#include "BatchEngine.cuh"
+#include "BatchFunctions.cuh"
 #include <StackAllocator.hpp>
 #include <cxxopts.hpp>
 #include <Malloc.hpp>
-#include <Array.hpp>
 #include <span>
+
+#include "BatchInfo.cuh"
 
 constexpr auto static ReadOnlyMemSize{256 * 1024}; // Cached in shared memory
 constexpr auto static CpuMemSize{8ll * 1024ll * 1024ll * 1024ll}; // Same size GPU memory: 48 - 4 for runtime!)
 
-inline
-void printNodeInfo(std::vector<NodeInfo> const * const nodesInfo)
-{
-    for (auto const & ni : *nodesInfo)
-    {
-        printf("HASH = %lu, BOUND = %.1f, IDX = %ld, IS_REP = %d\n",
-               ni.hash,
-               ni.boundSrcToNode,
-               ni.idx,
-               ni.isRepresented);
-    }
-}
-
-template<typename Node>
-void printLabels(Node const & node)
-{
-    using namespace gfl;
-    Array<u8>::print(node.labelsSrcToNode, node.labelsSrcToNode + node.nEdgesSrcToNode);
-}
-
 template<typename Model, typename Node>
-int run_bro_seq(int argc,char* argv[])
+int run_cadds_exact_seq(int argc,char* argv[])
 {
     using namespace gfl;
-    using LayerHelperType = BatchInfoHelper<Node>;
-    using LayerInfoType   = LayerInfo<Node>;
+    using BatchInfoHelperType = BatchInfoHelper<Node>;
+    using BatchInfoType   = BatchInfo<Node>;
     using LayerBufferType = std::vector<Node>;
 
     // Parse arguments
@@ -89,7 +72,7 @@ int run_bro_seq(int argc,char* argv[])
     f64 pBound = Model::worstValue();
     f64 dBound = Model::bestValue();
 
-    LayerInfoType *   layerInfo = mallocStd<LayerInfoType>(sizeof(LayerInfoType));
+    BatchInfoType * batchInfo = mallocStd<BatchInfoType>(sizeof(BatchInfoType));
     StackAllocator * gAllocator = new StackAllocator(mallocStd(CpuMemSize), CpuMemSize);
 
     // Layers buffers
@@ -158,7 +141,7 @@ int run_bro_seq(int argc,char* argv[])
                    lIdx,
                    expandedNodes,
                    currentLayer.size(),
-                   currentLayer.size()-currentBatchSize);
+                   currentLayer.size()-fragmentSize);
             printf( " | MemSize = ");
             printMemSize(sizeof(Node) * currentLayer.size());
             printf( " | Cost = ");
@@ -170,79 +153,27 @@ int run_bro_seq(int argc,char* argv[])
             {
                 printf("?");
             }
-            printf(" | Batch %3d/%3d | BatchSize = %10ld\n", bIdx+1, nBatches, currentBatchSize);
+            i64 qSize = 0;
+            for (auto const & l : layers)
+            {
+                qSize += l.size();
+            }
+            printf(" | Batch %3d/%3d | BatchSize = %10ld | Q = %10ld\n", bIdx+1, nBatches, currentBatchSize, qSize);
             fflush(stdout);
 
-            // Init
-            LayerHelperType::clear(layerInfo, gAllocator);
-            layerInfo->labelsInfo = labelsInfo[lIdx];
-            LayerHelperType::initParents(currentBatchSize, layerInfo, gAllocator);
-            memcpy(layerInfo->parents,currentBatch.data(),sizeof(Node) * currentBatchSize);
-            LayerHelperType::initChildren(layerInfo, gAllocator);
+            BatchEngine<Node>::initBatch(batchInfo,gAllocator,currentBatch,labelsInfo[lIdx]);
+            BatchEngine<Node>::processBatchExact(batchInfo,pBound,dBound,currentBatch);
 
-            // Children
-            calcChildren(
-                    model,
-                    layerInfo,
-                    pBound,
-                    DDCtx);
-
-            i64 const nChildren = layerInfo->nChildren;
-            if (nChildren > 0)
-            {
-               //  Representatives
-                auto cmpByHash = [](NodeInfo const & a, NodeInfo const & b){return a.hash < b.hash;};
-                std::sort(layerInfo->childrenInfo, layerInfo->childrenInfo + nChildren, cmpByHash);
-
-                calcRep<Model>(
-                        nChildren,
-                        layerInfo->children,
-                        layerInfo->childrenInfo);
-
-                countRep<Node>(
-                        layerInfo,
-                        layerInfo->childrenInfo);
-
-                if (sort) {
-                    auto cmpByRepCost = [](NodeInfo const &a, NodeInfo const &b)
-                    {
-                        std::pair<u32, f64> const aa = {a.isRepresented, a.boundSrcToNode};
-                        std::pair<u32, f64> const bb = {b.isRepresented, b.boundSrcToNode};
-                        return aa < bb;
-                    };
-                    std::sort(layerInfo->childrenInfo, layerInfo->childrenInfo + nChildren, cmpByRepCost);
-                }
-                else {
-                    auto cmpByRep = [](NodeInfo const &a, NodeInfo const &b)
-                    {
-                        return a.isRepresented < b.isRepresented;
-                    };
-                    std::sort(layerInfo->childrenInfo, layerInfo->childrenInfo + nChildren, cmpByRep);
-                }
-
-                swapPtr(&layerInfo->children, &layerInfo->tmpChildren);
-                copyRep(layerInfo, sort);
-
-                // Labels
-                layerInfo->labelsInfo.reset();
-                calcLabels(
-                        model,
-                        layerInfo,
-                        DDExact,
-                        pBound,
-                        dBound);
-            }
-
-            if (layerInfo->nRepresentatives > 0)
+            if (batchInfo->nChildren > 0)
             {
                 auto & nextLayer = layers[lIdx+1];
                 i64 const nextLayerOldSize = nextLayer.size();
-                nextLayer.resize(nextLayerOldSize + layerInfo->nRepresentatives);
+                nextLayer.resize(nextLayerOldSize + batchInfo->nChildren);
                 memcpy(nextLayer.data() + nextLayerOldSize,
-                       layerInfo->children,
-                       sizeof(Node) * layerInfo->nRepresentatives);
+                       batchInfo->children,
+                       sizeof(Node) * batchInfo->nChildren);
 
-                labelsInfo[lIdx+1].update(layerInfo->labelsInfo);
+                labelsInfo[lIdx+1].update(batchInfo->labelsInfo);
 
                 if(model->isTarget(nextLayer[nextLayerOldSize].state))
                 {
@@ -267,12 +198,6 @@ int run_bro_seq(int argc,char* argv[])
                     std::inplace_merge(nextLayer.data(), nextLayer.data() + nextLayerOldSize, nextLayer.data() + nextLayer.size(), cmpByCost);
                     assert(std::is_sorted(nextLayer.begin(), nextLayer.end(), cmpByCost));
                 }
-//                    for(Node const & n : nextLayer)
-//                    {
-//                        printf("%7.2f ", n.boundSrcToNode);
-//                    }
-//                    printf("\n");
-//                fflush(stdout);
             }
         }
         currentLayer.resize(currentLayer.size() - fragmentSize);

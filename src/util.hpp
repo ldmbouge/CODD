@@ -159,6 +159,23 @@ public:
 };
 
 
+// References
+// - https://softwareengineering.stackexchange.com/a/402543
+// - https://www.boost.org/doc/libs/1_55_0/doc/html/hash/reference.html#boost.hash_combine
+GFL_HOST_DEVICE inline
+void hash_combine(std::size_t& seed, std::size_t const & hash) {
+    seed ^= hash + 0x9e3779b97f4a7c16ull + (seed<<6) + (seed>>2);
+}
+
+GFL_HOST_DEVICE inline
+void sim_combine(float & mean, float & n, float const val)
+{
+    n += 1.0;
+    mean += (val - mean) / n;
+}
+
+
+
 /**
  * Bounded Set for Naturals [0..64*nbw)
  * It does not resizes and all storage is self-contained.
@@ -381,8 +398,8 @@ public:
    }
 
    // Reference: https://en.wikipedia.org/wiki/Jaccard_index
-   GFL_HOST_DEVICE static
-   gfl::tuple<int,int> iu(NatSet const & a, NatSet const & b) noexcept
+   GFL_HOST_DEVICE
+   float iou(NatSet const & ps) noexcept
    {
        using namespace gfl;
 
@@ -390,10 +407,11 @@ public:
        int unionSize = 0;
        for (int wIdx = 0; wIdx < nbw; wIdx += 1)
        {
-           intersectionSize += popcount(a._t[wIdx] & b._t[wIdx]);
-           unionSize += popcount(a._t[wIdx] | b._t[wIdx]);
+           intersectionSize += popcount(_t[wIdx] & ps._t[wIdx]);
+           unionSize += popcount(_t[wIdx] | ps._t[wIdx]);
        }
-       return {intersectionSize,unionSize};
+       return static_cast<float>(intersectionSize) /
+              static_cast<float>(unionSize);
    }
    GFL_HOST_DEVICE
    void insert(int p) noexcept         { _t[p >> 6] |= (1ull << (p & 63));}
@@ -576,41 +594,7 @@ public:
    friend class GNSet;
 };
 
-// References
-// - https://softwareengineering.stackexchange.com/a/402543
-// - https://www.boost.org/doc/libs/1_55_0/doc/html/hash/reference.html#boost.hash_combine
-GFL_HOST_DEVICE inline
-void hash_combine(std::size_t& seed, std::size_t const & hash) {
-    seed ^= hash + 0x9e3779b97f4a7c16ull + (seed<<6) + (seed>>2);
-}
 
-GFL_HOST_DEVICE inline
-void sim_combine(float & mean, int & n, float const val)
-{
-    n += 1;
-    mean += (val - mean) / static_cast<float>(n);
-}
-
-template <unsigned short N>
-GFL_HOST_DEVICE
-float sim_score(NatSet<N> const & a, NatSet<N> const & b)
-{
-    auto const [i,u] = NatSet<N>::iu(a,b);
-    return static_cast<float>(i) / static_cast<float>(u);
-}
-
-template <typename T>
-GFL_HOST_DEVICE
-float sim_score(T const & a, T const & b)
-{
-    assert(a >= 0 and b >= 0);
-    float result = 1.0;
-    if (a != b) // Avoid 0/0
-    {
-        result = static_cast<float>(abs(a-b)) / static_cast<float>(a+b);
-    }
-    return result;
-}
 
 
 /**

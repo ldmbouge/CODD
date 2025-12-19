@@ -6,9 +6,25 @@
 
 #include <algorithm>
 
+template<typename Model, typename Node>
+GFL_HOST_DEVICE
+gfl::f32 calcMergeScore(Node const & baseNode, Node const & toEvalNode, gfl::f32 const alpha = 1.0)
+{
+    using namespace gfl;
+
+    assert(baseNode.boundSrcToNode <= toEvalNode.boundSrcToNode);
+    assert(0.0 <= alpha);
+    assert(alpha <= 1.0);
+
+    f32 const simScore = Model::ssf(baseNode.state, toEvalNode.state);  // 1.0 = identical, 0.0 = very different
+    f32 const costRatio = toEvalNode.boundSrcToNode / baseNode.boundSrcToNode;              // How much worse than best (≥ 1.0)
+    f32 const score = costRatio + (alpha * simScore);
+    return score;
+}
+
 template<typename Model, typename State>
 GFL_HOST_DEVICE
-void checkPair(NodeInfo & iInfo, NodeInfo & jInfo, State const & iState, State const & jState)
+void calcRep(NodeInfo & iInfo, NodeInfo & jInfo, State const & iState, State const & jState)
 {
     using namespace gfl;
 
@@ -56,7 +72,7 @@ void calcRep(BatchInfo<Node> * const batchInfo)
             Node const jChild = bi.children[jInfo.idx].state;
             if (iInfo.hash == jInfo.hash)
             {
-                checkPair<Model>(iInfo,jInfo, iChild, jChild);
+                calcRep<Model>(iInfo,jInfo, iChild, jChild);
             }
             else
             {
@@ -65,6 +81,32 @@ void calcRep(BatchInfo<Node> * const batchInfo)
         }
     }
 }
+
+
+template<typename Model, typename Node>
+void calcMergeScore(BatchInfo<Node> * const batchInfo, gfl::i64 const width)
+{
+    using namespace gfl;
+    BatchInfo<Node> & bi = *batchInfo;
+
+    NodeInfo & baseInfo = bi.childrenInfo[0];
+    Node const & baseNode = bi.children[baseInfo.idx];
+
+    for(i64 i = 0; i < width; i += 1)
+    {
+        i64 begin,end;
+        getBeginEnd(begin,end,i,width,bi.nChildren);
+        for (i64 j = begin; j < end; j += 1)
+        {
+            NodeInfo const & toScoreInfo = bi.childrenInfo[j];
+            Node const & toScoreNode = bi.children[toScoreInfo.idx];
+            toScoreInfo.score = calcMergeScore<Model,Node>(baseNode,toScoreNode);
+        }
+    }
+
+    baseInfo.score = 1.0; // Manually adjust the base state
+}
+
 
 template<typename Node>
 void countFlagged(BatchInfo<Node> * const batchInfo, gfl::u32 const flag)
@@ -129,15 +171,16 @@ void calcChildren(
     using State = Model::State;
 
     BatchInfo<Node> & bi = *batchInfo;
+    LabelsInfo const & li = bi.labelsInfo;
 
     for (i64 pIdx = 0; pIdx < bi.nParents; pIdx += 1)
     {
-        if (bi.labelsInfo.nLabels > 0)
+        if (li.nLabels > 0)
         {
             Node cNode;
             NodeInfo cInfo;
             Node const pNode = bi.parents[pIdx];
-            for (i32 label = bi.labelsInfo.minLabel; label <= bi.labelsInfo.maxLabel; label += 1)
+            for (i32 label = li.minLabel; label <= li.maxLabel; label += 1)
             {
                 if (pNode.labels.contains(label))
                 {
@@ -180,87 +223,91 @@ void calcChildren(
     }
 }
 
+
+template<typename Model, typename Node>
+void copyAndMergeSuffix(
+        gfl::i64 const width,
+        BatchInfo<Node> * const batchInfo)
+{
+    using namespace gfl;
+
+    BatchInfo<Node> & bi = *batchInfo;
+
+    copyNodes<Node>(&width, &bi.children, &bi.tmpChildren, &bi.childrenInfo);
+
+    Node & lastNode = bi.children[width-1];
+    for(i64 i = width; i < bi.nChildren; i += 1)
+    {
+        NodeInfo const  & toMergeInfo = bi.childrenInfo[i];
+        Node const & toMergeNode = bi.tmpChildren[toMergeInfo.idx];
+        lastNode.state = Model::smf(lastNode.state, toMergeNode.state);
+        lastNode.boundSrcToNode = Model::better(lastNode.boundSrcToNode, toMergeNode.boundSrcToNode) ?
+                                  toMergeNode.boundSrcToNode : lastNode.boundSrcToNode;
+    }
+}
+
+template<typename Model, typename Node>
+void mergeChildren(gfl::i64 const width, BatchInfo<Node> * const batchInfo)
+{
+    using namespace gfl;
+    BatchInfo<Node> & bi = *batchInfo;
+
+    for (i64 i = 0; i < bi.nChildren; i += 1)
+    {
+        NodeInfo & cInfo = bi.childrenInfo[i];
+        cInfo.score = bi.children[cInfo.idx].boundSrcToNode;
+    }
+
+    auto cmpByScore = [](NodeInfo const & a, NodeInfo const & b)
+    {return a.score < b.score;};
+    std::sort(bi.childrenInfo,
+              bi.childrenInfo + bi.nChildren,
+              cmpByScore);
+
+    calcMergeScore<Model,Node>(batchInfo);
+
+    std::sort(bi.childrenInfo,
+             bi.childrenInfo + bi.nChildren,
+             cmpByScore);
+
+    swapPtr(&bi.children, &bi.tmpChildren);
+    copyAndMergeSuffix<Model,Node>(width,batchInfo);
+    bi.nChildren = width;
+}
+
+template<typename Model, typename Node>
+void calcChildrenLabels(
+        Model const * const model,
+        BatchInfo<Node> * const batchInfo,
+        DDContext const ddCtx,
+        gfl::f64 pBound,
+        gfl::f64 dBound)
+{
+    using namespace gfl;
+    BatchInfo<Node> & bi = *batchInfo;
+
+    for (i64 cIdx = 0; cIdx < bi.nChildren; cIdx += 1)
+    {
+        auto & cNode = bi.children[cIdx];
+        cNode.labels = model->lgf(cNode.state, ddCtx, pBound, dBound);
+        bi.labelsInfo.update(cNode.labels.slc());
+    }
+}
+
+
+
+
 template<typename Model, typename Node>
 void ProcessBatchRelaxed(
       Model const * const model,
       gfl::f64 pBound,
       gfl::i64 width,
-      BatchInfo<Node> * const batchInfo
-    )
+      BatchInfo<Node> * const batchInfo)
 {
-    using namespace gfl;
-    using State = Model::State;
-
-    BatchInfo<Node> & bi = *batchInfo;
-
-    calcChildren(model,pBound,bi);
-
-    Array<Node> inNodes(inNodes, *nInNodes);
-    // 1) Calculate children
-    // 2) Filter children by eq/dom
-    // 3) Merge children until $nChildren <= width$
-
-            // 2) If $dualBound(d) > primalBound$ return no children, otherwise go to 3).
-
-            // 3) Calculate the children of the $n$ roots and return them.
-            // 3.1) Restore the roots
-            // 3.2) Calculate children
-            // 3.3) Filter children by eq/dom
-            // 3.4) Set dual bound of each child.
-            // 3.5) Return the children.
-            // ###
-
-            // 1.1) Backup the roots (see 3)
-            memcpy(layerInfo->tmpParents,layerInfo->parents,sizeof(Node) * layerInfo->nParents);
-
-            while (true)
-            {
-                // 1.2) Calculate children
-                calcChildren(model,layerInfo,pBound,DDCtx);
-
-                // 1.3) If no children, set the worst possible dual bound and go to 2)
-                if (layerInfo->nChildren == 0)
-                {
-                    layerInfo->dBound = model->worstValue();
-                    break;
-                }
-
-                // 1.4) If solution layer, save the best dual bound and go to 2)
-                if (model->isTarget(layerInfo->children[0]))
-                {
-                    for (i64 cIdx = 0; cIdx < layerInfo->nChildren; cIdx += 1)
-                    {
-                        i64 const cBound = layerInfo->children[cIdx].boundSrcToNode;
-                        layerInfo->dBound = model->isBetter(cBound, layerInfo->dBound) ?
-                                            cBound:
-                                            layerInfo->dBound;
-                    }
-                    break;
-                }
-                // 1.5) Filter children by eq/dom
-                filterChildren(layerInfo,sort);
-
-                // 1.6) Merge children
-                layerInfo->nChildren = layerInfo->nRepresentatives;
-                if (layerInfo->nChildren > width)
-                {
-                    mergeChildren(layerInfo, width);
-                    layerInfo->nChildren = width;
-                }
-
-                // 1.7) Parents <- Children and go to 1.2)
-                copyNodes(&layerInfo->nChildren, layerInfo->parents, layerInfo->children, layerInfo->childrenInfo);
-                layerInfo->nParents = layerInfo->nChildren;
-                layerInfo->nChildren = 0;
-                layerInfo->nRepresentatives = 0;
-            }
-
-            // 2) If $dualBound(d) > primalBound$ return no children, otherwise go to 3).
-            if (layerInfo->dBound > pBound)
-            {
-}
-
-void ProcessBatchExact()
-{
-
+    ProcessBatchExact<Model,Node>(model,pBound,batchInfo);
+    if (batchInfo->nChildren > width)
+    {
+        mergeChildren<Model,Node>(width,batchInfo);
+        batchInfo->isExact = false;
+    }
 }

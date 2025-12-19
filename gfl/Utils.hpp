@@ -158,6 +158,14 @@ namespace gfl
         return max<TOut>(ab, rest...);
     }
 
+    template <typename T>
+    GFL_HOST_DEVICE constexpr
+    f32 minOverMax(T const a, T const b)
+    {
+        return static_cast<f32>(min(a,b)) /
+               static_cast<f32>(max(a,b));
+    }
+
     // Ordered pairs
     template <typename T>
     GFL_HOST_DEVICE constexpr

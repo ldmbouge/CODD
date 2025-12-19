@@ -23,7 +23,7 @@
 #include "model.hpp"
 
 #ifdef __NVCC__
- #include <LayerEngine.cuh>
+ #include <BatchEngine.cuh>
 #endif
 
 
