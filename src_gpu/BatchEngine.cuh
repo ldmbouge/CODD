@@ -5,8 +5,6 @@
 #include <StackAllocator.hpp>
 #include <BatchFunctions.cuh>
 
-#include "kernels.cuh"
-
 template<typename Node>
 struct BatchEngine
 {
@@ -47,7 +45,7 @@ struct BatchEngine
         allocator->clear();
 
         batchInfo->initParents(parents.size(), allocator);
-        memcpy(batchInfo->parents,parents.data(),sizeof(Node) * parents);
+        memcpy(batchInfo->parents,parents.data(),sizeof(Node) * parents.size());
 
         batchInfo->labelsInfo = labelsInfo;
         batchInfo->initChildren(allocator);

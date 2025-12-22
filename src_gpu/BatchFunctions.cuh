@@ -6,6 +6,28 @@
 
 #include <algorithm>
 
+template <typename T>
+GFL_HOST_DEVICE
+void swapPtr(T** a, T** b)
+{
+    assert(a != nullptr);
+    assert(b != nullptr);
+    T * tmp = *a;
+    *a = *b;
+    *b = tmp;
+}
+
+template <typename T>
+GFL_HOST_DEVICE
+void swapVal(T* a, T* b)
+{
+    assert(a != nullptr);
+    assert(b != nullptr);
+    T tmp = *a;
+    *a = *b;
+    *b = tmp;
+}
+
 template<typename Model, typename Node>
 GFL_HOST_DEVICE
 gfl::f32 calcMergeScore(Node const & baseNode, Node const & toEvalNode, gfl::f32 const alpha = 1.0)
@@ -22,15 +44,15 @@ gfl::f32 calcMergeScore(Node const & baseNode, Node const & toEvalNode, gfl::f32
     return score;
 }
 
-template<typename Model, typename State>
+template<typename Model, typename Node>
 GFL_HOST_DEVICE
-void calcRep(NodeInfo & iInfo, NodeInfo & jInfo, State const & iState, State const & jState)
+void calcRep(NodeInfo & iInfo, NodeInfo & jInfo, Node const & iNode, Node const & jNode)
 {
     using namespace gfl;
 
-    if (Model::State::equal(iState, jState))
+    if (Model::State::equal(iNode.state, jNode.state))
     {
-        if (Model::betterEq(iState.boundSrcToNode, jState.boundSrcToNode))
+        if (Model::betterEq(iNode.boundSrcToNode, jNode.boundSrcToNode))
         {
             jInfo.flag = 1;
         }
@@ -41,11 +63,11 @@ void calcRep(NodeInfo & iInfo, NodeInfo & jInfo, State const & iState, State con
     }
     if constexpr (Model::has_dom)
     {
-        if (Model::betterEq(iState.boundSrcToNode, jState.boundSrcToNode) and Model::dom(iState.state, jState.state))
+        if (Model::betterEq(iNode.boundSrcToNode, jNode.boundSrcToNode) and Model::dom(iNode.state, jNode.state))
         {
             jInfo.flag = 1;
         }
-        else if (Model::betterEq(jState.boundSrcToNode, iState.boundSrcToNode) and Model::dom(jState.state, iState.state))
+        else if (Model::betterEq(jNode.boundSrcToNode, iNode.boundSrcToNode) and Model::dom(jNode.state, iNode.state))
         {
             iInfo.flag = 1;
         }
@@ -63,13 +85,13 @@ void calcRep(BatchInfo<Node> * const batchInfo)
         NodeInfo & iInfo = bi.childrenInfo[i];
         assert(0 <= iInfo.idx);
         assert(iInfo.idx < bi.nChildren);
-        Node const iChild = bi.children[iInfo.idx].state;
+        Node const iChild = bi.children[iInfo.idx];
         for (i64 j = i + 1; j < bi.nChildren; j += 1)
         {
             NodeInfo & jInfo = bi.childrenInfo[j];
             assert(0 <= jInfo.idx);
             assert(jInfo.idx < bi.nChildren);
-            Node const jChild = bi.children[jInfo.idx].state;
+            Node const jChild = bi.children[jInfo.idx];
             if (iInfo.hash == jInfo.hash)
             {
                 calcRep<Model>(iInfo,jInfo, iChild, jChild);
@@ -116,7 +138,7 @@ void countFlagged(BatchInfo<Node> * const batchInfo, gfl::u32 const flag)
 
     for (i64 cIdx = 0; cIdx < bi.nChildren; cIdx += 1)
     {
-       bi.nFlagged += bi.childrenInfo[cIdx].isFlagged == flag;
+       bi.nFlagged += bi.childrenInfo[cIdx].flag == flag;
     }
 }
 
@@ -155,10 +177,10 @@ void filterChildren(BatchInfo<Node> * const batchInfo)
 
     swapPtr(&bi.children, &bi.tmpChildren);
     countFlagged<Node>(batchInfo, 0);
-    copyNodes<Node>(&bi.nFlagged, &bi.children, &bi.tmpChildren, &bi.childrenInfo);
+    copyNodes<Node>(&bi.nFlagged, bi.children, bi.tmpChildren, bi.childrenInfo);
 
     bi.nChildren = bi.nFlagged;
-    bi.nChildren = 0;
+    bi.nFlagged = 0;
 }
 
 template<typename Model, typename Node>
@@ -311,3 +333,5 @@ void ProcessBatchRelaxed(
         batchInfo->isExact = false;
     }
 }
+
+

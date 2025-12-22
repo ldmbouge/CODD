@@ -47,6 +47,16 @@ struct NodeInfo
     NodeInfo() noexcept {};
 };
 
+struct DummyDecomposer128
+{
+    GFL_HOST_DEVICE
+    gfl::tuple<gfl::f64&, gfl::f64&> operator()(NodeInfo &) const
+    {
+        gfl::f64 tmp = 0;
+        return {tmp,tmp};
+    }
+};
+
 struct LabelsInfo
 {
     gfl::i32 minLabel;
@@ -178,14 +188,7 @@ struct BatchInfo
         // initAux()
         if (auxBuffers)
         {
-            struct DummyDecomposer128
-            {
-                 tuple<f64&, f64&> operator()(NodeInfo &) const
-                 {
-                     f64 tmp = 0;
-                     return {tmp,tmp};
-                 }
-             };
+
 
             std::size_t dummyMemSize = 0;
             void * dummyTmpMem = nullptr;

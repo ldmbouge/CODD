@@ -114,16 +114,7 @@ struct TSPTW1 : TSPTWBase
     constexpr static double bestValue() noexcept { return std::numeric_limits<double>::lowest(); }
     constexpr static double worstValue() noexcept { return std::numeric_limits<double>::max(); } // lowest() instead of min() because double
 
-    constexpr static bool has_merge = true;
-    GFL_HOST_DEVICE
-    gfl::optional<State> smf(State const & s1, State const & s2) const noexcept
-    {
-        if (s1.e == s2.e && s1.hops == s2.hops)  {
-            return State{s1.U | s2.U, s1.e, s1.hops, gfl::min<int>(s1.t, s2.t)};
-        } else {
-            return gfl::nullopt; // return  the empty optional
-        }
-    }
+    constexpr static bool has_merge = false;
 
     constexpr static bool has_local = true;
     GFL_HOST_DEVICE

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "codd.hpp"
-#include "BatchFunctions.cuh"
+#include "BatchEngine.cuh"
 #include <StackAllocator.hpp>
 #include <cxxopts.hpp>
 #include <Malloc.hpp>
@@ -16,7 +16,6 @@ template<typename Model, typename Node>
 int run_cadds_exact_seq(int argc,char* argv[])
 {
     using namespace gfl;
-    using BatchInfoHelperType = BatchInfoHelper<Node>;
     using BatchInfoType   = BatchInfo<Node>;
     using LayerBufferType = std::vector<Node>;
 
@@ -122,7 +121,7 @@ int run_cadds_exact_seq(int argc,char* argv[])
 
         // Fragment
         auto & currentLayer = layers[lIdx];
-        i64 const batchSize = gfl::min<i64>(currentLayer.size(), LayerHelperType::getMaxParents(labelsInfo[lIdx].nLabels, CpuMemSize, false));
+        i64 const batchSize = gfl::min<i64>(currentLayer.size(), BatchInfoType::calcMaxParents(labelsInfo[lIdx].nLabels, CpuMemSize, false));
         i64 const fragmentSize = gfl::min<i64>(currentLayer.size(), width < 0 ? batchSize : width);
         auto const fragment = std::span(currentLayer.end() - fragmentSize, fragmentSize);
         expandedNodes += fragmentSize;
@@ -162,7 +161,7 @@ int run_cadds_exact_seq(int argc,char* argv[])
             fflush(stdout);
 
             BatchEngine<Node>::initBatch(batchInfo,gAllocator,currentBatch,labelsInfo[lIdx]);
-            BatchEngine<Node>::processBatchExact(batchInfo,pBound,dBound,currentBatch);
+            BatchEngine<Node>::processBatchExact(model,pBound,dBound,batchInfo);
 
             if (batchInfo->nChildren > 0)
             {
@@ -205,7 +204,7 @@ int run_cadds_exact_seq(int argc,char* argv[])
         if (newSolution)
         {
             printf("[%7.2fs] SOLUTION     | Visited = %10ld | Cost = %7.2f | Value = ", RuntimeMonitor::elapsedSeconds(start), expandedNodes, bestNode.boundSrcToNode);
-            printLabels(bestNode);
+            Node::printLabels(bestNode);
             printf("\n");
             fflush(stdout);
         }
@@ -217,7 +216,7 @@ int run_cadds_exact_seq(int argc,char* argv[])
         if (pBound != Model::worstValue())
         {
             printf("COMPLETED    | Visited = %10ld | Cost = %7.2f | Value = ", expandedNodes, bestNode.boundSrcToNode);
-            printLabels(bestNode);
+            Node::printLabels(bestNode);
             printf("\n");
         }
         else

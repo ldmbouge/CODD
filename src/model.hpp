@@ -46,7 +46,7 @@ concept HasMerge =
     (M::has_merge == false) or
     requires(M const & m, S const & s)
     {
-        { m.smf(s,s) } -> std::same_as<gfl::optional<S>>;
+        { m.smf(s,s) } -> std::same_as<S>;
         { m.ssf(s,s) } -> std::same_as<gfl::f32>;
     };
 

@@ -22,11 +22,6 @@
 #include "RuntimeMonitor.hpp"
 #include "model.hpp"
 
-#ifdef __NVCC__
- #include <BatchEngine.cuh>
-#endif
-
-
 class Strategy;
 class AbstractDD;
 
