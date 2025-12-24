@@ -51,6 +51,14 @@ struct BatchEngine
         batchInfo->initChildren(allocator);
     }
 
+    static
+    void initParentsWithChildren(BatchInfo<Node> * const batchInfo)
+    {
+        batchInfo->nParents = batchInfo->nChildren;
+        memcpy(batchInfo->parents,batchInfo->children,sizeof(Node) * batchInfo->nChildren);
+        batchInfo->nChildren = 0;
+    }
+
     template<typename Model>
     static
     void processBatchExact(
@@ -60,8 +68,47 @@ struct BatchEngine
         BatchInfo<Node> * const batchInfo)
     {
         calcChildren<Model,Node>(model,pBound,batchInfo);
-        filterChildren<Model,Node>(batchInfo);
-        batchInfo->labelsInfo.reset();
-        calcChildrenLabels<Model,Node>(model,batchInfo,DDExact,pBound,dBound);
+        if (batchInfo->nChildren > 0)
+        {
+            if (model->isTarget(batchInfo->children[0].state))
+            {
+                keepOnlyBestChild<Model,Node>(batchInfo);
+            }
+            else
+            {
+                filterChildren<Model,Node>(batchInfo);
+                batchInfo->labelsInfo.reset();
+                calcChildrenLabels<Model,Node>(model,batchInfo,DDExact,pBound,dBound);
+            }
+        }
+    }
+
+
+    template<typename Model>
+    void processBatchRelaxed(
+          Model const * const model,
+          gfl::f64 pBound,
+          gfl::f64 dBound,
+          gfl::i64 width,
+          BatchInfo<Node> * const batchInfo)
+    {
+        calcChildren<Model,Node>(model,pBound,batchInfo);
+        if (batchInfo->nChildren > 0)
+        {
+            if (model->isTarget(batchInfo->children[0].state))
+            {
+                keepOnlyBestChild<Model,Node>(batchInfo);
+            }
+            else
+            {
+                filterChildren<Model,Node>(batchInfo);
+                if (batchInfo->nChildren > width)
+                {
+                    mergeChildren<Model,Node>(width,batchInfo);
+                }
+                batchInfo->labelsInfo.reset();
+                calcChildrenLabels<Model,Node>(model,batchInfo,DDRelaxed,pBound,dBound);
+            }
+        }
     }
 };

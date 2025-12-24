@@ -89,9 +89,11 @@ struct Misp : MispBase<N>
     }
 
     GFL_HOST_DEVICE constexpr static
-    bool better(double const & c1, double const & c2) noexcept { return c1 > c2; }
+    bool isBetter(double const & c1, double const & c2) noexcept { return c1 > c2; }
+    double calcBetter(double const & c1, double const & c2) noexcept { return isBetter(c1, c2) ? c1 : c2; }
+    double calcWorst(double const & c1, double const & c2) noexcept { return not isBetter(c1, c2) ? c1 : c2; }
     GFL_HOST_DEVICE
-    constexpr static bool betterEq(double const & c1, double const & c2)  noexcept { return c1 >= c2; }
+    constexpr static bool isBetterEq(double const & c1, double const & c2)  noexcept { return c1 >= c2; }
     constexpr static double bestValue() noexcept { return std::numeric_limits<double>::max(); }
     constexpr static double worstValue() noexcept { return std::numeric_limits<double>::lowest(); } // lowest() instead of min() because double
 
@@ -100,18 +102,14 @@ struct Misp : MispBase<N>
     State smf(State const & s1, State const & s2) const noexcept
     {
         return State{s1.sel | s2.sel,min(s1.n,s2.n)};
-    };
-    State smf(State const & s1, State const & s2) const noexcept
-    {
-        return State{s1.sel | s2.sel,min(s1.n,s2.n)};
-    };
+    }
     // State similarity function
     GFL_HOST_DEVICE
     gfl::f32 ssf(State const & s1, State const & s2) const noexcept
     {
         gfl::f32 n = 0.0;
         gfl::f32 mean = 0.0;
-        sim_combine(mean,n,s1.sel.iou(s2));
+        sim_combine(mean,n,s1.sel.iou(s2.sel));
         return mean;
     };
 

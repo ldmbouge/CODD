@@ -25,7 +25,10 @@ struct alignas(16) LightNode
             isNotExact(0),
             boundSrcToNode(0),
             nEdgesSrcToNode(0)
-    {};
+    {}
+
+    GFL_HOST_DEVICE
+    void reset() noexcept {memset(this,0,sizeof(LightNode));}
 
     template<typename Node>
     GFL_HOST_DEVICE static
@@ -100,9 +103,7 @@ struct LabelsInfo
 template<typename Node>
 struct BatchInfo
 {
-    gfl::f64 dualBound;
     LabelsInfo labelsInfo;
-    bool isExact;
 
     gfl::i64 nParents;
     Node * parents;
@@ -120,9 +121,7 @@ struct BatchInfo
 
     void reset()
     {
-        dualBound = 0;
         labelsInfo.reset();
-        isExact = true;
 
         nParents = 0;
         parents = nullptr;
@@ -147,6 +146,19 @@ struct BatchInfo
 
         this->nParents = nParents;
         parents = allocator->allocateArray<Node>(nParents);
+    }
+
+    void useChildrenAsParents(gfl::StackAllocator * allocator) noexcept
+    {
+        using namespace gfl;
+
+        i64 const nChildren = nParents * labelsInfo.nLabels;
+
+        children = allocator->allocateArray<Node>(nChildren);
+        tmpChildren = allocator->allocateArray<Node>(nChildren);
+
+        childrenInfo = allocator->allocateArray<NodeInfo>(nChildren);
+        tmpChildrenInfo =  allocator->allocateArray<NodeInfo>(nChildren);
     }
 
     void initChildren(gfl::StackAllocator * allocator) noexcept

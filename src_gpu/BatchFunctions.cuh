@@ -52,7 +52,7 @@ void calcRep(NodeInfo & iInfo, NodeInfo & jInfo, Node const & iNode, Node const 
 
     if (Model::State::equal(iNode.state, jNode.state))
     {
-        if (Model::betterEq(iNode.boundSrcToNode, jNode.boundSrcToNode))
+        if (Model::isBetterEq(iNode.boundSrcToNode, jNode.boundSrcToNode))
         {
             jInfo.flag = 1;
         }
@@ -63,11 +63,11 @@ void calcRep(NodeInfo & iInfo, NodeInfo & jInfo, Node const & iNode, Node const 
     }
     if constexpr (Model::has_dom)
     {
-        if (Model::betterEq(iNode.boundSrcToNode, jNode.boundSrcToNode) and Model::dom(iNode.state, jNode.state))
+        if (Model::isBetterEq(iNode.boundSrcToNode, jNode.boundSrcToNode) and Model::dom(iNode.state, jNode.state))
         {
             jInfo.flag = 1;
         }
-        else if (Model::betterEq(jNode.boundSrcToNode, iNode.boundSrcToNode) and Model::dom(jNode.state, iNode.state))
+        else if (Model::isBetterEq(jNode.boundSrcToNode, iNode.boundSrcToNode) and Model::dom(jNode.state, iNode.state))
         {
             iInfo.flag = 1;
         }
@@ -215,13 +215,13 @@ void calcChildren(
                         if constexpr (Model::has_local)
                             cDualBound += model->local(cState.value(), DDCtx);
 
-                        if (Model::better(cDualBound, pBound))
+                        if (Model::isBetter(cDualBound, pBound))
                         {
                             // Node
                             cNode.state = cState.value();
                             cNode.boundSrcToNode = cBoundSrcToNode;
                             cNode.dualBound = cDualBound;
-                            cNode.isNotExact = 0;
+                            cNode.isNotExact = pNode.isNotExact;
                             memcpy(cNode.labelsSrcToNode, pNode.labelsSrcToNode, sizeof(cNode.labelsSrcToNode));
                             cNode.labelsSrcToNode[pNode.nEdgesSrcToNode] = label;
                             cNode.nEdgesSrcToNode = pNode.nEdgesSrcToNode + 1;
@@ -258,16 +258,15 @@ void copyAndMergeSuffix(
     copyNodes<Node>(&width, &bi.children, &bi.tmpChildren, &bi.childrenInfo);
 
     Node & lastNode = bi.children[width-1];
-    for(i64 i = width; i < bi.nChildren; i += 1)
+    lastNode.isNotExact = lastNode.isNotExact or width < bi.nChildren;
+    for (i64 i = width; i < bi.nChildren; i += 1)
     {
         NodeInfo const  & toMergeInfo = bi.childrenInfo[i];
         Node const & toMergeNode = bi.tmpChildren[toMergeInfo.idx];
         lastNode.state = Model::smf(lastNode.state, toMergeNode.state);
-        lastNode.boundSrcToNode = Model::better(lastNode.boundSrcToNode, toMergeNode.boundSrcToNode) ?
-                                  toMergeNode.boundSrcToNode : lastNode.boundSrcToNode;
+        lastNode.boundSrcToNode = Model::calcWorst(lastNode.boundSrcToNode, toMergeNode.boundSrcToNode);
     }
 }
-
 template<typename Model, typename Node>
 void mergeChildren(gfl::i64 const width, BatchInfo<Node> * const batchInfo)
 {
@@ -297,6 +296,27 @@ void mergeChildren(gfl::i64 const width, BatchInfo<Node> * const batchInfo)
     bi.nChildren = width;
 }
 
+
+template<typename Model, typename Node>
+void keepOnlyBestChild(BatchInfo<Node> * const batchInfo)
+{
+    using namespace gfl;
+    BatchInfo<Node> const & bi = *batchInfo;
+
+    assert(bi.nChildren > 0);
+
+    Node & bestChild = bi.children[0];
+    for(i64 cIdx = 1; cIdx < bi.nChildren; cIdx += 1)
+    {
+        Node const & child = bi.children[cIdx];
+        if (Model::isBetter(child.boundSrcToNode,bestChild.boundSrcToNode))
+        {
+            bestChild = child;
+        }
+    }
+    bi.nChildren = 1;
+}
+
 template<typename Model, typename Node>
 void calcChildrenLabels(
         Model const * const model,
@@ -315,23 +335,3 @@ void calcChildrenLabels(
         bi.labelsInfo.update(cNode.labels.slc());
     }
 }
-
-
-
-
-template<typename Model, typename Node>
-void ProcessBatchRelaxed(
-      Model const * const model,
-      gfl::f64 pBound,
-      gfl::i64 width,
-      BatchInfo<Node> * const batchInfo)
-{
-    ProcessBatchExact<Model,Node>(model,pBound,batchInfo);
-    if (batchInfo->nChildren > width)
-    {
-        mergeChildren<Model,Node>(width,batchInfo);
-        batchInfo->isExact = false;
-    }
-}
-
-
