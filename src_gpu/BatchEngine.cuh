@@ -51,14 +51,6 @@ struct BatchEngine
         batchInfo->initChildren(allocator);
     }
 
-    static
-    void initParentsWithChildren(BatchInfo<Node> * const batchInfo)
-    {
-        batchInfo->nParents = batchInfo->nChildren;
-        memcpy(batchInfo->parents,batchInfo->children,sizeof(Node) * batchInfo->nChildren);
-        batchInfo->nChildren = 0;
-    }
-
     template<typename Model>
     static
     void processBatchExact(
@@ -83,7 +75,6 @@ struct BatchEngine
         }
     }
 
-
     template<typename Model>
     static
     void processBatchRelaxed(
@@ -93,7 +84,9 @@ struct BatchEngine
           gfl::i64 width,
           BatchInfo<Node> * const batchInfo)
     {
+
         calcChildren<Model,Node>(model,pBound,batchInfo);
+
         if (batchInfo->nChildren > 0)
         {
             if (model->isTarget(batchInfo->children[0].state))

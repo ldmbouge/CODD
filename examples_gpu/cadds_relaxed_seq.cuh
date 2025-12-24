@@ -106,7 +106,7 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
     // Search
     Node bestNode;
     f64 pBound = Model::worstValue();
-    f64 dBound = Model::bestValue();
+    f64 dBound = Model::worstValue();
 
     BatchInfoType * batchInfo = mallocStd<BatchInfoType>(sizeof(BatchInfoType));
     StackAllocator * gAllocator = new StackAllocator(mallocStd(CpuMemSize), CpuMemSize);
@@ -168,22 +168,26 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
 
             auto & tmpLayer = auxLayer.getLayer(0);
             tmpLayer.clear();
-            tmpLayer.reserve(currentBatchSize);
+            tmpLayer.resize(currentBatchSize);
             memcpy(tmpLayer.data(),currentBatch.data() ,sizeof(Node) * currentBatchSize);
             BatchEngine<Node>::initBatch(batchInfo,gAllocator,tmpLayer,exactLayers.getLabelsInfo(currentExactLayerIdx));
 
+            i64 relaxedLayerIdx = currentExactLayerIdx;
+            printf("Processing relaxation...");
             while (true)
             {
+                relaxedLayerIdx += 1;
                 BatchEngine<Node>::processBatchRelaxed(model,pBound,dBound,width,batchInfo);
                 if (batchInfo->nChildren > 0)
                 {
                     tmpLayer.clear();
-                    tmpLayer.reserve(batchInfo->nChildren);
+                    tmpLayer.resize(batchInfo->nChildren);
                     memcpy(tmpLayer.data(),batchInfo->children,sizeof(Node) * batchInfo->nChildren);
                     if (not model->isTarget(tmpLayer[0].state))
                     {
-                        assert(batchInfo->labelsInfo.nLabels <= exactLayers.getLabelsInfo(currentExactLayerIdx).nLabels);
-                        BatchEngine<Node>::initParentsWithChildren(batchInfo);
+                        LabelsInfo const li = batchInfo->labelsInfo;
+                        assert(batchInfo->nChildren <= BatchInfoType::calcMaxParents(li.nLabels, CpuMemSize, false));
+                        BatchEngine<Node>::initBatch(batchInfo,gAllocator,tmpLayer,li);
                     }
                     else
                     {
@@ -195,6 +199,8 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
                     break;
                 }
             }
+            printf(" (%ld layers)\n", relaxedLayerIdx- currentExactLayerIdx);
+
 
             // I know that the only child I have is the best
             if (batchInfo->nChildren > 0)
@@ -211,10 +217,10 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
                 }
 
                 // If necessary, enqueue children for further expansion
-                if (tmpBound < pBound)
+                if (not Model::isBetter(tmpBound, pBound))
                 {
                     tmpLayer.clear();
-                    tmpLayer.reserve(currentBatchSize);
+                    tmpLayer.resize(currentBatchSize);
                     memcpy(tmpLayer.data(),currentBatch.data() ,sizeof(Node) * currentBatchSize);
                     BatchEngine<Node>::initBatch(batchInfo,gAllocator,tmpLayer,exactLayers.getLabelsInfo(currentExactLayerIdx));
                     BatchEngine<Node>::processBatchExact(model,pBound,dBound,batchInfo);
@@ -222,13 +228,14 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
                     if (batchInfo->nChildren > 0)
                     {
                         auto & nextExactLayer = exactLayers.getLayer(currentExactLayerIdx+1);
+                        auto & nextExactLabelsInfo =  exactLayers.getLabelsInfo(currentExactLayerIdx+1);
                         i64 const nextExactLayerOldSize = nextExactLayer.size();
                         nextExactLayer.resize(nextExactLayerOldSize + batchInfo->nChildren);
                         memcpy(nextExactLayer.data() + nextExactLayerOldSize,
                                batchInfo->children,
                                sizeof(Node) * batchInfo->nChildren);
 
-                        exactLayers.getLabelsInfo(currentExactLayerIdx+1).update(batchInfo->labelsInfo);
+                        nextExactLabelsInfo.update(batchInfo->labelsInfo);
                         Node const & tmpNodeExact = nextExactLayer[nextExactLayerOldSize];
                         if (model->isTarget(tmpNodeExact.state))
                         {
@@ -252,7 +259,7 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
                 }
             }
         }
-        currentExactLayer.resize(currentExactLayer.size() - fragmentSize);
+        exactLayers.getLayer(currentExactLayerIdx).resize(exactLayers.getLayer(currentExactLayerIdx).size() - fragmentSize);
 
         if (newSolution)
         {
@@ -268,18 +275,18 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
     {
         if (pBound != Model::worstValue())
         {
-            printf("COMPLETED    | Visited = %10ld | Cost = %7.2f | Value = ", expandedNodes, bestNode.boundSrcToNode);
+            printf("COMPLETED    | Expanded = %10ld | Cost = %7.2f | Value = ", expandedNodes, bestNode.boundSrcToNode);
             Node::printLabels(bestNode);
             printf("\n");
         }
         else
         {
-            printf("INFEASIBLE   | Visited = %10ld\n", expandedNodes);
+            printf("INFEASIBLE   | Expanded = %10ld\n", expandedNodes);
         }
     }
     else
     {
-        printf("TIMEOUT      | Visited = %10ld\n", expandedNodes);
+        printf("TIMEOUT      | Expanded = %10ld\n", expandedNodes);
     }
     fflush(stdout);
 

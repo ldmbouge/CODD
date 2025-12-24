@@ -74,6 +74,21 @@ void calcRep(NodeInfo & iInfo, NodeInfo & jInfo, Node const & iNode, Node const 
     }
 }
 
+template<typename Node>
+GFL_HOST_DEVICE
+void assertInfoConsistency(BatchInfo<Node> * const batchInfo)
+{
+    using namespace gfl;
+    BatchInfo<Node> & bi = *batchInfo;
+
+    for(i64 i = 0; i < bi.nChildren; i+=1)
+    {
+        assert(0 <= bi.childrenInfo[i].idx);
+        assert(bi.childrenInfo[i].idx < bi.nChildren);
+    }
+}
+
+
 template<typename Model, typename Node>
 void calcRep(BatchInfo<Node> * const batchInfo)
 {
@@ -149,8 +164,8 @@ void copyNodes(gfl::i64 const * const nNodes, Node * const dst,  Node const * co
 
     for (i64 i = 0; i < *nNodes; i += 1)
     {
-        i64 const nIdx = nodesInfo[i].idx;
-        dst[i] = src[nIdx];
+        i64 const srcIdx = nodesInfo[i].idx;
+        dst[i] = src[srcIdx];
     }
 }
 
@@ -175,8 +190,9 @@ void filterChildren(BatchInfo<Node> * const batchInfo)
               bi.childrenInfo + bi.nChildren,
               cmpByFlag);
 
-    swapPtr(&bi.children, &bi.tmpChildren);
     countFlagged<Node>(batchInfo, 0);
+
+    swapPtr(&bi.children, &bi.tmpChildren);
     copyNodes<Node>(&bi.nFlagged, bi.children, bi.tmpChildren, bi.childrenInfo);
 
     bi.nChildren = bi.nFlagged;
@@ -255,10 +271,11 @@ void copyAndMergeSuffix(
 
     BatchInfo<Node> & bi = *batchInfo;
 
+    swapPtr(&bi.children, &bi.tmpChildren);
     copyNodes<Node>(&width, bi.children, bi.tmpChildren, bi.childrenInfo);
 
     Node & lastNode = bi.children[width-1];
-    lastNode.isNotExact = lastNode.isNotExact or width < bi.nChildren;
+    lastNode.isNotExact = 1;
     for (i64 i = width; i < bi.nChildren; i += 1)
     {
         NodeInfo const  & toMergeInfo = bi.childrenInfo[i];
@@ -276,6 +293,7 @@ void mergeChildren(gfl::i64 const width, BatchInfo<Node> * const batchInfo)
     for (i64 i = 0; i < bi.nChildren; i += 1)
     {
         NodeInfo & cInfo = bi.childrenInfo[i];
+        cInfo.idx = i;
         cInfo.score = bi.children[cInfo.idx].boundSrcToNode;
     }
 
@@ -291,9 +309,27 @@ void mergeChildren(gfl::i64 const width, BatchInfo<Node> * const batchInfo)
              bi.childrenInfo + bi.nChildren,
              cmpByScore);
 
-    swapPtr(&bi.children, &bi.tmpChildren);
     copyAndMergeSuffix<Model,Node>(width,batchInfo);
     bi.nChildren = width;
+}
+
+
+template<typename Model, typename Node>
+bool someTarget(Model const * const model, BatchInfo<Node> * batchInfo)
+{
+    using namespace gfl;
+    BatchInfo<Node> & bi = *batchInfo;
+
+    assert(bi.nChildren > 0);
+
+    for(i64 cIdx = 0; cIdx < bi.nChildren; cIdx += 1)
+    {
+       if (model->isTarget(bi.children[cIdx].state))
+       {
+           return true;
+       }
+    }
+    return false;
 }
 
 

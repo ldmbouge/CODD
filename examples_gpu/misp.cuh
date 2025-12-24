@@ -73,7 +73,8 @@ struct Misp : MispBase<N>
         }
         else
         {
-            if (l and not s.sel.contains(s.n)) return gfl::nullopt; // we cannot take n (label==1) if not legal.
+            if (l and not s.sel.contains(s.n))
+                return gfl::nullopt; // we cannot take n (label==1) if not legal.
             Set out = s.sel;
             out.remove(s.n);   // remove n from state
             if (l) out.diffWith(MispBase<N>::adj[s.n]); // remove neighbors of n from state (when taking n -- label==1 -- )
@@ -104,6 +105,7 @@ struct Misp : MispBase<N>
     static
     State smf(State const & s1, State const & s2) noexcept
     {
+        assert(s1.n == s2.n);
         return State{s1.sel | s2.sel,min(s1.n,s2.n)};
     }
     // State similarity function
