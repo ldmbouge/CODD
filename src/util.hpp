@@ -397,9 +397,10 @@ public:
        return {smallest,largest,count};
    }
 
+   // Intersection Over Union
    // Reference: https://en.wikipedia.org/wiki/Jaccard_index
    GFL_HOST_DEVICE
-   float iou(NatSet const & ps) noexcept
+   float iou(NatSet const & ps) const noexcept
    {
        using namespace gfl;
 

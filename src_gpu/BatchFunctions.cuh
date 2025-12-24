@@ -120,7 +120,7 @@ void calcMergeScore(BatchInfo<Node> * const batchInfo, gfl::i64 const width)
         getBeginEnd(begin,end,i,width,bi.nChildren);
         for (i64 j = begin; j < end; j += 1)
         {
-            NodeInfo const & toScoreInfo = bi.childrenInfo[j];
+            NodeInfo & toScoreInfo = bi.childrenInfo[j];
             Node const & toScoreNode = bi.children[toScoreInfo.idx];
             toScoreInfo.score = calcMergeScore<Model,Node>(baseNode,toScoreNode);
         }
@@ -255,7 +255,7 @@ void copyAndMergeSuffix(
 
     BatchInfo<Node> & bi = *batchInfo;
 
-    copyNodes<Node>(&width, &bi.children, &bi.tmpChildren, &bi.childrenInfo);
+    copyNodes<Node>(&width, bi.children, bi.tmpChildren, bi.childrenInfo);
 
     Node & lastNode = bi.children[width-1];
     lastNode.isNotExact = lastNode.isNotExact or width < bi.nChildren;
@@ -285,7 +285,7 @@ void mergeChildren(gfl::i64 const width, BatchInfo<Node> * const batchInfo)
               bi.childrenInfo + bi.nChildren,
               cmpByScore);
 
-    calcMergeScore<Model,Node>(batchInfo);
+    calcMergeScore<Model,Node>(batchInfo, width);
 
     std::sort(bi.childrenInfo,
              bi.childrenInfo + bi.nChildren,
@@ -298,10 +298,10 @@ void mergeChildren(gfl::i64 const width, BatchInfo<Node> * const batchInfo)
 
 
 template<typename Model, typename Node>
-void keepOnlyBestChild(BatchInfo<Node> * const batchInfo)
+void keepOnlyBestChild(BatchInfo<Node> * batchInfo)
 {
     using namespace gfl;
-    BatchInfo<Node> const & bi = *batchInfo;
+    BatchInfo<Node> & bi = *batchInfo;
 
     assert(bi.nChildren > 0);
 

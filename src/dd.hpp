@@ -20,7 +20,6 @@
 #include <atomic>
 
 #include "RuntimeMonitor.hpp"
-#include "model.hpp"
 
 class Strategy;
 class AbstractDD;
@@ -501,7 +500,7 @@ public:
 
 template <class Model>
 requires
-    IsModel<Model> and
+//
     Printable<typename Model::State> and
     Hashable<typename Model::State>
 class DD :public AbstractDD {

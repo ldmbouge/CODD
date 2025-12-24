@@ -85,6 +85,7 @@ struct BatchEngine
 
 
     template<typename Model>
+    static
     void processBatchRelaxed(
           Model const * const model,
           gfl::f64 pBound,

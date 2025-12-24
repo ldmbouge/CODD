@@ -119,7 +119,7 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
     auto const rState = model->initial();
     auto const rLabels = model->lgf(rState, DDExact, pBound, dBound);
     exactLayers.getLayer(0).emplace_back(rState,rLabels);
-    exactLayers.getLabelsInfo(0).emplace_back(rLabels.slc());
+    exactLayers.getLabelsInfo(0).update(rLabels.slc());
 
     // Let's goo!
     auto const start = RuntimeMonitor::cputime();
@@ -170,11 +170,11 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
             tmpLayer.clear();
             tmpLayer.reserve(currentBatchSize);
             memcpy(tmpLayer.data(),currentBatch.data() ,sizeof(Node) * currentBatchSize);
-            BatchEngine<Node>::initBatch(batchInfo,gAllocator,tmpLayer,exactLayers.getLabelsInfo(currentExactLayer));
+            BatchEngine<Node>::initBatch(batchInfo,gAllocator,tmpLayer,exactLayers.getLabelsInfo(currentExactLayerIdx));
 
             while (true)
             {
-                BatchEngine<Node>::processBatchRelaxed(model,pBound,dBound,batchInfo);
+                BatchEngine<Node>::processBatchRelaxed(model,pBound,dBound,width,batchInfo);
                 if (batchInfo->nChildren > 0)
                 {
                     tmpLayer.clear();
@@ -182,7 +182,7 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
                     memcpy(tmpLayer.data(),batchInfo->children,sizeof(Node) * batchInfo->nChildren);
                     if (not model->isTarget(tmpLayer[0].state))
                     {
-                        assert(batchInfo->labelsInfo.nLabels <= exactLayers.getLabelsInfo(currentExactLayer).nLabels);
+                        assert(batchInfo->labelsInfo.nLabels <= exactLayers.getLabelsInfo(currentExactLayerIdx).nLabels);
                         BatchEngine<Node>::initParentsWithChildren(batchInfo);
                     }
                     else
@@ -216,7 +216,7 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
                     tmpLayer.clear();
                     tmpLayer.reserve(currentBatchSize);
                     memcpy(tmpLayer.data(),currentBatch.data() ,sizeof(Node) * currentBatchSize);
-                    BatchEngine<Node>::initBatch(batchInfo,gAllocator,tmpLayer,exactLayers.getLabelsInfo(currentExactLayer));
+                    BatchEngine<Node>::initBatch(batchInfo,gAllocator,tmpLayer,exactLayers.getLabelsInfo(currentExactLayerIdx));
                     BatchEngine<Node>::processBatchExact(model,pBound,dBound,batchInfo);
 
                     if (batchInfo->nChildren > 0)
@@ -232,7 +232,7 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
                         Node const & tmpNodeExact = nextExactLayer[nextExactLayerOldSize];
                         if (model->isTarget(tmpNodeExact.state))
                         {
-                            if (Model::better(tmpNodeExact.boundSrcToNode, pBound))
+                            if (Model::isBetter(tmpNodeExact.boundSrcToNode, pBound))
                             {
                                 bestNode = tmpNodeExact;
                                 pBound = bestNode.boundSrcToNode;
@@ -243,10 +243,10 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
                         if (sort and nextExactLayerOldSize > 0)
                         {
                             // Reverse because we work on the tail of the vector
-                            auto cmpByBound = [](Node const & a, Node const & b){return not Model::betterEq(a.boundSrcToNode,b.boundSrcToNode);};
+                            auto cmpByBound = [](Node const & a, Node const & b){return not Model::isBetterEq(a.boundSrcToNode,b.boundSrcToNode);};
                             //assert(std::is_sorted(nextLayer.data() + nextLayerOldSize, nextLayer.data() + nextLayer.size(), cmpByCost));
                             std::inplace_merge(nextExactLayer.data(), nextExactLayer.data() + nextExactLayerOldSize, nextExactLayer.data() + nextExactLayer.size(), cmpByBound);
-                            assert(std::is_sorted(nextLayer.begin(), nextLayer.end(), cmpByCost));
+                            assert(std::is_sorted(nextExactLayer.begin(), nextExactLayer.end(), cmpByBound));
                         }
                     }
                 }
