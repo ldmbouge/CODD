@@ -173,7 +173,7 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
             BatchEngine<Node>::initBatch(batchInfo,gAllocator,tmpLayer,exactLayers.getLabelsInfo(currentExactLayerIdx));
 
             i64 relaxedLayerIdx = currentExactLayerIdx;
-            printf("Processing relaxation...");
+            printf("           Processing relaxation...");
             while (true)
             {
                 relaxedLayerIdx += 1;
@@ -199,7 +199,7 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
                     break;
                 }
             }
-            printf(" (%ld layers)\n", relaxedLayerIdx- currentExactLayerIdx);
+            printf(" (%ld layers)\n", relaxedLayerIdx - currentExactLayerIdx);
 
 
             // I know that the only child I have is the best
@@ -207,7 +207,7 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
             {
                 // Update bounds and solution
                 Node const & tmpNode = batchInfo->children[0];
-                auto const & tmpBound = tmpNode.boundSrcToNode;
+                auto const tmpBound = tmpNode.boundSrcToNode;
                 dBound = Model::calcBetter(tmpBound,dBound);
                 if ((not tmpNode.isNotExact) and Model::isBetter(tmpBound,pBound))
                 {
@@ -217,7 +217,7 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
                 }
 
                 // If necessary, enqueue children for further expansion
-                if (not Model::isBetter(tmpBound, pBound))
+                if (Model::isBetter(tmpBound, pBound))
                 {
                     tmpLayer.clear();
                     tmpLayer.resize(currentBatchSize);
@@ -256,6 +256,10 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
                             assert(std::is_sorted(nextExactLayer.begin(), nextExactLayer.end(), cmpByBound));
                         }
                     }
+                }
+                else
+                {
+                    printf("           Pruned %ld nodes\n", currentBatchSize);
                 }
             }
         }

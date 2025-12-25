@@ -30,7 +30,7 @@ void swapVal(T* a, T* b)
 
 template<typename Model, typename Node>
 GFL_HOST_DEVICE
-gfl::f32 calcMergeScore(Node const & baseNode, Node const & toEvalNode, gfl::f32 const alpha = 1.0)
+gfl::f32 calcMergeScore(Node const & baseNode, Node const & toEvalNode, gfl::f32 const alpha = 0.5)
 {
     using namespace gfl;
 
@@ -231,7 +231,7 @@ void calcChildren(
                         if constexpr (Model::has_local)
                             cDualBound += model->local(cState.value(), DDCtx);
 
-                        if (Model::isBetter(cDualBound, pBound))
+                        if (Model::isBetter(cDualBound,pBound))
                         {
                             // Node
                             cNode.state = cState.value();
