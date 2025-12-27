@@ -67,6 +67,23 @@ struct LayersHelper
         return -1;
     }
 
+    gfl::i32 calcOneWithBestBound() const noexcept
+    {
+        using namespace gfl;
+
+        double bound = worstBound<Model>();
+        i32 lIdx = -1;
+        for (i32 i =0; i < layers.size(); i += 1)
+        {
+            if (isBetterEq<Model>(bounds[i], bound))
+            {
+                bound = bounds[i];
+                lIdx = i;
+            }
+        }
+        return lIdx;
+    }
+
     LayerType & getLayer(gfl::i32 const lIdx) noexcept
     {
         if (layers.size() <= lIdx)

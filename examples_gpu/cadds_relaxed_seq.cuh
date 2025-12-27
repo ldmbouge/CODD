@@ -53,9 +53,9 @@ void printLog(double elapsed,
     printf( " | ");
 
     printf("Batch %3d/%3d of Size %10ld ", bIdx+1, nBatches, bSize);
-    printf( "(");
-    printMemSize(sizeof(Node) * bSize);
-    printf( ") | ");
+    // printf( "(");
+    // printMemSize(sizeof(Node) * bSize);
+    // printf( ") | ");
 
     printf("Expanded = %10ld | Queue = %10ld\n", nExpanded, qSize);
     fflush(stdout);
@@ -151,9 +151,10 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
         newSolution = false;
 
         // Grow number of layers on demand
-        i32 const currentExactLayerIdx = iteration % 10 < 5 ?
-            exactLayers.calcDeepestNotEmpty():
-            exactLayers.calcShallowestNotEmpty();
+        i32 const currentExactLayerIdx = iteration % 2 ?
+            exactLayers.calcOneWithBestBound():
+            exactLayers.calcDeepestNotEmpty();
+            //exactLayers.calcShallowestNotEmpty();
 
         // Fragment
         auto & currentExactLayer = exactLayers.getLayer(currentExactLayerIdx);
@@ -225,7 +226,7 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
             {
                 // Update bound and solution
                 Node const & tmpNode = batchInfo->children[0];
-                auto const tmpBound = tmpNode.sumEdgesSrcToNode;
+                auto const tmpBound = calcTighterBound<Model>(tmpNode.sumEdgesSrcToNode, tmpNode.heuristicBound);
                 if (isBetter<Model>(tmpBound,pBound))
                 {
                     if (not tmpNode.isNotExact)
@@ -268,7 +269,7 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
                             else if (sort and nextExactLayerOldSize > 0)
                             {
                                 // Reverse because we work on the tail of the vector
-                                auto cmpByBound = [](Node const & a, Node const & b){return isBetter<Model>(b.sumEdgesSrcToNode,a.sumEdgesSrcToNode);};
+                                auto cmpByBound = [](Node const & a, Node const & b){return isBetter<Model>(b.heuristicBound,a.heuristicBound);};
                                 //assert(std::is_sorted(nextLayer.data() + nextLayerOldSize, nextLayer.data() + nextLayer.size(), cmpByCost));
                                 std::inplace_merge(nextExactLayer.data(), nextExactLayer.data() + nextExactLayerOldSize, nextExactLayer.data() + nextExactLayer.size(), cmpByBound);
                                 assert(std::is_sorted(nextExactLayer.begin(), nextExactLayer.end(), cmpByBound));
