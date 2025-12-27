@@ -9,8 +9,8 @@ struct alignas(16) LightNode
 {
     State state;
     Labels labels;
-    gfl::f64 boundSrcToNode;
-    gfl::f64 dualBound;
+    gfl::f64 sumEdgesSrcToNode;
+    gfl::f64 heuristicBound;
     gfl::u8 isNotExact;
     gfl::u8 nEdgesSrcToNode;
     gfl::u8 labelsSrcToNode[N];
@@ -19,11 +19,12 @@ struct alignas(16) LightNode
     LightNode() noexcept {};
 
     GFL_HOST_DEVICE
-    LightNode(State const & s, Labels const & l) noexcept :
+    LightNode(State const & s, Labels const & l, gfl::f64 const hBound) noexcept :
             state(s),
             labels(l),
+            heuristicBound(hBound),
             isNotExact(0),
-            boundSrcToNode(0),
+            sumEdgesSrcToNode(0),
             nEdgesSrcToNode(0)
     {}
 
@@ -35,8 +36,8 @@ struct alignas(16) LightNode
     void print(Node const & node)
     {
         using namespace gfl;
-        printf("S2N: %.1f | ", node.boundSrcToNode);
-        printf("DBND: %.1f | ",node.dualBound);
+        printf("S2N: %.1f | ", node.sumEdgesSrcToNode);
+        printf("HBND: %.1f | ",node.heuristicBound);
         printf("EXCT: %d | ", 1-node.isNotExact);
         printf("EDGS: %d", node.nEdgesSrcToNode);
     }
@@ -60,6 +61,16 @@ struct NodeInfo
 
     GFL_HOST_DEVICE
     NodeInfo() noexcept {};
+
+    GFL_HOST_DEVICE static
+     void print(NodeInfo const & ni)
+    {
+        using namespace gfl;
+        printf("H: %7llu | ", ni.hash % 10000000);
+        printf("IDX: %7lld | ", ni.idx);
+        printf("FLGS: %8d | ", ni.flag);
+        printf("SCR: %7.5f", ni.score);
+    }
 };
 
 struct DummyDecomposer128

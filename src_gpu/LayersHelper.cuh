@@ -2,15 +2,17 @@
 #include <vector>
 
 #include "BatchInfo.cuh"
+#include "BoundsHelpers.cuh"
 #include "Types.hpp"
 
-template<typename Node>
+template<typename Node, typename Model>
 struct LayersHelper
 {
     using LayerType = std::vector<Node>;
 
     std::vector<LayerType>  layers;
     std::vector<LabelsInfo> labelsInfo;
+    std::vector<double>     bounds;
 
     LayersHelper() noexcept {};
 
@@ -52,6 +54,19 @@ struct LayersHelper
         return -1;
     }
 
+    gfl::i32 calcShallowestNotEmpty() const noexcept
+    {
+        using namespace gfl;
+        for (i32 i = 0; i <  layers.size(); i += 1)
+        {
+            if (not layers[i].empty())
+            {
+                return i;
+            }
+        }
+        return -1;
+    }
+
     LayerType & getLayer(gfl::i32 const lIdx) noexcept
     {
         if (layers.size() <= lIdx)
@@ -68,6 +83,38 @@ struct LayersHelper
             labelsInfo.resize(lIdx + 1);
         }
         return labelsInfo[lIdx];
+    }
+
+    double & getBound(gfl::i32 const lIdx) noexcept
+    {
+        if (bounds.size() <= lIdx)
+        {
+            bounds.resize(lIdx + 1, worstBound<Model>());
+        }
+        return bounds[lIdx];
+    }
+
+    void updateBound(gfl::i32 const lIdx) noexcept
+    {
+        double const  oldBound = getBound(lIdx);
+        double & bound = bounds[lIdx];
+        bound = worstBound<Model>();
+        for (auto const & n : getLayer(lIdx))
+        {
+            bound = calcBetter<Model>(bound,n.heuristicBound);
+        }
+    }
+
+    double calcBestBound() const noexcept
+    {
+        double bound = worstBound<Model>();
+        // gfl::Array<double>::print(bounds.data(), bounds.data() + bounds.size(), "%.1f");
+        // printf("\n");
+        for (auto const & b : bounds)
+        {
+            bound = calcBetter<Model>(bound,b);
+        }
+        return bound;
     }
 
     gfl::i64 countAllNodes() const noexcept

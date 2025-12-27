@@ -82,11 +82,11 @@ struct BatchEngine
        gfl::f64 pBound,
        gfl::f64 dBound,
        BatchInfo<Node> * const batchInfo,
-       gfl::f64 bound
+       gfl::f64 hBound
        )
     {
         processBatchExact(model,pBound,dBound,batchInfo);
-        updateNodesDual<Model>(&batchInfo->nChildren, batchInfo->children, bound);
+        updateNodesBound<Model>(&batchInfo->nChildren, batchInfo->children, hBound);
     }
 
 
@@ -107,8 +107,6 @@ struct BatchEngine
 
         // printf("Children (%d)\n", batchInfo->nChildren);
         // printNodes(batchInfo->nChildren, batchInfo->children);
-
-
 
         if (batchInfo->nChildren > 0)
         {

@@ -20,6 +20,7 @@ void printLog(double elapsed,
               gfl::i64 lSize,
               gfl::i64 fSize,
               gfl::f64 pBound,
+              gfl::f64 dBound,
               gfl::i32 bIdx,
               gfl::i64 bSize,
               gfl::i32 nBatches,
@@ -31,10 +32,19 @@ void printLog(double elapsed,
     printf("[%7.2fs] ", elapsed);
     printf("Layer = %4d (%10ld -> %10ld) | ",lIdx, lSize, lSize - fSize);
 
-    printf( "Cost = ");
+    printf( "P/D = ");
     if (isValid<Model>(pBound))
     {
         printf("%7.2f", pBound);
+    }
+    else
+    {
+        printf("?");
+    }
+    printf( "/");
+    if (isValid<Model>(dBound))
+    {
+        printf("%7.2f", dBound);
     }
     else
     {
@@ -107,28 +117,32 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
     // Search
     Node bestNode;
     f64 pBound = worstBound<Model>();
-    f64 dBound = worstBound<Model>();
+    f64 dBound = bestBound<Model>();
 
     BatchInfoType * batchInfo = mallocStd<BatchInfoType>(sizeof(BatchInfoType));
     StackAllocator * gAllocator = new StackAllocator(mallocStd(CpuMemSize), CpuMemSize);
 
     // Layers buffers
-    LayersHelper<Node> exactLayers;
-    LayersHelper<Node> auxLayer;
+    LayersHelper<Node,Model> exactLayers;
+    LayersHelper<Node,Model> auxLayer;
 
     // Initialize first layer
     auto const rState = model->initial();
     auto const rLabels = model->lgf(rState, DDExact, pBound, dBound);
-    exactLayers.getLayer(0).emplace_back(rState,rLabels);
+    exactLayers.getLayer(0).emplace_back(rState,rLabels,bestBound<Model>());
     exactLayers.getLabelsInfo(0).update(rLabels.slc());
+    exactLayers.getBound(0) = worstBound<Model>();
 
     // Let's goo!
     auto const start = RuntimeMonitor::cputime();
     i64 expandedNodes = 0;
     bool interrupted = false;
     bool newSolution = false;
+    i64 iteration = 0;
     while (not exactLayers.allLayersEmpty())
     {
+        iteration += 1;
+
         if (RuntimeMonitor::elapsedSeconds(start) > timeout)
         {
             interrupted = true;
@@ -137,7 +151,9 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
         newSolution = false;
 
         // Grow number of layers on demand
-        i32 const currentExactLayerIdx = exactLayers.calcDeepestNotEmpty();
+        i32 const currentExactLayerIdx = iteration % 10 < 5 ?
+            exactLayers.calcDeepestNotEmpty():
+            exactLayers.calcShallowestNotEmpty();
 
         // Fragment
         auto & currentExactLayer = exactLayers.getLayer(currentExactLayerIdx);
@@ -163,6 +179,7 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
                     currentExactLayer.size(),
                     fragmentSize,
                     pBound,
+                    dBound,
                     bIdx,currentBatchSize,nBatches,
                     expandedNodes,
                     exactLayers.countAllNodes());
@@ -174,7 +191,7 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
             BatchEngine<Node>::initBatch(batchInfo,gAllocator,tmpLayer,exactLayers.getLabelsInfo(currentExactLayerIdx));
 
             i64 relaxedLayerIdx = currentExactLayerIdx;
-            printf("           Processing relaxation...");
+            //printf("           Processing relaxation...");
             while (true)
             {
                 relaxedLayerIdx += 1;
@@ -200,17 +217,15 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
                     break;
                 }
             }
-            printf(" (%ld layers)\n", relaxedLayerIdx - currentExactLayerIdx);
+           // printf(" (%ld layers)\n", relaxedLayerIdx - currentExactLayerIdx);
 
 
             // I know that the only child I have is the best
             if (batchInfo->nChildren > 0)
             {
-                // Update bounds and solution
+                // Update bound and solution
                 Node const & tmpNode = batchInfo->children[0];
-                auto const tmpBound = tmpNode.boundSrcToNode;
-                dBound = calcBetter<Model>(tmpBound,dBound);
-                printf("%.1f vs %.1f\n", tmpBound,pBound);
+                auto const tmpBound = tmpNode.sumEdgesSrcToNode;
                 if (isBetter<Model>(tmpBound,pBound))
                 {
                     if (not tmpNode.isNotExact)
@@ -229,8 +244,9 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
 
                         if (batchInfo->nChildren > 0)
                         {
-                            auto & nextExactLayer = exactLayers.getLayer(currentExactLayerIdx+1);
-                            auto & nextExactLabelsInfo =  exactLayers.getLabelsInfo(currentExactLayerIdx+1);
+                            auto const nextExactLayerIdx = currentExactLayerIdx+1;
+                            auto & nextExactLayer = exactLayers.getLayer(nextExactLayerIdx);
+                            auto & nextExactLabelsInfo =  exactLayers.getLabelsInfo(nextExactLayerIdx);
                             i64 const nextExactLayerOldSize = nextExactLayer.size();
                             nextExactLayer.resize(nextExactLayerOldSize + batchInfo->nChildren);
                             memcpy(nextExactLayer.data() + nextExactLayerOldSize,
@@ -241,18 +257,18 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
                             Node const & tmpNodeExact = nextExactLayer[nextExactLayerOldSize];
                             if (model->isTarget(tmpNodeExact.state))
                             {
-                                if (isBetter<Model>(tmpNodeExact.boundSrcToNode, pBound))
+                                if (isBetter<Model>(tmpNodeExact.sumEdgesSrcToNode, pBound))
                                 {
                                     bestNode = tmpNodeExact;
-                                    pBound = bestNode.boundSrcToNode;
+                                    pBound = bestNode.sumEdgesSrcToNode;
                                     newSolution = true;
                                 }
                                 nextExactLayer.resize(nextExactLayerOldSize);
                             }
-                            if (sort and nextExactLayerOldSize > 0)
+                            else if (sort and nextExactLayerOldSize > 0)
                             {
                                 // Reverse because we work on the tail of the vector
-                                auto cmpByBound = [](Node const & a, Node const & b){return isBetter<Model>(b.boundSrcToNode,a.boundSrcToNode);};
+                                auto cmpByBound = [](Node const & a, Node const & b){return isBetter<Model>(b.sumEdgesSrcToNode,a.sumEdgesSrcToNode);};
                                 //assert(std::is_sorted(nextLayer.data() + nextLayerOldSize, nextLayer.data() + nextLayer.size(), cmpByCost));
                                 std::inplace_merge(nextExactLayer.data(), nextExactLayer.data() + nextExactLayerOldSize, nextExactLayer.data() + nextExactLayer.size(), cmpByBound);
                                 assert(std::is_sorted(nextExactLayer.begin(), nextExactLayer.end(), cmpByBound));
@@ -271,13 +287,34 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
             }
         }
         exactLayers.getLayer(currentExactLayerIdx).resize(exactLayers.getLayer(currentExactLayerIdx).size() - fragmentSize);
-
         if (newSolution)
         {
-            printf("[%7.2fs] SOLUTION     | Visited = %10ld | Cost = %7.2f | Value = ", RuntimeMonitor::elapsedSeconds(start), expandedNodes, bestNode.boundSrcToNode);
+
+            printf("[%7.2fs] SOLUTION     | Expanded = %10ld | Cost = %7.2f | Value = ", RuntimeMonitor::elapsedSeconds(start), expandedNodes, bestNode.sumEdgesSrcToNode);
             Node::printLabels(bestNode);
             printf("\n");
             fflush(stdout);
+            Node::printLabels(bestNode);
+            printf("\n");
+            fflush(stdout);
+        }
+
+
+        exactLayers.updateBound(currentExactLayerIdx);
+        exactLayers.updateBound(currentExactLayerIdx+1);
+        auto const tmpBound = exactLayers.calcBestBound();
+        if (isTighterBound<Model>(tmpBound,dBound))
+        {
+            dBound = tmpBound;
+            printf("[%7.2fs] TIGHTENING   | Expanded = %10ld | Bnd =  %7.2f\n",
+                RuntimeMonitor::elapsedSeconds(start),
+                expandedNodes,
+                dBound);
+
+            if (isBetterEq<Model>(pBound,dBound))
+            {
+                 break;
+            }
         }
     }
 
@@ -286,7 +323,7 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
     {
         if (isValid<Model>(pBound))
         {
-            printf("COMPLETED    | Expanded = %10ld | Cost = %7.2f | Value = ", expandedNodes, bestNode.boundSrcToNode);
+            printf("COMPLETED    | Expanded = %10ld | Cost = %7.2f | Value = ", expandedNodes, bestNode.sumEdgesSrcToNode);
             Node::printLabels(bestNode);
             printf("\n");
         }
