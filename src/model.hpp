@@ -33,7 +33,7 @@ concept IsDP = requires(M const & m, S const & s, int l, DDContext c, double pBo
 };
 
 template<typename M>
-concept HasCmp = requires(double const & d)
+concept HasObj = requires(double const & d)
 {
     { M::isBetter(d,d) }   -> std::same_as<bool>;
     { M::isBetterEq(d,d) } -> std::same_as<bool>;
@@ -73,9 +73,10 @@ concept HasDom =
 
 template<typename M>
 concept IsModel =
+    requires { { M::is_maximization } -> std::convertible_to<bool>; } and
     IsState<typename M::State> and
     IsLabels<typename M::Labels> and
-    IsDP<M,typename M::State, typename M::Labels> and HasCmp<M> and
+    IsDP<M,typename M::State, typename M::Labels> and
     requires { { M::has_merge } -> std::convertible_to<bool>; } and HasMerge<M,typename M::State> and
     requires { { M::has_local } -> std::convertible_to<bool>; } and HasLocal<M,typename M::State> and
     requires { { M::has_dom }   -> std::convertible_to<bool>; } and HasDom<M,typename M::State>;

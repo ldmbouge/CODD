@@ -11,6 +11,8 @@
 template<int N = 256>
 struct Misp : MispBase<N>
 {
+    constexpr static bool is_maximization = true;
+
     // Model
     using Set = NatSet<gfl::roundUpDivPosInt<unsigned short>(N, 64)>;
     using Labels = Set;
@@ -88,17 +90,6 @@ struct Misp : MispBase<N>
     {
         return static_cast<double>(l);
     }
-
-    GFL_HOST_DEVICE
-    constexpr static
-    bool isBetter(double const & c1, double const & c2) noexcept { return c1 > c2; }
-    GFL_HOST_DEVICE
-    constexpr static
-    bool isBetterEq(double const & c1, double const & c2)  noexcept { return c1 >= c2; }
-    constexpr static double calcBetter(double const & c1, double const & c2) noexcept { return isBetter(c1, c2) ? c1 : c2; }
-    constexpr static double calcWorst(double const & c1, double const & c2) noexcept { return not isBetter(c1, c2) ? c1 : c2; }
-    constexpr static double bestValue() noexcept { return std::numeric_limits<double>::max(); }
-    constexpr static double worstValue() noexcept { return std::numeric_limits<double>::lowest(); } // lowest() instead of min() because double
 
     constexpr static bool has_merge = true;
     GFL_HOST_DEVICE

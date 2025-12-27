@@ -32,6 +32,18 @@ struct alignas(16) LightNode
 
     template<typename Node>
     GFL_HOST_DEVICE static
+    void print(Node const & node)
+    {
+        using namespace gfl;
+        printf("S2N: %.1f | ", node.boundSrcToNode);
+        printf("DBND: %.1f | ",node.dualBound);
+        printf("EXCT: %d | ", 1-node.isNotExact);
+        printf("EDGS: %d", node.nEdgesSrcToNode);
+    }
+
+
+    template<typename Node>
+    GFL_HOST_DEVICE static
     void printLabels(Node const & node)
     {
         using namespace gfl;

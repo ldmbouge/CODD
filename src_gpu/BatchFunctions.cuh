@@ -6,6 +6,8 @@
 
 #include <algorithm>
 
+#include "BoundsHelpers.cuh"
+
 template <typename T>
 GFL_HOST_DEVICE
 void swapPtr(T** a, T** b)
@@ -30,16 +32,19 @@ void swapVal(T* a, T* b)
 
 template<typename Model, typename Node>
 GFL_HOST_DEVICE
-gfl::f32 calcMergeScore(Node const & baseNode, Node const & toEvalNode, gfl::f32 const alpha = 0.5)
+gfl::f32 calcMergeScore(Node const & baseNode, Node const & toEvalNode, gfl::f32 const alpha = 1.0)
 {
     using namespace gfl;
 
-    assert(baseNode.boundSrcToNode <= toEvalNode.boundSrcToNode);
+    f64 const normBaseCost =  absDiffWithBest<Model>(baseNode.boundSrcToNode);
+    f64 const normToEvalCost =  absDiffWithBest<Model>(toEvalNode.boundSrcToNode);
+
+    assert(isBetterEq<Model>(normBaseCost,normToEvalCost));
     assert(0.0 <= alpha);
     assert(alpha <= 1.0);
 
-    f32 const simScore = Model::ssf(baseNode.state, toEvalNode.state);  // 1.0 = identical, 0.0 = very different
-    f32 const costRatio = toEvalNode.boundSrcToNode / baseNode.boundSrcToNode;              // How much worse than best (≥ 1.0)
+    f32 const simScore = Model::ssf(baseNode.state, toEvalNode.state);        // 1.0 = identical, 0.0 = very different
+    f32 const costRatio = static_cast<f32>(normToEvalCost / normBaseCost);    // How much worse than best (≥ 1.0)
     f32 const score = costRatio + (alpha * simScore);
     return score;
 }
@@ -52,7 +57,7 @@ void calcRep(NodeInfo & iInfo, NodeInfo & jInfo, Node const & iNode, Node const 
 
     if (Model::State::equal(iNode.state, jNode.state))
     {
-        if (Model::isBetterEq(iNode.boundSrcToNode, jNode.boundSrcToNode))
+        if (isBetterEq<Model>(iNode.boundSrcToNode, jNode.boundSrcToNode))
         {
             jInfo.flag = 1;
         }
@@ -63,11 +68,11 @@ void calcRep(NodeInfo & iInfo, NodeInfo & jInfo, Node const & iNode, Node const 
     }
     if constexpr (Model::has_dom)
     {
-        if (Model::isBetterEq(iNode.boundSrcToNode, jNode.boundSrcToNode) and Model::dom(iNode.state, jNode.state))
+        if (isBetterEq<Model>(iNode.boundSrcToNode, jNode.boundSrcToNode) and Model::dom(iNode.state, jNode.state))
         {
             jInfo.flag = 1;
         }
-        else if (Model::isBetterEq(jNode.boundSrcToNode, iNode.boundSrcToNode) and Model::dom(jNode.state, iNode.state))
+        else if (isBetterEq<Model>(jNode.boundSrcToNode, iNode.boundSrcToNode) and Model::dom(jNode.state, iNode.state))
         {
             iInfo.flag = 1;
         }
@@ -170,22 +175,32 @@ void copyNodes(gfl::i64 const * const nNodes, Node * const dst,  Node const * co
 }
 
 template<typename Model, typename Node>
+void updateNodesDual(gfl::i64 const * const nNodes, Node * const nodes, gfl::f64 const dBound)
+{
+    using namespace gfl;
+
+    for (i64 i = 0; i < *nNodes; i += 1)
+    {
+        Node & node = nodes[i];
+        node.dualBound = calcBetter<Model>(node.dualBound, dBound);
+    }
+}
+
+template<typename Model, typename Node>
 void filterChildren(BatchInfo<Node> * const batchInfo)
 {
     using namespace gfl;
 
     BatchInfo<Node> & bi = *batchInfo;
 
-    auto cmpByHash = [](NodeInfo const & a, NodeInfo const & b)
-        {return a.hash < b.hash;};
+    auto cmpByHash = [](NodeInfo const & a, NodeInfo const & b){return a.hash < b.hash;};
     std::sort(bi.childrenInfo,
               bi.childrenInfo + bi.nChildren,
               cmpByHash);
 
     calcRep<Model,Node>(batchInfo);
 
-    auto cmpByFlag = [](NodeInfo const & a, NodeInfo const & b)
-        {return a.flag < b.flag;};
+    auto cmpByFlag = [](NodeInfo const & a, NodeInfo const & b){return a.flag < b.flag;};
     std::sort(bi.childrenInfo,
               bi.childrenInfo + bi.nChildren,
               cmpByFlag);
@@ -226,17 +241,18 @@ void calcChildren(
                     auto cState = model->stf(pNode.state, label);
                     if (cState.has_value())
                     {
-                        f64 const cBoundSrcToNode = pNode.boundSrcToNode + model->scf(pNode.state, label);
+                        f64 const tCost = model->scf(pNode.state, label);
+                        f64 const cBoundSrcToNode = pNode.boundSrcToNode + tCost;
                         f64 cDualBound = cBoundSrcToNode;
                         if constexpr (Model::has_local)
                             cDualBound += model->local(cState.value(), DDCtx);
+                        cNode.dualBound = calcBetter<Model>(cNode.dualBound - tCost, cDualBound);
 
-                        if (Model::isBetter(cDualBound,pBound))
+                        if (isBetter<Model>( cNode.dualBound,pBound))
                         {
                             // Node
                             cNode.state = cState.value();
                             cNode.boundSrcToNode = cBoundSrcToNode;
-                            cNode.dualBound = cDualBound;
                             cNode.isNotExact = pNode.isNotExact;
                             memcpy(cNode.labelsSrcToNode, pNode.labelsSrcToNode, sizeof(cNode.labelsSrcToNode));
                             cNode.labelsSrcToNode[pNode.nEdgesSrcToNode] = label;
@@ -281,7 +297,8 @@ void copyAndMergeSuffix(
         NodeInfo const  & toMergeInfo = bi.childrenInfo[i];
         Node const & toMergeNode = bi.tmpChildren[toMergeInfo.idx];
         lastNode.state = Model::smf(lastNode.state, toMergeNode.state);
-        lastNode.boundSrcToNode = Model::calcWorst(lastNode.boundSrcToNode, toMergeNode.boundSrcToNode);
+        lastNode.boundSrcToNode = calcBetter<Model>(lastNode.boundSrcToNode, toMergeNode.boundSrcToNode);
+        lastNode.dualBound = calcBetter<Model>(lastNode.dualBound, toMergeNode.dualBound);
     }
 }
 template<typename Model, typename Node>
@@ -294,11 +311,10 @@ void mergeChildren(gfl::i64 const width, BatchInfo<Node> * const batchInfo)
     {
         NodeInfo & cInfo = bi.childrenInfo[i];
         cInfo.idx = i;
-        cInfo.score = bi.children[cInfo.idx].boundSrcToNode;
+        cInfo.score = absDiffWithBest<Model>(bi.children[cInfo.idx].boundSrcToNode);
     }
 
-    auto cmpByScore = [](NodeInfo const & a, NodeInfo const & b)
-    {return a.score < b.score;};
+    auto cmpByScore = [](NodeInfo const & a, NodeInfo const & b){return a.score < b.score;};
     std::sort(bi.childrenInfo,
               bi.childrenInfo + bi.nChildren,
               cmpByScore);
@@ -345,7 +361,7 @@ void keepOnlyBestChild(BatchInfo<Node> * batchInfo)
     for(i64 cIdx = 1; cIdx < bi.nChildren; cIdx += 1)
     {
         Node const & child = bi.children[cIdx];
-        if (Model::isBetter(child.boundSrcToNode,bestChild.boundSrcToNode))
+        if (isBetter<Model>(child.boundSrcToNode,bestChild.boundSrcToNode))
         {
             bestChild = child;
         }
@@ -369,5 +385,16 @@ void calcChildrenLabels(
         auto & cNode = bi.children[cIdx];
         cNode.labels = model->lgf(cNode.state, ddCtx, pBound, dBound);
         bi.labelsInfo.update(cNode.labels.slc());
+    }
+}
+
+template<typename Node>
+void printNodes(gfl::i64 const nNodes, Node const * const nodes)
+{
+    using namespace gfl;
+    for (i64 nIdx = 0; nIdx < nNodes; nIdx += 1)
+    {
+        Node::print(nodes[nIdx]);
+        printf("\n");
     }
 }

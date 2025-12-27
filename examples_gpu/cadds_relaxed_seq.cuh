@@ -9,6 +9,7 @@
 
 #include "BatchInfo.cuh"
 #include "LayersHelper.cuh"
+#include "BoundsHelpers.cuh"
 
 constexpr auto static ReadOnlyMemSize{256 * 1024}; // Cached in shared memory
 constexpr auto static CpuMemSize{8ll * 1024ll * 1024ll * 1024ll}; // Same size GPU memory: 48 - 4 for runtime!)
@@ -31,7 +32,7 @@ void printLog(double elapsed,
     printf("Layer = %4d (%10ld -> %10ld) | ",lIdx, lSize, lSize - fSize);
 
     printf( "Cost = ");
-    if (pBound != Model::worstValue())
+    if (isValid<Model>(pBound))
     {
         printf("%7.2f", pBound);
     }
@@ -105,8 +106,8 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
 
     // Search
     Node bestNode;
-    f64 pBound = Model::worstValue();
-    f64 dBound = Model::worstValue();
+    f64 pBound = worstBound<Model>();
+    f64 dBound = worstBound<Model>();
 
     BatchInfoType * batchInfo = mallocStd<BatchInfoType>(sizeof(BatchInfoType));
     StackAllocator * gAllocator = new StackAllocator(mallocStd(CpuMemSize), CpuMemSize);
@@ -208,52 +209,54 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
                 // Update bounds and solution
                 Node const & tmpNode = batchInfo->children[0];
                 auto const tmpBound = tmpNode.boundSrcToNode;
-                dBound = Model::calcBetter(tmpBound,dBound);
-                if ((not tmpNode.isNotExact) and Model::isBetter(tmpBound,pBound))
+                dBound = calcBetter<Model>(tmpBound,dBound);
+                printf("%.1f vs %.1f\n", tmpBound,pBound);
+                if (isBetter<Model>(tmpBound,pBound))
                 {
-                    pBound = tmpBound;
-                    bestNode = tmpNode;
-                    newSolution = true;
-                }
-
-                // If necessary, enqueue children for further expansion
-                if (Model::isBetter(tmpBound, pBound))
-                {
-                    tmpLayer.clear();
-                    tmpLayer.resize(currentBatchSize);
-                    memcpy(tmpLayer.data(),currentBatch.data() ,sizeof(Node) * currentBatchSize);
-                    BatchEngine<Node>::initBatch(batchInfo,gAllocator,tmpLayer,exactLayers.getLabelsInfo(currentExactLayerIdx));
-                    BatchEngine<Node>::processBatchExact(model,pBound,dBound,batchInfo);
-
-                    if (batchInfo->nChildren > 0)
+                    if (not tmpNode.isNotExact)
                     {
-                        auto & nextExactLayer = exactLayers.getLayer(currentExactLayerIdx+1);
-                        auto & nextExactLabelsInfo =  exactLayers.getLabelsInfo(currentExactLayerIdx+1);
-                        i64 const nextExactLayerOldSize = nextExactLayer.size();
-                        nextExactLayer.resize(nextExactLayerOldSize + batchInfo->nChildren);
-                        memcpy(nextExactLayer.data() + nextExactLayerOldSize,
-                               batchInfo->children,
-                               sizeof(Node) * batchInfo->nChildren);
+                        pBound = tmpBound;
+                        bestNode = tmpNode;
+                        newSolution = true;
+                    }
+                    else
+                    {
+                        tmpLayer.clear();
+                        tmpLayer.resize(currentBatchSize);
+                        memcpy(tmpLayer.data(),currentBatch.data() ,sizeof(Node) * currentBatchSize);
+                        BatchEngine<Node>::initBatch(batchInfo,gAllocator,tmpLayer,exactLayers.getLabelsInfo(currentExactLayerIdx));
+                        BatchEngine<Node>::processBatchExactWithBound(model,pBound,dBound,batchInfo, tmpBound);
 
-                        nextExactLabelsInfo.update(batchInfo->labelsInfo);
-                        Node const & tmpNodeExact = nextExactLayer[nextExactLayerOldSize];
-                        if (model->isTarget(tmpNodeExact.state))
+                        if (batchInfo->nChildren > 0)
                         {
-                            if (Model::isBetter(tmpNodeExact.boundSrcToNode, pBound))
+                            auto & nextExactLayer = exactLayers.getLayer(currentExactLayerIdx+1);
+                            auto & nextExactLabelsInfo =  exactLayers.getLabelsInfo(currentExactLayerIdx+1);
+                            i64 const nextExactLayerOldSize = nextExactLayer.size();
+                            nextExactLayer.resize(nextExactLayerOldSize + batchInfo->nChildren);
+                            memcpy(nextExactLayer.data() + nextExactLayerOldSize,
+                                   batchInfo->children,
+                                   sizeof(Node) * batchInfo->nChildren);
+
+                            nextExactLabelsInfo.update(batchInfo->labelsInfo);
+                            Node const & tmpNodeExact = nextExactLayer[nextExactLayerOldSize];
+                            if (model->isTarget(tmpNodeExact.state))
                             {
-                                bestNode = tmpNodeExact;
-                                pBound = bestNode.boundSrcToNode;
-                                newSolution = true;
+                                if (isBetter<Model>(tmpNodeExact.boundSrcToNode, pBound))
+                                {
+                                    bestNode = tmpNodeExact;
+                                    pBound = bestNode.boundSrcToNode;
+                                    newSolution = true;
+                                }
+                                nextExactLayer.resize(nextExactLayerOldSize);
                             }
-                            nextExactLayer.resize(nextExactLayerOldSize);
-                        }
-                        if (sort and nextExactLayerOldSize > 0)
-                        {
-                            // Reverse because we work on the tail of the vector
-                            auto cmpByBound = [](Node const & a, Node const & b){return not Model::isBetterEq(a.boundSrcToNode,b.boundSrcToNode);};
-                            //assert(std::is_sorted(nextLayer.data() + nextLayerOldSize, nextLayer.data() + nextLayer.size(), cmpByCost));
-                            std::inplace_merge(nextExactLayer.data(), nextExactLayer.data() + nextExactLayerOldSize, nextExactLayer.data() + nextExactLayer.size(), cmpByBound);
-                            assert(std::is_sorted(nextExactLayer.begin(), nextExactLayer.end(), cmpByBound));
+                            if (sort and nextExactLayerOldSize > 0)
+                            {
+                                // Reverse because we work on the tail of the vector
+                                auto cmpByBound = [](Node const & a, Node const & b){return isBetter<Model>(b.boundSrcToNode,a.boundSrcToNode);};
+                                //assert(std::is_sorted(nextLayer.data() + nextLayerOldSize, nextLayer.data() + nextLayer.size(), cmpByCost));
+                                std::inplace_merge(nextExactLayer.data(), nextExactLayer.data() + nextExactLayerOldSize, nextExactLayer.data() + nextExactLayer.size(), cmpByBound);
+                                assert(std::is_sorted(nextExactLayer.begin(), nextExactLayer.end(), cmpByBound));
+                            }
                         }
                     }
                 }
@@ -261,6 +264,10 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
                 {
                     printf("           Pruned %ld nodes\n", currentBatchSize);
                 }
+            }
+            else
+            {
+                printf("           Discarded %ld nodes\n", currentBatchSize);
             }
         }
         exactLayers.getLayer(currentExactLayerIdx).resize(exactLayers.getLayer(currentExactLayerIdx).size() - fragmentSize);
@@ -277,7 +284,7 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
     printf("[%7.2fs] ", RuntimeMonitor::elapsedSeconds(start));
     if (not interrupted)
     {
-        if (pBound != Model::worstValue())
+        if (isValid<Model>(pBound))
         {
             printf("COMPLETED    | Expanded = %10ld | Cost = %7.2f | Value = ", expandedNodes, bestNode.boundSrcToNode);
             Node::printLabels(bestNode);

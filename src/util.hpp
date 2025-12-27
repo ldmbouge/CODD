@@ -567,10 +567,12 @@ public:
          //    return s1._t[0] == s2._t[0];
          // }break;
          default:
-            unsigned short nw = s1._t[0] == s2._t[0], i=1;
-            for(;i < nbw && nw == i;i++)
-               nw += s1._t[i] == s2._t[i];
-            return nw == i;
+            int eqWrds = 0;
+            for(int i = 0;i < nbw; i += 1)
+            {
+                eqWrds += s1._t[i] == s2._t[i];
+            }
+            return eqWrds == nbw;
       }
    }
     GFL_HOST_DEVICE

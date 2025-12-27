@@ -75,6 +75,21 @@ struct BatchEngine
         }
     }
 
+   template<typename Model>
+   static
+   void processBatchExactWithBound(
+       Model const * const model,
+       gfl::f64 pBound,
+       gfl::f64 dBound,
+       BatchInfo<Node> * const batchInfo,
+       gfl::f64 bound
+       )
+    {
+        processBatchExact(model,pBound,dBound,batchInfo);
+        updateNodesDual<Model>(&batchInfo->nChildren, batchInfo->children, bound);
+    }
+
+
     template<typename Model>
     static
     void processBatchRelaxed(
@@ -85,13 +100,30 @@ struct BatchEngine
           BatchInfo<Node> * const batchInfo)
     {
 
+        // printf("Parents (%d)\n", batchInfo->nParents);
+        // printNodes(batchInfo->nParents, batchInfo->parents);
+
         calcChildren<Model,Node>(model,pBound,batchInfo);
+
+        // printf("Children (%d)\n", batchInfo->nChildren);
+        // printNodes(batchInfo->nChildren, batchInfo->children);
+
+
 
         if (batchInfo->nChildren > 0)
         {
+            // printf("Before (%d)\n", batchInfo->nChildren);
+            // printNodes(batchInfo->nChildren, batchInfo->children);
+
             if (model->isTarget(batchInfo->children[0].state))
             {
+                // printf("Before Reduce (%d)\n", batchInfo->nChildren);
+                // printNodes(batchInfo->nChildren, batchInfo->children);
+
                 keepOnlyBestChild<Model,Node>(batchInfo);
+
+                // printf("After Reduce (%d)\n", batchInfo->nChildren);
+                // printNodes(batchInfo->nChildren, batchInfo->children);
             }
             else
             {
@@ -103,6 +135,9 @@ struct BatchEngine
                 batchInfo->labelsInfo.reset();
                 calcChildrenLabels<Model,Node>(model,batchInfo,DDRelaxed,pBound,dBound);
             }
+
+            // printf("After (%d)\n", batchInfo->nChildren);
+            // printNodes(batchInfo->nChildren, batchInfo->children);
         }
     }
 };
