@@ -196,15 +196,11 @@ public:
          _t[i]=0;
    }
    GFL_HOST_DEVICE
-   NatSet(const NatSet& s) {
-      for(int i=0;i<nbw;i++)
-         _t[i] = s._t[i];
-   }
+   NatSet(NatSet const & s) noexcept = default;
+
    GFL_HOST_DEVICE
-   NatSet(NatSet&& s) noexcept {
-      for(int i=0;i<nbw;i++)
-         _t[i] = s._t[i];      
-   }
+   NatSet(NatSet && s) noexcept = default;
+
    GFL_HOST_DEVICE
    NatSet(int lb,int ub) {
       if (lb > ub) {
@@ -335,11 +331,8 @@ public:
       }
    }
    GFL_HOST_DEVICE
-   NatSet& operator=(const NatSet& s) noexcept {
-      for(auto i=0u;i < nbw;i++)
-         _t[i] = s._t[i];
-      return *this;
-   }
+   NatSet& operator=(NatSet const & s) noexcept = default;
+
    constexpr unsigned short nbWords() const noexcept { return nbw;}
 
    GFL_HOST_DEVICE

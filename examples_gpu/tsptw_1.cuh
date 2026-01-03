@@ -157,14 +157,6 @@ struct TSPTW1 : TSPTWBase
         hash_combine(seed, static_cast<std::size_t>(s.hops));
         return seed;
     }
-    GFL_HOST_DEVICE
-    static bool domEq(State const & s1, State const & s2) noexcept
-    {
-        return
-            s1.U == s2.U and
-            s1.e == s2.e and
-            s1.hops == s2.hops;
-    }
 };
 
 static_assert(IsModel<TSPTW1<>>);

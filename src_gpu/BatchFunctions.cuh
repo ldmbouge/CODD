@@ -56,7 +56,7 @@ void printNodes(gfl::i64 const nNodes, Node const * const nodes)
 
 template<typename Model, typename Node>
 GFL_HOST_DEVICE
-gfl::f32 calcMergeScore(Node const & baseNode, Node const & toEvalNode, gfl::f32 const alpha = 1.0)
+gfl::f32 calcMergeScore(Node const & baseNode, Node const & toEvalNode, gfl::f32 const alpha = 0.5)
 {
     using namespace gfl;
 
@@ -161,14 +161,15 @@ void calcMergeScore(BatchInfo<Node> * const batchInfo, gfl::i64 const width)
     {
         i64 begin,end;
         getBeginEnd(begin,end,i,width,bi.nChildren);
-        for (i64 j = begin; j < end; j += 1)
+        NodeInfo & toCompareInfo = bi.childrenInfo[begin];
+        Node const & toCompareNode = bi.children[toCompareInfo.idx];
+        for (i64 j = begin+1; j < end; j += 1)
         {
             NodeInfo & toScoreInfo = bi.childrenInfo[j];
             Node const & toScoreNode = bi.children[toScoreInfo.idx];
-            toScoreInfo.score = calcMergeScore<Model,Node>(baseNode,toScoreNode);
+            toScoreInfo.score = calcMergeScore<Model,Node>(baseNode, toScoreNode);
         }
     }
-
     baseInfo.score = 1.0; // Manually adjust the base state
 }
 
@@ -210,7 +211,7 @@ void updateNodesBound(gfl::i64 const * const nNodes, Node * const nodes, gfl::f6
 }
 
 template<typename Model, typename Node>
-void filterChildren(BatchInfo<Node> * const batchInfo)
+void filterChildren(BatchInfo<Node> * const batchInfo, bool sort)
 {
     using namespace gfl;
 
@@ -229,6 +230,20 @@ void filterChildren(BatchInfo<Node> * const batchInfo)
               cmpByFlag);
 
     countFlagged<Node>(batchInfo, 0);
+
+    if (sort)
+    {
+        for (i64 i = 0; i < bi.nFlagged; i += 1)
+        {
+            NodeInfo & cInfo = bi.childrenInfo[i];
+            cInfo.score = bi.children[cInfo.idx].heuristicBound;
+        }
+
+        auto cmpByScore = [](NodeInfo const & a, NodeInfo const & b){return isBetter<Model>(b.score,a.score);};
+        std::sort(bi.childrenInfo,
+                  bi.childrenInfo + bi.nFlagged,
+                  cmpByScore);
+    }
 
     swapPtr(&bi.children, &bi.tmpChildren);
     copyNodes<Node>(&bi.nFlagged, bi.children, bi.tmpChildren, bi.childrenInfo);
@@ -349,7 +364,7 @@ void mergeChildren(gfl::i64 const width, BatchInfo<Node> * const batchInfo)
               bi.childrenInfo + bi.nChildren,
               cmpByScore);
 
-   // printNodesInfo(bi.nChildren, bi.childrenInfo);
+    //printNodesInfo(bi.nChildren, bi.childrenInfo);
 
     calcMergeScore<Model,Node>(batchInfo, width);
 

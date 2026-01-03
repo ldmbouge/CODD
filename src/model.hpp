@@ -2,6 +2,7 @@
 
 #include <concepts>
 #include <Backend.hpp>
+#include <Types.hpp>
 
 enum DDContext : int;
 enum LocalContext : int;
@@ -23,6 +24,8 @@ concept IsLabels = requires(L const & l)
 template<typename M, typename S, typename L>
 concept IsDP = requires(M const & m, S const & s, int l, DDContext c, double pBound, double dBound)
 {
+    { M::is_maximization } -> std::convertible_to<bool>;
+
     { m.initial() }   -> std::same_as<S>;
     { m.target() }    -> std::same_as<S>;
     { m.isTarget(s) } -> std::same_as<bool>;
@@ -67,15 +70,13 @@ concept HasDom =
     {
         { M::dom(s,s) }   -> std::same_as<bool>;
         { M::domHash(s) } -> std::same_as<std::size_t>;
-        { M::domEq(s,s) } -> std::same_as<bool>;
     };
 
 
 template<typename M>
 concept IsModel =
-    requires { { M::is_maximization } -> std::convertible_to<bool>; } and
-    IsState<typename M::State> and
-    IsLabels<typename M::Labels> and
+    std::is_trivially_copyable_v<typename M::State>  and IsState<typename M::State> and
+    std::is_trivially_copyable_v<typename M::Labels> and IsLabels<typename M::Labels> and
     IsDP<M,typename M::State, typename M::Labels> and
     requires { { M::has_merge } -> std::convertible_to<bool>; } and HasMerge<M,typename M::State> and
     requires { { M::has_local } -> std::convertible_to<bool>; } and HasLocal<M,typename M::State> and

@@ -61,6 +61,41 @@ void printLog(double elapsed,
     fflush(stdout);
 }
 
+
+template<typename Model>
+void printProgress(double elapsed,
+              gfl::f64 pBound,
+              gfl::f64 dBound,
+              gfl::i64 nExpanded,
+              gfl::i64 qSize
+        )
+{
+    using namespace gfl;
+    printf("[%7.2fs] ", elapsed);
+    printf( "P/D = ");
+    if (isValid<Model>(pBound))
+    {
+        printf("%7.2f", pBound);
+    }
+    else
+    {
+        printf("      ?");
+    }
+    printf( "/");
+    if (isValid<Model>(dBound))
+    {
+        printf("%7.2f", dBound);
+    }
+    else
+    {
+        printf("      ?");
+    }
+    printf( " | ");
+
+    printf("Expanded = %10ld | Queue = %10ld\n", nExpanded, qSize);
+    fflush(stdout);
+}
+
 template<typename Model, typename Node>
 int run_cadds_relaxed_seq(int argc,char* argv[])
 {
@@ -139,6 +174,8 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
     bool interrupted = false;
     bool newSolution = false;
     i64 iteration = 0;
+    f64 const printProgressInterval = 5;
+    auto lastPrintProgress = RuntimeMonitor::cputime();
     while (not exactLayers.allLayersEmpty())
     {
         iteration += 1;
@@ -151,16 +188,16 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
         newSolution = false;
 
         // Grow number of layers on demand
-        i32 const currentExactLayerIdx = iteration % 2 ?
-            exactLayers.calcOneWithBestBound():
+        i32 const currentExactLayerIdx = iteration % 10 > 0 ?
+            exactLayers.calcShallowestWithBestBound():
             exactLayers.calcDeepestNotEmpty();
-            //exactLayers.calcShallowestNotEmpty();
+        //exactLayers.calcShallowestNotEmpty();
 
         // Fragment
         auto & currentExactLayer = exactLayers.getLayer(currentExactLayerIdx);
         auto & currentExactLabelsInfo = exactLayers.getLabelsInfo(currentExactLayerIdx);
         i64 const batchSize = gfl::min<i64>(currentExactLayer.size(), BatchInfoType::calcMaxParents(currentExactLabelsInfo.nLabels, CpuMemSize, false));
-        i64 const fragmentSize = gfl::min<i64>(currentExactLayer.size(), width < 0 ? batchSize : width);
+        i64 const fragmentSize = gfl::min<i64>(currentExactLayer.size(), 1);; //gfl::min<i64>(currentExactLayer.size(), width < 0 ? batchSize : width);
         auto const fragment = std::span(currentExactLayer.end() - fragmentSize, fragmentSize);
 
         // Batching
@@ -174,16 +211,28 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
             auto const currentBatch = std::span(fragment.data() + bBegin, currentBatchSize);
             expandedNodes += currentBatchSize;
 
-            printLog<Model,Node>(
+            // printLog<Model,Node>(
+            //         RuntimeMonitor::elapsedSeconds(start),
+            //         currentExactLayerIdx,
+            //         currentExactLayer.size(),
+            //         fragmentSize,
+            //         pBound,
+            //         dBound,
+            //         bIdx,currentBatchSize,nBatches,
+            //         expandedNodes,
+            //         exactLayers.countAllNodes());
+
+            if (RuntimeMonitor::elapsedSeconds(lastPrintProgress) > printProgressInterval)
+            {
+                printProgress<Model>(
                     RuntimeMonitor::elapsedSeconds(start),
-                    currentExactLayerIdx,
-                    currentExactLayer.size(),
-                    fragmentSize,
                     pBound,
                     dBound,
-                    bIdx,currentBatchSize,nBatches,
                     expandedNodes,
                     exactLayers.countAllNodes());
+                lastPrintProgress = RuntimeMonitor::cputime();
+            }
+
 
             auto & tmpLayer = auxLayer.getLayer(0);
             tmpLayer.clear();
@@ -241,7 +290,7 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
                         tmpLayer.resize(currentBatchSize);
                         memcpy(tmpLayer.data(),currentBatch.data() ,sizeof(Node) * currentBatchSize);
                         BatchEngine<Node>::initBatch(batchInfo,gAllocator,tmpLayer,exactLayers.getLabelsInfo(currentExactLayerIdx));
-                        BatchEngine<Node>::processBatchExactWithBound(model,pBound,dBound,batchInfo, tmpBound);
+                        BatchEngine<Node>::processBatchExactWithBound(model,pBound,dBound,batchInfo, tmpBound, sort);
 
                         if (batchInfo->nChildren > 0)
                         {
@@ -272,26 +321,26 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
                                 auto cmpByBound = [](Node const & a, Node const & b){return isBetter<Model>(b.heuristicBound,a.heuristicBound);};
                                 //assert(std::is_sorted(nextLayer.data() + nextLayerOldSize, nextLayer.data() + nextLayer.size(), cmpByCost));
                                 std::inplace_merge(nextExactLayer.data(), nextExactLayer.data() + nextExactLayerOldSize, nextExactLayer.data() + nextExactLayer.size(), cmpByBound);
-                                assert(std::is_sorted(nextExactLayer.begin(), nextExactLayer.end(), cmpByBound));
+                                assert (std::is_sorted(nextExactLayer.begin(), nextExactLayer.end(), cmpByBound));
                             }
                         }
                     }
                 }
                 else
                 {
-                    printf("           Pruned %ld nodes\n", currentBatchSize);
+                    //printf("           Pruned %ld nodes\n", currentBatchSize);
                 }
             }
             else
             {
-                printf("           Discarded %ld nodes\n", currentBatchSize);
+                //printf("           Discarded %ld nodes\n", currentBatchSize);
             }
         }
         exactLayers.getLayer(currentExactLayerIdx).resize(exactLayers.getLayer(currentExactLayerIdx).size() - fragmentSize);
         if (newSolution)
         {
 
-            printf("[%7.2fs] SOLUTION     | Expanded = %10ld | Cost = %7.2f | Value = ", RuntimeMonitor::elapsedSeconds(start), expandedNodes, bestNode.sumEdgesSrcToNode);
+            printf("[%7.2fs] SOLUTION     | Cost = %7.2f | Value = ", RuntimeMonitor::elapsedSeconds(start), expandedNodes, bestNode.sumEdgesSrcToNode);
             Node::printLabels(bestNode);
             printf("\n");
             fflush(stdout);
@@ -306,16 +355,15 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
         auto const tmpBound = exactLayers.calcBestBound();
         if (isTighterBound<Model>(tmpBound,dBound))
         {
-            dBound = tmpBound;
-            printf("[%7.2fs] TIGHTENING   | Expanded = %10ld | Bnd =  %7.2f\n",
+            printf("[%7.2fs] TIGHTENING   | Dual = %7.2f -> %7.2f\n",
                 RuntimeMonitor::elapsedSeconds(start),
-                expandedNodes,
-                dBound);
-
-            if (isBetterEq<Model>(pBound,dBound))
-            {
-                 break;
-            }
+                dBound,
+                tmpBound);
+            dBound = tmpBound;
+        }
+        if (isBetterEq<Model>(pBound,dBound))
+        {
+            break;
         }
     }
 

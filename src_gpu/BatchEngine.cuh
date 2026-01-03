@@ -57,7 +57,8 @@ struct BatchEngine
         Model const * const model,
         gfl::f64 pBound,
         gfl::f64 dBound,
-        BatchInfo<Node> * const batchInfo)
+        BatchInfo<Node> * const batchInfo,
+        bool sort)
     {
         calcChildren<Model,Node>(model,pBound,batchInfo);
         if (batchInfo->nChildren > 0)
@@ -68,7 +69,7 @@ struct BatchEngine
             }
             else
             {
-                filterChildren<Model,Node>(batchInfo);
+                filterChildren<Model,Node>(batchInfo,sort);
                 batchInfo->labelsInfo.reset();
                 calcChildrenLabels<Model,Node>(model,batchInfo,DDExact,pBound,dBound);
             }
@@ -82,10 +83,12 @@ struct BatchEngine
        gfl::f64 pBound,
        gfl::f64 dBound,
        BatchInfo<Node> * const batchInfo,
-       gfl::f64 hBound
+       gfl::f64 hBound,
+       bool sort
+
        )
     {
-        processBatchExact(model,pBound,dBound,batchInfo);
+        processBatchExact(model,pBound,dBound,batchInfo,sort);
         updateNodesBound<Model>(&batchInfo->nChildren, batchInfo->children, hBound);
     }
 
@@ -125,7 +128,7 @@ struct BatchEngine
             }
             else
             {
-                filterChildren<Model,Node>(batchInfo);
+                filterChildren<Model,Node>(batchInfo,false);
                 if (batchInfo->nChildren > width)
                 {
                     mergeChildren<Model,Node>(width,batchInfo);
