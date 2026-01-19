@@ -379,7 +379,7 @@ void copyAndMergeSuffix(
 
             repNode.state = Model::smf(repNode.state, toMergeNode.state);
             repNode.sumEdgesSrcToNode = calcBetter<Model>(repNode.sumEdgesSrcToNode, toMergeNode.sumEdgesSrcToNode);
-            repNode.heuristicBound = calcBetter<Model>(repNode.heuristicBound, toMergeNode.heuristicBound);
+            repNode.heuristicBound = calcWorst<Model>(repNode.heuristicBound, toMergeNode.heuristicBound);
 
             assert(repNode.state.n == toMergeNode.state.n);
             assert(repNode.state.n == bi.children[0].state.n);

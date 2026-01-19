@@ -188,11 +188,11 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
         newSolution = false;
 
         // Grow number of layers on demand
-        bool dive = iteration % 10 < 1;
+        bool dive = iteration % 10 < 5;
         i32 const currentExactLayerIdx = dive ?
             exactLayers.calcDeepestNotEmpty() :
-            exactLayers.calcShallowMostPromising();
-            //exactLayers.calcDeepestMostPromising();
+            //exactLayers.calcShallowMostPromising();
+            exactLayers.calcDeepestMostPromising();
 
         // Fragment
         auto & currentExactLayer = exactLayers.getLayer(currentExactLayerIdx);
