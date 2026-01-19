@@ -33,7 +33,7 @@ void printLog(double elapsed,
     printf("Layer = %4d (%10ld -> %10ld) | ",lIdx, lSize, lSize - fSize);
 
     printf( "P/D = ");
-    if (isValid<Model>(pBound))
+    if (isValidBound<Model>(pBound))
     {
         printf("%7.2f", pBound);
     }
@@ -42,7 +42,7 @@ void printLog(double elapsed,
         printf("?");
     }
     printf( "/");
-    if (isValid<Model>(dBound))
+    if (isValidBound<Model>(dBound))
     {
         printf("%7.2f", dBound);
     }
@@ -151,22 +151,22 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
 
     // Search
     Node bestNode;
-    f64 pBound = worstBound<Model>();
-    f64 dBound = bestBound<Model>();
+    f64 pBound = worstValue<Model>();
+    f64 dBound = bestValue<Model>();
 
     BatchInfoType * batchInfo = mallocStd<BatchInfoType>(sizeof(BatchInfoType));
     StackAllocator * gAllocator = new StackAllocator(mallocStd(CpuMemSize), CpuMemSize);
 
-    // Layers buffers
+    // Layers buffers l<?
     LayersHelper<Node,Model> exactLayers;
     LayersHelper<Node,Model> auxLayer;
 
     // Initialize first layer
     auto const rState = model->initial();
     auto const rLabels = model->lgf(rState, DDExact, pBound, dBound);
-    exactLayers.getLayer(0).emplace_back(rState,rLabels,bestBound<Model>());
+    exactLayers.getLayer(0).emplace_back(rState,rLabels,bestValue<Model>());
     exactLayers.getLabelsInfo(0).update(rLabels.slc());
-    exactLayers.getBound(0) = worstBound<Model>();
+    exactLayers.updateBound(0);
 
     // Let's goo!
     auto const start = RuntimeMonitor::cputime();
@@ -188,10 +188,11 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
         newSolution = false;
 
         // Grow number of layers on demand
-        i32 const currentExactLayerIdx = iteration % 10 > 0 ?
-            exactLayers.calcShallowestWithBestBound():
-            exactLayers.calcDeepestNotEmpty();
-        //exactLayers.calcShallowestNotEmpty();
+        bool dive = iteration % 10 < 1;
+        i32 const currentExactLayerIdx = dive ?
+            exactLayers.calcDeepestNotEmpty() :
+            exactLayers.calcShallowMostPromising();
+            //exactLayers.calcDeepestMostPromising();
 
         // Fragment
         auto & currentExactLayer = exactLayers.getLayer(currentExactLayerIdx);
@@ -267,7 +268,7 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
                     break;
                 }
             }
-           // printf(" (%ld layers)\n", relaxedLayerIdx - currentExactLayerIdx);
+            // printf(" (%ld layers)\n", relaxedLayerIdx - currentExactLayerIdx);
 
 
             // I know that the only child I have is the best
@@ -275,12 +276,11 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
             {
                 // Update bound and solution
                 Node const & tmpNode = batchInfo->children[0];
-                auto const tmpBound = calcTighterBound<Model>(tmpNode.sumEdgesSrcToNode, tmpNode.heuristicBound);
-                if (isBetter<Model>(tmpBound,pBound))
+                if (isBetter<Model>(tmpNode.heuristicBound,pBound))
                 {
                     if (not tmpNode.isNotExact)
                     {
-                        pBound = tmpBound;
+                        pBound = tmpNode.sumEdgesSrcToNode;
                         bestNode = tmpNode;
                         newSolution = true;
                     }
@@ -290,7 +290,7 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
                         tmpLayer.resize(currentBatchSize);
                         memcpy(tmpLayer.data(),currentBatch.data() ,sizeof(Node) * currentBatchSize);
                         BatchEngine<Node>::initBatch(batchInfo,gAllocator,tmpLayer,exactLayers.getLabelsInfo(currentExactLayerIdx));
-                        BatchEngine<Node>::processBatchExactWithBound(model,pBound,dBound,batchInfo, tmpBound, sort);
+                        BatchEngine<Node>::processBatchExactWithBound(model,pBound,dBound,batchInfo,tmpNode.heuristicBound, sort);
 
                         if (batchInfo->nChildren > 0)
                         {
@@ -318,7 +318,7 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
                             else if (sort and nextExactLayerOldSize > 0)
                             {
                                 // Reverse because we work on the tail of the vector
-                                auto cmpByBound = [](Node const & a, Node const & b){return isBetter<Model>(b.heuristicBound,a.heuristicBound);};
+                                auto cmpByBound = [](Node const & a, Node const & b){return isWorstEq<Model>(a.heuristicBound,b.heuristicBound);};
                                 //assert(std::is_sorted(nextLayer.data() + nextLayerOldSize, nextLayer.data() + nextLayer.size(), cmpByCost));
                                 std::inplace_merge(nextExactLayer.data(), nextExactLayer.data() + nextExactLayerOldSize, nextExactLayer.data() + nextExactLayer.size(), cmpByBound);
                                 assert (std::is_sorted(nextExactLayer.begin(), nextExactLayer.end(), cmpByBound));
@@ -328,12 +328,12 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
                 }
                 else
                 {
-                    //printf("           Pruned %ld nodes\n", currentBatchSize);
+                    printf("           Pruned %ld nodes\n", currentBatchSize);
                 }
             }
             else
             {
-                //printf("           Discarded %ld nodes\n", currentBatchSize);
+                   //printf("           Discarded %ld nodes\n", currentBatchSize);
             }
         }
         exactLayers.getLayer(currentExactLayerIdx).resize(exactLayers.getLayer(currentExactLayerIdx).size() - fragmentSize);
@@ -353,7 +353,7 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
         exactLayers.updateBound(currentExactLayerIdx);
         exactLayers.updateBound(currentExactLayerIdx+1);
         auto const tmpBound = exactLayers.calcBestBound();
-        if (isTighterBound<Model>(tmpBound,dBound))
+        if (isWorst<Model>(tmpBound,dBound))
         {
             printf("[%7.2fs] TIGHTENING   | Dual = %7.2f -> %7.2f\n",
                 RuntimeMonitor::elapsedSeconds(start),

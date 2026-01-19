@@ -54,24 +54,26 @@ struct LayersHelper
         return -1;
     }
 
-    gfl::i32 calcShallowestNotEmpty() const noexcept
+    gfl::i32 calcDeepestMostPromising() const noexcept
     {
         using namespace gfl;
-        for (i32 i = 0; i <  layers.size(); i += 1)
+        double bound = worstValue<Model>();
+        i32 lIdx = -1;
+        for (i32 i = 0; i < layers.size(); i += 1)
         {
-            if (not layers[i].empty())
+            if (isBetterEq<Model>(bounds[i], bound))
             {
-                return i;
+                bound = bounds[i];
+                lIdx = i;
             }
         }
-        return -1;
+        return lIdx;
     }
 
-    gfl::i32 calcShallowestWithBestBound() const noexcept
+    gfl::i32 calcShallowMostPromising() const noexcept
     {
         using namespace gfl;
-
-        double bound = worstBound<Model>();
+        double bound = worstValue<Model>();
         i32 lIdx = -1;
         for (i32 i = layers.size()-1; i >= 0; i -= 1)
         {
@@ -106,30 +108,30 @@ struct LayersHelper
     {
         if (bounds.size() <= lIdx)
         {
-            bounds.resize(lIdx + 1, worstBound<Model>());
+            bounds.resize(lIdx + 1, bestValue<Model>());
         }
         return bounds[lIdx];
     }
 
     void updateBound(gfl::i32 const lIdx) noexcept
     {
-        double const  oldBound = getBound(lIdx);
-        double & bound = bounds[lIdx];
-        bound = worstBound<Model>();
+        double tBound = worstValue<Model>();
         for (auto const & n : getLayer(lIdx))
         {
-            bound = calcBetter<Model>(bound,n.heuristicBound);
+            double const nBound = n.heuristicBound;
+            tBound = calcBetter<Model>(tBound,nBound);
         }
+        getBound(lIdx) = tBound;
     }
 
     double calcBestBound() const noexcept
     {
-        double bound = worstBound<Model>();
+        double bound = worstValue<Model>();
         // gfl::Array<double>::print(bounds.data(), bounds.data() + bounds.size(), "%.1f");
         // printf("\n");
         for (auto const & b : bounds)
         {
-            bound = calcBetter<Model>(bound,b);
+                bound = calcBetter<Model>(bound,b);
         }
         return bound;
     }

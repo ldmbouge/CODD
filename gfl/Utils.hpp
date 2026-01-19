@@ -483,9 +483,14 @@ namespace gfl
     GFL_HOST_DEVICE inline
     void getBeginEnd(T & begin, T & end, i64 index, i64 workers, i64 jobs) noexcept
     {
-        auto const jobsPerWorker = roundUpDivPosInt<T>(jobs, workers);
-        begin = jobsPerWorker * index;
-        end = min<T>(jobs, begin + jobsPerWorker);
+        auto const jobsPerWorker = jobs / workers;
+        auto const remainder = jobs % workers;
+
+        // First 'remainder' workers get one extra job
+        auto const extra = (index < remainder) ? 1 : 0;
+
+        begin = index * jobsPerWorker + min<T>(index, remainder);
+        end = begin + jobsPerWorker + extra;
     }
 
     inline

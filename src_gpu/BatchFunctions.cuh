@@ -206,7 +206,7 @@ void updateNodesBound(gfl::i64 const * const nNodes, Node * const nodes, gfl::f6
     for (i64 i = 0; i < *nNodes; i += 1)
     {
         Node & node = nodes[i];
-        node.heuristicBound = calcWorst<Model>(node.heuristicBound, hBound); // We want the tightest (i.e., worst) dual
+        node.heuristicBound = calcWorst<Model>(node.heuristicBound, hBound);
     }
 }
 
@@ -239,7 +239,7 @@ void filterChildren(BatchInfo<Node> * const batchInfo, bool sort)
             cInfo.score = bi.children[cInfo.idx].heuristicBound;
         }
 
-        auto cmpByScore = [](NodeInfo const & a, NodeInfo const & b){return isBetter<Model>(b.score,a.score);};
+        auto cmpByScore = [](NodeInfo const & a, NodeInfo const & b){return isWorstEq<Model>(a.score,b.score);};
         std::sort(bi.childrenInfo,
                   bi.childrenInfo + bi.nFlagged,
                   cmpByScore);
@@ -284,16 +284,19 @@ void calcChildren(
                         cNode.sumEdgesSrcToNode = pNode.sumEdgesSrcToNode + tCost;
 
                         // Lower/Upper bound
-                        cNode.heuristicBound = pNode.heuristicBound;
                         if constexpr (Model::has_local)
                         {
-                            f64 const heuristicBoundFromLocal = cNode.sumEdgesSrcToNode + model->local(cState.value(), DDCtx);
-                            cNode.heuristicBound = calcTighterBound<Model>(cNode.heuristicBound, heuristicBoundFromLocal);
+                            cNode.heuristicBound = cNode.sumEdgesSrcToNode + model->local(cState.value(), DDCtx);
+                        }
+                        else
+                        {
+                            cNode.heuristicBound = pNode.heuristicBound;
                         }
 
                         // Conditions to keep the child
                         if (isBetter<Model>(cNode.heuristicBound,pBound))
                         {
+
                             // Node
                             cNode.state = cState.value();
                             cNode.isNotExact = pNode.isNotExact;
@@ -330,19 +333,71 @@ void copyAndMergeSuffix(
 
     BatchInfo<Node> & bi = *batchInfo;
 
-    swapPtr(&bi.children, &bi.tmpChildren);
-    copyNodes<Node>(&width, bi.children, bi.tmpChildren, bi.childrenInfo);
-
-    Node & lastNode = bi.children[width-1];
-    lastNode.isNotExact = 1;
-    for (i64 i = width; i < bi.nChildren; i += 1)
+    for(i32 nIdx = 0; nIdx < bi.nChildren; nIdx += 1)
     {
-        NodeInfo const  & toMergeInfo = bi.childrenInfo[i];
-        Node const & toMergeNode = bi.tmpChildren[toMergeInfo.idx];
-        lastNode.state = Model::smf(lastNode.state, toMergeNode.state);
-        lastNode.sumEdgesSrcToNode = calcBetter<Model>(lastNode.sumEdgesSrcToNode, toMergeNode.sumEdgesSrcToNode);
-        lastNode.heuristicBound = calcBetter<Model>(lastNode.heuristicBound, toMergeNode.heuristicBound);
+        assert(bi.children[0].state.n == bi.children[nIdx].state.n);
     }
+
+    // Need: nToMerge >= 2*nBinds
+    // So: bi.nChildren - nToCopy >= 2*(width - nToCopy)
+    // => bi.nChildren - nToCopy >= 2*width - 2*nToCopy
+    // => bi.nChildren >= 2*width - nToCopy
+    // => nToCopy >= 2*width - bi.nChildren
+
+    i64 nToCopy = gfl::max<i64>(roundUpDivPosInt<i64>(width, 4),
+                            2 * width - bi.nChildren);
+    nToCopy = gfl::min<i64>(nToCopy, bi.nChildren);  // Cap at total children
+    i64 const nBinds = width - nToCopy;
+    i64 const nToMerge = bi.nChildren - nToCopy;
+
+    swapPtr(&bi.children, &bi.tmpChildren);
+    copyNodes<Node>(&nToCopy, bi.children, bi.tmpChildren, bi.childrenInfo);
+
+    bi.nChildren = nToCopy;
+    for(i32 nIdx = 0; nIdx < bi.nChildren; nIdx += 1)
+    {
+        assert(bi.children[0].state.n == bi.children[nIdx].state.n);
+    }
+
+    for(i32 bIdx = 0; bIdx < nBinds; bIdx += 1)
+    {
+        i64 bBegin, bEnd;
+        getBeginEnd(bBegin,bEnd, bIdx, nBinds, nToMerge);
+        bBegin += nToCopy;
+        bEnd += nToCopy;
+        NodeInfo const & repInfo = bi.childrenInfo[bBegin];
+        Node repNode = bi.tmpChildren[repInfo.idx];
+        assert(repNode.state.n == bi.children[0].state.n);
+        repNode.isNotExact = 1;
+        for (i64 i = bBegin+1; i < bEnd; i += 1)
+        {
+            NodeInfo const  & toMergeInfo = bi.childrenInfo[i];
+            Node const & toMergeNode = bi.tmpChildren[toMergeInfo.idx];
+
+            assert(repNode.state.n == toMergeNode.state.n);
+            assert(repNode.state.n == bi.children[0].state.n);
+
+            repNode.state = Model::smf(repNode.state, toMergeNode.state);
+            repNode.sumEdgesSrcToNode = calcBetter<Model>(repNode.sumEdgesSrcToNode, toMergeNode.sumEdgesSrcToNode);
+            repNode.heuristicBound = calcBetter<Model>(repNode.heuristicBound, toMergeNode.heuristicBound);
+
+            assert(repNode.state.n == toMergeNode.state.n);
+            assert(repNode.state.n == bi.children[0].state.n);
+
+        }
+        assert(repNode.state.n == bi.children[0].state.n);
+        bi.children[nToCopy + bIdx] = repNode;
+
+        bi.nChildren += 1;
+        for(i32 nIdx = 0; nIdx < bi.nChildren; nIdx += 1)
+        {
+            assert(bi.children[0].state.n == bi.children[nIdx].state.n);
+        }
+    }
+
+
+
+
 }
 template<typename Model, typename Node>
 void mergeChildren(gfl::i64 const width, BatchInfo<Node> * const batchInfo)
@@ -366,13 +421,13 @@ void mergeChildren(gfl::i64 const width, BatchInfo<Node> * const batchInfo)
 
     //printNodesInfo(bi.nChildren, bi.childrenInfo);
 
-    calcMergeScore<Model,Node>(batchInfo, width);
+    //calcMergeScore<Model,Node>(batchInfo, width);
 
     //printNodesInfo(bi.nChildren, bi.childrenInfo);
 
-    std::sort(bi.childrenInfo,
-             bi.childrenInfo + bi.nChildren,
-             cmpByScore);
+    // std::sort(bi.childrenInfo,
+    //          bi.childrenInfo + bi.nChildren,
+    //          cmpByScore);
 
     // printNodesInfo(bi.nChildren, bi.childrenInfo);
     //
@@ -380,8 +435,6 @@ void mergeChildren(gfl::i64 const width, BatchInfo<Node> * const batchInfo)
     // printNodes(bi.nChildren, bi.children);
 
     copyAndMergeSuffix<Model,Node>(width,batchInfo);
-
-    bi.nChildren = width;
 
     // printf("After (%d)\n", bi.nChildren);
     // printNodes(bi.nChildren, bi.children);
