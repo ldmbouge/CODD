@@ -194,6 +194,7 @@ void copyNodes(gfl::i64 const * const nNodes, Node * const dst,  Node const * co
     for (i64 i = 0; i < *nNodes; i += 1)
     {
         i64 const srcIdx = nodesInfo[i].idx;
+        assert(srcIdx < *nNodes);
         dst[i] = src[srcIdx];
     }
 }
@@ -379,7 +380,7 @@ void copyAndMergeSuffix(
 
             repNode.state = Model::smf(repNode.state, toMergeNode.state);
             repNode.sumEdgesSrcToNode = calcBetter<Model>(repNode.sumEdgesSrcToNode, toMergeNode.sumEdgesSrcToNode);
-            repNode.heuristicBound = calcWorst<Model>(repNode.heuristicBound, toMergeNode.heuristicBound);
+            repNode.heuristicBound = calcBest<Model>(repNode.heuristicBound, toMergeNode.heuristicBound);
 
             assert(repNode.state.n == toMergeNode.state.n);
             assert(repNode.state.n == bi.children[0].state.n);
