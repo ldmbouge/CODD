@@ -40,6 +40,7 @@ void printNodesInfo(gfl::i64 const nNodes, NodeInfo const * const nodesInfo)
         NodeInfo::print(nodesInfo[nIdx]);
         printf("\n");
     }
+    fflush(stdout);
 }
 
 template<typename Node>
@@ -51,6 +52,8 @@ void printNodes(gfl::i64 const nNodes, Node const * const nodes)
         Node::print(nodes[nIdx]);
         printf("\n");
     }
+    fflush(stdout);
+
 }
 
 
@@ -194,21 +197,40 @@ void copyNodes(gfl::i64 const * const nNodes, Node * const dst,  Node const * co
     for (i64 i = 0; i < *nNodes; i += 1)
     {
         i64 const srcIdx = nodesInfo[i].idx;
-        assert(srcIdx < *nNodes);
         dst[i] = src[srcIdx];
     }
 }
 
 template<typename Model, typename Node>
-void updateNodesBound(gfl::i64 const * const nNodes, Node * const nodes, gfl::f64 const hBound)
+void updateChildrenBound(BatchInfo<Node> * const batchInfo, gfl::f64 const hBound, bool sort)
 {
     using namespace gfl;
 
-    for (i64 i = 0; i < *nNodes; i += 1)
+    BatchInfo<Node> & bi = *batchInfo;
+
+    for (i64 i = 0; i < bi.nChildren; i += 1)
     {
-        Node & node = nodes[i];
-        node.heuristicBound = calcWorst<Model>(node.heuristicBound, hBound);
+        Node & cNode = bi.children[i];
+        cNode.heuristicBound = calcWorst<Model>(cNode.heuristicBound, hBound);
     }
+
+    if (sort)
+    {
+        for (i64 i = 0; i < bi.nChildren; i += 1)
+        {
+            NodeInfo & cInfo = bi.childrenInfo[i];
+            cInfo.score = bi.children[i].heuristicBound;
+            cInfo.idx = i;
+        }
+
+        auto cmpByScore = [](NodeInfo const & a, NodeInfo const & b){return isWorstEq<Model>(a.score,b.score);};
+        std::sort(bi.childrenInfo,
+                  bi.childrenInfo + bi.nChildren,
+                  cmpByScore);
+    }
+
+    swapPtr(&bi.children, &bi.tmpChildren);
+    copyNodes<Node>(&bi.nChildren, bi.children, bi.tmpChildren, bi.childrenInfo);
 }
 
 template<typename Model, typename Node>
@@ -240,10 +262,12 @@ void filterChildren(BatchInfo<Node> * const batchInfo, bool sort)
             cInfo.score = bi.children[cInfo.idx].heuristicBound;
         }
 
-        auto cmpByScore = [](NodeInfo const & a, NodeInfo const & b){return isWorstEq<Model>(a.score,b.score);};
+        //printNodesInfo(bi.nFlagged,bi.childrenInfo);
+        auto cmpByScore = [](NodeInfo const & a, NodeInfo const & b){return isWorst<Model>(a.score,b.score);};
         std::sort(bi.childrenInfo,
                   bi.childrenInfo + bi.nFlagged,
                   cmpByScore);
+        //printNodesInfo(bi.nFlagged,bi.childrenInfo);
     }
 
     swapPtr(&bi.children, &bi.tmpChildren);
@@ -257,6 +281,7 @@ template<typename Model, typename Node>
 void calcChildren(
         Model const * const model,
         gfl::f64 pBound,
+        gfl::f64 hBound,
         BatchInfo<Node> * const batchInfo)
 {
     using namespace gfl;
@@ -285,13 +310,11 @@ void calcChildren(
                         cNode.sumEdgesSrcToNode = pNode.sumEdgesSrcToNode + tCost;
 
                         // Lower/Upper bound
+                        cNode.heuristicBound = calcBetter<Model>(pNode.heuristicBound,hBound);
                         if constexpr (Model::has_local)
                         {
-                            cNode.heuristicBound = cNode.sumEdgesSrcToNode + model->local(cState.value(), DDCtx);
-                        }
-                        else
-                        {
-                            cNode.heuristicBound = pNode.heuristicBound;
+                            double const tBound = cNode.sumEdgesSrcToNode + model->local(cState.value(), DDCtx);
+                            cNode.heuristicBound = calcWorst<Model>(cNode.heuristicBound, tBound);
                         }
 
                         // Conditions to keep the child
@@ -323,7 +346,6 @@ void calcChildren(
         }
     }
 }
-
 
 template<typename Model, typename Node>
 void copyAndMergeSuffix(
@@ -380,7 +402,7 @@ void copyAndMergeSuffix(
 
             repNode.state = Model::smf(repNode.state, toMergeNode.state);
             repNode.sumEdgesSrcToNode = calcBetter<Model>(repNode.sumEdgesSrcToNode, toMergeNode.sumEdgesSrcToNode);
-            repNode.heuristicBound = calcBest<Model>(repNode.heuristicBound, toMergeNode.heuristicBound);
+            repNode.heuristicBound = calcBetter<Model>(repNode.heuristicBound, toMergeNode.heuristicBound);
 
             assert(repNode.state.n == toMergeNode.state.n);
             assert(repNode.state.n == bi.children[0].state.n);
@@ -395,10 +417,6 @@ void copyAndMergeSuffix(
             assert(bi.children[0].state.n == bi.children[nIdx].state.n);
         }
     }
-
-
-
-
 }
 template<typename Model, typename Node>
 void mergeChildren(gfl::i64 const width, BatchInfo<Node> * const batchInfo)

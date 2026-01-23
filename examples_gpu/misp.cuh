@@ -138,7 +138,7 @@ struct Misp : MispBase<N>
     static std::size_t domHash(State const & s) noexcept
     {
         std::size_t seed = 0;
-        hash_combine(seed, gfl::roundUpToMultiple<std::size_t>(s.sel.size(), 2));
+        hash_combine(seed, gfl::roundUpToMultiple<std::size_t>(s.sel.size(), 32));
         return seed;
     }
 };

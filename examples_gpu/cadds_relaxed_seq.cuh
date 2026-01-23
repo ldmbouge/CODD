@@ -176,7 +176,7 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
     i64 iteration = 0;
     f64 const printProgressInterval = 5;
     auto lastPrintProgress = RuntimeMonitor::cputime();
-    while (not exactLayers.allLayersEmpty())
+    while (not exactLayers.allLayersEmpty() and isWorst<Model>(pBound,dBound))
     {
         iteration += 1;
 
@@ -187,17 +187,24 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
         }
         newSolution = false;
 
-        // Grow number of layers on demand
-        bool dive = iteration % 10 < 5;
-        i32 const currentExactLayerIdx = dive ?
-            exactLayers.calcDeepestNotEmpty() :
-            //exactLayers.calcShallowMostPromising();
-            exactLayers.calcDeepestMostPromising();
+        // bool dive = iteration % 10 < 5;
+        // i32 const currentExactLayerIdx = dive ?
+        //     exactLayers.calcDeepestMostPromising() :
+        //     exactLayers.calcShallowMostPromising();
+        //     //exactLayers.calcDeepestMostPromising();
+
+        i32 const currentExactLayerIdx =  exactLayers.calcDeepestMostPromising();
 
         // Fragment
         auto & currentExactLayer = exactLayers.getLayer(currentExactLayerIdx);
         auto & currentExactLabelsInfo = exactLayers.getLabelsInfo(currentExactLayerIdx);
         i64 const batchSize = gfl::min<i64>(currentExactLayer.size(), BatchInfoType::calcMaxParents(currentExactLabelsInfo.nLabels, CpuMemSize, false));
+        i32 suffixLength = 1;
+        while(suffixLength < currentExactLayer.size() and currentExactLayer.at(currentExactLayer.size() - 1 - suffixLength).heuristicBound == currentExactLayer.back().heuristicBound and suffixLength < width)
+        {
+            suffixLength += 1;
+        }
+        //printf("Suffix length: %i\n", suffixLength);
         i64 const fragmentSize = gfl::min<i64>(currentExactLayer.size(), 1);; //gfl::min<i64>(currentExactLayer.size(), width < 0 ? batchSize : width);
         auto const fragment = std::span(currentExactLayer.end() - fragmentSize, fragmentSize);
 
@@ -270,7 +277,6 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
             }
             // printf(" (%ld layers)\n", relaxedLayerIdx - currentExactLayerIdx);
 
-
             // I know that the only child I have is the best
             if (batchInfo->nChildren > 0)
             {
@@ -290,7 +296,7 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
                         tmpLayer.resize(currentBatchSize);
                         memcpy(tmpLayer.data(),currentBatch.data() ,sizeof(Node) * currentBatchSize);
                         BatchEngine<Node>::initBatch(batchInfo,gAllocator,tmpLayer,exactLayers.getLabelsInfo(currentExactLayerIdx));
-                        BatchEngine<Node>::processBatchExactWithBound(model,pBound,dBound,batchInfo,tmpNode.heuristicBound, sort);
+                        BatchEngine<Node>::processBatchExact(model,pBound,dBound,batchInfo,sort);
 
                         if (batchInfo->nChildren > 0)
                         {
@@ -315,11 +321,11 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
                                 }
                                 nextExactLayer.resize(nextExactLayerOldSize);
                             }
-                            else if (sort and nextExactLayerOldSize > 0)
+                            else if (sort)
                             {
                                 // Reverse because we work on the tail of the vector
-                                auto cmpByBound = [](Node const & a, Node const & b){return isWorstEq<Model>(a.heuristicBound,b.heuristicBound);};
-                                //assert(std::is_sorted(nextLayer.data() + nextLayerOldSize, nextLayer.data() + nextLayer.size(), cmpByCost));
+                                auto cmpByBound = [](Node const & a, Node const & b){return isWorst<Model>(a.heuristicBound,b.heuristicBound);};
+                                assert(std::is_sorted(nextExactLayer.data() + nextExactLayerOldSize, nextExactLayer.data() + nextExactLayer.size(), cmpByBound));
                                 std::inplace_merge(nextExactLayer.data(), nextExactLayer.data() + nextExactLayerOldSize, nextExactLayer.data() + nextExactLayer.size(), cmpByBound);
                                 assert (std::is_sorted(nextExactLayer.begin(), nextExactLayer.end(), cmpByBound));
                             }
@@ -328,7 +334,7 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
                 }
                 else
                 {
-                    printf("           Pruned %ld nodes\n", currentBatchSize);
+                    //printf("           Pruned %ld nodes\n", currentBatchSize);
                 }
             }
             else
@@ -339,7 +345,6 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
         exactLayers.getLayer(currentExactLayerIdx).resize(exactLayers.getLayer(currentExactLayerIdx).size() - fragmentSize);
         if (newSolution)
         {
-
             printf("[%7.2fs] SOLUTION     | Cost = %7.2f | Value = ", RuntimeMonitor::elapsedSeconds(start), expandedNodes, bestNode.sumEdgesSrcToNode);
             Node::printLabels(bestNode);
             printf("\n");
@@ -349,21 +354,18 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
             fflush(stdout);
         }
 
-
         exactLayers.updateBound(currentExactLayerIdx);
         exactLayers.updateBound(currentExactLayerIdx+1);
         auto const tmpBound = exactLayers.calcBestBound();
         if (isWorst<Model>(tmpBound,dBound))
         {
-            printf("[%7.2fs] TIGHTENING   | Dual = %7.2f -> %7.2f\n",
+            printf("[%7.2fs] TIGHTENING   | Dual = %7.2f -> %7.2f | Expanded = %10ld | Queue = %10ld\n",
                 RuntimeMonitor::elapsedSeconds(start),
                 dBound,
-                tmpBound);
+                tmpBound,
+                expandedNodes,
+                exactLayers.countAllNodes());
             dBound = tmpBound;
-        }
-        if (isBetterEq<Model>(pBound,dBound))
-        {
-            break;
         }
     }
 

@@ -67,6 +67,10 @@ struct LayersHelper
                 lIdx = i;
             }
         }
+
+        // printf("Selecting layer %d with hBound %.1f\n", lIdx,bound);
+        // fflush(stdout);
+
         return lIdx;
     }
 
@@ -115,6 +119,7 @@ struct LayersHelper
 
     void updateBound(gfl::i32 const lIdx) noexcept
     {
+        double oldBound = getBound(lIdx);
         double tBound = worstValue<Model>();
         for (auto const & n : getLayer(lIdx))
         {
@@ -122,17 +127,21 @@ struct LayersHelper
             tBound = calcBetter<Model>(tBound,nBound);
         }
         getBound(lIdx) = tBound;
+        // printf("Layer %d bound: %.1f -> %.1f\n", lIdx,oldBound, tBound);
+        // fflush(stdout);
     }
 
     double calcBestBound() const noexcept
     {
         double bound = worstValue<Model>();
-        // gfl::Array<double>::print(bounds.data(), bounds.data() + bounds.size(), "%.1f");
-        // printf("\n");
         for (auto const & b : bounds)
         {
-                bound = calcBetter<Model>(bound,b);
+            bound = calcBetter<Model>(bound,b);
         }
+
+        // gfl::Array<double>::print(bounds.data(), bounds.data() + bounds.size(), "%.1f");
+        // printf("\n");
+
         return bound;
     }
 

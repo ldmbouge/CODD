@@ -60,20 +60,7 @@ struct BatchEngine
         BatchInfo<Node> * const batchInfo,
         bool sort)
     {
-        calcChildren<Model,Node>(model,pBound,batchInfo);
-        if (batchInfo->nChildren > 0)
-        {
-            if (model->isTarget(batchInfo->children[0].state))
-            {
-                keepOnlyBestChild<Model,Node>(batchInfo);
-            }
-            else
-            {
-                filterChildren<Model,Node>(batchInfo,sort);
-                batchInfo->labelsInfo.reset();
-                calcChildrenLabels<Model,Node>(model,batchInfo,DDExact,pBound,dBound);
-            }
-        }
+        processBatchExactWithBound(model,pBound,dBound,bestValue<Model>(),batchInfo,sort);
     }
 
    template<typename Model>
@@ -82,14 +69,69 @@ struct BatchEngine
        Model const * const model,
        gfl::f64 pBound,
        gfl::f64 dBound,
-       BatchInfo<Node> * const batchInfo,
        gfl::f64 hBound,
+       BatchInfo<Node> * const batchInfo,
        bool sort
-
        )
     {
-        processBatchExact(model,pBound,dBound,batchInfo,sort);
-        updateNodesBound<Model>(&batchInfo->nChildren, batchInfo->children, hBound);
+        calcChildren<Model,Node>(model,pBound,hBound,batchInfo);
+        if (batchInfo->nChildren > 0)
+        {
+            if (model->isTarget(batchInfo->children[0].state))
+            {
+                keepOnlyBestChild<Model,Node>(batchInfo);
+            }
+            else
+            {
+                //printNodes(batchInfo->nChildren, batchInfo->children);
+
+                int nBPrefix = 0;
+                for (int i = 0; i < batchInfo->nChildren; i += 1)
+                {
+                    auto & const tmptmp = batchInfo->children[i];
+                    gfl::u8 opt[] = {0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,0};
+                    bool isPrefix = true;
+                    for (gfl::i32 i = 0; i < tmptmp.nEdgesSrcToNode; i += 1)
+                    {
+                        isPrefix = isPrefix and tmptmp.labelsSrcToNode[i] == opt[i];
+                    }
+                    if (isPrefix)
+                    {
+                        nBPrefix+= 1;
+
+                    }
+                }
+                filterChildren<Model,Node>(batchInfo,sort);
+
+                int nAPrefix = 0;
+                for (int i = 0; i < batchInfo->nChildren; i += 1)
+                {
+                    auto & const tmptmp = batchInfo->children[i];
+                    gfl::u8 opt[] = {0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,0};
+                    bool isPrefix = true;
+                    for (gfl::i32 i = 0; i < tmptmp.nEdgesSrcToNode; i += 1)
+                    {
+                        isPrefix = isPrefix and tmptmp.labelsSrcToNode[i] == opt[i];
+                    }
+                    if (isPrefix)
+                    {
+                        nAPrefix+= 1;
+
+                    }
+                }
+                if (nBPrefix > 0)
+                {
+                    printf("OPT ANCESTOR FILTERING: %d -> %d\n",nBPrefix, nAPrefix);
+                    fflush(stdout);
+                }
+
+
+                batchInfo->labelsInfo.reset();
+                calcChildrenLabels<Model,Node>(model,batchInfo,DDExact,pBound,dBound);
+                //printNodes(batchInfo->nChildren, batchInfo->children);
+            }
+        }
+
     }
 
 
@@ -106,7 +148,7 @@ struct BatchEngine
         // printf("Parents (%d)\n", batchInfo->nParents);
         // printNodes(batchInfo->nParents, batchInfo->parents);
 
-        calcChildren<Model,Node>(model,pBound,batchInfo);
+        calcChildren<Model,Node>(model,pBound,bestValue<Model>(),batchInfo);
 
         // printf("Children (%d)\n", batchInfo->nChildren);
         // printNodes(batchInfo->nChildren, batchInfo->children);
