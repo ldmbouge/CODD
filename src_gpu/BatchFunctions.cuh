@@ -289,40 +289,6 @@ bool isOptAnc(Node const & n)
     }
     return isPrefix;
 }
-template<typename Node>
-void checkNode(Node const & n)
-{
-    if (isOptAnc(n) )
-    {
-        if ( n.heuristicBound < 17)
-            printf("OPT ANCESTOR WITH COST %.2f!!!!\n", n.heuristicBound);
-        else
-            printf("OPT ANCESTOR FOUND %.2f!!!!\n", n.heuristicBound);
-        fflush(stdout);
-    }
-}
-
-template<typename Node>
-void checkNodeEdgesSum(Node const & n)
-{
-    float tmp = 0;
-    for (gfl::i32 i = 0; i < n.nEdgesSrcToNode; i += 1)
-    {
-        tmp += n.labelsSrcToNode[i];
-    }
-
-    if (n.isNotExact == 0 and tmp != n.sumEdgesSrcToNode)
-    {
-        printf("INCONSISTENT NODE! %.2f vs %.2f\n", tmp, n.sumEdgesSrcToNode);
-        fflush(stdout);
-    }
-
-    if (n.isNotExact == 1 and n.sumEdgesSrcToNode > n.nEdgesSrcToNode)
-    {
-        printf("INCONSISTENT NODE! %.2f vs %.2f\n", n.sumEdgesSrcToNode, n.nEdgesSrcToNode);
-        fflush(stdout);
-    }
-}
 
 template<typename Model, typename Node>
 void calcChildren(
@@ -343,9 +309,6 @@ void calcChildren(
             Node cNode;
             NodeInfo cInfo;
             Node const pNode = bi.parents[pIdx];
-            checkNode(pNode);
-            assert(pNode.sumEdgesSrcToNode <= pNode.heuristicBound);
-            bool tmpOA = isOptAnc(pNode);
             for (i32 label = li.minLabel; label <= li.maxLabel; label += 1)
             {
                 if (pNode.labels.contains(label))
@@ -354,35 +317,27 @@ void calcChildren(
                     auto cState = model->stf(pNode.state, label);
                     if (cState.has_value())
                     {
-                        cNode.state = cState.value();
-                        cNode.isNotExact = pNode.isNotExact;
-                        memcpy(cNode.labelsSrcToNode, pNode.labelsSrcToNode, sizeof(cNode.labelsSrcToNode));
-                        cNode.labelsSrcToNode[pNode.nEdgesSrcToNode] = label;
-                        cNode.nEdgesSrcToNode = pNode.nEdgesSrcToNode + 1;
-
                         // Current cost
                         f64 const tCost = model->scf(pNode.state, label);
                         cNode.sumEdgesSrcToNode = pNode.sumEdgesSrcToNode + tCost;
 
                         // Lower/Upper bound
-                        cNode.heuristicBound = pNode.heuristicBound + tCost;
-                        assert(cNode.sumEdgesSrcToNode <= cNode.heuristicBound);
-
+                        cNode.heuristicBound = pNode.heuristicBound;
                         if constexpr (Model::has_local)
                         {
-                            double const nodeToSinkBound = model->local(cState.value(), DDCtx);
-                            double const tBound = cNode.sumEdgesSrcToNode + nodeToSinkBound;
-                            cNode.heuristicBound = calcWorst<Model>(cNode.heuristicBound, tBound);
-                            assert(cNode.sumEdgesSrcToNode <= cNode.heuristicBound);
-
+                            double const tBound = cNode.sumEdgesSrcToNode + model->local(cState.value(), DDCtx);
+                            cNode.heuristicBound = calcBetter<Model>(cNode.heuristicBound, tBound);
                         }
-                        assert(cNode.sumEdgesSrcToNode <= cNode.heuristicBound);
 
                         // Conditions to keep the child
                         if (isBetter<Model>(cNode.heuristicBound,pBound))
                         {
-
-
+                            // Node
+                            cNode.state = cState.value();
+                            cNode.isNotExact = pNode.isNotExact;
+                            memcpy(cNode.labelsSrcToNode, pNode.labelsSrcToNode, sizeof(cNode.labelsSrcToNode));
+                            cNode.labelsSrcToNode[pNode.nEdgesSrcToNode] = label;
+                            cNode.nEdgesSrcToNode = pNode.nEdgesSrcToNode + 1;
 
                             // NodeInfo
                             if constexpr (Model::has_dom)
@@ -393,8 +348,6 @@ void calcChildren(
                             cInfo.idx = bi.nChildren;
                             bi.children[cInfo.idx] = cNode;
                             bi.childrenInfo[cInfo.idx] = cInfo;
-
-                            checkNodeEdgesSum(cNode);
 
                             bi.nChildren += 1;
                         }
@@ -414,17 +367,9 @@ void copyAndMergeSuffix(
 
     BatchInfo<Node> & bi = *batchInfo;
 
-    for(i32 nIdx = 0; nIdx < bi.nChildren; nIdx += 1)
-    {
-        assert(bi.children[0].state.n == bi.children[nIdx].state.n);
-        assert(bi.children[nIdx].sumEdgesSrcToNode <= bi.children[nIdx].heuristicBound);
-    }
-
     assert(bi.nChildren > width);
-    // printf("W = %d vs C = %d\n", width, bi.nChildren);
-    // fflush(stdout);
-    // t > w, c + b <= w and c + 2b >= t
-    i64 const nToCopy = width -1; //bi.nChildren <= 2 * width ? 2 * width - bi.nChildren : roundUpDivPosInt<i64>(width, 2);
+
+    i64 const nToCopy = bi.nChildren <= 2 * width ? 2 * width - bi.nChildren : roundUpDivPosInt<i64>(width, 4);
     i64 const nBinds = width - nToCopy;
     i64 const nToMerge = bi.nChildren - nToCopy;
     assert(nToMerge >= 2 * nBinds);
@@ -433,53 +378,25 @@ void copyAndMergeSuffix(
     copyNodes<Node>(&nToCopy, bi.children, bi.tmpChildren, bi.childrenInfo);
 
     bi.nChildren = nToCopy;
-    for(i32 nIdx = 0; nIdx < bi.nChildren; nIdx += 1)
-    {
-        assert(bi.children[0].state.n == bi.children[nIdx].state.n);
-        assert(bi.children[nIdx].sumEdgesSrcToNode <= bi.children[nIdx].heuristicBound);
-    }
-
     for(i32 bIdx = 0; bIdx < nBinds; bIdx += 1)
     {
         i64 bBegin, bEnd;
         getBeginEnd(bBegin,bEnd, bIdx, nBinds, nToMerge);
         bBegin += nToCopy;
         bEnd += nToCopy;
-
         NodeInfo const & repInfo = bi.childrenInfo[bBegin];
         Node repNode = bi.tmpChildren[repInfo.idx];
-        assert(repNode.sumEdgesSrcToNode <= repNode.heuristicBound);
-
-        assert(repNode.state.n == bi.children[0].state.n);
         repNode.isNotExact = 1;
         for (i64 i = bBegin+1; i < bEnd; i += 1)
         {
             NodeInfo const & toMergeInfo = bi.childrenInfo[i];
             Node const & toMergeNode = bi.tmpChildren[toMergeInfo.idx];
-
-            assert(repNode.state.n == toMergeNode.state.n);
-            assert(repNode.state.n == bi.children[0].state.n);
-
             repNode.state = Model::smf(repNode.state, toMergeNode.state);
-            assert(toMergeNode.sumEdgesSrcToNode <= toMergeNode.nEdgesSrcToNode);
-            assert(repNode.sumEdgesSrcToNode <= repNode.nEdgesSrcToNode);
             repNode.sumEdgesSrcToNode = calcBetter<Model>(repNode.sumEdgesSrcToNode, toMergeNode.sumEdgesSrcToNode);
             repNode.heuristicBound = calcBetter<Model>(repNode.heuristicBound, toMergeNode.heuristicBound);
-
-            assert(repNode.sumEdgesSrcToNode <= repNode.heuristicBound);
-
-            assert(repNode.state.n == toMergeNode.state.n);
-            assert(repNode.state.n == bi.children[0].state.n);
-
         }
-        assert(repNode.state.n == bi.children[0].state.n);
         bi.children[nToCopy + bIdx] = repNode;
-
         bi.nChildren += 1;
-        for(i32 nIdx = 0; nIdx < bi.nChildren; nIdx += 1)
-        {
-            assert(bi.children[0].state.n == bi.children[nIdx].state.n);
-        }
     }
 }
 template<typename Model, typename Node>

@@ -187,7 +187,7 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
         }
         newSolution = false;
 
-        bool dive = not (isValid<Model>(pBound)); // and iteration % 10 < 1;
+        bool const dive = iteration % 10 < 1;
         i32 const currentExactLayerIdx = dive ?
             exactLayers.calcDeepestNotEmpty() :
             exactLayers.calcDeepestMostPromising();
@@ -196,13 +196,7 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
         auto & currentExactLayer = exactLayers.getLayer(currentExactLayerIdx);
         auto & currentExactLabelsInfo = exactLayers.getLabelsInfo(currentExactLayerIdx);
         i64 const batchSize = gfl::min<i64>(currentExactLayer.size(), BatchInfoType::calcMaxParents(currentExactLabelsInfo.nLabels, CpuMemSize, false));
-        i32 suffixLength = 1;
-        while(suffixLength < currentExactLayer.size() and currentExactLayer.at(currentExactLayer.size() - 1 - suffixLength).heuristicBound == currentExactLayer.back().heuristicBound and suffixLength < width)
-        {
-            suffixLength += 1;
-        }
-        //printf("Suffix length: %i\n", suffixLength);
-        i64 const fragmentSize = gfl::min<i64>(currentExactLayer.size(), width);; //gfl::min<i64>(currentExactLayer.size(), width < 0 ? batchSize : width);
+        i64 const fragmentSize = gfl::min<i64>(currentExactLayer.size(), 1);
         auto const fragment = std::span(currentExactLayer.end() - fragmentSize, fragmentSize);
 
         // Batching
@@ -245,7 +239,6 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
             BatchEngine<Node>::initBatch(batchInfo,gAllocator,tmpLayer,exactLayers.getLabelsInfo(currentExactLayerIdx));
 
             i64 relaxedLayerIdx = currentExactLayerIdx;
-            //printf("           Processing relaxation...");
             while (true)
             {
                 relaxedLayerIdx += 1;
@@ -258,7 +251,6 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
                     if (not model->isTarget(tmpLayer[0].state))
                     {
                         LabelsInfo const li = batchInfo->labelsInfo;
-                        assert(batchInfo->nChildren <= BatchInfoType::calcMaxParents(li.nLabels, CpuMemSize, false));
                         BatchEngine<Node>::initBatch(batchInfo,gAllocator,tmpLayer,li);
                     }
                     else
@@ -271,14 +263,13 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
                     break;
                 }
             }
-            // printf(" (%ld layers)\n", relaxedLayerIdx - currentExactLayerIdx);
 
             // I know that the only child I have is the best
             if (batchInfo->nChildren > 0)
             {
                 // Update bound and solution
                 Node const & tmpNode = batchInfo->children[0];
-                if (isBetter<Model>(tmpNode.heuristicBound,pBound))
+                if (isBetter<Model>(tmpNode.sumEdgesSrcToNode,pBound))
                 {
                     if (not tmpNode.isNotExact)
                     {
@@ -290,14 +281,7 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
                     {
                         tmpLayer.clear();
                         tmpLayer.resize(currentBatchSize);
-                        // if(currentBatch.size() != 1)
-                        // {
-                        //     printf("[ERROR] Batch size should be 1, it is %d\n", currentBatch.size());
-                        //     exit(1);
-                        // }
-                        checkNode(currentBatch[0]);
-                        currentBatch[0].heuristicBound = tmpNode.heuristicBound;
-                        checkNode(currentBatch[0]);
+                        currentBatch[0].heuristicBound = tmpNode.sumEdgesSrcToNode;
                         memcpy(tmpLayer.data(),currentBatch.data() ,sizeof(Node) * currentBatchSize);
                         BatchEngine<Node>::initBatch(batchInfo,gAllocator,tmpLayer,exactLayers.getLabelsInfo(currentExactLayerIdx));
                         BatchEngine<Node>::processBatchExact(model,pBound,dBound,batchInfo,sort);
@@ -339,52 +323,11 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
                 else
                 {
                     //printf("           Pruned %ld nodes\n", currentBatchSize);
-                    //printNodes(batchInfo->nChildren, batchInfo->children);
-                    int nBPrefix = 0;
-                    for (int i = 0; i < batchInfo->nChildren; i += 1)
-                    {
-                        auto & const tmptmp = batchInfo->children[i];
-                        gfl::u8 opt[] = {0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,0};
-                        bool isPrefix = true;
-                        for (gfl::i32 i = 0; i < tmptmp.nEdgesSrcToNode; i += 1)
-                        {
-                            isPrefix = isPrefix and tmptmp.labelsSrcToNode[i] == opt[i];
-                        }
-                        if (isPrefix)
-                        {
-                            nBPrefix+= 1;
-                        }
-                    }
-                    if (nBPrefix > 0)
-                    {
-                        printf("OPT ANCESTOR FILTERING!!!!\n");
-                        fflush(stdout);
-                    }
                 }
             }
             else
             {
                    //printf("           Discarded %ld nodes\n", currentBatchSize);
-                int nBPrefix = 0;
-                for (int i = 0; i < batchInfo->nChildren; i += 1)
-                {
-                    auto & const tmptmp = batchInfo->children[i];
-                    gfl::u8 opt[] = {0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,0};
-                    bool isPrefix = true;
-                    for (gfl::i32 i = 0; i < tmptmp.nEdgesSrcToNode; i += 1)
-                    {
-                        isPrefix = isPrefix and tmptmp.labelsSrcToNode[i] == opt[i];
-                    }
-                    if (isPrefix)
-                    {
-                        nBPrefix+= 1;
-                    }
-                }
-                if (nBPrefix > 0)
-                {
-                    printf("OPT ANCESTOR FILTERING!!!!\n");
-                    fflush(stdout);
-                }
             }
         }
         exactLayers.getLayer(currentExactLayerIdx).resize(exactLayers.getLayer(currentExactLayerIdx).size() - fragmentSize);
