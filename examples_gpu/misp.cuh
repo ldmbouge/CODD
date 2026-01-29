@@ -75,11 +75,12 @@ struct Misp : MispBase<N>
         }
         else
         {
-            if (l and not s.sel.contains(s.n))
+            if (l and (not s.sel.contains(s.n)))
                 return gfl::nullopt; // we cannot take n (label==1) if not legal.
             Set out = s.sel;
             out.remove(s.n);   // remove n from state
-            if (l) out.diffWith(MispBase<N>::adj[s.n]); // remove neighbors of n from state (when taking n -- label==1 -- )
+            if (l)
+                out.diffWith(MispBase<N>::adj[s.n]); // remove neighbors of n from state (when taking n -- label==1 -- )
            // return State{out, out.empty() ? MispBase<N>::nNodes : s.n + 1}; // build state accordingly
             return State{out, s.n + 1}; // build state accordingly
         }
@@ -97,6 +98,8 @@ struct Misp : MispBase<N>
     State smf(State const & s1, State const & s2) noexcept
     {
         assert(s1.n == s2.n);
+        assert(s1.sel.size() <= 200 - s1.n);
+        assert(s2.sel.size() <= 200 - s2.n);
         return State{s1.sel | s2.sel,min(s1.n,s2.n)};
     }
     // State similarity function
@@ -115,13 +118,7 @@ struct Misp : MispBase<N>
     GFL_HOST_DEVICE
     double local(State const & s, LocalContext ctx) const noexcept
     {
-        int minAdj = gfl::numeric_limits<int>::max();
-        for (int i = 0; i < MispBase<N>::nNodes; i += 1)
-        {
-            if(s.sel.contains(i))
-                minAdj = gfl::min<int>(minAdj, (s.sel | MispBase<N>::adj[i]).size());
-        }
-        return s.sel.size() - MispBase<N>::minAdj;
+        return s.sel.size();
     }
 
     constexpr static bool has_dom = false;

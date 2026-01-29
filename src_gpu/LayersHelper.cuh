@@ -155,4 +155,15 @@ struct LayersHelper
         }
         return nNodes;
     }
+
+    void forEachNode(std::function<void(Node)> const & f)
+    {
+        for (auto const & l : layers)
+        {
+           for (auto const & n : l)
+           {
+               f(n);
+           }
+        }
+    }
 };

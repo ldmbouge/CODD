@@ -33,7 +33,7 @@ void printLog(double elapsed,
     printf("Layer = %4d (%10ld -> %10ld) | ",lIdx, lSize, lSize - fSize);
 
     printf( "P/D = ");
-    if (isValidBound<Model>(pBound))
+    if (isValid<Model>(pBound))
     {
         printf("%7.2f", pBound);
     }
@@ -42,7 +42,7 @@ void printLog(double elapsed,
         printf("?");
     }
     printf( "/");
-    if (isValidBound<Model>(dBound))
+    if (isValid<Model>(dBound))
     {
         printf("%7.2f", dBound);
     }
@@ -187,13 +187,10 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
         }
         newSolution = false;
 
-        // bool dive = iteration % 10 < 5;
-        // i32 const currentExactLayerIdx = dive ?
-        //     exactLayers.calcDeepestMostPromising() :
-        //     exactLayers.calcShallowMostPromising();
-        //     //exactLayers.calcDeepestMostPromising();
-
-        i32 const currentExactLayerIdx =  exactLayers.calcDeepestMostPromising();
+        bool dive = not (isValid<Model>(pBound)); // and iteration % 10 < 1;
+        i32 const currentExactLayerIdx = dive ?
+            exactLayers.calcDeepestNotEmpty() :
+            exactLayers.calcDeepestMostPromising();
 
         // Fragment
         auto & currentExactLayer = exactLayers.getLayer(currentExactLayerIdx);
@@ -205,7 +202,7 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
             suffixLength += 1;
         }
         //printf("Suffix length: %i\n", suffixLength);
-        i64 const fragmentSize = gfl::min<i64>(currentExactLayer.size(), 1);; //gfl::min<i64>(currentExactLayer.size(), width < 0 ? batchSize : width);
+        i64 const fragmentSize = gfl::min<i64>(currentExactLayer.size(), width);; //gfl::min<i64>(currentExactLayer.size(), width < 0 ? batchSize : width);
         auto const fragment = std::span(currentExactLayer.end() - fragmentSize, fragmentSize);
 
         // Batching
@@ -240,7 +237,6 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
                     exactLayers.countAllNodes());
                 lastPrintProgress = RuntimeMonitor::cputime();
             }
-
 
             auto & tmpLayer = auxLayer.getLayer(0);
             tmpLayer.clear();
@@ -294,6 +290,14 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
                     {
                         tmpLayer.clear();
                         tmpLayer.resize(currentBatchSize);
+                        // if(currentBatch.size() != 1)
+                        // {
+                        //     printf("[ERROR] Batch size should be 1, it is %d\n", currentBatch.size());
+                        //     exit(1);
+                        // }
+                        checkNode(currentBatch[0]);
+                        currentBatch[0].heuristicBound = tmpNode.heuristicBound;
+                        checkNode(currentBatch[0]);
                         memcpy(tmpLayer.data(),currentBatch.data() ,sizeof(Node) * currentBatchSize);
                         BatchEngine<Node>::initBatch(batchInfo,gAllocator,tmpLayer,exactLayers.getLabelsInfo(currentExactLayerIdx));
                         BatchEngine<Node>::processBatchExact(model,pBound,dBound,batchInfo,sort);
@@ -335,11 +339,52 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
                 else
                 {
                     //printf("           Pruned %ld nodes\n", currentBatchSize);
+                    //printNodes(batchInfo->nChildren, batchInfo->children);
+                    int nBPrefix = 0;
+                    for (int i = 0; i < batchInfo->nChildren; i += 1)
+                    {
+                        auto & const tmptmp = batchInfo->children[i];
+                        gfl::u8 opt[] = {0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,0};
+                        bool isPrefix = true;
+                        for (gfl::i32 i = 0; i < tmptmp.nEdgesSrcToNode; i += 1)
+                        {
+                            isPrefix = isPrefix and tmptmp.labelsSrcToNode[i] == opt[i];
+                        }
+                        if (isPrefix)
+                        {
+                            nBPrefix+= 1;
+                        }
+                    }
+                    if (nBPrefix > 0)
+                    {
+                        printf("OPT ANCESTOR FILTERING!!!!\n");
+                        fflush(stdout);
+                    }
                 }
             }
             else
             {
                    //printf("           Discarded %ld nodes\n", currentBatchSize);
+                int nBPrefix = 0;
+                for (int i = 0; i < batchInfo->nChildren; i += 1)
+                {
+                    auto & const tmptmp = batchInfo->children[i];
+                    gfl::u8 opt[] = {0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,0};
+                    bool isPrefix = true;
+                    for (gfl::i32 i = 0; i < tmptmp.nEdgesSrcToNode; i += 1)
+                    {
+                        isPrefix = isPrefix and tmptmp.labelsSrcToNode[i] == opt[i];
+                    }
+                    if (isPrefix)
+                    {
+                        nBPrefix+= 1;
+                    }
+                }
+                if (nBPrefix > 0)
+                {
+                    printf("OPT ANCESTOR FILTERING!!!!\n");
+                    fflush(stdout);
+                }
             }
         }
         exactLayers.getLayer(currentExactLayerIdx).resize(exactLayers.getLayer(currentExactLayerIdx).size() - fragmentSize);

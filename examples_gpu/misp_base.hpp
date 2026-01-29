@@ -12,7 +12,6 @@ struct MispBase
     int nNodes;
     int nEdges;
     FArray<Set> adj;
-    int minAdj;
 
     static inline
     void parseFile(MispBase * const model, std::string const & instance, gfl::StackAllocator & allocator)
@@ -33,7 +32,7 @@ struct MispBase
         assert(s == "edge");
         file >> m->nNodes;
         file >> m->nEdges;
-        new (&m->adj) FArray<Set>(m->nNodes,allocator); // The = operator gives issues whith destruction
+        new (&m->adj) FArray<Set>(m->nNodes,allocator); // The = operator gives issues whit destruction
         for (int i = 0; i < m->nNodes; i += 1)
         {
             new (&m->adj[i]) Set();
