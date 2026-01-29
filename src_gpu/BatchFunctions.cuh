@@ -322,13 +322,15 @@ void calcChildren(
                         cNode.sumEdgesSrcToNode = pNode.sumEdgesSrcToNode + tCost;
 
                         // Lower/Upper bound
-                        cNode.heuristicBound = pNode.heuristicBound;
                         if constexpr (Model::has_local)
                         {
-                            double const tBound = cNode.sumEdgesSrcToNode + model->local(cState.value(), DDCtx);
-                            cNode.heuristicBound = calcBetter<Model>(cNode.heuristicBound, tBound);
+                            double const h =  model->local(cState.value(), DDCtx);
+                            cNode.heuristicBound = cNode.sumEdgesSrcToNode + h;
                         }
-
+                        else
+                        {
+                            cNode.heuristicBound = pNode.heuristicBound;
+                        }
                         // Conditions to keep the child
                         if (isBetter<Model>(cNode.heuristicBound,pBound))
                         {
@@ -346,10 +348,10 @@ void calcChildren(
                                 cInfo.hash = State::hash(cNode.state);
                             cInfo.flag = 0;
                             cInfo.idx = bi.nChildren;
-                            bi.children[cInfo.idx] = cNode;
-                            bi.childrenInfo[cInfo.idx] = cInfo;
 
                             bi.nChildren += 1;
+                            bi.children[cInfo.idx] = cNode;
+                            bi.childrenInfo[cInfo.idx] = cInfo;
                         }
                     }
                 }
@@ -369,7 +371,7 @@ void copyAndMergeSuffix(
 
     assert(bi.nChildren > width);
 
-    i64 const nToCopy = bi.nChildren <= 2 * width ? 2 * width - bi.nChildren : roundUpDivPosInt<i64>(width, 4);
+    i64 const nToCopy = bi.nChildren <= 2 * width ? 2 * width - bi.nChildren : roundUpDivPosInt<i64>(width, 2);
     i64 const nBinds = width - nToCopy;
     i64 const nToMerge = bi.nChildren - nToCopy;
     assert(nToMerge >= 2 * nBinds);
@@ -409,7 +411,7 @@ void mergeChildren(gfl::i64 const width, BatchInfo<Node> * const batchInfo)
     {
         NodeInfo & cInfo = bi.childrenInfo[i];
         cInfo.idx = i;
-        cInfo.score = absDiffWithBest<Model>(bi.children[cInfo.idx].heuristicBound);
+        cInfo.score = absDiffWithBest<Model>(bi.children[i].heuristicBound);
     }
 
     //printNodesInfo(bi.nChildren, bi.childrenInfo);

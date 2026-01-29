@@ -98,8 +98,6 @@ struct Misp : MispBase<N>
     State smf(State const & s1, State const & s2) noexcept
     {
         assert(s1.n == s2.n);
-        assert(s1.sel.size() <= 200 - s1.n);
-        assert(s2.sel.size() <= 200 - s2.n);
         return State{s1.sel | s2.sel,min(s1.n,s2.n)};
     }
     // State similarity function

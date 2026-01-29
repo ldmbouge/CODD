@@ -4,6 +4,7 @@
 
 #include "Utils.hpp"
 #include "Array.hpp"
+
 template<typename State, typename Labels, int N>
 struct alignas(16) LightNode
 {
@@ -161,40 +162,43 @@ struct BatchInfo
         auxTmpMem = nullptr;
     }
 
+    void swapParentsAndChildren()
+    {
+        nParents = nChildren;
+        nChildren = 0;
+        Node * tmpPtr = parents;
+        parents = children;
+        children = tmpPtr;
+        nFlagged = 0;
+    }
+
     BatchInfo() noexcept {reset();}
 
     void initParents(gfl::i64 nParents, gfl::StackAllocator * allocator) noexcept
     {
+        initParents(nParents,nParents,allocator);
+    }
+
+    void initParents(gfl::i64 nParents, gfl::i64 bufferSize, gfl::StackAllocator * allocator) noexcept
+    {
         using namespace gfl;
+
+        assert(bufferSize >= nParents);
 
         this->nParents = nParents;
-        parents = allocator->allocateArray<Node>(nParents);
+        parents = allocator->allocateArray<Node>(bufferSize);
     }
 
-    void useChildrenAsParents(gfl::StackAllocator * allocator) noexcept
+    void initChildren(gfl::i64 bufferSize, gfl::StackAllocator * allocator) noexcept
     {
         using namespace gfl;
 
-        i64 const nChildren = nParents * labelsInfo.nLabels;
+        this->nChildren = 0;
+        children = allocator->allocateArray<Node>(bufferSize);
+        tmpChildren = allocator->allocateArray<Node>(bufferSize);
 
-        children = allocator->allocateArray<Node>(nChildren);
-        tmpChildren = allocator->allocateArray<Node>(nChildren);
-
-        childrenInfo = allocator->allocateArray<NodeInfo>(nChildren);
-        tmpChildrenInfo =  allocator->allocateArray<NodeInfo>(nChildren);
-    }
-
-    void initChildren(gfl::StackAllocator * allocator) noexcept
-    {
-        using namespace gfl;
-
-        i64 const nChildren = nParents * labelsInfo.nLabels;
-
-        children = allocator->allocateArray<Node>(nChildren);
-        tmpChildren = allocator->allocateArray<Node>(nChildren);
-
-        childrenInfo = allocator->allocateArray<NodeInfo>(nChildren);
-        tmpChildrenInfo =  allocator->allocateArray<NodeInfo>(nChildren);
+        childrenInfo = allocator->allocateArray<NodeInfo>(bufferSize);
+        tmpChildrenInfo =  allocator->allocateArray<NodeInfo>(bufferSize);
     }
 
     void initAux(gfl::i64 const memSize, gfl::StackAllocator * allocator) noexcept

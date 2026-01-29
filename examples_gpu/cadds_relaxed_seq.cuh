@@ -187,7 +187,7 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
         }
         newSolution = false;
 
-        bool const dive = iteration % 10 < 1;
+        bool const dive = iteration % 10 < 3;
         i32 const currentExactLayerIdx = dive ?
             exactLayers.calcDeepestNotEmpty() :
             exactLayers.calcDeepestMostPromising();
@@ -231,12 +231,7 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
                     exactLayers.countAllNodes());
                 lastPrintProgress = RuntimeMonitor::cputime();
             }
-
-            auto & tmpLayer = auxLayer.getLayer(0);
-            tmpLayer.clear();
-            tmpLayer.resize(currentBatchSize);
-            memcpy(tmpLayer.data(),currentBatch.data() ,sizeof(Node) * currentBatchSize);
-            BatchEngine<Node>::initBatch(batchInfo,gAllocator,tmpLayer,exactLayers.getLabelsInfo(currentExactLayerIdx));
+            BatchEngine<Node>::initBatchSwappable(batchInfo,gAllocator,currentBatch,exactLayers.getLabelsInfo(currentExactLayerIdx), width);
 
             i64 relaxedLayerIdx = currentExactLayerIdx;
             while (true)
@@ -245,13 +240,9 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
                 BatchEngine<Node>::processBatchRelaxed(model,pBound,dBound,width,batchInfo);
                 if (batchInfo->nChildren > 0)
                 {
-                    tmpLayer.clear();
-                    tmpLayer.resize(batchInfo->nChildren);
-                    memcpy(tmpLayer.data(),batchInfo->children,sizeof(Node) * batchInfo->nChildren);
-                    if (not model->isTarget(tmpLayer[0].state))
+                    if (not model->isTarget(batchInfo->children[0].state))
                     {
-                        LabelsInfo const li = batchInfo->labelsInfo;
-                        BatchEngine<Node>::initBatch(batchInfo,gAllocator,tmpLayer,li);
+                        batchInfo->swapParentsAndChildren();
                     }
                     else
                     {
@@ -269,21 +260,18 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
             {
                 // Update bound and solution
                 Node const & tmpNode = batchInfo->children[0];
-                if (isBetter<Model>(tmpNode.sumEdgesSrcToNode,pBound))
+                if (isBetter<Model>(tmpNode.heuristicBound,pBound))
                 {
                     if (not tmpNode.isNotExact)
                     {
-                        pBound = tmpNode.sumEdgesSrcToNode;
+                        pBound = tmpNode.heuristicBound;
                         bestNode = tmpNode;
                         newSolution = true;
                     }
                     else
                     {
-                        tmpLayer.clear();
-                        tmpLayer.resize(currentBatchSize);
-                        currentBatch[0].heuristicBound = tmpNode.sumEdgesSrcToNode;
-                        memcpy(tmpLayer.data(),currentBatch.data() ,sizeof(Node) * currentBatchSize);
-                        BatchEngine<Node>::initBatch(batchInfo,gAllocator,tmpLayer,exactLayers.getLabelsInfo(currentExactLayerIdx));
+                        currentBatch[0].heuristicBound = tmpNode.heuristicBound;
+                        BatchEngine<Node>::initBatch(batchInfo,gAllocator,currentBatch,exactLayers.getLabelsInfo(currentExactLayerIdx));
                         BatchEngine<Node>::processBatchExact(model,pBound,dBound,batchInfo,sort);
 
                         if (batchInfo->nChildren > 0)
