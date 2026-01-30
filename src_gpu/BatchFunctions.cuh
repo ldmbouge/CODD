@@ -225,10 +225,9 @@ void updateChildrenBound(BatchInfo<Node> * const batchInfo, gfl::f64 const hBoun
             cInfo.idx = i;
         }
 
-        auto cmpByScore = [](NodeInfo const & a, NodeInfo const & b){return isWorstEq<Model>(a.score,b.score);};
         std::sort(bi.childrenInfo,
-                  bi.childrenInfo + bi.nChildren,
-                  cmpByScore);
+            bi.childrenInfo + bi.nChildren,
+            NodeInfo::cmpByScore);
     }
 
     swapPtr(&bi.children, &bi.tmpChildren);
@@ -242,21 +241,15 @@ void filterChildren(BatchInfo<Node> * const batchInfo, bool sort)
 
     BatchInfo<Node> & bi = *batchInfo;
 
-    auto cmpByHash = [](NodeInfo const & a, NodeInfo const & b){return a.hash < b.hash;};
     std::sort(bi.childrenInfo,
               bi.childrenInfo + bi.nChildren,
-              cmpByHash);
-
-//     RadixSort32<NodeInfo>::sort(&bi.childrenInfo, bi.tmpChildrenInfo, (NodeInfo*) bi.tmpChildren, bi.nChildren,
-// [](const NodeInfo& ni) { return ni.hash; });
-//     swapPtr(&bi.childrenInfo, &bi.tmpChildrenInfo);
+              NodeInfo::cmpByHash);
 
     calcRep<Model,Node>(batchInfo);
 
-    auto cmpByFlag = [](NodeInfo const & a, NodeInfo const & b){return a.flag < b.flag;};
     std::sort(bi.childrenInfo,
               bi.childrenInfo + bi.nChildren,
-              cmpByFlag);
+              NodeInfo::cmpByFlag);
 
     countFlagged<Node>(batchInfo, 0);
 
@@ -269,10 +262,9 @@ void filterChildren(BatchInfo<Node> * const batchInfo, bool sort)
         }
 
         //printNodesInfo(bi.nFlagged,bi.childrenInfo);
-        auto cmpByScore = [](NodeInfo const & a, NodeInfo const & b){return isWorst<Model>(a.score,b.score);};
         std::sort(bi.childrenInfo,
                   bi.childrenInfo + bi.nFlagged,
-                  cmpByScore);
+                  NodeInfo::cmpByScore);
         //printNodesInfo(bi.nFlagged,bi.childrenInfo);
     }
 
@@ -378,7 +370,7 @@ void copyAndMergeSuffix(
 
     assert(bi.nChildren > width);
 
-    i64 const nToCopy = width/2; //bi.nChildren <= 2 * width ? 2 * width - bi.nChildren : roundUpDivPosInt<i64>(width, 2);
+    i64 const nToCopy = width / 2 ; //bi.nChildren <= 2 * width ? 2 * width - bi.nChildren : roundUpDivPosInt<i64>(width, 2);
     i64 const nBinds = width - nToCopy;
     i64 const nToMerge = bi.nChildren - nToCopy;
     assert(nToMerge >= 2 * nBinds);

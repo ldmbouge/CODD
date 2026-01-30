@@ -33,7 +33,6 @@ struct Misp : MispBase<N>
         {
             std::size_t seed = 0;
             hash_combine(seed, s.sel.hash());
-            hash_combine(seed, static_cast<std::size_t>(s.n));
             return seed;
         }
 

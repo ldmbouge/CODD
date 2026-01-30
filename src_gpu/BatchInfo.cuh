@@ -55,10 +55,14 @@ struct alignas(16) LightNode
 
 struct NodeInfo
 {
-    gfl::u64 hash;
+    union
+    {
+        gfl::u64 hash;
+        gfl::u32 flag;
+        gfl::f64 score;
+    };
     gfl::i64 idx;
-    gfl::u32 flag;
-    gfl::f64 score;
+
 
     GFL_HOST_DEVICE
     NodeInfo() noexcept {};
@@ -71,6 +75,27 @@ struct NodeInfo
         printf("IDX: %7lld | ", ni.idx);
         printf("FLGS: %8d | ", ni.flag);
         printf("SCR: %7.5f", ni.score);
+    }
+
+    GFL_HOST_DEVICE
+    constexpr
+    static bool cmpByHash(NodeInfo const & n1, NodeInfo const & n2)
+    {
+        return n1.hash < n2.hash;
+    }
+
+    GFL_HOST_DEVICE
+    constexpr
+    static bool cmpByFlag(NodeInfo const & n1, NodeInfo const & n2)
+    {
+        return n1.flag < n2.flag;
+    }
+
+    GFL_HOST_DEVICE
+    constexpr
+    static bool cmpByScore(NodeInfo const & n1, NodeInfo const & n2)
+    {
+        return n1.score < n2.score;
     }
 };
 
