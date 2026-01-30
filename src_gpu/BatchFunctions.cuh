@@ -9,6 +9,8 @@
 #include "BoundsHelpers.cuh"
 #include "../examples_gpu/bro_base.cuh"
 
+#include "RadixSort.hpp"
+
 template <typename T>
 GFL_HOST_DEVICE
 void swapPtr(T** a, T** b)
@@ -131,13 +133,13 @@ void calcRep(BatchInfo<Node> * const batchInfo)
         NodeInfo & iInfo = bi.childrenInfo[i];
         assert(0 <= iInfo.idx);
         assert(iInfo.idx < bi.nChildren);
-        Node const iChild = bi.children[iInfo.idx];
+        Node const & iChild = bi.children[iInfo.idx];
         for (i64 j = i + 1; j < bi.nChildren; j += 1)
         {
             NodeInfo & jInfo = bi.childrenInfo[j];
             assert(0 <= jInfo.idx);
             assert(jInfo.idx < bi.nChildren);
-            Node const jChild = bi.children[jInfo.idx];
+            Node const & jChild = bi.children[jInfo.idx];
             if (iInfo.hash == jInfo.hash)
             {
                 calcRep<Model>(iInfo,jInfo, iChild, jChild);
@@ -245,6 +247,10 @@ void filterChildren(BatchInfo<Node> * const batchInfo, bool sort)
               bi.childrenInfo + bi.nChildren,
               cmpByHash);
 
+//     RadixSort32<NodeInfo>::sort(&bi.childrenInfo, bi.tmpChildrenInfo, (NodeInfo*) bi.tmpChildren, bi.nChildren,
+// [](const NodeInfo& ni) { return ni.hash; });
+//     swapPtr(&bi.childrenInfo, &bi.tmpChildrenInfo);
+
     calcRep<Model,Node>(batchInfo);
 
     auto cmpByFlag = [](NodeInfo const & a, NodeInfo const & b){return a.flag < b.flag;};
@@ -306,13 +312,14 @@ void calcChildren(
     {
         if (li.nLabels > 0)
         {
-            Node cNode;
-            NodeInfo cInfo;
-            Node const pNode = bi.parents[pIdx];
+            Node const & pNode = bi.parents[pIdx];
             for (i32 label = li.minLabel; label <= li.maxLabel; label += 1)
             {
                 if (pNode.labels.contains(label))
                 {
+                    Node & cNode = bi.children[bi.nChildren];
+                    NodeInfo & cInfo = bi.childrenInfo[bi.nChildren];
+
                     // Transition
                     auto cState = model->stf(pNode.state, label);
                     if (cState.has_value())
@@ -350,8 +357,8 @@ void calcChildren(
                             cInfo.idx = bi.nChildren;
 
                             bi.nChildren += 1;
-                            bi.children[cInfo.idx] = cNode;
-                            bi.childrenInfo[cInfo.idx] = cInfo;
+                            //bi.children[cInfo.idx] = cNode;
+                            //bi.childrenInfo[cInfo.idx] = cInfo;
                         }
                     }
                 }
@@ -371,7 +378,7 @@ void copyAndMergeSuffix(
 
     assert(bi.nChildren > width);
 
-    i64 const nToCopy = bi.nChildren <= 2 * width ? 2 * width - bi.nChildren : roundUpDivPosInt<i64>(width, 2);
+    i64 const nToCopy = width/2; //bi.nChildren <= 2 * width ? 2 * width - bi.nChildren : roundUpDivPosInt<i64>(width, 2);
     i64 const nBinds = width - nToCopy;
     i64 const nToMerge = bi.nChildren - nToCopy;
     assert(nToMerge >= 2 * nBinds);
@@ -416,10 +423,10 @@ void mergeChildren(gfl::i64 const width, BatchInfo<Node> * const batchInfo)
 
     //printNodesInfo(bi.nChildren, bi.childrenInfo);
 
-    auto cmpByScore = [](NodeInfo const & a, NodeInfo const & b){return a.score < b.score;};
-    std::sort(bi.childrenInfo,
-              bi.childrenInfo + bi.nChildren,
-              cmpByScore);
+    // auto cmpByScore = [](NodeInfo const & a, NodeInfo const & b){return a.score < b.score;};
+    // std::sort(bi.childrenInfo,
+    //           bi.childrenInfo + bi.nChildren,
+    //           cmpByScore);
 
     //printNodesInfo(bi.nChildren, bi.childrenInfo);
 

@@ -123,7 +123,8 @@ GFL_HOST_DEVICE
 constexpr
 double absDiffWithBest(double const c) noexcept
 {
-    return abs(bestValue<Model>() - c);
+    double const diff = bestValue<Model>() - (bestValue<Model>() - c);
+    return diff >= 0 ? diff : -diff;
 }
 
 
