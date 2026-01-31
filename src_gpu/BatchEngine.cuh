@@ -109,9 +109,6 @@ struct BatchEngine
           gfl::i64 width,
           BatchInfo<Node> * const batchInfo)
     {
-        BatchInfo<Node> & bi = *batchInfo;
-
-
         calcChildren<Model,Node>(model,pBound,batchInfo);
 
         // printf("Children (%d)\n", batchInfo->nChildren);
@@ -137,6 +134,24 @@ struct BatchEngine
                 filterChildren<Model,Node>(batchInfo,false);
                 if (batchInfo->nChildren > width)
                 {
+                    if (not batchInfo->cutsetSaved)
+                    {
+                        calcChildrenLabels<Model,Node>(model,batchInfo,DDRelaxed,pBound,dBound);
+                        for (auto i = 0; i < batchInfo->nChildren; i += 1)
+                        {
+                            NodeInfo & cInfo = batchInfo->childrenInfo[i];
+                            cInfo.idx = i;
+                            cInfo.score = batchInfo->children[i].heuristicBound;
+                        }
+                        std::sort(batchInfo->childrenInfo,
+                            batchInfo->childrenInfo + batchInfo->nChildren,
+                                 [](NodeInfo const & a, NodeInfo const & b){return isWorst<Model>(a.score,b.score);});
+                        copyNodes<Node>(&batchInfo->nChildren,batchInfo->cutset,batchInfo->children, batchInfo->childrenInfo);
+                        batchInfo->cutsetSize = batchInfo->nChildren;
+                        batchInfo->cutsetSaved = true;
+                        auto cmpByBound = [](Node const & a, Node const & b){return isWorst<Model>(a.heuristicBound,b.heuristicBound);};
+                        assert(std::is_sorted(batchInfo->cutset,batchInfo->cutset + batchInfo->cutsetSize,cmpByBound));
+                    }
                     mergeChildren<Model,Node>(width,batchInfo);
                 }
                 batchInfo->labelsInfo.reset();

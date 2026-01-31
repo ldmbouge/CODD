@@ -203,35 +203,15 @@ void copyNodes(gfl::i64 const * const nNodes, Node * const dst,  Node const * co
     }
 }
 
-template<typename Model, typename Node>
-void updateChildrenBound(BatchInfo<Node> * const batchInfo, gfl::f64 const hBound, bool sort)
+template<typename Node>
+void copyNodes(gfl::i64 const * const nNodes, Node * const dst,  Node const * const src)
 {
     using namespace gfl;
 
-    BatchInfo<Node> & bi = *batchInfo;
-
-    for (i64 i = 0; i < bi.nChildren; i += 1)
+    for (i64 i = 0; i < *nNodes; i += 1)
     {
-        Node & cNode = bi.children[i];
-        cNode.heuristicBound = calcWorst<Model>(cNode.heuristicBound, hBound);
+        dst[i] = src[i];
     }
-
-    if (sort)
-    {
-        for (i64 i = 0; i < bi.nChildren; i += 1)
-        {
-            NodeInfo & cInfo = bi.childrenInfo[i];
-            cInfo.score = bi.children[i].heuristicBound;
-            cInfo.idx = i;
-        }
-
-        std::sort(bi.childrenInfo,
-            bi.childrenInfo + bi.nChildren,
-            NodeInfo::cmpByScore);
-    }
-
-    swapPtr(&bi.children, &bi.tmpChildren);
-    copyNodes<Node>(&bi.nChildren, bi.children, bi.tmpChildren, bi.childrenInfo);
 }
 
 template<typename Model, typename Node>
@@ -273,19 +253,6 @@ void filterChildren(BatchInfo<Node> * const batchInfo, bool sort)
 
     bi.nChildren = bi.nFlagged;
     bi.nFlagged = 0;
-}
-
-
-template<typename Node>
-bool isOptAnc(Node const & n)
-{
-    gfl::u8 opt[] = {0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,0};
-    bool isPrefix = true;
-    for (gfl::i32 i = 0; i < n.nEdgesSrcToNode; i += 1)
-    {
-        isPrefix = isPrefix and  n.labelsSrcToNode[i] == opt[i];
-    }
-    return isPrefix;
 }
 
 template<typename Model, typename Node>
@@ -370,10 +337,10 @@ void copyAndMergeSuffix(
 
     assert(bi.nChildren > width);
 
-    i64 const nToCopy = width / 2 ; //bi.nChildren <= 2 * width ? 2 * width - bi.nChildren : roundUpDivPosInt<i64>(width, 2);
+    i64 const nToCopy = bi.nChildren <= 2 * width ? 2 * width - bi.nChildren : roundUpDivPosInt<i64>(width, 2);
     i64 const nBinds = width - nToCopy;
     i64 const nToMerge = bi.nChildren - nToCopy;
-    assert(nToMerge >= 2 * nBinds);
+    //assert(nToMerge >= 2 * nBinds);
 
     swapPtr(&bi.children, &bi.tmpChildren);
     copyNodes<Node>(&nToCopy, bi.children, bi.tmpChildren, bi.childrenInfo);
@@ -440,26 +407,6 @@ void mergeChildren(gfl::i64 const width, BatchInfo<Node> * const batchInfo)
     // printf("After (%d)\n", bi.nChildren);
     // printNodes(bi.nChildren, bi.children);
 }
-
-
-template<typename Model, typename Node>
-bool someTarget(Model const * const model, BatchInfo<Node> * batchInfo)
-{
-    using namespace gfl;
-    BatchInfo<Node> & bi = *batchInfo;
-
-    assert(bi.nChildren > 0);
-
-    for(i64 cIdx = 0; cIdx < bi.nChildren; cIdx += 1)
-    {
-       if (model->isTarget(bi.children[cIdx].state))
-       {
-           return true;
-       }
-    }
-    return false;
-}
-
 
 template<typename Model, typename Node>
 void keepOnlyBestChild(BatchInfo<Node> * batchInfo)

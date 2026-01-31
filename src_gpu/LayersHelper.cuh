@@ -59,14 +59,20 @@ struct LayersHelper
         using namespace gfl;
         double bound = worstValue<Model>();
         i32 lIdx = -1;
-        for (i32 i = 0; i < layers.size(); i += 1)
+        for (i32 i = layers.size() - 1; i >= 0; i -= 1)
         {
-            if (isBetterEq<Model>(bounds[i], bound))
+            if (isBetter<Model>(bounds[i], bound))
             {
                 bound = bounds[i];
                 lIdx = i;
             }
         }
+        if (lIdx < 0)
+        {
+            return calcDeepestNotEmpty();
+        }
+        assert(lIdx >= 0) ;
+
 
         // printf("Selecting layer %d with hBound %.1f\n", lIdx,bound);
         // fflush(stdout);
@@ -92,7 +98,7 @@ struct LayersHelper
 
     LayerType & getLayer(gfl::i32 const lIdx) noexcept
     {
-        if (layers.size() <= lIdx)
+        if (layers.empty() or layers.size() <= lIdx)
         {
             layers.resize(lIdx + 1);
         }
@@ -101,7 +107,7 @@ struct LayersHelper
 
     LabelsInfo & getLabelsInfo(gfl::i32 const lIdx) noexcept
     {
-        if (labelsInfo.size() <= lIdx)
+        if (labelsInfo.empty() or labelsInfo.size() <= lIdx)
         {
             labelsInfo.resize(lIdx + 1);
         }
@@ -110,9 +116,9 @@ struct LayersHelper
 
     double & getBound(gfl::i32 const lIdx) noexcept
     {
-        if (bounds.size() <= lIdx)
+        if (bounds.empty() or bounds.size() <= lIdx)
         {
-            bounds.resize(lIdx + 1, bestValue<Model>());
+            bounds.resize(lIdx + 1, worstValue<Model>());
         }
         return bounds[lIdx];
     }

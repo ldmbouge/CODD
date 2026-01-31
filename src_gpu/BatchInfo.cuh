@@ -97,6 +97,13 @@ struct NodeInfo
     {
         return n1.score < n2.score;
     }
+
+    GFL_HOST_DEVICE
+    constexpr
+    static bool cmpByScoreDec(NodeInfo const & n1, NodeInfo const & n2)
+    {
+        return n1.score > n2.score;
+    }
 };
 
 struct DummyDecomposer128
@@ -165,6 +172,11 @@ struct BatchInfo
     NodeInfo * childrenInfo;
     NodeInfo * tmpChildrenInfo;
 
+
+    bool cutsetSaved;
+    gfl::i64 cutsetSize;
+    Node * cutset;
+
     std::size_t auxTmpMemSize;
     void * auxTmpMem;
 
@@ -177,8 +189,12 @@ struct BatchInfo
         tmpParents = nullptr;
 
         nChildren = 0;
+        cutsetSize = 0;
+        cutsetSaved = false;
         children = nullptr;
         tmpChildren = nullptr;
+        cutset = nullptr;
+
         nFlagged = 0;
         childrenInfo = nullptr;
         tmpChildrenInfo = nullptr;
@@ -222,6 +238,10 @@ struct BatchInfo
         children = allocator->allocateArray<Node>(bufferSize);
         tmpChildren = allocator->allocateArray<Node>(bufferSize);
 
+        this->cutsetSize = 0;
+        cutsetSaved = false;
+        cutset = allocator->allocateArray<Node>(bufferSize);
+
         childrenInfo = allocator->allocateArray<NodeInfo>(bufferSize);
         tmpChildrenInfo =  allocator->allocateArray<NodeInfo>(bufferSize);
     }
@@ -246,7 +266,7 @@ struct BatchInfo
 
         // initChildren()
         i64 const nChildren = nParents * branchingFactor;
-        memSize += 2 * (sizeof(Node) * nChildren + StackAllocator::DefaultAlign);
+        memSize += 3 * (sizeof(Node) * nChildren + StackAllocator::DefaultAlign);
         memSize += 2 * (sizeof(NodeInfo) * nChildren + StackAllocator::DefaultAlign);
 
         // initAux()
