@@ -265,7 +265,7 @@ void calcChildren(
     using State = Model::State;
 
     BatchInfo<Node> & bi = *batchInfo;
-    LabelsInfo const & li = bi.labelsInfo;
+    LabelsInfo const & li = bi.labelsInfoParents;
 
     for (i64 pIdx = 0; pIdx < bi.nParents; pIdx += 1)
     {
@@ -443,7 +443,56 @@ void calcChildrenLabels(
     {
         auto & cNode = bi.children[cIdx];
         cNode.labels = model->lgf(cNode.state, ddCtx, pBound, dBound);
-        bi.labelsInfo.update(cNode.labels.slc());
+        bi.labelsInfoChildren.update(cNode.labels.slc());
+    }
+}
+
+
+template<typename Model, typename Node>
+void saveCutset(BatchInfo<Node> * const batchInfo)
+{
+    using namespace gfl;
+
+    BatchInfo<Node> & bi = *batchInfo;
+
+    for (auto i = 0; i < bi.nChildren; i += 1)
+    {
+        NodeInfo & cInfo = bi.childrenInfo[i];
+        cInfo.idx = i;
+        cInfo.score = bi.children[i].heuristicBound;
+    }
+
+    std::sort(
+        bi.childrenInfo,
+        bi.childrenInfo + bi.nChildren,
+        [](NodeInfo const & a, NodeInfo const & b){return isWorst<Model>(a.score,b.score);});
+
+    copyNodes<Node>(&batchInfo->nChildren,batchInfo->cutset,batchInfo->children, batchInfo->childrenInfo);
+
+    batchInfo->cutsetSize = batchInfo->nChildren;
+    batchInfo->cutsetSaved = true;
+
+    auto cmpByBound = [](Node const & a, Node const & b){return isWorst<Model>(a.heuristicBound,b.heuristicBound);};
+    assert(std::is_sorted(batchInfo->cutset,batchInfo->cutset + batchInfo->cutsetSize,cmpByBound));
+    assert(std::all_of(batchInfo->cutset,batchInfo->cutset + batchInfo->cutsetSize, [](Node const & n) { return n.isNotExact == 0; }));
+}
+
+template<typename Model, typename Node>
+void calcCutsetLabels(
+        Model const * const model,
+        BatchInfo<Node> * const batchInfo,
+        DDContext const ddCtx,
+        gfl::f64 pBound,
+        gfl::f64 dBound)
+{
+    using namespace gfl;
+    BatchInfo<Node> & bi = *batchInfo;
+
+    for (i64 nIdx = 0; nIdx < bi.cutsetSize; nIdx += 1)
+    {
+        auto & node = bi.cutset[nIdx];
+        node.labels = model->lgf(node.state, ddCtx, pBound, dBound);
+        bi.labelsInfoCutset.update(node.labels.slc());
     }
 }
 

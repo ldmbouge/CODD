@@ -71,7 +71,8 @@ struct BatchEngine
 
         batchInfo->initParents(nParents, bufferSize, allocator);
         memcpy(batchInfo->parents,parents.data(), sizeof(Node) * nParents);
-        batchInfo->labelsInfo = labelsInfo;
+        batchInfo->labelsInfoParents = labelsInfo;
+        batchInfo->initCutset(bufferSize, allocator);
         batchInfo->initChildren(bufferSize, allocator);
     }
 
@@ -95,7 +96,6 @@ struct BatchEngine
             {
                 filterChildren<Model,Node>(batchInfo,sort);
             }
-            batchInfo->labelsInfo.reset();
             calcChildrenLabels<Model,Node>(model,batchInfo,DDExact,pBound,dBound);
         }
     }
@@ -136,25 +136,11 @@ struct BatchEngine
                 {
                     if (not batchInfo->cutsetSaved)
                     {
-                        calcChildrenLabels<Model,Node>(model,batchInfo,DDRelaxed,pBound,dBound);
-                        for (auto i = 0; i < batchInfo->nChildren; i += 1)
-                        {
-                            NodeInfo & cInfo = batchInfo->childrenInfo[i];
-                            cInfo.idx = i;
-                            cInfo.score = batchInfo->children[i].heuristicBound;
-                        }
-                        std::sort(batchInfo->childrenInfo,
-                            batchInfo->childrenInfo + batchInfo->nChildren,
-                                 [](NodeInfo const & a, NodeInfo const & b){return isWorst<Model>(a.score,b.score);});
-                        copyNodes<Node>(&batchInfo->nChildren,batchInfo->cutset,batchInfo->children, batchInfo->childrenInfo);
-                        batchInfo->cutsetSize = batchInfo->nChildren;
-                        batchInfo->cutsetSaved = true;
-                        auto cmpByBound = [](Node const & a, Node const & b){return isWorst<Model>(a.heuristicBound,b.heuristicBound);};
-                        assert(std::is_sorted(batchInfo->cutset,batchInfo->cutset + batchInfo->cutsetSize,cmpByBound));
+                        saveCutset<Model,Node>(batchInfo);
+                        calcCutsetLabels<Model,Node>(model,batchInfo,DDRelaxed,pBound,dBound);
                     }
                     mergeChildren<Model,Node>(width,batchInfo);
                 }
-                batchInfo->labelsInfo.reset();
                 calcChildrenLabels<Model,Node>(model,batchInfo,DDRelaxed,pBound,dBound);
             }
 

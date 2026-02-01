@@ -234,10 +234,10 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
             }
             BatchEngine<Node>::initBatchSwappable(batchInfo,gAllocator,currentBatch,exactLayers.getLabelsInfo(currentExactLayerIdx), width);
 
-            i64 relaxedLayerIdx = currentExactLayerIdx;
+            i64 currentLayerIdx = currentExactLayerIdx;
             while (true)
             {
-                relaxedLayerIdx += 1;
+                currentLayerIdx += 1;
                 BatchEngine<Node>::processBatchRelaxed(model,pBound,dBound,width,batchInfo);
                 if (batchInfo->nChildren > 0)
                 {
@@ -245,7 +245,7 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
                     {
                         if (cutsetLayerIdx < 0 and batchInfo->cutsetSaved)
                         {
-                            cutsetLayerIdx = relaxedLayerIdx;
+                            cutsetLayerIdx = currentLayerIdx;
                         }
                         batchInfo->swapParentsAndChildren();
                     }
@@ -275,7 +275,7 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
                     }
                     else
                     {
-                        if (batchInfo->cutsetSize > 0 and isBetter<Model>(batchInfo->cutset[batchInfo->cutsetSize - 1].heuristicBound,pBound))
+                        if (batchInfo->cutsetSize > 0)
                         {
                             auto & cutsetExactLayer = exactLayers.getLayer(cutsetLayerIdx);
                             auto & cutsetExactLabelsInfo =  exactLayers.getLabelsInfo(cutsetLayerIdx);
@@ -285,19 +285,8 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
                                    batchInfo->cutset,
                                    sizeof(Node) * batchInfo->cutsetSize);
 
-                            cutsetExactLabelsInfo.update(batchInfo->labelsInfo);
-                            Node const & tmpNodeExact = cutsetExactLayer[cutsetExactLayerOldSize];
-                            if (model->isTarget(tmpNodeExact.state))
-                            {
-                                if (isBetter<Model>(tmpNodeExact.sumEdgesSrcToNode, pBound))
-                                {
-                                    bestNode = tmpNodeExact;
-                                    pBound = bestNode.sumEdgesSrcToNode;
-                                    newSolution = true;
-                                }
-                                cutsetExactLayer.resize(cutsetExactLayerOldSize);
-                            }
-                            else if (sort)
+                            cutsetExactLabelsInfo.update(batchInfo->labelsInfoCutset);
+                            if (sort)
                             {
                                 // Reverse because we work on the tail of the vector
                                 auto cmpByBound = [](Node const & a, Node const & b){return isWorst<Model>(a.heuristicBound,b.heuristicBound);};

@@ -159,7 +159,9 @@ struct LabelsInfo
 template<typename Node>
 struct BatchInfo
 {
-    LabelsInfo labelsInfo;
+    LabelsInfo labelsInfoParents;
+    LabelsInfo labelsInfoChildren;
+    LabelsInfo labelsInfoCutset;
 
     gfl::i64 nParents;
     Node * parents;
@@ -182,7 +184,9 @@ struct BatchInfo
 
     void reset()
     {
-        labelsInfo.reset();
+        labelsInfoParents.reset();
+        labelsInfoChildren.reset();
+        labelsInfoCutset.reset();
 
         nParents = 0;
         parents = nullptr;
@@ -211,6 +215,8 @@ struct BatchInfo
         parents = children;
         children = tmpPtr;
         nFlagged = 0;
+        labelsInfoParents = labelsInfoChildren;
+        labelsInfoChildren.reset();
     }
 
     BatchInfo() noexcept {reset();}
@@ -238,12 +244,17 @@ struct BatchInfo
         children = allocator->allocateArray<Node>(bufferSize);
         tmpChildren = allocator->allocateArray<Node>(bufferSize);
 
+        childrenInfo = allocator->allocateArray<NodeInfo>(bufferSize);
+        tmpChildrenInfo =  allocator->allocateArray<NodeInfo>(bufferSize);
+    }
+
+    void initCutset(gfl::i64 bufferSize, gfl::StackAllocator * allocator) noexcept
+    {
+        using namespace gfl;
+
         this->cutsetSize = 0;
         cutsetSaved = false;
         cutset = allocator->allocateArray<Node>(bufferSize);
-
-        childrenInfo = allocator->allocateArray<NodeInfo>(bufferSize);
-        tmpChildrenInfo =  allocator->allocateArray<NodeInfo>(bufferSize);
     }
 
     void initAux(gfl::i64 const memSize, gfl::StackAllocator * allocator) noexcept
