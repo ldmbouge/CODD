@@ -10,11 +10,12 @@ struct alignas(16) LightNode
 {
     State state;
     Labels labels;
-    gfl::f64 sumEdgesSrcToNode;
-    gfl::f64 heuristicBound;
-    gfl::u8 isNotExact;
-    gfl::u8 nEdgesSrcToNode;
-    gfl::u8 labelsSrcToNode[N];
+    gfl::f64 gValue;
+    gfl::f64 fValue;
+    gfl::u8 isApproximated;
+    gfl::u8 hasAncestorInCutset;
+    gfl::i16 nEdgesSrcToNode;
+    gfl::i16 labelsSrcToNode[N];
 
     GFL_HOST_DEVICE
     LightNode() noexcept {};
@@ -23,33 +24,46 @@ struct alignas(16) LightNode
     LightNode(State const & s, Labels const & l, gfl::f64 const hBound) noexcept :
             state(s),
             labels(l),
-            heuristicBound(hBound),
-            isNotExact(0),
-            sumEdgesSrcToNode(0),
+            fValue(hBound),
+            isApproximated(0),
+            hasAncestorInCutset(0),
+            gValue(0),
             nEdgesSrcToNode(0)
     {}
 
     GFL_HOST_DEVICE
     void reset() noexcept {memset(this,0,sizeof(LightNode));}
 
-    template<typename Node>
     GFL_HOST_DEVICE static
-    void print(Node const & node)
+    void print(LightNode const & node)
     {
         using namespace gfl;
-        printf("S2N: %.1f | ", node.sumEdgesSrcToNode);
-        printf("HBND: %.1f | ",node.heuristicBound);
-        printf("EXCT: %d | ", 1-node.isNotExact);
-        printf("EDGS: %d", node.nEdgesSrcToNode);
+        printf("F: %.1f | ", node.fValue);
+        printf("G: %.1f | ", node.gValue);
+        printf("EXT: %d | ", 1 - node.isApproximated);
+        printf("AIC: %d | ", node.hasAncestorInCutset);
+        printf("EDS: %d", node.nEdgesSrcToNode);
     }
 
-
-    template<typename Node>
     GFL_HOST_DEVICE static
-    void printLabels(Node const & node)
+    void printLabels(LightNode const & node)
     {
         using namespace gfl;
-        Array<u8>::print(node.labelsSrcToNode, node.labelsSrcToNode + node.nEdgesSrcToNode);
+        Array<i16>::print(node.labelsSrcToNode, node.labelsSrcToNode + node.nEdgesSrcToNode);
+    }
+
+    GFL_HOST_DEVICE
+   constexpr
+   static bool cmpByF(LightNode const & n1, LightNode const & n2)
+    {
+        return n1.fValue < n2.fValue;
+    }
+
+    GFL_HOST_DEVICE
+    constexpr
+    static bool cmpByFDec(LightNode const & n1, LightNode const & n2)
+    {
+        return n1.fValue > n2.fValue;
     }
 };
 
@@ -62,6 +76,7 @@ struct NodeInfo
         gfl::f64 score;
     };
     gfl::i64 idx;
+    gfl::i64 pIdx;
 
 
     GFL_HOST_DEVICE
@@ -161,23 +176,23 @@ struct BatchInfo
 {
     LabelsInfo labelsInfoParents;
     LabelsInfo labelsInfoChildren;
-    LabelsInfo labelsInfoCutset;
 
     gfl::i64 nParents;
     Node * parents;
-    Node * tmpParents;
 
     gfl::i64 nChildren;
     Node * children;
     Node * tmpChildren;
+
     gfl::i64 nFlagged;
-    NodeInfo * childrenInfo;
-    NodeInfo * tmpChildrenInfo;
+    NodeInfo * nodesInfo;
+    NodeInfo * tmpNodesInfo;
 
-
-    bool cutsetSaved;
     gfl::i64 cutsetSize;
     Node * cutset;
+
+    gfl::i64 nChildrenToCopy;
+    gfl::i64 nChildrenToMerge;
 
     std::size_t auxTmpMemSize;
     void * auxTmpMem;
@@ -186,22 +201,21 @@ struct BatchInfo
     {
         labelsInfoParents.reset();
         labelsInfoChildren.reset();
-        labelsInfoCutset.reset();
 
         nParents = 0;
         parents = nullptr;
-        tmpParents = nullptr;
 
         nChildren = 0;
-        cutsetSize = 0;
-        cutsetSaved = false;
+
         children = nullptr;
         tmpChildren = nullptr;
-        cutset = nullptr;
 
         nFlagged = 0;
-        childrenInfo = nullptr;
-        tmpChildrenInfo = nullptr;
+        nodesInfo = nullptr;
+        tmpNodesInfo = nullptr;
+
+        cutsetSize = 0;
+        cutset = nullptr;
 
         auxTmpMemSize = 0;
         auxTmpMem = nullptr;
@@ -244,8 +258,8 @@ struct BatchInfo
         children = allocator->allocateArray<Node>(bufferSize);
         tmpChildren = allocator->allocateArray<Node>(bufferSize);
 
-        childrenInfo = allocator->allocateArray<NodeInfo>(bufferSize);
-        tmpChildrenInfo =  allocator->allocateArray<NodeInfo>(bufferSize);
+        nodesInfo = allocator->allocateArray<NodeInfo>(bufferSize);
+        tmpNodesInfo =  allocator->allocateArray<NodeInfo>(bufferSize);
     }
 
     void initCutset(gfl::i64 bufferSize, gfl::StackAllocator * allocator) noexcept
@@ -253,7 +267,6 @@ struct BatchInfo
         using namespace gfl;
 
         this->cutsetSize = 0;
-        cutsetSaved = false;
         cutset = allocator->allocateArray<Node>(bufferSize);
     }
 

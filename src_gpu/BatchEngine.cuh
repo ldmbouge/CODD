@@ -109,36 +109,22 @@ struct BatchEngine
           gfl::i64 width,
           BatchInfo<Node> * const batchInfo)
     {
+        // TODO Manage the case with >= branching factor of the root.
+
         calcChildren<Model,Node>(model,pBound,batchInfo);
-
-        // printf("Children (%d)\n", batchInfo->nChildren);
-        // printNodes(batchInfo->nChildren, batchInfo->children);
-
         if (batchInfo->nChildren > 0)
         {
-            // printf("Before (%d)\n", batchInfo->nChildren);
-            // printNodes(batchInfo->nChildren, batchInfo->children);
-
             if (model->isTarget(batchInfo->children[0].state))
             {
-                // printf("Before Reduce (%d)\n", batchInfo->nChildren);
-                // printNodes(batchInfo->nChildren, batchInfo->children);
-
                 keepOnlyBestChild<Model,Node>(batchInfo);
-
-                // printf("After Reduce (%d)\n", batchInfo->nChildren);
-                // printNodes(batchInfo->nChildren, batchInfo->children);
             }
             else
             {
-                filterChildren<Model,Node>(batchInfo,false);
+                filterChildren<Model,Node>(batchInfo,true);
                 if (batchInfo->nChildren > width)
                 {
-                    if (not batchInfo->cutsetSaved)
-                    {
-                        saveCutset<Model,Node>(batchInfo);
-                        calcCutsetLabels<Model,Node>(model,batchInfo,DDRelaxed,pBound,dBound);
-                    }
+                    calcMergePartition<Model,Node>(width,batchInfo);
+                    saveCutset<Model,Node>(width,batchInfo);
                     mergeChildren<Model,Node>(width,batchInfo);
                 }
                 calcChildrenLabels<Model,Node>(model,batchInfo,DDRelaxed,pBound,dBound);

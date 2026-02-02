@@ -191,7 +191,6 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
         i32 const currentExactLayerIdx = dive ?
             exactLayers.calcDeepestNotEmpty() :
             exactLayers.calcDeepestMostPromising();
-        i32 cutsetLayerIdx = -1;
 
         // Fragment
         auto & currentExactLayer = exactLayers.getLayer(currentExactLayerIdx);
@@ -234,19 +233,13 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
             }
             BatchEngine<Node>::initBatchSwappable(batchInfo,gAllocator,currentBatch,exactLayers.getLabelsInfo(currentExactLayerIdx), width);
 
-            i64 currentLayerIdx = currentExactLayerIdx;
             while (true)
             {
-                currentLayerIdx += 1;
                 BatchEngine<Node>::processBatchRelaxed(model,pBound,dBound,width,batchInfo);
                 if (batchInfo->nChildren > 0)
                 {
                     if (not model->isTarget(batchInfo->children[0].state))
                     {
-                        if (cutsetLayerIdx < 0 and batchInfo->cutsetSaved)
-                        {
-                            cutsetLayerIdx = currentLayerIdx;
-                        }
                         batchInfo->swapParentsAndChildren();
                     }
                     else
@@ -265,35 +258,52 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
             {
                 // Update bound and solution
                 Node const & tmpNode = batchInfo->children[0];
-                if (isBetter<Model>(tmpNode.heuristicBound,pBound))
+                if (isBetter<Model>(tmpNode.fValue,pBound))
                 {
-                    if (not tmpNode.isNotExact)
+                    if (not tmpNode.isApproximated)
                     {
-                        pBound = tmpNode.heuristicBound;
+                        assert(tmpNode.gValue == tmpNode.fValue);
+                        pBound = tmpNode.fValue;
                         bestNode = tmpNode;
                         newSolution = true;
                     }
                     else
                     {
-                        if (batchInfo->cutsetSize > 0)
+                        for (i64 i = 0; i < batchInfo->cutsetSize; )
                         {
-                            auto & cutsetExactLayer = exactLayers.getLayer(cutsetLayerIdx);
-                            auto & cutsetExactLabelsInfo =  exactLayers.getLabelsInfo(cutsetLayerIdx);
-                            i64 const cutsetExactLayerOldSize = cutsetExactLayer.size();
-                            cutsetExactLayer.resize(cutsetExactLayerOldSize + batchInfo->cutsetSize);
-                            memcpy(cutsetExactLayer.data() + cutsetExactLayerOldSize,
-                                   batchInfo->cutset,
-                                   sizeof(Node) * batchInfo->cutsetSize);
+                            i64 const pCutsetLayerIdx = batchInfo->cutset[i].nEdgesSrcToNode;
+                            i64 j = i + 1;
+                            for ( ; j < batchInfo->cutsetSize; j += 1)
+                            {
+                                if (batchInfo->cutset[j].nEdgesSrcToNode != pCutsetLayerIdx)
+                                {
+                                    break;
+                                }
+                            }
+                            std::span<Node> const pCutset(batchInfo->cutset + i, j - i);
+                            assert(std::all_of(pCutset.begin(), pCutset.end(), [=](auto const & n) { return n.nEdgesSrcToNode == pCutsetLayerIdx;}));
+                            assert(std::is_sorted(pCutset.begin(), pCutset.end(), Node::cmpByFDec));
 
-                            cutsetExactLabelsInfo.update(batchInfo->labelsInfoCutset);
+                            auto & pCutsetLabelsInfo =  exactLayers.getLabelsInfo(pCutsetLayerIdx);
+                            for (auto const & n : pCutset)
+                            {
+                                pCutsetLabelsInfo.update(n.labels.slc());
+                            }
+
+                            auto & pCutsetLayer = exactLayers.getLayer(pCutsetLayerIdx);
+                            i64 const pCutsetLayerOldSize = pCutsetLayer.size();
+                            pCutsetLayer.resize(pCutsetLayerOldSize + pCutset.size());
+                            memcpy(pCutsetLayer.data() + pCutsetLayerOldSize,
+                                   pCutset.data(),
+                                   sizeof(Node) * pCutset.size());
                             if (sort)
                             {
                                 // Reverse because we work on the tail of the vector
-                                auto cmpByBound = [](Node const & a, Node const & b){return isWorst<Model>(a.heuristicBound,b.heuristicBound);};
-                                assert(std::is_sorted(cutsetExactLayer.data() + cutsetExactLayerOldSize, cutsetExactLayer.data() + cutsetExactLayer.size(), cmpByBound));
-                                std::inplace_merge(cutsetExactLayer.data(), cutsetExactLayer.data() + cutsetExactLayerOldSize, cutsetExactLayer.data() + cutsetExactLayer.size(), cmpByBound);
-                                assert (std::is_sorted(cutsetExactLayer.begin(), cutsetExactLayer.end(), cmpByBound));
+                                std::inplace_merge(pCutsetLayer.data(), pCutsetLayer.data() + pCutsetLayerOldSize, pCutsetLayer.data() + pCutsetLayer.size(), Node::cmpByFDec);
                             }
+
+                            exactLayers.updateBound(pCutsetLayerIdx);
+                            i = j;
                         }
                     }
                 }
@@ -310,7 +320,7 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
         exactLayers.getLayer(currentExactLayerIdx).resize(exactLayers.getLayer(currentExactLayerIdx).size() - fragmentSize);
         if (newSolution)
         {
-            printf("[%7.2fs] SOLUTION     | Cost = %7.2f | Value = ", RuntimeMonitor::elapsedSeconds(start), expandedNodes, bestNode.sumEdgesSrcToNode);
+            printf("[%7.2fs] SOLUTION     | Cost = %7.2f | Value = ", RuntimeMonitor::elapsedSeconds(start), expandedNodes, bestNode.fValue);
             Node::printLabels(bestNode);
             printf("\n");
             fflush(stdout);
@@ -320,10 +330,6 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
         }
 
         exactLayers.updateBound(currentExactLayerIdx);
-        if (cutsetLayerIdx >= 0)
-        {
-            exactLayers.updateBound(cutsetLayerIdx);
-        }
         auto const tmpBound = exactLayers.calcBestBound();
         if (isWorst<Model>(tmpBound,dBound) and isValid<Model>(tmpBound))
         {
@@ -342,7 +348,7 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
     {
         if (pBound != worstValue<Model>())
         {
-            printf("COMPLETED    | Expanded = %10ld | Cost = %7.2f | Value = ", expandedNodes, bestNode.sumEdgesSrcToNode);
+            printf("COMPLETED    | Expanded = %10ld | Cost = %7.2f | Value = ", expandedNodes, bestNode.gValue);
             Node::printLabels(bestNode);
             printf("\n");
         }

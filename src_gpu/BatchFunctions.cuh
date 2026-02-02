@@ -85,7 +85,7 @@ void calcRep(NodeInfo & iInfo, NodeInfo & jInfo, Node const & iNode, Node const 
 
     if (Model::State::equal(iNode.state, jNode.state))
     {
-        if (isBetterEq<Model>(iNode.sumEdgesSrcToNode, jNode.sumEdgesSrcToNode))
+        if (isBetterEq<Model>(iNode.gValue, jNode.gValue))
         {
             jInfo.flag = 1;
         }
@@ -96,11 +96,11 @@ void calcRep(NodeInfo & iInfo, NodeInfo & jInfo, Node const & iNode, Node const 
     }
     if constexpr (Model::has_dom)
     {
-        if (isBetterEq<Model>(iNode.sumEdgesSrcToNode, jNode.sumEdgesSrcToNode) and Model::dom(iNode.state, jNode.state))
+        if (isBetterEq<Model>(iNode.gValue, jNode.gValue) and Model::dom(iNode.state, jNode.state))
         {
             jInfo.flag = 1;
         }
-        else if (isBetterEq<Model>(jNode.sumEdgesSrcToNode, iNode.sumEdgesSrcToNode) and Model::dom(jNode.state, iNode.state))
+        else if (isBetterEq<Model>(jNode.gValue, iNode.gValue) and Model::dom(jNode.state, iNode.state))
         {
             iInfo.flag = 1;
         }
@@ -130,13 +130,13 @@ void calcRep(BatchInfo<Node> * const batchInfo)
 
     for (i64 i = 0; i < bi.nChildren; i += 1)
     {
-        NodeInfo & iInfo = bi.childrenInfo[i];
+        NodeInfo & iInfo = bi.nodesInfo[i];
         assert(0 <= iInfo.idx);
         assert(iInfo.idx < bi.nChildren);
         Node const & iChild = bi.children[iInfo.idx];
         for (i64 j = i + 1; j < bi.nChildren; j += 1)
         {
-            NodeInfo & jInfo = bi.childrenInfo[j];
+            NodeInfo & jInfo = bi.nodesInfo[j];
             assert(0 <= jInfo.idx);
             assert(jInfo.idx < bi.nChildren);
             Node const & jChild = bi.children[jInfo.idx];
@@ -187,7 +187,7 @@ void countFlagged(BatchInfo<Node> * const batchInfo, gfl::u32 const flag)
 
     for (i64 cIdx = 0; cIdx < bi.nChildren; cIdx += 1)
     {
-       bi.nFlagged += bi.childrenInfo[cIdx].flag == flag;
+       bi.nFlagged += bi.nodesInfo[cIdx].flag == flag;
     }
 }
 
@@ -221,14 +221,14 @@ void filterChildren(BatchInfo<Node> * const batchInfo, bool sort)
 
     BatchInfo<Node> & bi = *batchInfo;
 
-    std::sort(bi.childrenInfo,
-              bi.childrenInfo + bi.nChildren,
+    std::sort(bi.nodesInfo,
+              bi.nodesInfo + bi.nChildren,
               NodeInfo::cmpByHash);
 
     calcRep<Model,Node>(batchInfo);
 
-    std::sort(bi.childrenInfo,
-              bi.childrenInfo + bi.nChildren,
+    std::sort(bi.nodesInfo,
+              bi.nodesInfo + bi.nChildren,
               NodeInfo::cmpByFlag);
 
     countFlagged<Node>(batchInfo, 0);
@@ -237,19 +237,17 @@ void filterChildren(BatchInfo<Node> * const batchInfo, bool sort)
     {
         for (i64 i = 0; i < bi.nFlagged; i += 1)
         {
-            NodeInfo & cInfo = bi.childrenInfo[i];
-            cInfo.score = bi.children[cInfo.idx].heuristicBound;
+            NodeInfo & cInfo = bi.nodesInfo[i];
+            cInfo.score = bi.children[cInfo.idx].fValue;
         }
 
-        //printNodesInfo(bi.nFlagged,bi.childrenInfo);
-        std::sort(bi.childrenInfo,
-                  bi.childrenInfo + bi.nFlagged,
+        std::sort(bi.nodesInfo,
+                  bi.nodesInfo + bi.nFlagged,
                   NodeInfo::cmpByScore);
-        //printNodesInfo(bi.nFlagged,bi.childrenInfo);
     }
 
     swapPtr(&bi.children, &bi.tmpChildren);
-    copyNodes<Node>(&bi.nFlagged, bi.children, bi.tmpChildren, bi.childrenInfo);
+    copyNodes<Node>(&bi.nFlagged, bi.children, bi.tmpChildren, bi.nodesInfo);
 
     bi.nChildren = bi.nFlagged;
     bi.nFlagged = 0;
@@ -277,7 +275,7 @@ void calcChildren(
                 if (pNode.labels.contains(label))
                 {
                     Node & cNode = bi.children[bi.nChildren];
-                    NodeInfo & cInfo = bi.childrenInfo[bi.nChildren];
+                    NodeInfo & cInfo = bi.nodesInfo[bi.nChildren];
 
                     // Transition
                     auto cState = model->stf(pNode.state, label);
@@ -285,24 +283,25 @@ void calcChildren(
                     {
                         // Current cost
                         f64 const tCost = model->scf(pNode.state, label);
-                        cNode.sumEdgesSrcToNode = pNode.sumEdgesSrcToNode + tCost;
+                        cNode.gValue = pNode.gValue + tCost;
 
                         // Lower/Upper bound
                         if constexpr (Model::has_local)
                         {
-                            double const h =  model->local(cState.value(), DDCtx);
-                            cNode.heuristicBound = cNode.sumEdgesSrcToNode + h;
+                            double const hValue =  model->local(cState.value(), DDCtx);
+                            cNode.fValue = cNode.gValue + hValue;
                         }
                         else
                         {
-                            cNode.heuristicBound = pNode.heuristicBound;
+                            cNode.fValue = pNode.fValue;
                         }
                         // Conditions to keep the child
-                        if (isBetter<Model>(cNode.heuristicBound,pBound))
+                        if (isBetter<Model>(cNode.fValue,pBound))
                         {
                             // Node
                             cNode.state = cState.value();
-                            cNode.isNotExact = pNode.isNotExact;
+                            cNode.isApproximated = pNode.isApproximated;
+                            cNode.hasAncestorInCutset = pNode.hasAncestorInCutset;
                             memcpy(cNode.labelsSrcToNode, pNode.labelsSrcToNode, sizeof(cNode.labelsSrcToNode));
                             cNode.labelsSrcToNode[pNode.nEdgesSrcToNode] = label;
                             cNode.nEdgesSrcToNode = pNode.nEdgesSrcToNode + 1;
@@ -313,6 +312,7 @@ void calcChildren(
                             else
                                 cInfo.hash = State::hash(cNode.state);
                             cInfo.flag = 0;
+                            cInfo.pIdx = pIdx;
                             cInfo.idx = bi.nChildren;
 
                             bi.nChildren += 1;
@@ -327,6 +327,32 @@ void calcChildren(
 }
 
 template<typename Model, typename Node>
+void calcMergePartition(gfl::i64 const width, BatchInfo<Node> * const batchInfo)
+{
+    using namespace gfl;
+    BatchInfo<Node> & bi = *batchInfo;
+
+    assert(width < bi.nChildren);
+
+    for (i64 i = 0; i < bi.nChildren; i += 1)
+    {
+        NodeInfo & cInfo = bi.nodesInfo[i];
+        cInfo.idx = i;
+        cInfo.score = absDiffWithBest<Model>(bi.children[i].fValue);
+    }
+
+    std::sort(bi.nodesInfo,
+              bi.nodesInfo + bi.nChildren,
+              NodeInfo::cmpByScore);
+
+    bi.nChildrenToCopy = bi.nChildren <= 2 * width ?
+                        2 * width - bi.nChildren :
+                        roundUpDivPosInt<i64>(width, 2);
+    bi.nChildrenToMerge = bi.nChildren - bi.nChildrenToCopy;
+}
+
+
+template<typename Model, typename Node>
 void copyAndMergeSuffix(
         gfl::i64 const width,
         BatchInfo<Node> * const batchInfo)
@@ -337,33 +363,29 @@ void copyAndMergeSuffix(
 
     assert(bi.nChildren > width);
 
-    i64 const nToCopy = bi.nChildren <= 2 * width ? 2 * width - bi.nChildren : roundUpDivPosInt<i64>(width, 2);
-    i64 const nBinds = width - nToCopy;
-    i64 const nToMerge = bi.nChildren - nToCopy;
-    //assert(nToMerge >= 2 * nBinds);
-
+    auto const nBinds = width - bi.nChildrenToCopy;
     swapPtr(&bi.children, &bi.tmpChildren);
-    copyNodes<Node>(&nToCopy, bi.children, bi.tmpChildren, bi.childrenInfo);
+    copyNodes<Node>(&bi.nChildrenToCopy, bi.children, bi.tmpChildren, bi.nodesInfo);
 
-    bi.nChildren = nToCopy;
+    bi.nChildren = bi.nChildrenToCopy;
     for(i32 bIdx = 0; bIdx < nBinds; bIdx += 1)
     {
         i64 bBegin, bEnd;
-        getBeginEnd(bBegin,bEnd, bIdx, nBinds, nToMerge);
-        bBegin += nToCopy;
-        bEnd += nToCopy;
-        NodeInfo const & repInfo = bi.childrenInfo[bBegin];
+        getBeginEnd(bBegin,bEnd, bIdx, nBinds, bi.nChildrenToMerge);
+        bBegin += bi.nChildrenToCopy;
+        bEnd += bi.nChildrenToCopy;
+        NodeInfo const & repInfo = bi.nodesInfo[bBegin];
         Node repNode = bi.tmpChildren[repInfo.idx];
-        repNode.isNotExact = 1;
+        repNode.isApproximated = 1;
         for (i64 i = bBegin+1; i < bEnd; i += 1)
         {
-            NodeInfo const & toMergeInfo = bi.childrenInfo[i];
+            NodeInfo const & toMergeInfo = bi.nodesInfo[i];
             Node const & toMergeNode = bi.tmpChildren[toMergeInfo.idx];
             repNode.state = Model::smf(repNode.state, toMergeNode.state);
-            repNode.sumEdgesSrcToNode = calcBetter<Model>(repNode.sumEdgesSrcToNode, toMergeNode.sumEdgesSrcToNode);
-            repNode.heuristicBound = calcBetter<Model>(repNode.heuristicBound, toMergeNode.heuristicBound);
+            repNode.gValue = calcBetter<Model>(repNode.gValue, toMergeNode.gValue);
+            repNode.fValue = calcBetter<Model>(repNode.fValue, toMergeNode.fValue);
         }
-        bi.children[nToCopy + bIdx] = repNode;
+        bi.children[bi.nChildrenToCopy + bIdx] = repNode;
         bi.nChildren += 1;
     }
 }
@@ -375,37 +397,12 @@ void mergeChildren(gfl::i64 const width, BatchInfo<Node> * const batchInfo)
 
     for (i64 i = 0; i < bi.nChildren; i += 1)
     {
-        NodeInfo & cInfo = bi.childrenInfo[i];
+        NodeInfo & cInfo = bi.nodesInfo[i];
         cInfo.idx = i;
-        cInfo.score = absDiffWithBest<Model>(bi.children[i].heuristicBound);
+        cInfo.score = absDiffWithBest<Model>(bi.children[i].fValue);
     }
 
-    //printNodesInfo(bi.nChildren, bi.childrenInfo);
-
-    // auto cmpByScore = [](NodeInfo const & a, NodeInfo const & b){return a.score < b.score;};
-    // std::sort(bi.childrenInfo,
-    //           bi.childrenInfo + bi.nChildren,
-    //           cmpByScore);
-
-    //printNodesInfo(bi.nChildren, bi.childrenInfo);
-
-    //calcMergeScore<Model,Node>(batchInfo, width);
-
-    //printNodesInfo(bi.nChildren, bi.childrenInfo);
-
-    // std::sort(bi.childrenInfo,
-    //          bi.childrenInfo + bi.nChildren,
-    //          cmpByScore);
-
-    // printNodesInfo(bi.nChildren, bi.childrenInfo);
-    //
-    // printf("Before (%d)\n", bi.nChildren);
-    // printNodes(bi.nChildren, bi.children);
-
     copyAndMergeSuffix<Model,Node>(width,batchInfo);
-
-    // printf("After (%d)\n", bi.nChildren);
-    // printNodes(bi.nChildren, bi.children);
 }
 
 template<typename Model, typename Node>
@@ -420,7 +417,7 @@ void keepOnlyBestChild(BatchInfo<Node> * batchInfo)
     for(i64 cIdx = 1; cIdx < bi.nChildren; cIdx += 1)
     {
         Node const & child = bi.children[cIdx];
-        if (isBetter<Model>(child.sumEdgesSrcToNode,bestChild.sumEdgesSrcToNode))
+        if (isBetter<Model>(child.fValue,bestChild.fValue))
         {
             bestChild = child;
         }
@@ -449,32 +446,44 @@ void calcChildrenLabels(
 
 
 template<typename Model, typename Node>
-void saveCutset(BatchInfo<Node> * const batchInfo)
+void saveCutset(gfl::i64 const width, BatchInfo<Node> * const batchInfo)
 {
     using namespace gfl;
 
     BatchInfo<Node> & bi = *batchInfo;
 
-    for (auto i = 0; i < bi.nChildren; i += 1)
+    //assert(std::is_sorted(bi.parents, bi.parents + bi.nParents, Node::cmpByFDec));
+
+    for (auto i = 0; i < bi.nParents; i += 1)
     {
-        NodeInfo & cInfo = bi.childrenInfo[i];
-        cInfo.idx = i;
-        cInfo.score = bi.children[i].heuristicBound;
+        bi.tmpNodesInfo[i].flag = 0;
     }
 
-    std::sort(
-        bi.childrenInfo,
-        bi.childrenInfo + bi.nChildren,
-        [](NodeInfo const & a, NodeInfo const & b){return isWorst<Model>(a.score,b.score);});
+    for (auto i = 0; i < bi.nChildrenToMerge; i += 1)
+    {
+        auto const cIdx = bi.nChildrenToCopy + i;
+        assert(0 <= cIdx);
+        assert(cIdx < bi.nChildren);
+        if (bi.children[cIdx].hasAncestorInCutset == 0)
+        {
+            bi.children[cIdx].hasAncestorInCutset = 1;
+            auto const pIdx = bi.nodesInfo[cIdx].pIdx;
+            assert(0 <= pIdx);
+            assert(pIdx < bi.nParents);
+            bi.tmpNodesInfo[pIdx].flag = 1;
+        }
+    }
 
-    copyNodes<Node>(&batchInfo->nChildren,batchInfo->cutset,batchInfo->children, batchInfo->childrenInfo);
-
-    batchInfo->cutsetSize = batchInfo->nChildren;
-    batchInfo->cutsetSaved = true;
-
-    auto cmpByBound = [](Node const & a, Node const & b){return isWorst<Model>(a.heuristicBound,b.heuristicBound);};
-    assert(std::is_sorted(batchInfo->cutset,batchInfo->cutset + batchInfo->cutsetSize,cmpByBound));
-    assert(std::all_of(batchInfo->cutset,batchInfo->cutset + batchInfo->cutsetSize, [](Node const & n) { return n.isNotExact == 0; }));
+    for (auto i = 0; i < bi.nParents; i += 1)
+    {
+        if (bi.tmpNodesInfo[i].flag == 1)
+        {
+            bi.cutset[bi.cutsetSize] = bi.parents[i];
+            bi.cutsetSize += 1;
+        }
+        assert(bi.cutsetSize <= width * bi.labelsInfoParents.nLabels);
+    }
+    assert(bi.cutsetSize <= width * bi.labelsInfoParents.nLabels);
 }
 
 template<typename Model, typename Node>
@@ -495,4 +504,3 @@ void calcCutsetLabels(
         bi.labelsInfoCutset.update(node.labels.slc());
     }
 }
-

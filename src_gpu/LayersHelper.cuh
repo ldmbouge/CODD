@@ -129,7 +129,7 @@ struct LayersHelper
         double tBound = worstValue<Model>();
         for (auto const & n : getLayer(lIdx))
         {
-            double const nBound = n.heuristicBound;
+            double const nBound = n.fValue;
             tBound = calcBetter<Model>(tBound,nBound);
         }
         getBound(lIdx) = tBound;
