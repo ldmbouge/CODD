@@ -231,6 +231,7 @@ struct BatchInfo
         nFlagged = 0;
         labelsInfoParents = labelsInfoChildren;
         labelsInfoChildren.reset();
+
     }
 
     BatchInfo() noexcept {reset();}

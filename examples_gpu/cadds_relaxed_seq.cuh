@@ -233,6 +233,7 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
             }
             BatchEngine<Node>::initBatchSwappable(batchInfo,gAllocator,currentBatch,exactLayers.getLabelsInfo(currentExactLayerIdx), width);
 
+            //printf("---\n");
             while (true)
             {
                 BatchEngine<Node>::processBatchRelaxed(model,pBound,dBound,width,batchInfo);
@@ -282,7 +283,8 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
                             }
                             std::span<Node> const pCutset(batchInfo->cutset + i, j - i);
                             assert(std::all_of(pCutset.begin(), pCutset.end(), [=](auto const & n) { return n.nEdgesSrcToNode == pCutsetLayerIdx;}));
-                            assert(std::is_sorted(pCutset.begin(), pCutset.end(), Node::cmpByFDec));
+
+
 
                             auto & pCutsetLabelsInfo =  exactLayers.getLabelsInfo(pCutsetLayerIdx);
                             for (auto const & n : pCutset)
@@ -299,6 +301,7 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
                             if (sort)
                             {
                                 // Reverse because we work on the tail of the vector
+                                std::sort(pCutsetLayer.data() + pCutsetLayerOldSize, pCutsetLayer.data() + pCutsetLayer.size(), Node::cmpByFDec);
                                 std::inplace_merge(pCutsetLayer.data(), pCutsetLayer.data() + pCutsetLayerOldSize, pCutsetLayer.data() + pCutsetLayer.size(), Node::cmpByFDec);
                             }
 

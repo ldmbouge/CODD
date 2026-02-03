@@ -120,7 +120,7 @@ struct BatchEngine
             }
             else
             {
-                filterChildren<Model,Node>(batchInfo,true);
+                filterChildren<Model,Node>(batchInfo,false);
                 if (batchInfo->nChildren > width)
                 {
                     calcMergePartition<Model,Node>(width,batchInfo);

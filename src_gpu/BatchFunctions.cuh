@@ -345,9 +345,7 @@ void calcMergePartition(gfl::i64 const width, BatchInfo<Node> * const batchInfo)
               bi.nodesInfo + bi.nChildren,
               NodeInfo::cmpByScore);
 
-    bi.nChildrenToCopy = bi.nChildren <= 2 * width ?
-                        2 * width - bi.nChildren :
-                        roundUpDivPosInt<i64>(width, 2);
+    bi.nChildrenToCopy = roundUpDivPosInt<i64>(width, 2);
     bi.nChildrenToMerge = bi.nChildren - bi.nChildrenToCopy;
 }
 
@@ -366,6 +364,10 @@ void copyAndMergeSuffix(
     auto const nBinds = width - bi.nChildrenToCopy;
     swapPtr(&bi.children, &bi.tmpChildren);
     copyNodes<Node>(&bi.nChildrenToCopy, bi.children, bi.tmpChildren, bi.nodesInfo);
+    for(i32 i = 0; i < bi.nChildrenToCopy; i += 1)
+    {
+        bi.nodesInfo[i].idx = i;
+    }
 
     bi.nChildren = bi.nChildrenToCopy;
     for(i32 bIdx = 0; bIdx < nBinds; bIdx += 1)
@@ -374,7 +376,8 @@ void copyAndMergeSuffix(
         getBeginEnd(bBegin,bEnd, bIdx, nBinds, bi.nChildrenToMerge);
         bBegin += bi.nChildrenToCopy;
         bEnd += bi.nChildrenToCopy;
-        NodeInfo const & repInfo = bi.nodesInfo[bBegin];
+        NodeInfo & repInfo = bi.nodesInfo[bBegin];
+
         Node repNode = bi.tmpChildren[repInfo.idx];
         repNode.isApproximated = 1;
         for (i64 i = bBegin+1; i < bEnd; i += 1)
@@ -386,6 +389,10 @@ void copyAndMergeSuffix(
             repNode.fValue = calcBetter<Model>(repNode.fValue, toMergeNode.fValue);
         }
         bi.children[bi.nChildrenToCopy + bIdx] = repNode;
+
+        repInfo.idx = bi.nChildrenToCopy + bIdx;
+        bi.nodesInfo[bi.nChildrenToCopy + bIdx] = repInfo;
+
         bi.nChildren += 1;
     }
 }
@@ -395,14 +402,17 @@ void mergeChildren(gfl::i64 const width, BatchInfo<Node> * const batchInfo)
     using namespace gfl;
     BatchInfo<Node> & bi = *batchInfo;
 
+    copyAndMergeSuffix<Model,Node>(width,batchInfo);
+
     for (i64 i = 0; i < bi.nChildren; i += 1)
     {
         NodeInfo & cInfo = bi.nodesInfo[i];
-        cInfo.idx = i;
-        cInfo.score = absDiffWithBest<Model>(bi.children[i].fValue);
+        auto const & cIdx = cInfo.idx;
+        assert(0 <= cIdx);
+        assert(cIdx < bi.nChildren);
+        auto & cNode = bi.children[cIdx];
+        cInfo.score = absDiffWithBest<Model>(cNode.fValue);
     }
-
-    copyAndMergeSuffix<Model,Node>(width,batchInfo);
 }
 
 template<typename Model, typename Node>
@@ -453,6 +463,7 @@ void saveCutset(gfl::i64 const width, BatchInfo<Node> * const batchInfo)
     BatchInfo<Node> & bi = *batchInfo;
 
     //assert(std::is_sorted(bi.parents, bi.parents + bi.nParents, Node::cmpByFDec));
+    assert(std::is_sorted(bi.nodesInfo,bi.nodesInfo + bi.nChildren, NodeInfo::cmpByScore));
 
     for (auto i = 0; i < bi.nParents; i += 1)
     {
@@ -461,46 +472,51 @@ void saveCutset(gfl::i64 const width, BatchInfo<Node> * const batchInfo)
 
     for (auto i = 0; i < bi.nChildrenToMerge; i += 1)
     {
-        auto const cIdx = bi.nChildrenToCopy + i;
+        auto const & cInfo = bi.nodesInfo[bi.nChildrenToCopy + i];
+        auto const & cIdx = cInfo.idx;
         assert(0 <= cIdx);
         assert(cIdx < bi.nChildren);
-        if (bi.children[cIdx].hasAncestorInCutset == 0)
+        auto & cNode = bi.children[cIdx];
+        if (cNode.hasAncestorInCutset == 0)
         {
-            bi.children[cIdx].hasAncestorInCutset = 1;
-            auto const pIdx = bi.nodesInfo[cIdx].pIdx;
+            cNode.hasAncestorInCutset = 1;
+            auto const & pIdx = cInfo.pIdx;
             assert(0 <= pIdx);
             assert(pIdx < bi.nParents);
             bi.tmpNodesInfo[pIdx].flag = 1;
         }
     }
 
+    for (auto i = 0; i < bi.nChildrenToCopy; i += 1)
+    {
+        auto const & cInfo = bi.nodesInfo[i];
+        auto const & cIdx = cInfo.idx;
+        assert(0 <= cIdx);
+        assert(cIdx < bi.nChildren);
+        auto & cNode = bi.children[cIdx];
+        auto const & pIdx = cInfo.pIdx;
+        assert(0 <= pIdx);
+        assert(pIdx < bi.nParents);
+        if (bi.tmpNodesInfo[pIdx].flag == 1)
+        {
+            cNode.hasAncestorInCutset = 1;
+        }
+    }
+
+    i64 nSavedNodes = 0;
     for (auto i = 0; i < bi.nParents; i += 1)
     {
         if (bi.tmpNodesInfo[i].flag == 1)
         {
             bi.cutset[bi.cutsetSize] = bi.parents[i];
             bi.cutsetSize += 1;
+            nSavedNodes += 1;
         }
         assert(bi.cutsetSize <= width * bi.labelsInfoParents.nLabels);
     }
     assert(bi.cutsetSize <= width * bi.labelsInfoParents.nLabels);
-}
-
-template<typename Model, typename Node>
-void calcCutsetLabels(
-        Model const * const model,
-        BatchInfo<Node> * const batchInfo,
-        DDContext const ddCtx,
-        gfl::f64 pBound,
-        gfl::f64 dBound)
-{
-    using namespace gfl;
-    BatchInfo<Node> & bi = *batchInfo;
-
-    for (i64 nIdx = 0; nIdx < bi.cutsetSize; nIdx += 1)
+    if (nSavedNodes > 0)
     {
-        auto & node = bi.cutset[nIdx];
-        node.labels = model->lgf(node.state, ddCtx, pBound, dBound);
-        bi.labelsInfoCutset.update(node.labels.slc());
+        //printf("Saved %d nodes of layer %d in cutset\n", nSavedNodes, bi.cutset[bi.cutsetSize-1].nEdgesSrcToNode);
     }
 }
