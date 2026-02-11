@@ -187,7 +187,7 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
         }
         newSolution = false;
 
-        bool const dive = iteration % 10 < 1;
+        bool const dive = false; //iteration % 10 < 1;
         i32 const currentExactLayerIdx = dive ?
             exactLayers.calcDeepestNotEmpty() :
             exactLayers.calcDeepestMostPromising();
@@ -233,7 +233,7 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
             }
             BatchEngine<Node>::initBatchSwappable(batchInfo,gAllocator,currentBatch,exactLayers.getLabelsInfo(currentExactLayerIdx), width);
 
-            //printf("---\n");
+            printf("---\n");
             while (true)
             {
                 BatchEngine<Node>::processBatchRelaxed(model,pBound,dBound,width,batchInfo);
@@ -283,8 +283,6 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
                             }
                             std::span<Node> const pCutset(batchInfo->cutset + i, j - i);
                             assert(std::all_of(pCutset.begin(), pCutset.end(), [=](auto const & n) { return n.nEdgesSrcToNode == pCutsetLayerIdx;}));
-
-
 
                             auto & pCutsetLabelsInfo =  exactLayers.getLabelsInfo(pCutsetLayerIdx);
                             for (auto const & n : pCutset)

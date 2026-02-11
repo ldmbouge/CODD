@@ -345,7 +345,7 @@ void calcMergePartition(gfl::i64 const width, BatchInfo<Node> * const batchInfo)
               bi.nodesInfo + bi.nChildren,
               NodeInfo::cmpByScore);
 
-    bi.nChildrenToCopy = roundUpDivPosInt<i64>(width, 2);
+    bi.nChildrenToCopy = roundUpDivPosInt<i64>( 3 * width, 4);
     bi.nChildrenToMerge = bi.nChildren - bi.nChildrenToCopy;
 }
 
@@ -511,12 +511,14 @@ void saveCutset(gfl::i64 const width, BatchInfo<Node> * const batchInfo)
             bi.cutset[bi.cutsetSize] = bi.parents[i];
             bi.cutsetSize += 1;
             nSavedNodes += 1;
+
+
         }
-        assert(bi.cutsetSize <= width * bi.labelsInfoParents.nLabels);
+        assert(bi.cutsetSize <= width * width);
     }
-    assert(bi.cutsetSize <= width * bi.labelsInfoParents.nLabels);
+    assert(bi.cutsetSize <= width * width);
     if (nSavedNodes > 0)
     {
-        //printf("Saved %d nodes of layer %d in cutset\n", nSavedNodes, bi.cutset[bi.cutsetSize-1].nEdgesSrcToNode);
+        printf("Saved %d nodes of layer %d in cutset\n", nSavedNodes, bi.cutset[bi.cutsetSize-1].nEdgesSrcToNode);
     }
 }

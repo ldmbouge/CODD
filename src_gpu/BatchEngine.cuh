@@ -72,7 +72,7 @@ struct BatchEngine
         batchInfo->initParents(nParents, bufferSize, allocator);
         memcpy(batchInfo->parents,parents.data(), sizeof(Node) * nParents);
         batchInfo->labelsInfoParents = labelsInfo;
-        batchInfo->initCutset(bufferSize, allocator);
+        batchInfo->initCutset(maxWidth*maxWidth, allocator);
         batchInfo->initChildren(bufferSize, allocator);
     }
 
