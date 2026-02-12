@@ -251,8 +251,8 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
             while (true)
             {
                 BatchEngine<Node>::processBatchRelaxed(model,pBound,dBound,width,batchInfo);
-                printf("P = %ld | C = %ld\n", batchInfo->nParents, batchInfo->nChildren);
-                fflush(stdout);
+                // printf("P = %ld | C = %ld\n", batchInfo->nParents, batchInfo->nChildren);
+                // fflush(stdout);
                 if (batchInfo->nChildren > 0)
                 {
                     if (not model->isTarget(batchInfo->children[0].state))
@@ -291,10 +291,10 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
                         {
                             batchInfo->cutset[k].fValue = calcWorst<Model>(batchInfo->cutset[k].fValue, tmpNode.fValue);
                             Node::print(batchInfo->cutset[k]);
-                            fflush(stdout);
+                             fflush(stdout);
                         }
-                        printf("---\n");
-                        fflush(stdout);
+                        // printf("---\n");
+                        // fflush(stdout);
                         // bool childrenFound = false;
                         // for (i64 k = 0; k < batchInfo->cutsetSize;  k+= 1)
                         // {
@@ -345,18 +345,18 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
                 }
                 else
                 {
-                    if (currentBatch[0].isAncestorOf(opt))
-                    {
-                        printf("Ancestor of OPT pruned because bounds!\n");
-                    }
+                    // if (currentBatch[0].isAncestorOf(opt))
+                    // {
+                    //     printf("Ancestor of OPT pruned because bounds!\n");
+                    // }
                 }
             }
             else
             {
-                 if (currentBatch[0].isAncestorOf(opt))
-                 {
-                     printf("Ancestor of OPT pruned because no children!\n");
-                 }
+                 // if (currentBatch[0].isAncestorOf(opt))
+                 // {
+                 //     printf("Ancestor of OPT pruned because no children!\n");
+                 // }
                    //printf("           Discarded %ld nodes\n", currentBatchSize);
             }
         }

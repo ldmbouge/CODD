@@ -44,10 +44,11 @@ struct alignas(16) LightNode
         printf("\n");
     }
 
-    GFL_HOST_DEVICE static
+    GFL_HOST static
     void printMeta(LightNode const & node)
     {
         using namespace gfl;
+        std::cout << node.state << " | ";
         printf("F: %.1f | ", node.fValue);
         printf("G: %.1f | ", node.gValue);
         printf("EXT: %d | ", 1 - node.isApproximated);
@@ -201,7 +202,8 @@ struct BatchInfo
     gfl::i64 cutsetSize;
     Node * cutset;
 
-    gfl::i64 nChildrenToCopy;
+    gfl::i64 nChildrenToCopyPrefix;
+    gfl::i64 nChildrenToCopySuffix;
     gfl::i64 nChildrenToMerge;
 
     std::size_t auxTmpMemSize;

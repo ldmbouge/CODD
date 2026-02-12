@@ -205,12 +205,12 @@ void copyNodes(gfl::i64 const * const nNodes, Node * const dst,  Node const * co
     }
 }
 
-template<typename Node>
-void copyNodes(gfl::i64 const * const nNodes, Node * const dst,  Node const * const src)
+template<typename T>
+void copyItems(gfl::i64 const * const nItems, T * const dst,  T const * const src)
 {
     using namespace gfl;
 
-    for (i64 i = 0; i < *nNodes; i += 1)
+    for (i64 i = 0; i < *nItems; i += 1)
     {
         dst[i] = src[i];
     }
@@ -389,83 +389,49 @@ void calcMergePartition(gfl::i64 const width, BatchInfo<Node> * const batchInfo)
     BatchInfo<Node> & bi = *batchInfo;
 
     assert(width < bi.nChildren);
-
-    double avgFValue = 0.0;
-    for (i64 i = 0; i < bi.nChildren; i += 1)
-    {
-        avgFValue += bi.children[i].fValue;
-    }
-    avgFValue /= bi.nChildren;
-
     for (i64 i = 0; i < bi.nChildren; i += 1)
     {
         NodeInfo & iInfo = bi.nodesInfo[i];
         iInfo.idx = i;
-        Node & iNode = bi.children[i];
-        double simScore = 0;
-        double fRank = 1;
-        for (i64 j = 0; j < bi.nChildren; j += 1)
-        {
-            if (i != j)
-            {
-                Node & jNode = bi.children[j];
-                simScore += Model::ssf(iNode.state, jNode.state);
-                fRank += isWorstEq<Model>(iNode.fValue,jNode.fValue);
-            }
-        }
-
-        simScore /= bi.nChildren - 1;
-        assert(0 <= simScore);
-        assert(simScore <= 1.0);
-
-        fRank /= bi.nChildren + 1;
-        assert(0 <= fRank);
-        assert(fRank <= 1.0);
-
-        iInfo.score = simScore;// + (1.0 - abs(0.5 - fRank));
+        Node const & iNode = bi.children[i];
+        iInfo.score = fValueToScore<Model>(iNode.fValue);
     }
 
-    printf("SCORES =");
-    for (i32 i = 0; i < bi.nChildren; i += 1)
-    {
-        if( i == bi.nChildrenToCopy-1) printf(" |");
-        printf(" %.2f", bi.nodesInfo[i].score);
-    }
-    printf("\n");
-    fflush(stdout);
+    // printf("SCORES =");
+    // for (i32 i = 0; i < bi.nChildren; i += 1)
+    // {
+    //     if( i == bi.nChildrenToCopy-1) printf(" |");
+    //     printf(" %.2f", bi.nodesInfo[i].score);
+    // }
+    // printf("\n");
+    // fflush(stdout);
 
     std::sort(bi.nodesInfo,
               bi.nodesInfo + bi.nChildren,
               NodeInfo::cmpByScore);
 
-    printf("SSCORES =");
-    for (i32 i = 0; i < bi.nChildren; i += 1)
-    {
-        if( i == bi.nChildrenToCopy-1) printf(" |");
-        printf(" %.2f", bi.nodesInfo[i].score);
-    }
-    printf("\n");
-    fflush(stdout);
-
-    printf("DONE   =");
-    for (i32 i = 0; i < bi.nChildren; i += 1)
-    {
-        if( i == bi.nChildrenToCopy-1) printf(" |");
-        printf(" %.2f", bi.children[i].state.sel.empty());
-    }
-    printf("\n");
-    fflush(stdout);
+    // printf("SSCORES =");
+    // for (i32 i = 0; i < bi.nChildren; i += 1)
+    // {
+    //     if( i == bi.nChildrenToCopy-1) printf(" |");
+    //     printf(" %.2f", bi.nodesInfo[i].score);
+    // }
+    // printf("\n");
+    // fflush(stdout);
 
 
 
-    bi.nChildrenToCopy = gfl::min<i64>(bi.nChildren, roundUpDivPosInt<i64>( width, 2));
-    bi.nChildrenToMerge = bi.nChildren - bi.nChildrenToCopy;
-    assert(bi.nChildrenToCopy + bi.nChildrenToMerge == bi.nChildren);
+    bi.nChildrenToCopyPrefix = (width - 1) / 2;
+    bi.nChildrenToCopySuffix = (width - 1) / 2;
+    bi.nChildrenToMerge = bi.nChildren - bi.nChildrenToCopyPrefix -  bi.nChildrenToCopySuffix;
+    assert(bi.nChildrenToCopyPrefix + bi.nChildrenToCopySuffix < width);
+    assert(bi.nChildrenToMerge > 0);
+    assert(bi.nChildren == bi.nChildrenToCopyPrefix + bi.nChildrenToCopySuffix + bi.nChildrenToMerge);
 }
 
 
 template<typename Model, typename Node>
-void copyAndMergeSuffix(
+void copyAndMerge(
         gfl::i64 const width,
         BatchInfo<Node> * const batchInfo)
 {
@@ -473,57 +439,71 @@ void copyAndMergeSuffix(
 
     BatchInfo<Node> & bi = *batchInfo;
 
-    assert(bi.nChildren > width);
-    printf("BFVALUES =");
-    for (i32 i = 0; i < bi.nChildren; i += 1)
-    {
-        if( i == bi.nChildrenToCopy-1) printf(" |");
-        printf(" %.2f", bi.children[bi.nodesInfo[i].idx].fValue);
-    }
-    printf("\n");
+    // assert(bi.nChildren > width);
+    // printf("BFVALUES =");
+    // for (i32 i = 0; i < bi.nChildren; i += 1)
+    // {
+    //     if( i == bi.nChildrenToCopy-1) printf(" |");
+    //     printf(" %.2f", bi.children[bi.nodesInfo[i].idx].fValue);
+    // }
+    // printf("\n");
 
-    auto const nBinds = width - bi.nChildrenToCopy;
+    // Copy
     swapPtr(&bi.children, &bi.tmpChildren);
-    copyNodes<Node>(&bi.nChildrenToCopy, bi.children, bi.tmpChildren, bi.nodesInfo);
-    for (i32 i = 0; i < bi.nChildrenToCopy; i += 1)
-    {
-        bi.nodesInfo[i].idx = i;
-    }
+    swapPtr(&bi.nodesInfo, &bi.tmpNodesInfo);
+    copyNodes<Node>(&bi.nChildrenToCopyPrefix,
+                    bi.children,
+                    bi.tmpChildren,
+                    bi.tmpNodesInfo);
+    copyItems(&bi.nChildrenToCopyPrefix,
+                    bi.nodesInfo,
+                    bi.tmpNodesInfo);
+    copyNodes<Node>(&bi.nChildrenToCopySuffix,
+                    bi.children + bi.nChildrenToCopyPrefix,
+                    bi.tmpChildren,
+                    bi.tmpNodesInfo + bi.nChildren - bi.nChildrenToCopySuffix);
+    copyItems(&bi.nChildrenToCopySuffix,
+                    bi.nodesInfo + bi.nChildrenToCopyPrefix,
+                    bi.tmpNodesInfo+ bi.nChildren - bi.nChildrenToCopySuffix);
+    bi.nChildren = bi.nChildrenToCopyPrefix + bi.nChildrenToCopySuffix;
 
-    bi.nChildren = bi.nChildrenToCopy;
-    for(i32 bIdx = 0; bIdx < nBinds; bIdx += 1)
+    i32 const nBins = width - bi.nChildren;
+    for(i32 bIdx = 0; bIdx < nBins; bIdx += 1)
     {
         i64 bBegin, bEnd;
-        getBeginEnd(bBegin,bEnd, bIdx, nBinds, bi.nChildrenToMerge);
-        bBegin += bi.nChildrenToCopy;
-        bEnd += bi.nChildrenToCopy;
+        getBeginEnd(bBegin,bEnd, bIdx, nBins, bi.nChildrenToMerge);
+        bBegin += bi.nChildrenToCopyPrefix;
+        bEnd += bi.nChildrenToCopyPrefix;
 
-        NodeInfo & repInfo = bi.nodesInfo[bBegin];
+        NodeInfo & repInfo = bi.tmpNodesInfo[bBegin];
         Node repNode = bi.tmpChildren[repInfo.idx];
         repNode.isApproximated = 1;
         for (i64 i = bBegin+1; i < bEnd; i += 1)
         {
-            NodeInfo const & toMergeInfo = bi.nodesInfo[i];
+            NodeInfo const & toMergeInfo = bi.tmpNodesInfo[i];
             Node const & toMergeNode = bi.tmpChildren[toMergeInfo.idx];
             repNode.state = Model::smf(repNode.state, toMergeNode.state);
             repNode.gValue = calcBetter<Model>(repNode.gValue, toMergeNode.gValue);
             repNode.fValue = calcBetter<Model>(repNode.fValue, toMergeNode.fValue);
         }
-        bi.children[bi.nChildrenToCopy + bIdx] = repNode;
-
-        repInfo.idx = bi.nChildrenToCopy + bIdx;
-        bi.nodesInfo[bi.nChildrenToCopy + bIdx] = repInfo;
-
+        bi.children[bi.nChildren] = repNode;
+        bi.nodesInfo[bi.nChildren] = repInfo;
         bi.nChildren += 1;
     }
 
-    printf("AFVALUES =");
+    // Fix nodes info
     for (i32 i = 0; i < bi.nChildren; i += 1)
     {
-        if( i == bi.nChildrenToCopy-1) printf(" |");
-        printf(" %.2f", bi.children[bi.nodesInfo[i].idx].fValue);
+        bi.nodesInfo[i].idx = i;
     }
-    printf("\n");
+
+    // printf("AFVALUES =");
+    // for (i32 i = 0; i < bi.nChildren; i += 1)
+    // {
+    //     if( i == bi.nChildrenToCopy-1) printf(" |");
+    //     printf(" %.2f", bi.children[bi.nodesInfo[i].idx].fValue);
+    // }
+    // printf("\n");
 }
 template<typename Model, typename Node>
 void mergeChildren(gfl::i64 const width, BatchInfo<Node> * const batchInfo)
@@ -531,7 +511,7 @@ void mergeChildren(gfl::i64 const width, BatchInfo<Node> * const batchInfo)
     using namespace gfl;
     BatchInfo<Node> & bi = *batchInfo;
 
-    copyAndMergeSuffix<Model,Node>(width,batchInfo);
+    copyAndMerge<Model,Node>(width,batchInfo);
 }
 
 template<typename Model, typename Node>
@@ -591,7 +571,7 @@ void saveCutset(gfl::i64 const width, BatchInfo<Node> * const batchInfo)
 
     for (auto i = 0; i < bi.nChildrenToMerge; i += 1)
     {
-        auto const & cInfo = bi.nodesInfo[bi.nChildrenToCopy + i];
+        auto const & cInfo = bi.nodesInfo[bi.nChildrenToCopyPrefix + i];
         auto const & cIdx = cInfo.idx;
         assert(0 <= cIdx);
         assert(cIdx < bi.nChildren);
@@ -606,9 +586,24 @@ void saveCutset(gfl::i64 const width, BatchInfo<Node> * const batchInfo)
         }
     }
 
-    for (auto i = 0; i < bi.nChildrenToCopy; i += 1)
+    for (auto i = 0; i < bi.nChildrenToCopyPrefix; i += 1)
     {
         auto const & cInfo = bi.nodesInfo[i];
+        auto const & cIdx = cInfo.idx;
+        assert(0 <= cIdx);
+        assert(cIdx < bi.nChildren);
+        auto & cNode = bi.children[cIdx];
+        auto const & pIdx = cInfo.pIdx;
+        assert(0 <= pIdx);
+        assert(pIdx < bi.nParents);
+        if (bi.tmpNodesInfo[pIdx].flag == 1)
+        {
+            cNode.hasAncestorInCutset = 1;
+        }
+    }
+    for (auto i = 0; i < bi.nChildrenToCopySuffix; i += 1)
+    {
+        auto const & cInfo = bi.nodesInfo[bi.nChildren - 1 - i];
         auto const & cIdx = cInfo.idx;
         assert(0 <= cIdx);
         assert(cIdx < bi.nChildren);
