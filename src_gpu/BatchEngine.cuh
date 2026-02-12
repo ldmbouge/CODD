@@ -171,9 +171,9 @@ struct BatchEngine
 #endif
                 if (batchInfo->nChildren > width)
                 {
-                    calcMergePartition<Model,Node>(width,batchInfo);
-                    saveCutset<Model,Node>(width,batchInfo);
+
                     mergeChildren<Model,Node>(width,batchInfo);
+                    //saveCutset<Model,Node>(width,batchInfo);
 #ifdef G_DEBUG
                     if(ancFound)
                     {

@@ -250,6 +250,10 @@ void filterChildren(BatchInfo<Node> * const batchInfo, bool sort)
 
     swapPtr(&bi.children, &bi.tmpChildren);
     copyNodes<Node>(&bi.nFlagged, bi.children, bi.tmpChildren, bi.nodesInfo);
+    for (i32 i = 0; i < bi.nFlagged; i += 1)
+    {
+        bi.nodesInfo[i].idx = i;
+    }
 
     bi.nChildren = bi.nFlagged;
     bi.nFlagged = 0;
@@ -511,7 +515,115 @@ void mergeChildren(gfl::i64 const width, BatchInfo<Node> * const batchInfo)
     using namespace gfl;
     BatchInfo<Node> & bi = *batchInfo;
 
-    copyAndMerge<Model,Node>(width,batchInfo);
+    assert(bi.nChildren > width);
+
+    // Sort by fValue
+    for (i64 i = 0; i < bi.nChildren; i += 1)
+    {
+        NodeInfo & iInfo = bi.nodesInfo[i];
+        i64 const iIdx = iInfo.idx;
+        assert(0 <= iIdx);
+        assert(iIdx <  bi.nChildren);
+        Node const & iNode = bi.children[iIdx];
+        iInfo.score = fValueToScore<Model>(iNode.fValue);
+    }
+    std::sort(bi.nodesInfo,
+              bi.nodesInfo + bi.nChildren,
+              NodeInfo::cmpByScore);
+
+    // Parents to back up
+    for (auto i = 0; i < bi.nParents; i += 1)
+    {
+        bi.tmpNodesInfo[i].flag = 0;
+    }
+
+    i64 mergedSuffixSize = 0;
+    while(bi.nChildren - mergedSuffixSize > width)
+    {
+        // Pick last node
+        i64 const toMergeInfoIdx = bi.nChildren-1-mergedSuffixSize;
+        NodeInfo const & toMergeInfo = bi.nodesInfo[toMergeInfoIdx];
+        i64 const toMergeNodeIdx = toMergeInfo.idx;
+        assert(0 <= toMergeNodeIdx);
+        assert(toMergeNodeIdx < bi.nChildren);
+        Node const & toMergeNode = bi.children[toMergeNodeIdx];
+
+        // Find better candidate
+        i64 bestCandidateInfoIdx = -1;
+        double bestCandidateScore = 0.0;
+        for (i64 candidateInfoIdx = 0; candidateInfoIdx < toMergeInfoIdx; candidateInfoIdx += 1)
+        {
+            NodeInfo const & candidateInfo = bi.nodesInfo[candidateInfoIdx];
+            i64 const & candidateNodeIdx = candidateInfo.idx;
+            assert(0 <= candidateNodeIdx);
+            assert(candidateNodeIdx < bi.nChildren);
+            Node const & candidateNode = bi.children[candidateNodeIdx];
+            double const simScore = Model::ssf(toMergeNode.state, candidateNode.state);
+            if(bestCandidateScore < simScore)
+            {
+                bestCandidateScore = simScore;
+                bestCandidateInfoIdx = candidateInfoIdx;
+            }
+        }
+
+        // Merge nodes
+        assert(bestCandidateInfoIdx >= 0);
+        assert(bestCandidateInfoIdx < bi.nChildren);
+        NodeInfo const & bestInfo = bi.nodesInfo[bestCandidateInfoIdx];
+        i64 const bestNodeIdx = bestInfo.idx;
+        assert(0 <= bestNodeIdx);
+        assert(bestNodeIdx < bi.nChildren);
+        Node & bestNode = bi.children[bestNodeIdx];
+
+        bestNode.state = Model::smf(bestNode.state, toMergeNode.state);
+        bestNode.gValue = calcBetter<Model>(bestNode.gValue, toMergeNode.gValue);
+        bestNode.fValue = calcBetter<Model>(bestNode.fValue, toMergeNode.fValue);
+
+        bestNode.isApproximated = 1;
+        bi.tmpNodesInfo[bestInfo.pIdx].flag = 1;
+        bi.tmpNodesInfo[toMergeInfo.pIdx].flag = 1;
+        mergedSuffixSize += 1;
+    }
+
+    // Sort the nodes
+    bi.nChildren -= mergedSuffixSize;
+    swapPtr(&bi.children, &bi.tmpChildren);
+    copyNodes<Node>(&bi.nChildren, bi.children, bi.tmpChildren, bi.nodesInfo);
+    for (i32 i = 0; i < bi.nChildren; i += 1)
+    {
+        bi.nodesInfo[i].idx = i;
+    }
+
+    // Save cutset
+    for (auto i = 0; i < bi.nChildren; i += 1)
+    {
+        NodeInfo const & nodeInfo = bi.nodesInfo[i];
+        i64 const & nodeIdx = nodeInfo.idx;
+        assert(0 <= nodeIdx);
+        assert(nodeIdx < bi.nChildren);
+        auto & node = bi.children[nodeIdx];
+        if (bi.tmpNodesInfo[nodeInfo.pIdx].flag == 1)
+        {
+            node.hasAncestorInCutset = 1;
+        }
+    }
+
+    i64 nSavedNodes = 0;
+    for (auto i = 0; i < bi.nParents; i += 1)
+    {
+        if (bi.tmpNodesInfo[i].flag == 1)
+        {
+            bi.cutset[bi.cutsetSize] = bi.parents[i];
+            bi.cutsetSize += 1;
+            nSavedNodes += 1;
+        }
+        assert(bi.cutsetSize <= width * width);
+    }
+    assert(bi.cutsetSize <= width * width);
+    if (nSavedNodes > 0)
+    {
+        //printf("Saved %d nodes of layer %d in cutset\n", nSavedNodes, bi.cutset[bi.cutsetSize-1].nEdgesSrcToNode);
+    }
 }
 
 template<typename Model, typename Node>
