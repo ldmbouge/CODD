@@ -97,7 +97,7 @@ struct Misp : MispBase<N>
     State smf(State const & s1, State const & s2) noexcept
     {
         assert(s1.n == s2.n);
-        return State{s1.sel | s2.sel,min(s1.n,s2.n)};
+        return State{s1.sel | s2.sel,s1.n};
     }
     // State similarity function
     GFL_HOST_DEVICE

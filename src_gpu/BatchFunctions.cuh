@@ -559,7 +559,7 @@ void mergeChildren(gfl::i64 const width, BatchInfo<Node> * const batchInfo)
             assert(candidateNodeIdx < bi.nChildren);
             Node const & candidateNode = bi.children[candidateNodeIdx];
             double const simScore = Model::ssf(toMergeNode.state, candidateNode.state);
-            if(bestCandidateScore < simScore)
+            if (bestCandidateScore <= simScore) // We use <= to tie-break with fValue
             {
                 bestCandidateScore = simScore;
                 bestCandidateInfoIdx = candidateInfoIdx;
@@ -580,8 +580,8 @@ void mergeChildren(gfl::i64 const width, BatchInfo<Node> * const batchInfo)
         bestNode.fValue = calcBetter<Model>(bestNode.fValue, toMergeNode.fValue);
 
         bestNode.isApproximated = 1;
-        bi.tmpNodesInfo[bestInfo.pIdx].flag = 1;
-        bi.tmpNodesInfo[toMergeInfo.pIdx].flag = 1;
+        if (not bestNode.hasAncestorInCutset) bi.tmpNodesInfo[bestInfo.pIdx].flag = 1;
+        if (not toMergeNode.hasAncestorInCutset) bi.tmpNodesInfo[toMergeInfo.pIdx].flag = 1;
         mergedSuffixSize += 1;
     }
 

@@ -404,8 +404,7 @@ public:
            intersectionSize += popcount(_t[wIdx] & ps._t[wIdx]);
            unionSize += popcount(_t[wIdx] | ps._t[wIdx]);
        }
-       return static_cast<float>(intersectionSize) /
-              static_cast<float>(unionSize);
+       return static_cast<float>(intersectionSize) / static_cast<float>(unionSize);
    }
    GFL_HOST_DEVICE
    void insert(int p) noexcept         { _t[p >> 6] |= (1ull << (p & 63));}

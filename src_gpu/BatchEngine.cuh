@@ -141,7 +141,6 @@ struct BatchEngine
         };
 #endif
 
-
         calcChildren<Model,Node>(model,pBound,batchInfo);
 
 #ifdef G_DEBUG
