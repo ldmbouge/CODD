@@ -345,7 +345,7 @@ public:
    int size() const noexcept {
       int ttl = 0;
       for(short i=0;i < nbw;++i)
-         ttl += gfl::popcount(_t[i]);
+         ttl += __builtin_popcountll(_t[i]);
       return ttl;
    }
    GFL_HOST_DEVICE

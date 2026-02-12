@@ -21,10 +21,10 @@ struct alignas(16) LightNode
     LightNode() noexcept {};
 
     GFL_HOST_DEVICE
-    LightNode(State const & s, Labels const & l, gfl::f64 const hBound) noexcept :
+    LightNode(State const & s, Labels const & l, gfl::f64 const fValue) noexcept :
             state(s),
             labels(l),
-            fValue(hBound),
+            fValue(fValue),
             isApproximated(0),
             hasAncestorInCutset(0),
             gValue(0),
@@ -35,7 +35,17 @@ struct alignas(16) LightNode
     void reset() noexcept {memset(this,0,sizeof(LightNode));}
 
     GFL_HOST_DEVICE static
-    void print(LightNode const & node)
+   void print(LightNode const & node)
+    {
+        using namespace gfl;
+        printMeta(node);
+        printf(" | LBS: ");
+        printLabels(node);
+        printf("\n");
+    }
+
+    GFL_HOST_DEVICE static
+    void printMeta(LightNode const & node)
     {
         using namespace gfl;
         printf("F: %.1f | ", node.fValue);
@@ -52,18 +62,25 @@ struct alignas(16) LightNode
         Array<i16>::print(node.labelsSrcToNode, node.labelsSrcToNode + node.nEdgesSrcToNode);
     }
 
+    template<typename Cmp>
     GFL_HOST_DEVICE
-   constexpr
-   static bool cmpByF(LightNode const & n1, LightNode const & n2)
+    constexpr
+    static bool cmpByF(LightNode const & n1, LightNode const & n2)
     {
-        return n1.fValue < n2.fValue;
+        return Cmp(n1.fValue,n2.fValue);
     }
 
     GFL_HOST_DEVICE
     constexpr
-    static bool cmpByFDec(LightNode const & n1, LightNode const & n2)
+    bool isAncestorOf(std::vector<int> const & sol) const
     {
-        return n1.fValue > n2.fValue;
+        bool isAncestor = true;
+        int const l = gfl::min<int>(nEdgesSrcToNode, sol.size());
+        for (int i = 0; i < l and isAncestor; i += 1)
+        {
+            isAncestor = isAncestor and sol[i] == labelsSrcToNode[i];
+        }
+        return isAncestor;
     }
 };
 
@@ -111,13 +128,6 @@ struct NodeInfo
     static bool cmpByScore(NodeInfo const & n1, NodeInfo const & n2)
     {
         return n1.score < n2.score;
-    }
-
-    GFL_HOST_DEVICE
-    constexpr
-    static bool cmpByScoreDec(NodeInfo const & n1, NodeInfo const & n2)
-    {
-        return n1.score > n2.score;
     }
 };
 

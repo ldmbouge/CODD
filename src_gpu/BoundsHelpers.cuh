@@ -119,13 +119,15 @@ bool isValid(double const c) noexcept
 }
 
 template<typename Model>
-GFL_HOST_DEVICE
 constexpr
-double absDiffWithBest(double const c) noexcept
+double fValueToScore(double const v) noexcept
 {
-    double const diff = bestValue<Model>() - (bestValue<Model>() - c);
-    return diff >= 0 ? diff : -diff;
+    if constexpr (Model::is_maximization)
+        return -v;
+    else
+        return v;
 }
+
 
 
 

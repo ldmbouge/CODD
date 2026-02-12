@@ -11,6 +11,8 @@
 
 #include "RadixSort.hpp"
 
+#include <Debug.cuh>
+
 template <typename T>
 GFL_HOST_DEVICE
 void swapPtr(T** a, T** b)
@@ -238,7 +240,7 @@ void filterChildren(BatchInfo<Node> * const batchInfo, bool sort)
         for (i64 i = 0; i < bi.nFlagged; i += 1)
         {
             NodeInfo & cInfo = bi.nodesInfo[i];
-            cInfo.score = bi.children[cInfo.idx].fValue;
+            cInfo.score = fValueToScore<Model>(bi.children[cInfo.idx].fValue);
         }
 
         std::sort(bi.nodesInfo,
@@ -265,11 +267,25 @@ void calcChildren(
     BatchInfo<Node> & bi = *batchInfo;
     LabelsInfo const & li = bi.labelsInfoParents;
 
+#ifdef G_DEBUG
+    std::vector<int> const opt = {0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,0};
+
+
+    auto checkParent = [&](Node const & pNode)
+    {
+        if (pNode.isAncestorOf(opt))
+        {
+            printf("Ancestor of OPT found!\n");
+            assert(pNode.fValue >= 17);
+        }
+    };
+#endif
     for (i64 pIdx = 0; pIdx < bi.nParents; pIdx += 1)
     {
+        Node const & pNode = bi.parents[pIdx];
+
         if (li.nLabels > 0)
         {
-            Node const & pNode = bi.parents[pIdx];
             for (i32 label = li.minLabel; label <= li.maxLabel; label += 1)
             {
                 if (pNode.labels.contains(label))
@@ -277,13 +293,23 @@ void calcChildren(
                     Node & cNode = bi.children[bi.nChildren];
                     NodeInfo & cInfo = bi.nodesInfo[bi.nChildren];
 
+#ifdef G_DEBUG
+                    checkParent(pNode);
+#endif
+
                     // Transition
                     auto cState = model->stf(pNode.state, label);
                     if (cState.has_value())
                     {
+#ifdef G_DEBUG
+                        checkParent(pNode);
+#endif
                         // Current cost
                         f64 const tCost = model->scf(pNode.state, label);
                         cNode.gValue = pNode.gValue + tCost;
+#ifdef G_DEBUG
+                        checkParent(pNode);
+#endif
 
                         // Lower/Upper bound
                         if constexpr (Model::has_local)
@@ -295,6 +321,9 @@ void calcChildren(
                         {
                             cNode.fValue = pNode.fValue;
                         }
+#ifdef G_DEBUG
+                        checkParent(pNode);
+#endif
                         // Conditions to keep the child
                         if (isBetter<Model>(cNode.fValue,pBound))
                         {
@@ -305,6 +334,9 @@ void calcChildren(
                             memcpy(cNode.labelsSrcToNode, pNode.labelsSrcToNode, sizeof(cNode.labelsSrcToNode));
                             cNode.labelsSrcToNode[pNode.nEdgesSrcToNode] = label;
                             cNode.nEdgesSrcToNode = pNode.nEdgesSrcToNode + 1;
+#ifdef G_DEBUG
+                            checkParent(pNode);
+#endif
 
                             // NodeInfo
                             if constexpr (Model::has_dom)
@@ -314,12 +346,36 @@ void calcChildren(
                             cInfo.flag = 0;
                             cInfo.pIdx = pIdx;
                             cInfo.idx = bi.nChildren;
+#ifdef G_DEBUG
+                            checkParent(pNode);
+#endif
 
                             bi.nChildren += 1;
                             //bi.children[cInfo.idx] = cNode;
                             //bi.childrenInfo[cInfo.idx] = cInfo;
                         }
+                        else
+                        {
+#ifdef G_DEBUG
+                            memcpy(cNode.labelsSrcToNode, pNode.labelsSrcToNode, sizeof(cNode.labelsSrcToNode));
+                            cNode.labelsSrcToNode[pNode.nEdgesSrcToNode] = label;
+                            cNode.nEdgesSrcToNode = pNode.nEdgesSrcToNode + 1;
+                            if (cNode.isAncestorOf(opt))
+                            {
+
+                                printf("P = "); Node::printLabels(pNode); printf("\n");
+                                printf("C = "); Node::printLabels(cNode); printf("\n");
+                                fflush(stdout);
+                                assert(pNode.isAncestorOf(opt));
+                                printf("Ancestor of OPT DOB because bounds!\n");
+                            }
+#endif
+                        }
+
                     }
+#ifdef G_DEBUG
+                    checkParent(pNode);
+#endif
                 }
             }
         }
@@ -334,19 +390,77 @@ void calcMergePartition(gfl::i64 const width, BatchInfo<Node> * const batchInfo)
 
     assert(width < bi.nChildren);
 
+    double avgFValue = 0.0;
     for (i64 i = 0; i < bi.nChildren; i += 1)
     {
-        NodeInfo & cInfo = bi.nodesInfo[i];
-        cInfo.idx = i;
-        cInfo.score = absDiffWithBest<Model>(bi.children[i].fValue);
+        avgFValue += bi.children[i].fValue;
     }
+    avgFValue /= bi.nChildren;
+
+    for (i64 i = 0; i < bi.nChildren; i += 1)
+    {
+        NodeInfo & iInfo = bi.nodesInfo[i];
+        iInfo.idx = i;
+        Node & iNode = bi.children[i];
+        double simScore = 0;
+        double fRank = 1;
+        for (i64 j = 0; j < bi.nChildren; j += 1)
+        {
+            if (i != j)
+            {
+                Node & jNode = bi.children[j];
+                simScore += Model::ssf(iNode.state, jNode.state);
+                fRank += isWorstEq<Model>(iNode.fValue,jNode.fValue);
+            }
+        }
+
+        simScore /= bi.nChildren - 1;
+        assert(0 <= simScore);
+        assert(simScore <= 1.0);
+
+        fRank /= bi.nChildren + 1;
+        assert(0 <= fRank);
+        assert(fRank <= 1.0);
+
+        iInfo.score = simScore;// + (1.0 - abs(0.5 - fRank));
+    }
+
+    printf("SCORES =");
+    for (i32 i = 0; i < bi.nChildren; i += 1)
+    {
+        if( i == bi.nChildrenToCopy-1) printf(" |");
+        printf(" %.2f", bi.nodesInfo[i].score);
+    }
+    printf("\n");
+    fflush(stdout);
 
     std::sort(bi.nodesInfo,
               bi.nodesInfo + bi.nChildren,
               NodeInfo::cmpByScore);
 
-    bi.nChildrenToCopy = roundUpDivPosInt<i64>( 3 * width, 4);
+    printf("SSCORES =");
+    for (i32 i = 0; i < bi.nChildren; i += 1)
+    {
+        if( i == bi.nChildrenToCopy-1) printf(" |");
+        printf(" %.2f", bi.nodesInfo[i].score);
+    }
+    printf("\n");
+    fflush(stdout);
+
+    printf("DONE   =");
+    for (i32 i = 0; i < bi.nChildren; i += 1)
+    {
+        if( i == bi.nChildrenToCopy-1) printf(" |");
+        printf(" %.2f", bi.children[i].state.sel.empty());
+    }
+    printf("\n");
+    fflush(stdout);
+
+
+
+    bi.nChildrenToCopy = gfl::min<i64>(bi.nChildren, roundUpDivPosInt<i64>( width, 2));
     bi.nChildrenToMerge = bi.nChildren - bi.nChildrenToCopy;
+    assert(bi.nChildrenToCopy + bi.nChildrenToMerge == bi.nChildren);
 }
 
 
@@ -360,11 +474,18 @@ void copyAndMergeSuffix(
     BatchInfo<Node> & bi = *batchInfo;
 
     assert(bi.nChildren > width);
+    printf("BFVALUES =");
+    for (i32 i = 0; i < bi.nChildren; i += 1)
+    {
+        if( i == bi.nChildrenToCopy-1) printf(" |");
+        printf(" %.2f", bi.children[bi.nodesInfo[i].idx].fValue);
+    }
+    printf("\n");
 
     auto const nBinds = width - bi.nChildrenToCopy;
     swapPtr(&bi.children, &bi.tmpChildren);
     copyNodes<Node>(&bi.nChildrenToCopy, bi.children, bi.tmpChildren, bi.nodesInfo);
-    for(i32 i = 0; i < bi.nChildrenToCopy; i += 1)
+    for (i32 i = 0; i < bi.nChildrenToCopy; i += 1)
     {
         bi.nodesInfo[i].idx = i;
     }
@@ -376,8 +497,8 @@ void copyAndMergeSuffix(
         getBeginEnd(bBegin,bEnd, bIdx, nBinds, bi.nChildrenToMerge);
         bBegin += bi.nChildrenToCopy;
         bEnd += bi.nChildrenToCopy;
-        NodeInfo & repInfo = bi.nodesInfo[bBegin];
 
+        NodeInfo & repInfo = bi.nodesInfo[bBegin];
         Node repNode = bi.tmpChildren[repInfo.idx];
         repNode.isApproximated = 1;
         for (i64 i = bBegin+1; i < bEnd; i += 1)
@@ -395,6 +516,14 @@ void copyAndMergeSuffix(
 
         bi.nChildren += 1;
     }
+
+    printf("AFVALUES =");
+    for (i32 i = 0; i < bi.nChildren; i += 1)
+    {
+        if( i == bi.nChildrenToCopy-1) printf(" |");
+        printf(" %.2f", bi.children[bi.nodesInfo[i].idx].fValue);
+    }
+    printf("\n");
 }
 template<typename Model, typename Node>
 void mergeChildren(gfl::i64 const width, BatchInfo<Node> * const batchInfo)
@@ -403,16 +532,6 @@ void mergeChildren(gfl::i64 const width, BatchInfo<Node> * const batchInfo)
     BatchInfo<Node> & bi = *batchInfo;
 
     copyAndMergeSuffix<Model,Node>(width,batchInfo);
-
-    for (i64 i = 0; i < bi.nChildren; i += 1)
-    {
-        NodeInfo & cInfo = bi.nodesInfo[i];
-        auto const & cIdx = cInfo.idx;
-        assert(0 <= cIdx);
-        assert(cIdx < bi.nChildren);
-        auto & cNode = bi.children[cIdx];
-        cInfo.score = absDiffWithBest<Model>(cNode.fValue);
-    }
 }
 
 template<typename Model, typename Node>
@@ -463,7 +582,7 @@ void saveCutset(gfl::i64 const width, BatchInfo<Node> * const batchInfo)
     BatchInfo<Node> & bi = *batchInfo;
 
     //assert(std::is_sorted(bi.parents, bi.parents + bi.nParents, Node::cmpByFDec));
-    assert(std::is_sorted(bi.nodesInfo,bi.nodesInfo + bi.nChildren, NodeInfo::cmpByScore));
+   // assert(std::is_sorted(bi.nodesInfo,bi.nodesInfo + bi.nChildren, NodeInfo::cmpByScore));
 
     for (auto i = 0; i < bi.nParents; i += 1)
     {
@@ -511,14 +630,12 @@ void saveCutset(gfl::i64 const width, BatchInfo<Node> * const batchInfo)
             bi.cutset[bi.cutsetSize] = bi.parents[i];
             bi.cutsetSize += 1;
             nSavedNodes += 1;
-
-
         }
         assert(bi.cutsetSize <= width * width);
     }
     assert(bi.cutsetSize <= width * width);
     if (nSavedNodes > 0)
     {
-        printf("Saved %d nodes of layer %d in cutset\n", nSavedNodes, bi.cutset[bi.cutsetSize-1].nEdgesSrcToNode);
+        //printf("Saved %d nodes of layer %d in cutset\n", nSavedNodes, bi.cutset[bi.cutsetSize-1].nEdgesSrcToNode);
     }
 }

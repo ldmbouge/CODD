@@ -150,6 +150,7 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
         std::cout << width << std::endl;
 
     // Search
+    std::vector<int> const opt = {0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,0};
     Node bestNode;
     f64 pBound = worstValue<Model>();
     f64 dBound = bestValue<Model>();
@@ -164,7 +165,8 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
     // Initialize first layer
     auto const rState = model->initial();
     auto const rLabels = model->lgf(rState, DDExact, pBound, dBound);
-    exactLayers.getLayer(0).emplace_back(rState,rLabels,bestValue<Model>());
+    auto const rFValue = Model::has_local ? model->local(rState, DDCtx) : bestValue<Model>();
+    exactLayers.getLayer(0).emplace_back(rState,rLabels,rFValue);
     exactLayers.getLabelsInfo(0).update(rLabels.slc());
     exactLayers.updateBound(0);
 
@@ -221,6 +223,9 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
             //         expandedNodes,
             //         exactLayers.countAllNodes());
 
+            Node::print(currentBatch[0]);
+
+
             if (RuntimeMonitor::elapsedSeconds(lastPrintProgress) > printProgressInterval)
             {
                 printProgress<Model>(
@@ -231,12 +236,23 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
                     exactLayers.countAllNodes());
                 lastPrintProgress = RuntimeMonitor::cputime();
             }
-            BatchEngine<Node>::initBatchSwappable(batchInfo,gAllocator,currentBatch,exactLayers.getLabelsInfo(currentExactLayerIdx), width);
+            BatchEngine<Node>::initBatchSwappable(batchInfo,gAllocator,currentBatch,exactLayers.getLabelsInfo(currentExactLayerIdx), width, 200);
 
-            printf("---\n");
+
+            // bool const isAnc = currentBatch[0].isAncestorOf(opt);
+            // if (isAnc)
+            // {
+            //     printf("Ancestor of OPT pulled from Q!\n");
+            //     assert(currentBatch[0].fValue >= 17);
+            // }
+
+
+            //printf("---\n");
             while (true)
             {
                 BatchEngine<Node>::processBatchRelaxed(model,pBound,dBound,width,batchInfo);
+                printf("P = %ld | C = %ld\n", batchInfo->nParents, batchInfo->nChildren);
+                fflush(stdout);
                 if (batchInfo->nChildren > 0)
                 {
                     if (not model->isTarget(batchInfo->children[0].state))
@@ -270,19 +286,36 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
                     }
                     else
                     {
+                        printf("CUTSET\n");
+                        for (i64 k = 0; k < batchInfo->cutsetSize;  k += 1)
+                        {
+                            batchInfo->cutset[k].fValue = calcWorst<Model>(batchInfo->cutset[k].fValue, tmpNode.fValue);
+                            Node::print(batchInfo->cutset[k]);
+                            fflush(stdout);
+                        }
+                        printf("---\n");
+                        fflush(stdout);
+                        // bool childrenFound = false;
+                        // for (i64 k = 0; k < batchInfo->cutsetSize;  k+= 1)
+                        // {
+                        //     if (batchInfo->cutset[k].isAncestorOf(opt))
+                        //         childrenFound = true;
+                        // }
+                        // assert(isAnc == false or childrenFound == true);
+
                         for (i64 i = 0; i < batchInfo->cutsetSize; )
                         {
-                            i64 const pCutsetLayerIdx = batchInfo->cutset[i].nEdgesSrcToNode;
+                            i64 const pCutsetLayerIdx = batchInfo->cutset[i].nEdgesSrcToNode-1;
                             i64 j = i + 1;
                             for ( ; j < batchInfo->cutsetSize; j += 1)
                             {
-                                if (batchInfo->cutset[j].nEdgesSrcToNode != pCutsetLayerIdx)
+                                if (batchInfo->cutset[j].nEdgesSrcToNode != pCutsetLayerIdx+1)
                                 {
                                     break;
                                 }
                             }
                             std::span<Node> const pCutset(batchInfo->cutset + i, j - i);
-                            assert(std::all_of(pCutset.begin(), pCutset.end(), [=](auto const & n) { return n.nEdgesSrcToNode == pCutsetLayerIdx;}));
+                            assert(std::all_of(pCutset.begin(), pCutset.end(), [=](auto const & n) { return n.nEdgesSrcToNode == pCutsetLayerIdx+1;}));
 
                             auto & pCutsetLabelsInfo =  exactLayers.getLabelsInfo(pCutsetLayerIdx);
                             for (auto const & n : pCutset)
@@ -296,11 +329,13 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
                             memcpy(pCutsetLayer.data() + pCutsetLayerOldSize,
                                    pCutset.data(),
                                    sizeof(Node) * pCutset.size());
+                            exactLayers.updateBound(pCutsetLayerIdx);
                             if (sort)
                             {
                                 // Reverse because we work on the tail of the vector
-                                std::sort(pCutsetLayer.data() + pCutsetLayerOldSize, pCutsetLayer.data() + pCutsetLayer.size(), Node::cmpByFDec);
-                                std::inplace_merge(pCutsetLayer.data(), pCutsetLayer.data() + pCutsetLayerOldSize, pCutsetLayer.data() + pCutsetLayer.size(), Node::cmpByFDec);
+                                auto constexpr cmp = [](auto const & n1, auto const & n2) {return isWorst<Model>(n1.fValue, n2.fValue);};
+                                std::sort(pCutsetLayer.data() + pCutsetLayerOldSize, pCutsetLayer.data() + pCutsetLayer.size(), cmp);
+                                std::inplace_merge(pCutsetLayer.data(), pCutsetLayer.data() + pCutsetLayerOldSize, pCutsetLayer.data() + pCutsetLayer.size(), cmp);
                             }
 
                             exactLayers.updateBound(pCutsetLayerIdx);
@@ -310,18 +345,25 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
                 }
                 else
                 {
-                    //printf("           Pruned %ld nodes\n", currentBatchSize);
+                    if (currentBatch[0].isAncestorOf(opt))
+                    {
+                        printf("Ancestor of OPT pruned because bounds!\n");
+                    }
                 }
             }
             else
             {
+                 if (currentBatch[0].isAncestorOf(opt))
+                 {
+                     printf("Ancestor of OPT pruned because no children!\n");
+                 }
                    //printf("           Discarded %ld nodes\n", currentBatchSize);
             }
         }
         exactLayers.getLayer(currentExactLayerIdx).resize(exactLayers.getLayer(currentExactLayerIdx).size() - fragmentSize);
         if (newSolution)
         {
-            printf("[%7.2fs] SOLUTION     | Cost = %7.2f | Value = ", RuntimeMonitor::elapsedSeconds(start), expandedNodes, bestNode.fValue);
+            printf("[%7.2fs] SOLUTION              | Cost = %7.2f | Value = ", RuntimeMonitor::elapsedSeconds(start), expandedNodes, bestNode.fValue);
             Node::printLabels(bestNode);
             printf("\n");
             fflush(stdout);
@@ -334,7 +376,7 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
         auto const tmpBound = exactLayers.calcBestBound();
         if (isWorst<Model>(tmpBound,dBound) and isValid<Model>(tmpBound))
         {
-            printf("[%7.2fs] TIGHTENING   | Dual = %7.2f -> %7.2f | Expanded = %10ld | Queue = %10ld\n",
+            printf("[%7.2fs] TIGHTENING            | Dual = %7.2f -> %7.2f\n",
                 RuntimeMonitor::elapsedSeconds(start),
                 dBound,
                 tmpBound,
@@ -349,7 +391,7 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
     {
         if (pBound != worstValue<Model>())
         {
-            printf("COMPLETED    | Expanded = %10ld | Cost = %7.2f | Value = ", expandedNodes, bestNode.gValue);
+            printf("COMPLETED    | Expanded = %10ld | Queue = %10ld | Cost = %7.2f | Value = ", expandedNodes,  exactLayers.countAllNodes(), bestNode.gValue);
             Node::printLabels(bestNode);
             printf("\n");
         }

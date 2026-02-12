@@ -4,6 +4,7 @@
 #include <Malloc.hpp>
 #include <StackAllocator.hpp>
 #include <BatchFunctions.cuh>
+#include <Debug.cuh>
 
 template<typename Node>
 struct BatchEngine
@@ -59,7 +60,8 @@ struct BatchEngine
        gfl::StackAllocator * const allocator,
        std::span<Node> const & parents,
        LabelsInfo const & labelsInfo,
-       gfl::i64 const maxWidth)
+       gfl::i64 const maxWidth,
+       gfl::i64 const maxDepth)
     {
         using namespace gfl;
         // Init
@@ -72,7 +74,7 @@ struct BatchEngine
         batchInfo->initParents(nParents, bufferSize, allocator);
         memcpy(batchInfo->parents,parents.data(), sizeof(Node) * nParents);
         batchInfo->labelsInfoParents = labelsInfo;
-        batchInfo->initCutset(maxWidth*maxWidth, allocator);
+        batchInfo->initCutset(maxWidth*maxDepth, allocator);
         batchInfo->initChildren(bufferSize, allocator);
     }
 
@@ -110,22 +112,76 @@ struct BatchEngine
           BatchInfo<Node> * const batchInfo)
     {
         // TODO Manage the case with >= branching factor of the root.
+#ifdef G_DEBUG
+        std::vector<int> const opt = {0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,0};
+
+        auto checkNode = [&](Node const & pNode)
+        {
+            if (pNode.isAncestorOf(opt))
+            {
+                printf("Ancestor of OPT found!\n");
+                assert(pNode.fValue >= 17);
+            }
+            return true;
+        };
+
+        auto checkNodes = [&] (Node const * nodes, gfl::i64 nNodes)
+        {
+            bool ancFound = false;
+            for (gfl::i64 i = 0; i < nNodes; i++)
+            {
+                auto const & node = nodes[i];
+                if (node.isAncestorOf(opt))
+                {
+                    ancFound = true;
+                    assert(node.fValue >= 17);
+                }
+            }
+            return ancFound;
+        };
+#endif
+
 
         calcChildren<Model,Node>(model,pBound,batchInfo);
+
+#ifdef G_DEBUG
+        bool ancFound = checkNodes(batchInfo->children,batchInfo->nChildren);
+#endif
         if (batchInfo->nChildren > 0)
         {
             if (model->isTarget(batchInfo->children[0].state))
             {
                 keepOnlyBestChild<Model,Node>(batchInfo);
+#ifdef G_DEBUG
+                if (ancFound)
+                {
+                    assert(batchInfo->children[0].isAncestorOf(opt));
+                    assert(batchInfo->children[0].fValue >= 17);
+                }
+#endif
             }
             else
             {
+#ifdef G_DEBUG
+                assert(not ancFound or checkNodes(batchInfo->children,batchInfo->nChildren));
+#endif
                 filterChildren<Model,Node>(batchInfo,false);
+#ifdef G_DEBUG
+                assert(not ancFound or checkNodes(batchInfo->children,batchInfo->nChildren));
+#endif
                 if (batchInfo->nChildren > width)
                 {
                     calcMergePartition<Model,Node>(width,batchInfo);
                     saveCutset<Model,Node>(width,batchInfo);
                     mergeChildren<Model,Node>(width,batchInfo);
+#ifdef G_DEBUG
+                    if(ancFound)
+                    {
+                        bool inChildren = checkNodes(batchInfo->children,batchInfo->nChildren);
+                        bool inCutset = checkNodes(batchInfo->cutset,batchInfo->cutsetSize);
+                        assert(inChildren or inCutset);
+                    }
+#endif
                 }
                 calcChildrenLabels<Model,Node>(model,batchInfo,DDRelaxed,pBound,dBound);
             }

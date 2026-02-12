@@ -65,11 +65,14 @@ namespace gfl
     GFL_HOST_DEVICE
     void Array<T>::print(T const * const begin, T const * const end, char const * const fmt) noexcept
     {
-        if (begin != end) printf(fmt, *begin);
-        for(T const * it = begin + 1; it != end; it += 1)
+        if (begin != end)
         {
-            printf(",");
-            printf(fmt, *it);
+            printf(fmt, *begin);
+            for(T const * it = begin + 1; it != end; it += 1)
+            {
+                printf(",");
+                printf(fmt, *it);
+            }
         }
     }
 
