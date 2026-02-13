@@ -185,10 +185,17 @@ struct BatchEngine
                 //         Node::print(iNode);
                 //     }
                 // }
+
                 if (batchInfo->nChildren > width)
                 {
 
+                    if (batchInfo->cutsetSize == 0)
+                    {
+                        calcChildrenLabels<Model,Node>(model,batchInfo,DDRelaxed,pBound,dBound);
+                    }
                     mergeChildren<Model,Node>(width,batchInfo);
+
+
                     //saveCutset<Model,Node>(width,batchInfo);
 #ifdef G_DEBUG
                     if(ancFound)
@@ -198,6 +205,10 @@ struct BatchEngine
                         assert(inChildren or inCutset);
                     }
 #endif
+                }
+                if (batchInfo->nChildren <= width or batchInfo->cutsetSize  != 0)
+                {
+                    calcChildrenLabels<Model,Node>(model,batchInfo,DDRelaxed,pBound,dBound);
                 }
 
                 // printf("AFTER MERGING\n");
@@ -211,7 +222,7 @@ struct BatchEngine
                 //     Node::print(iNode);
                 // }
 
-                calcChildrenLabels<Model,Node>(model,batchInfo,DDRelaxed,pBound,dBound);
+
             }
 
             // printf("After (%d)\n", batchInfo->nChildren);
