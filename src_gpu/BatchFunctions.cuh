@@ -517,6 +517,12 @@ void mergeChildren(gfl::i64 const width, BatchInfo<Node> * const batchInfo)
 
     assert(bi.nChildren > width);
 
+    if (bi.cutsetSize == 0)
+    {
+        copyNodes<Node>(&bi.nChildren, bi.cutset, bi.children, bi.nodesInfo);
+        bi.cutsetSize = bi.nChildren;
+    }
+
     // Sort by fValue
     for (i64 i = 0; i < bi.nChildren; i += 1)
     {
@@ -614,35 +620,35 @@ void mergeChildren(gfl::i64 const width, BatchInfo<Node> * const batchInfo)
     }
 
     // Save cutset
-    for (auto i = 0; i < bi.nChildren; i += 1)
-    {
-        NodeInfo const & nodeInfo = bi.nodesInfo[i];
-        i64 const & nodeIdx = nodeInfo.idx;
-        assert(0 <= nodeIdx);
-        assert(nodeIdx < bi.nChildren);
-        auto & node = bi.children[nodeIdx];
-        if (bi.tmpNodesInfo[nodeInfo.pIdx].flag == 1)
-        {
-            node.hasAncestorInCutset = 1;
-        }
-    }
-
-    i64 nSavedNodes = 0;
-    for (auto i = 0; i < bi.nParents; i += 1)
-    {
-        if (bi.tmpNodesInfo[i].flag == 1)
-        {
-            bi.cutset[bi.cutsetSize] = bi.parents[i];
-            bi.cutsetSize += 1;
-            nSavedNodes += 1;
-        }
-        assert(bi.cutsetSize <= width * width);
-    }
-    assert(bi.cutsetSize <= width * width);
-    if (nSavedNodes > 0)
-    {
-        //printf("Saved %d nodes of layer %d in cutset\n", nSavedNodes, bi.cutset[bi.cutsetSize-1].nEdgesSrcToNode);
-    }
+    // for (auto i = 0; i < bi.nChildren; i += 1)
+    // {
+    //     NodeInfo const & nodeInfo = bi.nodesInfo[i];
+    //     i64 const & nodeIdx = nodeInfo.idx;
+    //     assert(0 <= nodeIdx);
+    //     assert(nodeIdx < bi.nChildren);
+    //     auto & node = bi.children[nodeIdx];
+    //     if (bi.tmpNodesInfo[nodeInfo.pIdx].flag == 1)
+    //     {
+    //         node.hasAncestorInCutset = 1;
+    //     }
+    // }
+    //
+    // i64 nSavedNodes = 0;
+    // for (auto i = 0; i < bi.nParents; i += 1)
+    // {
+    //     if (bi.tmpNodesInfo[i].flag == 1)
+    //     {
+    //         bi.cutset[bi.cutsetSize] = bi.parents[i];
+    //         bi.cutsetSize += 1;
+    //         nSavedNodes += 1;
+    //     }
+    //     assert(bi.cutsetSize <= width * width);
+    // }
+    // assert(bi.cutsetSize <= width * width);
+    // if (nSavedNodes > 0)
+    // {
+    //     //printf("Saved %d nodes of layer %d in cutset\n", nSavedNodes, bi.cutset[bi.cutsetSize-1].nEdgesSrcToNode);
+    // }
 }
 
 template<typename Model, typename Node>
