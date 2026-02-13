@@ -111,6 +111,8 @@ struct BatchEngine
           gfl::i64 width,
           BatchInfo<Node> * const batchInfo)
     {
+
+        using namespace gfl;
         // TODO Manage the case with >= branching factor of the root.
 #ifdef G_DEBUG
         std::vector<int> const opt = {0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,0};
@@ -168,6 +170,21 @@ struct BatchEngine
 #ifdef G_DEBUG
                 assert(not ancFound or checkNodes(batchInfo->children,batchInfo->nChildren));
 #endif
+
+                // BatchInfo<Node> & bi = *batchInfo;
+                // if(batchInfo->nChildren <= width)
+                // {
+                //     printf("BEFORE MERGING\n");
+                //     for (i64 i = 0; i < bi.nChildren; i += 1)
+                //     {
+                //         NodeInfo & iInfo = bi.nodesInfo[i];
+                //         i64 const iIdx = iInfo.idx;
+                //         assert(0 <= iIdx);
+                //         assert(iIdx <  bi.nChildren);
+                //         Node const & iNode = bi.children[iIdx];
+                //         Node::print(iNode);
+                //     }
+                // }
                 if (batchInfo->nChildren > width)
                 {
 
@@ -182,6 +199,18 @@ struct BatchEngine
                     }
 #endif
                 }
+
+                // printf("AFTER MERGING\n");
+                // for (i64 i = 0; i < bi.nChildren; i += 1)
+                // {
+                //     NodeInfo & iInfo = bi.nodesInfo[i];
+                //     i64 const iIdx = iInfo.idx;
+                //     assert(0 <= iIdx);
+                //     assert(iIdx <  bi.nChildren);
+                //     Node const & iNode = bi.children[iIdx];
+                //     Node::print(iNode);
+                // }
+
                 calcChildrenLabels<Model,Node>(model,batchInfo,DDRelaxed,pBound,dBound);
             }
 

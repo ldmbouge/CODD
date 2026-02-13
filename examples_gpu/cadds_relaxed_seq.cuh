@@ -223,7 +223,7 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
             //         expandedNodes,
             //         exactLayers.countAllNodes());
 
-            Node::print(currentBatch[0]);
+            //Node::print(currentBatch[0]);
 
 
             if (RuntimeMonitor::elapsedSeconds(lastPrintProgress) > printProgressInterval)
@@ -286,12 +286,12 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
                     }
                     else
                     {
-                        printf("CUTSET\n");
+                        //printf("CUTSET\n");
                         for (i64 k = 0; k < batchInfo->cutsetSize;  k += 1)
                         {
                             batchInfo->cutset[k].fValue = calcWorst<Model>(batchInfo->cutset[k].fValue, tmpNode.fValue);
-                            Node::print(batchInfo->cutset[k]);
-                             fflush(stdout);
+                            //Node::print(batchInfo->cutset[k]);
+                            //fflush(stdout);
                         }
                         // printf("---\n");
                         // fflush(stdout);

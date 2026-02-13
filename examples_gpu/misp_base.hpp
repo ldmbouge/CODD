@@ -4,7 +4,7 @@
 #include <fstream>
 #include <Utils.hpp>
 
-template<int N = 256>
+template<int N = 64*5>
 struct MispBase
 {
     using Set = NatSet<gfl::roundUpDivPosInt<unsigned short>(N,64)>;

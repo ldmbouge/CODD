@@ -525,11 +525,22 @@ void mergeChildren(gfl::i64 const width, BatchInfo<Node> * const batchInfo)
         assert(0 <= iIdx);
         assert(iIdx <  bi.nChildren);
         Node const & iNode = bi.children[iIdx];
-        iInfo.score = fValueToScore<Model>(iNode.fValue);
+        iInfo.score = fValueToScore<Model>(iNode.gValue);
     }
     std::sort(bi.nodesInfo,
               bi.nodesInfo + bi.nChildren,
               NodeInfo::cmpByScore);
+
+    // printf("BEFORE MERGING\n");
+    // for (i64 i = 0; i < bi.nChildren; i += 1)
+    // {
+    //     NodeInfo & iInfo = bi.nodesInfo[i];
+    //     i64 const iIdx = iInfo.idx;
+    //     assert(0 <= iIdx);
+    //     assert(iIdx <  bi.nChildren);
+    //     Node const & iNode = bi.children[iIdx];
+    //     Node::print(iNode);
+    // }
 
     // Parents to back up
     for (auto i = 0; i < bi.nParents; i += 1)
@@ -549,22 +560,29 @@ void mergeChildren(gfl::i64 const width, BatchInfo<Node> * const batchInfo)
         Node const & toMergeNode = bi.children[toMergeNodeIdx];
 
         // Find better candidate
-        i64 bestCandidateInfoIdx = -1;
-        double bestCandidateScore = 0.0;
-        for (i64 candidateInfoIdx = 0; candidateInfoIdx < toMergeInfoIdx; candidateInfoIdx += 1)
-        {
-            NodeInfo const & candidateInfo = bi.nodesInfo[candidateInfoIdx];
-            i64 const & candidateNodeIdx = candidateInfo.idx;
-            assert(0 <= candidateNodeIdx);
-            assert(candidateNodeIdx < bi.nChildren);
-            Node const & candidateNode = bi.children[candidateNodeIdx];
-            double const simScore = Model::ssf(toMergeNode.state, candidateNode.state);
-            if (bestCandidateScore <= simScore) // We use <= to tie-break with fValue
-            {
-                bestCandidateScore = simScore;
-                bestCandidateInfoIdx = candidateInfoIdx;
-            }
-        }
+        // i64 bestCandidateInfoIdx = -1;
+        // double bestCandidateScore = 0.0;
+        // for (i64 candidateInfoIdx = width / 2; candidateInfoIdx < toMergeInfoIdx; candidateInfoIdx += 1)
+        // {
+        //     NodeInfo const & candidateInfo = bi.nodesInfo[candidateInfoIdx];
+        //     i64 const & candidateNodeIdx = candidateInfo.idx;
+        //     assert(0 <= candidateNodeIdx);
+        //     assert(candidateNodeIdx < bi.nChildren);
+        //     Node const & candidateNode = bi.children[candidateNodeIdx];
+        //     double const fValueMin = min(candidateNode.gValue, toMergeNode.gValue);
+        //     double const fValueMax = max(candidateNode.gValue, toMergeNode.gValue);
+        //     double const fValueScore = (fValueMax - fValueMin) / fValueMax;
+        //     double const simScore =
+        //         Model::ssf(toMergeNode.state, candidateNode.state) +
+        //         1.0 * fValueScore;
+        //     if (bestCandidateScore <= simScore) // We use <= to tie-break with fValue
+        //     {
+        //         bestCandidateScore = simScore;
+        //         bestCandidateInfoIdx = candidateInfoIdx;
+        //     }
+        // }
+
+        i64 bestCandidateInfoIdx = toMergeInfoIdx -1;
 
         // Merge nodes
         assert(bestCandidateInfoIdx >= 0);
@@ -575,6 +593,7 @@ void mergeChildren(gfl::i64 const width, BatchInfo<Node> * const batchInfo)
         assert(bestNodeIdx < bi.nChildren);
         Node & bestNode = bi.children[bestNodeIdx];
 
+        //printf("Merging %ld <-> %ld, with fValues %.2f %.2f\n", bestCandidateInfoIdx, toMergeInfoIdx, bestNode.fValue, toMergeNode.fValue);
         bestNode.state = Model::smf(bestNode.state, toMergeNode.state);
         bestNode.gValue = calcBetter<Model>(bestNode.gValue, toMergeNode.gValue);
         bestNode.fValue = calcBetter<Model>(bestNode.fValue, toMergeNode.fValue);
@@ -746,3 +765,4 @@ void saveCutset(gfl::i64 const width, BatchInfo<Node> * const batchInfo)
         //printf("Saved %d nodes of layer %d in cutset\n", nSavedNodes, bi.cutset[bi.cutsetSize-1].nEdgesSrcToNode);
     }
 }
+
