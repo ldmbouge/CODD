@@ -337,8 +337,6 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
                                 std::sort(pCutsetLayer.data() + pCutsetLayerOldSize, pCutsetLayer.data() + pCutsetLayer.size(), cmp);
                                 std::inplace_merge(pCutsetLayer.data(), pCutsetLayer.data() + pCutsetLayerOldSize, pCutsetLayer.data() + pCutsetLayer.size(), cmp);
                             }
-
-                            exactLayers.updateBound(pCutsetLayerIdx);
                             i = j;
                         }
                     }
