@@ -1,8 +1,8 @@
 #include "codd.hpp"
-#include "BatchEngine.cuh"
+#include "LayerEngine.cuh"
 #include <StackAllocator.hpp>
 #include <cxxopts.hpp>
-#include <Malloc.hpp>
+#include <Memory.hpp>
 #include <Array.hpp>
 #include <span>
 

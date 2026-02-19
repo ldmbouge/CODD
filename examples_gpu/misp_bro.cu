@@ -1,5 +1,5 @@
 #include "bro_base.cuh"
-#include "misp.cuh"
+#include "../examples/misp.hpp"
 
 int main(int argc,char* argv[])
 {

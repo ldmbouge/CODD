@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Utils.hpp"
-#include "BatchInfo.cuh"
+#include "ExpansionInfo.cuh"
 #include "ctx.hpp"
 
 #include <algorithm>
@@ -111,10 +111,10 @@ void calcRep(NodeInfo & iInfo, NodeInfo & jInfo, Node const & iNode, Node const 
 
 template<typename Node>
 GFL_HOST_DEVICE
-void assertInfoConsistency(BatchInfo<Node> * const batchInfo)
+void assertInfoConsistency(ExpansionInfo<Node> * const batchInfo)
 {
     using namespace gfl;
-    BatchInfo<Node> & bi = *batchInfo;
+    ExpansionInfo<Node> & bi = *batchInfo;
 
     for(i64 i = 0; i < bi.nChildren; i+=1)
     {
@@ -125,10 +125,10 @@ void assertInfoConsistency(BatchInfo<Node> * const batchInfo)
 
 
 template<typename Model, typename Node>
-void calcRep(BatchInfo<Node> * const batchInfo)
+void calcRep(ExpansionInfo<Node> * const batchInfo)
 {
     using namespace gfl;
-    BatchInfo<Node> & bi = *batchInfo;
+    ExpansionInfo<Node> & bi = *batchInfo;
 
     for (i64 i = 0; i < bi.nChildren; i += 1)
     {
@@ -156,10 +156,10 @@ void calcRep(BatchInfo<Node> * const batchInfo)
 
 
 template<typename Model, typename Node>
-void calcMergeScore(BatchInfo<Node> * const batchInfo, gfl::i64 const width)
+void calcMergeScore(ExpansionInfo<Node> * const batchInfo, gfl::i64 const width)
 {
     using namespace gfl;
-    BatchInfo<Node> & bi = *batchInfo;
+    ExpansionInfo<Node> & bi = *batchInfo;
 
     NodeInfo & baseInfo = bi.childrenInfo[0];
     Node const & baseNode = bi.children[baseInfo.idx];
@@ -182,10 +182,10 @@ void calcMergeScore(BatchInfo<Node> * const batchInfo, gfl::i64 const width)
 
 
 template<typename Node>
-void countFlagged(BatchInfo<Node> * const batchInfo, gfl::u32 const flag)
+void countFlagged(ExpansionInfo<Node> * const batchInfo, gfl::u32 const flag)
 {
     using namespace gfl;
-    BatchInfo<Node> & bi = *batchInfo;
+    ExpansionInfo<Node> & bi = *batchInfo;
 
     for (i64 cIdx = 0; cIdx < bi.nChildren; cIdx += 1)
     {
@@ -217,11 +217,11 @@ void copyItems(gfl::i64 const * const nItems, T * const dst,  T const * const sr
 }
 
 template<typename Model, typename Node>
-void filterChildren(BatchInfo<Node> * const batchInfo, bool sort)
+void filterChildren(ExpansionInfo<Node> * const batchInfo, bool sort)
 {
     using namespace gfl;
 
-    BatchInfo<Node> & bi = *batchInfo;
+    ExpansionInfo<Node> & bi = *batchInfo;
 
     std::sort(bi.nodesInfo,
               bi.nodesInfo + bi.nChildren,
@@ -263,12 +263,12 @@ template<typename Model, typename Node>
 void calcChildren(
         Model const * const model,
         gfl::f64 pBound,
-        BatchInfo<Node> * const batchInfo)
+        ExpansionInfo<Node> * const batchInfo)
 {
     using namespace gfl;
     using State = Model::State;
 
-    BatchInfo<Node> & bi = *batchInfo;
+    ExpansionInfo<Node> & bi = *batchInfo;
     LabelsInfo const & li = bi.labelsInfoParents;
 
 #ifdef G_DEBUG
@@ -387,10 +387,10 @@ void calcChildren(
 }
 
 template<typename Model, typename Node>
-void calcMergePartition(gfl::i64 const width, BatchInfo<Node> * const batchInfo)
+void calcMergePartition(gfl::i64 const width, ExpansionInfo<Node> * const batchInfo)
 {
     using namespace gfl;
-    BatchInfo<Node> & bi = *batchInfo;
+    ExpansionInfo<Node> & bi = *batchInfo;
 
     assert(width < bi.nChildren);
     for (i64 i = 0; i < bi.nChildren; i += 1)
@@ -437,11 +437,11 @@ void calcMergePartition(gfl::i64 const width, BatchInfo<Node> * const batchInfo)
 template<typename Model, typename Node>
 void copyAndMerge(
         gfl::i64 const width,
-        BatchInfo<Node> * const batchInfo)
+        ExpansionInfo<Node> * const batchInfo)
 {
     using namespace gfl;
 
-    BatchInfo<Node> & bi = *batchInfo;
+    ExpansionInfo<Node> & bi = *batchInfo;
 
     // assert(bi.nChildren > width);
     // printf("BFVALUES =");
@@ -510,10 +510,10 @@ void copyAndMerge(
     // printf("\n");
 }
 template<typename Model, typename Node>
-void mergeChildren(gfl::i64 const width, BatchInfo<Node> * const batchInfo)
+void mergeChildren(gfl::i64 const width, ExpansionInfo<Node> * const batchInfo)
 {
     using namespace gfl;
-    BatchInfo<Node> & bi = *batchInfo;
+    ExpansionInfo<Node> & bi = *batchInfo;
 
     assert(bi.nChildren > width);
 
@@ -652,10 +652,10 @@ void mergeChildren(gfl::i64 const width, BatchInfo<Node> * const batchInfo)
 }
 
 template<typename Model, typename Node>
-void keepOnlyBestChild(BatchInfo<Node> * batchInfo)
+void keepOnlyBestChild(ExpansionInfo<Node> * batchInfo)
 {
     using namespace gfl;
-    BatchInfo<Node> & bi = *batchInfo;
+    ExpansionInfo<Node> & bi = *batchInfo;
 
     assert(bi.nChildren > 0);
 
@@ -674,13 +674,13 @@ void keepOnlyBestChild(BatchInfo<Node> * batchInfo)
 template<typename Model, typename Node>
 void calcChildrenLabels(
         Model const * const model,
-        BatchInfo<Node> * const batchInfo,
+        ExpansionInfo<Node> * const batchInfo,
         DDContext const ddCtx,
         gfl::f64 pBound,
         gfl::f64 dBound)
 {
     using namespace gfl;
-    BatchInfo<Node> & bi = *batchInfo;
+    ExpansionInfo<Node> & bi = *batchInfo;
 
     for (i64 cIdx = 0; cIdx < bi.nChildren; cIdx += 1)
     {
@@ -692,11 +692,11 @@ void calcChildrenLabels(
 
 
 template<typename Model, typename Node>
-void saveCutset(gfl::i64 const width, BatchInfo<Node> * const batchInfo)
+void saveCutset(gfl::i64 const width, ExpansionInfo<Node> * const batchInfo)
 {
     using namespace gfl;
 
-    BatchInfo<Node> & bi = *batchInfo;
+    ExpansionInfo<Node> & bi = *batchInfo;
 
     //assert(std::is_sorted(bi.parents, bi.parents + bi.nParents, Node::cmpByFDec));
    // assert(std::is_sorted(bi.nodesInfo,bi.nodesInfo + bi.nChildren, NodeInfo::cmpByScore));

@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
 
-#include "BatchInfo.cuh"
+#include "ExpansionInfo.cuh"
 #include "BoundsHelpers.cuh"
 #include "Types.hpp"
 
@@ -12,13 +12,12 @@ struct LayersHelper
 
     std::vector<LayerType>  layers;
     std::vector<LabelsInfo> labelsInfo;
-    std::vector<double>     bounds;
+    std::vector<double>     dBounds;
 
     LayersHelper() noexcept {};
 
     void clear() noexcept
     {
-        bool allEmpty = true;
         for (auto & l : layers)
         {
            l.clear();
@@ -28,72 +27,11 @@ struct LayersHelper
         {
            li.reset();
         }
-    }
 
-    bool allLayersEmpty() const noexcept
-    {
-        bool allEmpty = true;
-        for (auto const & l : layers)
+        for (auto & b : dBounds)
         {
-            allEmpty = allEmpty and l.empty();
+           b = bestValue<Model>();
         }
-
-        return allEmpty;
-    }
-
-    gfl::i32 calcDeepestNotEmpty() const noexcept
-    {
-        using namespace gfl;
-        for (i32 i = layers.size() - 1; i >= 0; i -= 1)
-        {
-            if (not layers[i].empty())
-            {
-                return i;
-            }
-        }
-        return -1;
-    }
-
-    gfl::i32 calcDeepestMostPromising() const noexcept
-    {
-        using namespace gfl;
-        double bound = worstValue<Model>();
-        i32 lIdx = -1;
-        for (i32 i = layers.size() - 1; i >= 0; i -= 1)
-        {
-            if (isBetter<Model>(bounds[i], bound))
-            {
-                bound = bounds[i];
-                lIdx = i;
-            }
-        }
-        if (lIdx < 0)
-        {
-            return calcDeepestNotEmpty();
-        }
-        assert(lIdx >= 0) ;
-
-
-        // printf("Selecting layer %d with hBound %.1f\n", lIdx,bound);
-        // fflush(stdout);
-
-        return lIdx;
-    }
-
-    gfl::i32 calcShallowMostPromising() const noexcept
-    {
-        using namespace gfl;
-        double bound = worstValue<Model>();
-        i32 lIdx = -1;
-        for (i32 i = layers.size()-1; i >= 0; i -= 1)
-        {
-            if (isBetterEq<Model>(bounds[i], bound))
-            {
-                bound = bounds[i];
-                lIdx = i;
-            }
-        }
-        return lIdx;
     }
 
     LayerType & getLayer(gfl::i32 const lIdx) noexcept
@@ -116,39 +54,62 @@ struct LayersHelper
 
     double & getBound(gfl::i32 const lIdx) noexcept
     {
-        if (bounds.empty() or bounds.size() <= lIdx)
+        if (dBounds.empty() or dBounds.size() <= lIdx)
         {
-            bounds.resize(lIdx + 1, worstValue<Model>());
+            dBounds.resize(lIdx + 1, worstValue<Model>());
         }
-        return bounds[lIdx];
+        return dBounds[lIdx];
     }
 
-    void updateBound(gfl::i32 const lIdx) noexcept
+    gfl::i32 calcDeepestNotEmpty() const noexcept
     {
-        double oldBound = getBound(lIdx);
-        double tBound = worstValue<Model>();
-        for (auto const & n : getLayer(lIdx))
+        using namespace gfl;
+
+        i32 lIdx = -1;
+        for (i32 i = 0; i < layers.size(); i += 1)
         {
-            double const nBound = n.fValue;
-            tBound = calcBetter<Model>(tBound,nBound);
+            if (not layers[i].empty())
+            {
+                lIdx = i;
+            }
         }
-        getBound(lIdx) = tBound;
-        // printf("Layer %d bound: %.1f -> %.1f\n", lIdx,oldBound, tBound);
-        // fflush(stdout);
+        return lIdx;
     }
 
-    double calcBestBound() const noexcept
+    gfl::i32 calcDeepestMostPromising() const noexcept
     {
+        using namespace gfl;
+
         double bound = worstValue<Model>();
-        for (auto const & b : bounds)
+        i32 lIdx = -1;
+        for (i32 i = 0; i < layers.size(); i += 1)
         {
-            bound = calcBetter<Model>(bound,b);
+            if (isBetterEq<Model>(dBounds[i], bound))
+            {
+                bound = dBounds[i];
+                lIdx = i;
+            }
         }
 
-        // gfl::Array<double>::print(bounds.data(), bounds.data() + bounds.size(), "%.1f");
-        // printf("\n");
+        // Unbounded root
+        if (lIdx < 0)
+        {
+            return calcDeepestNotEmpty();
+        }
 
-        return bound;
+        assert(lIdx >= 0);
+        return lIdx;
+    }
+
+    bool allLayersEmpty() const noexcept
+    {
+        bool allEmpty = true;
+        for (auto const & l : layers)
+        {
+            allEmpty = allEmpty and l.empty();
+        }
+
+        return allEmpty;
     }
 
     gfl::i64 countAllNodes() const noexcept
@@ -171,5 +132,46 @@ struct LayersHelper
                f(n);
            }
         }
+    }
+
+    void addToLayer(gfl::i32 const lIdx, std::span<Node> const & nodes, LabelsInfo const & li) noexcept
+    {
+        using namespace gfl;
+
+        // Append nodes
+        auto & layer = getLayer(lIdx);
+        i64 const layerOldSize = layer.size();
+        layer.resize(layerOldSize + nodes.size());
+        std::span<Node> const oldLayer(layer.data(), layerOldSize);
+        std::span<Node> const extension(layer.data() + layerOldSize, nodes.size());
+        memcpy(extension.data(),nodes.data(),sizeof(Node) * nodes.size());
+
+        // Update label info
+        getLabelsInfo(lIdx).update(li);
+
+        // Keep reverse sorted since we pop from the tail
+        std::sort(extension.begin(), extension.end(), isWorst<Model>);
+        std::inplace_merge(layer.data(), layer.data() + layerOldSize, layer.data() + layer.size(), isWorst<Model>);
+
+        // Update dual bound
+        getBound(lIdx) = layer.back().fValue;
+    }
+
+    void addToLayer(gfl::i32 const lIdx, Node const & node) noexcept
+    {
+        std::span<Node> const nodes(&node,1);
+        LabelsInfo const li(node.slc());
+        addToLayer(lIdx, nodes, li);
+    }
+
+    void removeSuffixFromLayer(gfl::i32 const lIdx, gfl::i32 const size) noexcept
+    {
+        auto & layer = getLayer(lIdx);
+        layer.resize(layer.size() - size);
+
+        // No need to update label info
+
+        // Update dual bound
+        getBound(lIdx) = layer.back().fValue;
     }
 };

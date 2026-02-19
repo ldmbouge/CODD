@@ -1,18 +1,15 @@
 #pragma once
 
 #include "codd.hpp"
-#include "BatchEngine.cuh"
-#include <StackAllocator.hpp>
+#include "LayerEngine.cuh"
+#include <ArenaAllocator.hpp>
 #include <cxxopts.hpp>
-#include <Malloc.hpp>
-#include <span>
+#include <Memory.hpp>
+#include <Types.hpp>
 
-#include "BatchInfo.cuh"
+#include "ExpansionInfo.cuh"
 #include "LayersHelper.cuh"
 #include "BoundsHelpers.cuh"
-
-constexpr auto static ReadOnlyMemSize{256 * 1024}; // Cached in shared memory
-constexpr auto static CpuMemSize{8ll * 1024ll * 1024ll * 1024ll}; // Same size GPU memory: 48 - 4 for runtime!)
 
 template<typename Model, typename Node>
 void printLog(double elapsed,
@@ -97,21 +94,19 @@ void printProgress(double elapsed,
 }
 
 template<typename Model, typename Node>
-int run_cadds_relaxed_seq(int argc,char* argv[])
+int run_cadds_relaxed_seq(int argc, char* argv[])
 {
-    using namespace gfl;
-    using BatchInfoType   = BatchInfo<Node>;
+    using namespace xuda;
+    using BatchInfoType = ExpansionInfo<Node>;
 
     // Parse arguments
     i64 width = -1;
     int timeout = std::numeric_limits<int>::max(); // 68 years
-    bool sort = false;
     std::string instance;
     cxxopts::Options options("", "A C++ solver for DIDP models");
     options.add_options("Available")
-            ("w,width", "Beam width", cxxopts::value(width))
+            ("w,width", "DD width", cxxopts::value(width))
             ("h,help", "Show this help message and exit")
-            ("s,sort", "Sort nodes by cost", cxxopts::value(sort))
             ("i,instance", "Path to the instance file", cxxopts::value(instance))
             ("t,timeout", "Timeout in seconds", cxxopts::value(timeout));
     options.parse_positional({"instance"});
@@ -136,6 +131,7 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
         exit(EXIT_SUCCESS);
     }
 
+    constexpr auto static ReadOnlyMemSize{256 * 1024}; // Aim to be cached in shared memory
     auto * const readOnlyMem = mallocStd<void>(ReadOnlyMemSize);
     StackAllocator roAllocator(readOnlyMem, ReadOnlyMemSize);
     auto * const model = new (roAllocator) Model();
@@ -143,42 +139,38 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
 
     std::cout << "Instance: " << instance << std::endl;
     std::cout << "GPU: False" << std::endl;
-    std::cout << "Width: ";
-    if (width <= 0)
-        std::cout << "Auto" << std::endl;
-    else
-        std::cout << width << std::endl;
+    std::cout << "Width: " << width << std::endl;
 
-    // Search
-    std::vector<int> const opt = {0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,0};
+    // Solutions and bounds
     Node bestNode;
     f64 pBound = worstValue<Model>();
     f64 dBound = bestValue<Model>();
 
-    BatchInfoType * batchInfo = mallocStd<BatchInfoType>(sizeof(BatchInfoType));
-    StackAllocator * gAllocator = new StackAllocator(mallocStd(CpuMemSize), CpuMemSize);
+    constexpr auto static DeviceMemSize{8ll * 1024ll * 1024ll * 1024ll}; // Same size GPU memory: 48 - 4 for runtime!)
+    BatchInfoType * const batchInfo = mallocStd<BatchInfoType>(sizeof(BatchInfoType));
+    StackAllocator * const gAllocator = new StackAllocator(mallocStd(DeviceMemSize), DeviceMemSize);
 
-    // Layers buffers l<?
-    LayersHelper<Node,Model> exactLayers;
-    LayersHelper<Node,Model> auxLayer;
+    // Layers buffers
+    LayersHelper<Node,Model> layers;
 
-    // Initialize first layer
-    auto const rState = model->initial();
-    auto const rLabels = model->lgf(rState, DDExact, pBound, dBound);
-    auto const rFValue = Model::has_local ? model->local(rState, DDCtx) : bestValue<Model>();
-    exactLayers.getLayer(0).emplace_back(rState,rLabels,rFValue);
-    exactLayers.getLabelsInfo(0).update(rLabels.slc());
-    exactLayers.updateBound(0);
+    // Initialize first layer with root
+    auto const rState =  model->initial();
+    Node const root(
+       ,rState,
+        model->lgf(rState, DDExact, pBound, dBound),
+        Model::has_local ? model->local(rState, DDCtx) : bestValue<Model>());
+    layers.addToLayer(0,root);
 
-    // Let's goo!
-    auto const start = RuntimeMonitor::cputime();
+    // Search info
     i64 expandedNodes = 0;
     bool interrupted = false;
     bool newSolution = false;
     i64 iteration = 0;
-    f64 const printProgressInterval = 5;
+
+    constexpr f64 printProgressInterval = 5;
+    auto const start = RuntimeMonitor::cputime();
     auto lastPrintProgress = RuntimeMonitor::cputime();
-    while (not exactLayers.allLayersEmpty() and isWorst<Model>(pBound,dBound))
+    while (not layers.allLayersEmpty() and isWorst<Model>(pBound,dBound))
     {
         iteration += 1;
 
@@ -187,178 +179,81 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
             interrupted = true;
             break;
         }
-        newSolution = false;
 
-        bool const dive = false; //iteration % 10 < 1;
-        i32 const currentExactLayerIdx = dive ?
-            exactLayers.calcDeepestNotEmpty() :
-            exactLayers.calcDeepestMostPromising();
+        // Pull node
+        i32 const currentLayerIdx = layers.calcDeepestMostPromising();
+        auto const currentNode = layers.getLayer(currentLayerIdx).back();
+        layers.removeSuffixFromLayer(currentLayerIdx, 1);
+        expandedNodes += 1;
 
-        // Fragment
-        auto & currentExactLayer = exactLayers.getLayer(currentExactLayerIdx);
-        auto & currentExactLabelsInfo = exactLayers.getLabelsInfo(currentExactLayerIdx);
-        i64 const batchSize = gfl::min<i64>(currentExactLayer.size(), BatchInfoType::calcMaxParents(currentExactLabelsInfo.nLabels, CpuMemSize, false));
-        i64 const fragmentSize = gfl::min<i64>(currentExactLayer.size(), 1);
-        auto const fragment = std::span(currentExactLayer.end() - fragmentSize, fragmentSize);
-
-        // Batching
-        i32 const nBatches = roundUpDivPosInt<i32>(fragmentSize, batchSize);
-        assert(nBatches * batchSize >= fragmentSize);
-        for (i32 bIdx = 0; bIdx < nBatches; bIdx += 1)
+        if (RuntimeMonitor::elapsedSeconds(lastPrintProgress) > printProgressInterval)
         {
-            i64 bBegin, bEnd;
-            getBeginEnd(bBegin, bEnd, bIdx, nBatches, fragmentSize);
-            i64 const currentBatchSize = bEnd - bBegin; // No + 1!
-            auto const currentBatch = std::span(fragment.data() + bBegin, currentBatchSize);
-            expandedNodes += currentBatchSize;
+            printProgress<Model>(
+                RuntimeMonitor::elapsedSeconds(start),
+                pBound,
+                dBound,
+                expandedNodes,
+                layers.countAllNodes());
+            lastPrintProgress = RuntimeMonitor::cputime();
+        }
+        LayerEngine<Node>::initBatchSwappable(
+            batchInfo,
+            gAllocator,
+            layers.getLabelsInfo(currentLayerIdx),
+            width,
+            Model::max_depth);
+        LayerEngine<Node>::compileRelaxed(
+            model,
+            batchInfo,
+            pBound,
+            dBound,
+            width);
 
-            // printLog<Model,Node>(
-            //         RuntimeMonitor::elapsedSeconds(start),
-            //         currentExactLayerIdx,
-            //         currentExactLayer.size(),
-            //         fragmentSize,
-            //         pBound,
-            //         dBound,
-            //         bIdx,currentBatchSize,nBatches,
-            //         expandedNodes,
-            //         exactLayers.countAllNodes());
-
-            //Node::print(currentBatch[0]);
-
-
-            if (RuntimeMonitor::elapsedSeconds(lastPrintProgress) > printProgressInterval)
+        // If there is a terminal node, it is the best one
+        assert(batchInfo->nChildren >= 0);
+        assert(batchInfo->nChildren <= 1);
+        if (batchInfo->nChildren > 0)
+        {
+            // Update bound and solution
+            Node const & tNode = batchInfo->children[0];
+            assert(tmpNode.gValue == tmpNode.fValue);
+            if (isBetter<Model>(tNode.fValue,pBound))
             {
-                printProgress<Model>(
-                    RuntimeMonitor::elapsedSeconds(start),
-                    pBound,
-                    dBound,
-                    expandedNodes,
-                    exactLayers.countAllNodes());
-                lastPrintProgress = RuntimeMonitor::cputime();
-            }
-            BatchEngine<Node>::initBatchSwappable(batchInfo,gAllocator,currentBatch,exactLayers.getLabelsInfo(currentExactLayerIdx), width, 200);
-
-
-            // bool const isAnc = currentBatch[0].isAncestorOf(opt);
-            // if (isAnc)
-            // {
-            //     printf("Ancestor of OPT pulled from Q!\n");
-            //     assert(currentBatch[0].fValue >= 17);
-            // }
-
-
-            //printf("---\n");
-            while (true)
-            {
-                BatchEngine<Node>::processBatchRelaxed(model,pBound,dBound,width,batchInfo);
-                // printf("P = %ld | C = %ld\n", batchInfo->nParents, batchInfo->nChildren);
-                // fflush(stdout);
-                if (batchInfo->nChildren > 0)
+                if (not tNode.isApproximated)  // Better solution found
                 {
-                    if (not model->isTarget(batchInfo->children[0].state))
-                    {
-                        batchInfo->swapParentsAndChildren();
-                    }
-                    else
-                    {
-                        break;
-                    }
+                    pBound = tNode.fValue;
+                    bestNode = tNode;
+                    newSolution = true;
                 }
                 else
                 {
-                    break;
-                }
-            }
-
-            // I know that the only child I have is the best
-            if (batchInfo->nChildren > 0)
-            {
-                // Update bound and solution
-                Node const & tmpNode = batchInfo->children[0];
-                if (isBetter<Model>(tmpNode.fValue,pBound))
-                {
-                    if (not tmpNode.isApproximated)
+                    for (i64 i = 0; i < batchInfo->cutsetSize; )
                     {
-                        assert(tmpNode.gValue == tmpNode.fValue);
-                        pBound = tmpNode.fValue;
-                        bestNode = tmpNode;
-                        newSolution = true;
-                    }
-                    else
-                    {
-                        //printf("CUTSET\n");
-                        for (i64 k = 0; k < batchInfo->cutsetSize;  k += 1)
+                        // Find nodes in the same layer
+                        i64 const lIdx = batchInfo->cutset[i].nEdgesSrcToNode-1;
+                        i64 j = i + 1;
+                        for ( ; j < batchInfo->cutsetSize; j += 1)
                         {
-                            batchInfo->cutset[k].fValue = calcWorst<Model>(batchInfo->cutset[k].fValue, tmpNode.fValue);
-                            //Node::print(batchInfo->cutset[k]);
-                            //fflush(stdout);
+                            if (batchInfo->cutset[j].nEdgesSrcToNode-1 != lIdx)
+                            {
+                                break;
+                            }
                         }
-                        // printf("---\n");
-                        // fflush(stdout);
-                        // bool childrenFound = false;
-                        // for (i64 k = 0; k < batchInfo->cutsetSize;  k+= 1)
-                        // {
-                        //     if (batchInfo->cutset[k].isAncestorOf(opt))
-                        //         childrenFound = true;
-                        // }
-                        // assert(isAnc == false or childrenFound == true);
 
-                        for (i64 i = 0; i < batchInfo->cutsetSize; )
-                        {
-                            i64 const pCutsetLayerIdx = batchInfo->cutset[i].nEdgesSrcToNode-1;
-                            i64 j = i + 1;
-                            for ( ; j < batchInfo->cutsetSize; j += 1)
-                            {
-                                if (batchInfo->cutset[j].nEdgesSrcToNode != pCutsetLayerIdx+1)
-                                {
-                                    break;
-                                }
-                            }
-                            std::span<Node> const pCutset(batchInfo->cutset + i, j - i);
-                            assert(std::all_of(pCutset.begin(), pCutset.end(), [=](auto const & n) { return n.nEdgesSrcToNode == pCutsetLayerIdx+1;}));
+                        // Collect them in a (partial) cutset
+                        std::span<Node> const cutset(batchInfo->cutset + i, j - i);
+                        assert(std::all_of(cutset.begin(), cutset.end(), [](auto const & n) { return n.nEdgesSrcToNode-1 == cutsetLayerIdx;}));
 
-                            auto & pCutsetLabelsInfo =  exactLayers.getLabelsInfo(pCutsetLayerIdx);
-                            for (auto const & n : pCutset)
-                            {
-                                pCutsetLabelsInfo.update(n.labels.slc());
-                            }
+                        // Add cutset to the layer
+                        layers.addToLayer(lIdx, cutset);
 
-                            auto & pCutsetLayer = exactLayers.getLayer(pCutsetLayerIdx);
-                            i64 const pCutsetLayerOldSize = pCutsetLayer.size();
-                            pCutsetLayer.resize(pCutsetLayerOldSize + pCutset.size());
-                            memcpy(pCutsetLayer.data() + pCutsetLayerOldSize,
-                                   pCutset.data(),
-                                   sizeof(Node) * pCutset.size());
-                            exactLayers.updateBound(pCutsetLayerIdx);
-                            if (sort)
-                            {
-                                // Reverse because we work on the tail of the vector
-                                auto constexpr cmp = [](auto const & n1, auto const & n2) {return isWorst<Model>(n1.fValue, n2.fValue);};
-                                std::sort(pCutsetLayer.data() + pCutsetLayerOldSize, pCutsetLayer.data() + pCutsetLayer.size(), cmp);
-                                std::inplace_merge(pCutsetLayer.data(), pCutsetLayer.data() + pCutsetLayerOldSize, pCutsetLayer.data() + pCutsetLayer.size(), cmp);
-                            }
-                            i = j;
-                        }
+                        // Next set of nodes
+                        i = j;
                     }
                 }
-                else
-                {
-                    // if (currentBatch[0].isAncestorOf(opt))
-                    // {
-                    //     printf("Ancestor of OPT pruned because bounds!\n");
-                    // }
-                }
-            }
-            else
-            {
-                 // if (currentBatch[0].isAncestorOf(opt))
-                 // {
-                 //     printf("Ancestor of OPT pruned because no children!\n");
-                 // }
-                   //printf("           Discarded %ld nodes\n", currentBatchSize);
             }
         }
-        exactLayers.getLayer(currentExactLayerIdx).resize(exactLayers.getLayer(currentExactLayerIdx).size() - fragmentSize);
+
         if (newSolution)
         {
             printf("[%7.2fs] SOLUTION              | Cost = %7.2f | Value = ", RuntimeMonitor::elapsedSeconds(start), expandedNodes, bestNode.fValue);
@@ -369,9 +264,7 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
             printf("\n");
             fflush(stdout);
         }
-
-        exactLayers.updateBound(currentExactLayerIdx);
-        auto const tmpBound = exactLayers.calcBestBound();
+        auto const tmpBound = layers.calcBestBound();
         if (isWorst<Model>(tmpBound,dBound) and isValid<Model>(tmpBound))
         {
             printf("[%7.2fs] TIGHTENING            | Dual = %7.2f -> %7.2f\n",
@@ -379,7 +272,7 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
                 dBound,
                 tmpBound,
                 expandedNodes,
-                exactLayers.countAllNodes());
+                layers.countAllNodes());
             dBound = tmpBound;
         }
     }
@@ -389,7 +282,7 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
     {
         if (pBound != worstValue<Model>())
         {
-            printf("COMPLETED    | Expanded = %10ld | Queue = %10ld | Cost = %7.2f | Value = ", expandedNodes,  exactLayers.countAllNodes(), bestNode.gValue);
+            printf("COMPLETED    | Expanded = %10ld | Queue = %10ld | Cost = %7.2f | Value = ", expandedNodes,  layers.countAllNodes(), bestNode.gValue);
             Node::printLabels(bestNode);
             printf("\n");
         }

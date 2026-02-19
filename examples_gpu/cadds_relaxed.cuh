@@ -1,13 +1,13 @@
 #pragma once
 
 #include "codd.hpp"
-#include "BatchEngine.cuh"
+#include "LayerEngine.cuh"
 #include <StackAllocator.hpp>
 #include <cxxopts.hpp>
-#include <Malloc.hpp>
+#include <Memory.hpp>
 #include <span>
 
-#include "BatchInfo.cuh"
+#include "ExpansionInfo.cuh"
 
 constexpr auto static ReadOnlyMemSize{256 * 1024}; // Cached in shared memory
 constexpr auto static CpuMemSize{8ll * 1024ll * 1024ll * 1024ll}; // Same size GPU memory: 48 - 4 for runtime!)
@@ -16,7 +16,7 @@ template<typename Model, typename Node>
 int run_cadds_relaxed_seq(int argc,char* argv[])
 {
     using namespace gfl;
-    using BatchInfoType   = BatchInfo<Node>;
+    using BatchInfoType   = ExpansionInfo<Node>;
     using LayerBufferType = std::vector<Node>;
 
     // Parse arguments
@@ -160,8 +160,8 @@ int run_cadds_relaxed_seq(int argc,char* argv[])
             printf(" | Batch %3d/%3d | BatchSize = %10ld | Q = %10ld\n", bIdx+1, nBatches, currentBatchSize, qSize);
             fflush(stdout);
 
-            BatchEngine<Node>::initBatch(batchInfo,gAllocator,currentBatch,labelsInfo[lIdx]);
-            BatchEngine<Node>::processBatchExact(model,pBound,dBound,batchInfo);
+            LayerEngine<Node>::initBatch(batchInfo,gAllocator,currentBatch,labelsInfo[lIdx]);
+            LayerEngine<Node>::processBatchExact(model,pBound,dBound,batchInfo);
 
             if (batchInfo->nChildren > 0)
             {

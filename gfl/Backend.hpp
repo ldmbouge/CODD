@@ -1,20 +1,14 @@
 #pragma once
 
-#ifdef __NVCC__
-#include <cuda/std/optional>
-#include <cuda/std/tuple>
-#include <cuda/std/bit>
-#include <cuda/std/initializer_list>
-#include <cuda/std/limits>
+#ifdef __CUDACC__
+    #include <cuda/std/optional>
+    #include <cuda/std/tuple>
+    #include <cuda/std/limits>
 #else
-#include <optional>
-#include <tuple>
-#include <bit>
-#include <initializer_list>
-#include <limits>
+    #include <optional>
+    #include <tuple>
+    #include <limits>
 #endif
-
-#include "Common.hpp"
 
 namespace gfl
 {
@@ -24,20 +18,30 @@ namespace gfl
     namespace backend = std;
 #endif
 
+    constexpr inline auto nullopt = backend::nullopt;
+
+
     // Optional
-    template<typename  T>
+    template<typename T>
     using optional = backend::optional<T>;
-    constexpr static auto nullopt = backend::nullopt;
 
     // Tuple
-    template <typename... Types>
+    template<typename... Types>
     using tuple = backend::tuple<Types...>;
-
-    // Initializer List
-    template <typename T>
-    using initializer_list = backend::initializer_list<T>;
+    using backend::make_tuple;
+    using backend::get;
 
     // Numeric Limits
-    template <typename T>
+    template<typename T>
     using numeric_limits = backend::numeric_limits<T>;
+
+    GFL_HOST_DEVICE inline
+    void abort()
+    {
+#ifdef __CUDA_ARCH__
+        __trap();
+#else
+        std::abort();
+#endif
+    }
 }

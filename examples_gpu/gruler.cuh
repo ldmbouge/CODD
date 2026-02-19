@@ -1,9 +1,9 @@
 #pragma once
 
-#include "model.hpp"
+#include "ModelSpec.hpp"
 #include "gruler_base.hpp"
 #include "util.hpp"
-#include <Common.hpp>
+#include <FunctionQualifiers.hpp>
 #include <Backend.hpp>
 
 #include <iostream>

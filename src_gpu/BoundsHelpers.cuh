@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Common.hpp"
+#include "FunctionQualifiers.hpp"
 
 //  Minimization TSP (Opt 4)
 //  Primal 5,7,+inf (Better 5) Better is Smaller

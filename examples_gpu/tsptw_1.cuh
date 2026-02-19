@@ -1,9 +1,9 @@
 #pragma once
 
-#include "model.hpp"
+#include "ModelSpec.hpp"
 #include "tsptw_base.hpp"
 #include "util.hpp"
-#include <Common.hpp>
+#include <FunctionQualifiers.hpp>
 #include <Backend.hpp>
 
 template<int N = 64>
