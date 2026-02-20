@@ -57,7 +57,7 @@ void expandParents(
         Node const & pNode = parents[pIdx];
         auto const & pLabels = pNode.labels();
         auto const & [minLabel, maxLabel, nLabels] = pLabels.summary();
-        if (nLabels > 0 and pNode.h() > 0)
+        if (nLabels > 0)
         {
             for (i32 label = minLabel; label <= maxLabel; label += 1)
             {
@@ -69,7 +69,7 @@ void expandParents(
                     {
                         f64 const tCost = model->scf(pNode.state(), label);
                         f64 const cG = pNode.g() + tCost;
-                        f64 cH = pNode.f() + tCost;
+                        f64 cH = pNode.f() - cG;
                         if constexpr (Model::has_heur)
                         {
                             f64 const h = model->h(cState.value(), BBCtx);
@@ -77,7 +77,7 @@ void expandParents(
                         }
 
                         // Conditions to keep the child
-                        if (isBetter<Model>(cG + cH,primal))
+                        if (cH >= 0 and isBetter<Model>(cG + cH,primal))
                         {
                             // Node
                             assert(childrenInfo.size() == children.size());

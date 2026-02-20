@@ -22,8 +22,7 @@ namespace gfl
             if (capacity > capacity_)
             {
                 i32 const newCapacity = capacity * GrowthFactor;
-                checkOrAbort(newCapacity <= MaxElements, "Vector exceeded MaxElements");
-                vmCommit(data_, newCapacity);   // pointer stays the same, no copy
+                data_ = heapRealloc(data_, newCapacity);
                 capacity_ = newCapacity;
             }
         }
@@ -39,15 +38,13 @@ namespace gfl
 
         explicit
         Vector(i32 const capacity) noexcept :
-            VectorView<T>(capacity, vmReserve<T>(MaxElements))
-        {
-            vmCommit(data_, capacity);
-        }
+            VectorView<T>(capacity, heapReserve<T>(capacity))
+        {}
 
         ~Vector() noexcept
         {
             assert(data_ != nullptr);
-            vmRelease(data_, MaxElements);
+            heapRelease(data_);
         }
 
         i32 resizeTo(i32 const size) noexcept

@@ -45,42 +45,36 @@ int runRelaxedSeq(int argc, char* argv[])
 
     // Log manager
     LogManager<Model,Node> log;
+    bnb.onPrimal([&log,&stats,&bnb]{log.event(stats,bnb);});
+    bnb.onDual([&log,&stats,&bnb]{log.event(stats,bnb);});
 
     // Layers
     Queue<Model,Node> queue;
     queue.onPush([&](i32 const n){stats.inserted(n);});
     queue.onPull([&](i32 const n){stats.extracted(n);});
-    auto const state = model->initial();
-    auto const outLabels = model->lgf(state, worst<Model>(), best<Model>(), DDExact);
-    f64 const h =  Model::has_heur ? model->h(state, DDInit) : best<Model>();
-    Node const root(state, outLabels, h);
-    queue.push(root);
+    queue.push(Node::makeRoot(model));
 
     // BnB search
     log.header();
     stats.start();
-    while (
-        not queue.empty() and
-        stats.elapsed<sec>() <= cli.timeout() and
-        not bnb.gapClosed())
+    while (stats.elapsed<sec>() <= cli.timeout() and not bnb.solved())
     {
-        // Expand
         Node const & node = queue.pullBest();
+        bnb.dual(queue.bestDual());
         eng->fullyExpandRelaxed(model, node, bnb.primal(), bnb.dual());
 
         // Check relaxation and manage cutset
         if (eng->hasTarget())
         {
-            Node const & trg_node = eng->getTarget();
-            if (not bnb.pruneAncestor(model, trg_node))
+            Node const & trg = eng->getTarget();
+            if (not bnb.pruneAncestor(trg))
             {
-                bnb.updatePrimal(model, trg_node);
+                bnb.primal(trg);
                 auto const & cutset = eng->cutset();
                 queue.push(cutset);
-                bnb.updateDual(queue.bestDual());
             }
         }
-        log.log(stats,bnb);
+        log.progress(stats,bnb);
     }
     stats.end();
     log.summary(stats,bnb,cli.timeout());

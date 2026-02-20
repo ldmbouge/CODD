@@ -74,6 +74,10 @@ public:
             Layer & l = layer(depth);
             i32 const oldSize = l.resizeBy(nodes.size());
             std::memcpy(&l[oldSize], nodes.data(), nodes.dataMemSize());
+            printf("%p,%p,%p,%llu,%d,%d\n",
+     l.begin(), &l[oldSize], l.end(),
+     sizeof(Node), oldSize, nodes.size());
+            fflush(stdout);
             std::inplace_merge(l.begin(), &l[oldSize], l.end(), revDual);
             notifyPush(nodes.size());
         }

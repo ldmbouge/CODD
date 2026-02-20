@@ -96,7 +96,7 @@ public:
         {
             if (l and (not s.sel.contains(s.n))) return gfl::nullopt; // we cannot take n (label==1) if not legal.
             ItemSet out = s.sel;
-            out.remove(s.n);   // remove n from state
+            out.remove(s.n);   // remove n from state128
             if (l) out.diffWith(adj[s.n]); // remove neighbors of n from state (when taking n -- label==1 -- )
             return State(out, s.n + 1); // build state accordingly
         }

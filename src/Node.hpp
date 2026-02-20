@@ -38,6 +38,18 @@ public:
         state_(s), outLabels(outLabels), h_(h)
     {}
 
+    template<typename Model>
+    static
+    Node makeRoot(Model const * const model)
+    {
+        using namespace gfl;
+
+        auto const state = model->initial();
+        auto const labels = model->lgf(state, worst<Model>(), best<Model>(), DDExact);
+        f64 const h =  Model::has_heur ? model->h(state, DDInit) : best<Model>();
+        return Node(state, labels, h);
+    }
+
     State const & state() const noexcept { return state_; }
     void state(State const & state) noexcept {state_ = state; }
 
