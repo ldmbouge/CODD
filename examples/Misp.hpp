@@ -64,6 +64,7 @@ public:
 
     State initial() const noexcept
     {
+       std::cout << "nodes-1: " << nodes -1  << "\n";
         return State(ItemSet(0,nodes-1),0);
     }
 
@@ -90,16 +91,20 @@ public:
     gfl::optional<State> stf(State const & s, int l) const noexcept
     {
         if (s.n == nodes)
-        {
-            return gfl::nullopt;
-        }
-        else
-        {
+           return gfl::nullopt;
+        else {
+           if (!s.sel.contains(s.n) && l)  return gfl::nullopt;
             ItemSet out = s.sel;
-            if (l and out.contains(s.n))
-            {
-                out.remove(s.n);
-                out.diffWith(adj[s.n]);
+            out.remove(s.n);
+            
+            //std::cout << "\tXXX:";out.print();std::cout << " LABEL:" << l << " :N = " << s.n << "\n";
+            //std::cout << "OUT.CONTAINS:" << out.contains(s.n)  << "\n";
+               
+            if (l) { //  and out.contains(s.n)) {
+               //std::cout << "ADJ:";adj[s.n].print(); std::cout << "\n";
+               //std::cout << "\tBADJ:";out.print();std::cout << "\n";
+               out.diffWith(adj[s.n]);
+               //std::cout << "\tAADJ:";out.print();std::cout << "\n";
             }
             return State(out, s.n + 1); // build state accordingly
         }
@@ -108,8 +113,7 @@ public:
     GFL_HOST_DEVICE
     gfl::f64 scf(State const & s, int const l) const noexcept
     {
-        using namespace gfl;
-        return scast<f64>(l);
+        return l;
     }
 
     constexpr static bool has_merge = true;

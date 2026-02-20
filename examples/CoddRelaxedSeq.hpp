@@ -45,8 +45,14 @@ int runRelaxedSeq(int argc, char* argv[])
 
     // Log manager
     LogManager<Model,Node> log;
-    bnb.onPrimal([&log,&stats,&bnb]{log.primal(stats,bnb);});
-    bnb.onDual([&log,&stats,&bnb]{log.dual(stats,bnb);});
+    bnb.onPrimal([&log,&stats,&bnb]{
+       std::cout << "OhAh  We have primal:" << bnb.primal() << "\n";
+       log.primal(stats,bnb);
+    });
+    bnb.onDual([&log,&stats,&bnb]{
+       //std::cout << "OhOh  We have dual:" << bnb.dual() << "\n";
+       log.dual(stats,bnb);
+    });
 
     // Layers
     Queue<Model,Node> queue;
@@ -57,9 +63,12 @@ int runRelaxedSeq(int argc, char* argv[])
     // BnB search
     log.header();
     stats.start();
+    int cnt = 0;
     while (stats.elapsed<sec>() <= cli.timeout() and not bnb.solved())
     {
+       //std::cout << "ITER CNT:" << cnt++ << " ----------------------------------------\n";
         Node const node = queue.pullBest();
+        //std::cout << "NODE:";Node::print(node);std::cout << "\n";
         bnb.dual(queue.bestDual());
         assert(bnb.consistent());
 
@@ -71,6 +80,7 @@ int runRelaxedSeq(int argc, char* argv[])
             Node const & trg = eng->getTarget();
             if (not bnb.pruneAncestor(trg))
             {
+                //std::cout << "who is a bad boy?"; Node::print(trg); std::cout << "\n";
                 bnb.primal(trg);
                 assert(bnb.consistent());
                 auto const & cutset = eng->cutset();

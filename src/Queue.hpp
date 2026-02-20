@@ -27,7 +27,7 @@ class Queue
         using namespace gfl;
         if (lIdx >= layers.size())
         {
-            i32 const oldSize = layers.size();
+           //i32 const oldSize = layers.size();
             layers.resize(lIdx + 1);
             // ArrayView<Layer> newLayers = layers.slice(oldSize, layers.size());
             // for (auto & l : newLayers) { new (&l) Layer(DefaultLayerSize); }

@@ -14,7 +14,7 @@ class alignas(gfl::DefaultAlign) Node
     OutLabels outLabels{};
     gfl::f64 g_{0};
     gfl::f64 h_{0};
-    gfl::u8 approximated_{0};
+    gfl::u8 approximated_;
     gfl::u8 ancestorInCutset_{0};
     gfl::i16 pathLen{0};
     gfl::i16 prefixPath[Depth]{};
@@ -25,10 +25,10 @@ public:
 
     GFL_HOST_DEVICE
     Node(State const & s, gfl::f64 const g, gfl::f64 const h, gfl::i32 const label, Node const & pNode) noexcept :
-            state_(s), g_(g), h_(h),
-            approximated_(pNode.approximated_),
-            ancestorInCutset_(pNode.ancestorInCutset_),
-            pathLen(pNode.pathLen+1)
+       state_(s), g_(g), h_(h),
+       approximated_(pNode.approximated_),
+       ancestorInCutset_(pNode.ancestorInCutset_),
+       pathLen(pNode.pathLen+1)
     {
         for (int i = 0; i < pNode.pathLen; i += 1)  prefixPath[i] = pNode.prefixPath[i];
         prefixPath[pNode.pathLen] = label;
@@ -36,7 +36,7 @@ public:
 
     GFL_HOST_DEVICE
     Node(State const & s, OutLabels const & outLabels, gfl::f64 const h) noexcept :
-        state_(s), outLabels(outLabels), h_(h)
+       state_(s), outLabels(outLabels), h_(h),approximated_(0)
     {}
 
     template<typename Model>
@@ -88,7 +88,9 @@ public:
         ArrayView<i16 const> const path(pathLen, prefixPath);
         return path;
     }
-
+   friend std::ostream& operator<<(std::ostream& os,const Node& n) {
+      return os << (n.approximated_ ? "1" : "0");
+   }
     GFL_HOST
     static
     void print(Node const & node)
@@ -140,7 +142,7 @@ struct NodeInfo
     void print(NodeInfo const & ni)
     {
         using namespace gfl;
-        printf("INFO: (%7lu,%7llu,%7.2f)", ni.flag, scast<llu>(ni.hash) % 10000000ll, std::fmod(ni.score,10000000.0));
+        printf("INFO: (%7llu,%7llu,%7.2f)", ni.flag, scast<llu>(ni.hash) % 10000000ll, std::fmod(ni.score,10000000.0));
         printf(" | "); printf("IDX: %lld", scast<lld>(ni.idx));
         printf(" | "); printf("PIDX: %lld", scast<lld>(ni.pIdx));
     }

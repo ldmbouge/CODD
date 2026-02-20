@@ -13,7 +13,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_FLAGS " -Wall")
-set(CMAKE_CXX_FLAGS_DEBUG          " -O0 -g -fno-omit-frame-pointer -fconcepts-diagnostics-depth=10")
+set(CMAKE_CXX_FLAGS_DEBUG          " -O0 -g -fno-omit-frame-pointer") # -fconcepts-diagnostics-depth=10
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO " -O2 -g -fno-omit-frame-pointer -DNDEBUG -march=native")
 set(CMAKE_CXX_FLAGS_RELEASE        " -O3 -DNDEBUG -march=native")
 

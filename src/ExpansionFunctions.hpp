@@ -41,9 +41,9 @@ void printInfo(gfl::ArrayView<NodeInfo> const & nodesInfo)
 
 template<typename Model, typename Node>
 void expandParents(
-        Model const * const model,
-        ExpansionData<Node> * const expData,
-        gfl::f64 const primal)
+                   Model const * const model,
+                   ExpansionData<Node> * const expData,
+                   gfl::f64 const primal)
 {
     using namespace gfl;
 
@@ -130,14 +130,27 @@ void flagRepresented(NodeInfo & iInfo, NodeInfo & jInfo, Node const & iNode, Nod
 
     if (Model::State::equal(iNode.state(), jNode.state()))
     {
-        if (isBetterEq<Model>(iNode.g(), jNode.g()))
-        {
-            jInfo.flag = 1;
-        }
-        else
-        {
-            iInfo.flag = 1;
-        }
+       if (iNode.approximated() == jNode.approximated())
+       {
+          if (isBetterEq<Model>(iNode.g(), jNode.g()))
+             jInfo.flag = 1;
+          else iInfo.flag = 1;
+       }
+       else
+       {
+          if (iNode.g() == jNode.g())
+          {
+             if (iNode.approximated())
+                iInfo.flag = 1;
+             else jInfo.flag = 1;
+          }
+          else
+          {
+             if (isBetterEq<Model>(iNode.g(), jNode.g()))
+                jInfo.flag = 1;
+             else iInfo.flag = 1;               
+          }
+       }
     }
     if constexpr (Model::has_dom)
     {
@@ -246,11 +259,15 @@ void filterChildren(ExpansionData<Node> * const expData)
 
     calcHash<Model>(children, childrenInfo);
     sort(childrenInfo, NodeInfo::cmpByHash);
+    assert(children.size() == childrenInfo.size());
 
+    //printInfo(childrenInfo);
+    
     i32 nRepresentatives = 0;
     setFlag(childrenInfo, 0);
     flagRepresented<Model,Node>(childrenInfo, children);
     countFlagged(&nRepresentatives, childrenInfo, 0);
+    //std::cout << "#flag:" << nRepresentatives << " input size:" << children.size() << "\n";
     sort(childrenInfo, NodeInfo::cmpByFlag);
 
     childrenInfo.resizeTo(nRepresentatives);
@@ -502,7 +519,7 @@ void finializeCutset(
     {
         calcOutLabels(model, cutData->nodes(), pBound, dBound, ddCtx);
         i64 const f = expData->getTarget().f();
-        //setH<Model,Node>(cutData->nodes(), f);
+        setH<Model,Node>(cutData->nodes(), f);
     }
 
 }

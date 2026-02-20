@@ -116,7 +116,7 @@ namespace gfl
         {
             assert(0 <= begin);
             assert(begin <= end);
-            assert(end <= size_);
+            assert(end   <= size_);
             return ArrayView<T>(end - begin, data_ + begin);
         }
 
@@ -125,10 +125,15 @@ namespace gfl
         {
             assert(count != 0);
             if (count >= 0) return slice(0,count);
-                       else return slice(size_ + count, size_);
-
+            else return slice(size_ + count, size_);
         }
-
+       friend std::ostream& operator<<(std::ostream& os,const ArrayView& av) {
+            os << "[";
+            for(T const * it = av.begin(); it != av.end(); ++it)
+               os << *it;
+            return os << "]";
+       }
+       
         GFL_HOST_DEVICE static
         void print(T const * begin, T const * end, char const * fmt = "%d") noexcept
         {
