@@ -40,9 +40,14 @@ public:
         for(auto const & l : dualListeners) { l(); }
     }
 
+    bool consistent() const
+    {
+        return isBetterEq<Model>(dual_, primal_);
+    }
+
     bool solved() const
     {
-        assert(isBetterEq<Model>(dual_, primal_));
+        assert(consistent());
         return dual_ == primal_;
     }
 

@@ -50,8 +50,17 @@ public:
         );
     }
 
-    void event(StatsManager const & stats, BnBManager const & bnb)
-    { log(bnb, stats); }
+    void primal(StatsManager const & stats, BnBManager const & bnb)
+    {
+        using namespace gfl;
+        solutionTime_ = stats.elapsed<sec>();
+        log(bnb, stats);
+    }
+
+    void dual(StatsManager const & stats, BnBManager const & bnb)
+    {
+        log(bnb, stats);
+    }
 
     void progress(StatsManager const & stats, BnBManager const & bnb)
     {
@@ -72,8 +81,8 @@ public:
         fmt::print("Status        = {}\n", statusStr);
         fmt::print("Extracted     = {}\n", stats.extracted());
         fmt::print("Queue         = {}\n", stats.inserted() - stats.extracted());
-        fmt::print("Search Time   = {:.2f} s\n", searchTime);
-        fmt::print("Solution Time = {:.2f} s\n", solutionTime_);
+        fmt::print("Search Time   = {:.2f}\n", searchTime);
+        fmt::print("Solution Time = {:.2f}\n", solutionTime_);
         fmt::print("Solution Cost = {:.2f}\n", bnb.primal());
         fmt::print("Solution Path = "); bnb.solution().print();
         fmt::print("\n");

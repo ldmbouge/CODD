@@ -45,8 +45,8 @@ int runRelaxedSeq(int argc, char* argv[])
 
     // Log manager
     LogManager<Model,Node> log;
-    bnb.onPrimal([&log,&stats,&bnb]{log.event(stats,bnb);});
-    bnb.onDual([&log,&stats,&bnb]{log.event(stats,bnb);});
+    bnb.onPrimal([&log,&stats,&bnb]{log.primal(stats,bnb);});
+    bnb.onDual([&log,&stats,&bnb]{log.dual(stats,bnb);});
 
     // Layers
     Queue<Model,Node> queue;
@@ -59,8 +59,10 @@ int runRelaxedSeq(int argc, char* argv[])
     stats.start();
     while (stats.elapsed<sec>() <= cli.timeout() and not bnb.solved())
     {
-        Node const & node = queue.pullBest();
+        Node const node = queue.pullBest();
         bnb.dual(queue.bestDual());
+        assert(bnb.consistent());
+
         eng->fullyExpandRelaxed(model, node, bnb.primal(), bnb.dual());
 
         // Check relaxation and manage cutset
@@ -70,6 +72,7 @@ int runRelaxedSeq(int argc, char* argv[])
             if (not bnb.pruneAncestor(trg))
             {
                 bnb.primal(trg);
+                assert(bnb.consistent());
                 auto const & cutset = eng->cutset();
                 queue.push(cutset);
             }

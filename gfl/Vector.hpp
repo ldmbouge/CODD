@@ -13,7 +13,8 @@ namespace gfl
         using VectorView<T>::data_;
         using VectorView<T>::capacity_;
 
-        static constexpr i64 MaxElements   = 256ll * 1024ll * 1024ll; // 256M elements
+        static constexpr i64 MaxBytes    = 8ll * 1024ll * 1024ll * 1024ll; // 8GB
+        static constexpr i64 MaxElements = MaxBytes / scast<i64>(sizeof(T));
         static constexpr i32 GrowthFactor  = 4;
         static constexpr i32 DefaultSize = 1024;
 
@@ -21,8 +22,11 @@ namespace gfl
         {
             if (capacity > capacity_)
             {
+
                 i32 const newCapacity = capacity * GrowthFactor;
-                data_ = heapRealloc(data_, newCapacity);
+                printf("CAPACITY = %d -> %d\n", capacity_, newCapacity);
+                checkOrAbort(newCapacity <= MaxElements, "Vector exceeded MaxElements");
+                vmCommit(data_, newCapacity);   // pointer stays the same, no copy
                 capacity_ = newCapacity;
             }
         }
@@ -38,13 +42,15 @@ namespace gfl
 
         explicit
         Vector(i32 const capacity) noexcept :
-            VectorView<T>(capacity, heapReserve<T>(capacity))
-        {}
+            VectorView<T>(capacity, vmReserve<T>(MaxElements))
+        {
+            vmCommit(data_, capacity);
+        }
 
         ~Vector() noexcept
         {
             assert(data_ != nullptr);
-            heapRelease(data_);
+            vmRelease(data_, MaxElements);
         }
 
         i32 resizeTo(i32 const size) noexcept

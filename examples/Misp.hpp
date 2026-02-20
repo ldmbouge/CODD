@@ -26,6 +26,7 @@ public:
         gfl::i32  n{0};
 
     public:
+        State() = default;
 
         State(ItemSet const & sel, gfl::i32 const n) noexcept : sel(sel), n(n) {}
 
@@ -94,10 +95,12 @@ public:
         }
         else
         {
-            if (l and (not s.sel.contains(s.n))) return gfl::nullopt; // we cannot take n (label==1) if not legal.
             ItemSet out = s.sel;
-            out.remove(s.n);   // remove n from state128
-            if (l) out.diffWith(adj[s.n]); // remove neighbors of n from state (when taking n -- label==1 -- )
+            if (l and out.contains(s.n))
+            {
+                out.remove(s.n);
+                out.diffWith(adj[s.n]);
+            }
             return State(out, s.n + 1); // build state accordingly
         }
     }

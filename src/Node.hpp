@@ -10,7 +10,7 @@
 template<typename State, typename OutLabels,  int Depth>
 class alignas(gfl::DefaultAlign) Node
 {
-    State state_{};
+    State state_;
     OutLabels outLabels{};
     gfl::f64 g_{0};
     gfl::f64 h_{0};
@@ -19,9 +19,10 @@ class alignas(gfl::DefaultAlign) Node
     gfl::i16 pathLen{0};
     gfl::i16 prefixPath[Depth]{};
 
-    Node() = delete;
-
 public:
+
+    Node() = default;
+
     GFL_HOST_DEVICE
     Node(State const & s, gfl::f64 const g, gfl::f64 const h, gfl::i32 const label, Node const & pNode) noexcept :
             state_(s), g_(g), h_(h),
@@ -100,7 +101,7 @@ public:
         printf(" | "); printf("CUT: %d", node.ancestorInCutset());
         printf(" | "); printf("DPT: %d", node.pathLen);
         printf(" | "); printf("LBS: "); ArrayView<i16>::print(node.prefixPath, node.pathLen);  // This is correct
-        printf(" | "); printf("ST: "); State::print(node.state_);
+        //printf(" | "); printf("ST: "); State::print(node.state_);
     }
 };
 

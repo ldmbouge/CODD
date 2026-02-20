@@ -26,26 +26,16 @@ namespace gfl
     template<typename T = u8>
     T* heapReserve(i64 const count) noexcept
     {
-        assert(count > 0);
+        checkOrAbort(count > 0, "heapReserve failed: count must be > 0");
         void* memory = std::malloc(sizeof(T) * count);
-        assert(memory != nullptr);
-        return scast<T*>(memory);
-    }
-
-    template<typename T>
-    T* heapRealloc(T* const ptr, i64 const count) noexcept
-    {
-        assert(ptr != nullptr);
-        assert(count > 0);
-        void* memory = std::realloc(ptr, sizeof(T) * count);
-        assert(memory != nullptr);
+        checkOrAbort(memory != nullptr, "heapReserve failed: null pointer returned");
         return scast<T*>(memory);
     }
 
     inline
     void heapRelease(void*& memory) noexcept
     {
-        assert(memory != nullptr);
+        checkOrAbort(memory != nullptr, "heapRelease failed: null pointer");
         std::free(memory);
         memory = nullptr;
     }
@@ -58,30 +48,28 @@ namespace gfl
     template<typename T>
     T* vmReserve(i64 const count) noexcept
     {
-        assert(count > 0);
-        i64 const bytes = roundUp<i64>(sizeof(T) * count, pageSize());
-        void* p = mmap(nullptr, bytes, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-        assert(p != MAP_FAILED);
+        checkOrAbort(count > 0, "vmReserve failed: count must be > 0");
+        void* p = mmap(nullptr, sizeof(T) * count,PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+        checkOrAbort(p != MAP_FAILED, "vmReserve failed: mmap returned MAP_FAILED");
         return scast<T*>(p);
     }
 
     template<typename T>
     void vmCommit(T* const ptr, i64 const count) noexcept
     {
-        assert(ptr != nullptr);
-        assert(count > 0);
-        i64 const bytes  = roundUp<i64>(sizeof(T) * count, pageSize());
+        checkOrAbort(ptr != nullptr, "vmCommit failed: null pointer");
+        checkOrAbort(count > 0, "vmCommit failed: count must be > 0");
+        i64 const bytes  = roundUp<i64>(sizeof(T) * count , pageSize());
         i32 const result = mprotect(ptr, bytes, PROT_READ | PROT_WRITE);
-        assert(result == 0);
+        checkOrAbort(result == 0, "vmCommit failed: mprotect failed");
     }
 
     template<typename T>
     void vmRelease(T*& ptr, i64 const count) noexcept
     {
-        assert(ptr != nullptr);
-        assert(count > 0);
-        i64 const bytes = roundUp<i64>(sizeof(T) * count, pageSize());
-        munmap(ptr, bytes);
+        checkOrAbort(ptr != nullptr, "vmRelease failed: null pointer");
+        checkOrAbort(count > 0, "vmRelease failed: count must be > 0");
+        munmap(ptr, sizeof(T) * count);
         ptr = nullptr;
     }
 
@@ -91,57 +79,57 @@ namespace gfl
     template<typename T = u8>
     T* cudaReserveHost(i64 const count) noexcept
     {
-        assert(count > 0);
+        checkOrAbort(count > 0, "cudaReserveHost failed: count must be > 0");
         void* memory = nullptr;
         cudaError_t const status = cudaMallocHost(&memory, sizeof(T) * count);
-        assert(status == cudaSuccess and memory != nullptr);
+        checkOrAbort(status == cudaSuccess and memory != nullptr, "cudaReserveHost failed");
         return scast<T*>(memory);
     }
 
     inline
     void cudaReleaseHost(void*& memory) noexcept
     {
-        assert(memory != nullptr);
+        checkOrAbort(memory != nullptr, "cudaReleaseHost failed: null pointer");
         cudaError_t const status = cudaFreeHost(memory);
-        assert(status == cudaSuccess);
+        checkOrAbort(status == cudaSuccess, "cudaReleaseHost failed");
         memory = nullptr;
     }
 
     template<typename T = u8>
     T* cudaReserveDevice(i64 const count) noexcept
     {
-        assert(count > 0);
+        checkOrAbort(count > 0, "cudaReserveDevice failed: count must be > 0");
         void* memory = nullptr;
         cudaError_t const status = cudaMalloc(&memory, sizeof(T) * count);
-        assert(status == cudaSuccess and memory != nullptr);
+        checkOrAbort(status == cudaSuccess and memory != nullptr, "cudaReserveDevice failed");
         return scast<T*>(memory);
     }
 
     inline
     void cudaReleaseDevice(void*& memory) noexcept
     {
-        assert(memory != nullptr);
+        checkOrAbort(memory != nullptr, "cudaReleaseDevice failed: null pointer");
         cudaError_t const status = cudaFree(memory);
-        assert(status == cudaSuccess);
+        checkOrAbort(status == cudaSuccess, "cudaReleaseDevice failed");
         memory = nullptr;
     }
 
     template<typename T = u8>
     T* cudaReserveManaged(i64 const count) noexcept
     {
-        assert(count > 0);
+        checkOrAbort(count > 0, "cudaReserveManaged failed: count must be > 0");
         void* memory = nullptr;
         cudaError_t const status = cudaMallocManaged(&memory, sizeof(T) * count);
-        assert(status == cudaSuccess and memory != nullptr);
+        checkOrAbort(status == cudaSuccess and memory != nullptr, "cudaReserveManaged failed");
         return scast<T*>(memory);
     }
 
     inline
     void cudaReleaseManaged(void*& memory) noexcept
     {
-        assert(memory != nullptr);
+        checkOrAbort(memory != nullptr, "cudaReleaseManaged failed: null pointer");
         cudaError_t const status = cudaFree(memory);
-        assert(status == cudaSuccess);
+        checkOrAbort(status == cudaSuccess, "cudaReleaseManaged failed");
         memory = nullptr;
     }
 #endif

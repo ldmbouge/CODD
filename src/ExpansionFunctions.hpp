@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <GFL.hpp>
 
+#include "Debug.hpp"
 #include "Node.hpp"
 #include "BoundsUtils.hpp"
 #include "CutsetData.hpp"
@@ -69,15 +70,16 @@ void expandParents(
                     {
                         f64 const tCost = model->scf(pNode.state(), label);
                         f64 const cG = pNode.g() + tCost;
-                        f64 cH = pNode.f() - cG;
+                        f64 cH =  pNode.h() > 0 ? pNode.f() - cG : 0; // Deal with shallow target states
                         if constexpr (Model::has_heur)
                         {
                             f64 const h = model->h(cState.value(), BBCtx);
                             cH = tighter<Model>(cH,h);
                         }
+                        assert(cH >= 0);
 
                         // Conditions to keep the child
-                        if (cH >= 0 and isBetter<Model>(cG + cH,primal))
+                        if (isBetter<Model>(cG + cH,primal))
                         {
                             // Node
                             assert(childrenInfo.size() == children.size());
@@ -358,6 +360,13 @@ void saveCutset(
         ArrayView<Node> segment = cutData->addSegment(nParentsToCopy);
         copyByInfo(segment, parents, parentsToCopyInfo);
     }
+
+    DEBUG_CUT (
+        printf("CUTSET:\n");
+        for(auto const & c : cutData->nodes()) {Node::print(c);printf("\n");}
+        printf("\n");
+    )
+
 }
 
 inline
@@ -393,6 +402,12 @@ void mergeChildren(gfl::i64 const width, ExpansionData<Node> * const expData, Cu
     copyByInfo(tmpChildren,children, childrenInfo);
     VectorView<Node>::swap(tmpChildren, children);
 
+    DEBUG_MRG(
+        printf("BEFORE MRG:\n");
+        for(auto const & c : expData->children) {Node::print(c);printf("\n");}
+        printf("\n");
+    )
+
     // Flag the parents of the nodes that will be merged
     parentInfo.resizeTo(parents.size());
     initInfoIdx(parentInfo);
@@ -405,6 +420,13 @@ void mergeChildren(gfl::i64 const width, ExpansionData<Node> * const expData, Cu
     mergeChildrenInplace<Model>(suffix);
     children.resizeTo(width);
     childrenInfo.resizeTo(width);
+
+
+    DEBUG_MRG(
+        printf("AFTER MRG:\n");
+        for(auto const & c : expData->children) {Node::print(c);printf("\n");}
+        printf("\n");
+    )
 
     // Save cutset
     updateAncestorFlag(children,childrenInfo,parentInfo);
@@ -480,6 +502,7 @@ void finializeCutset(
     {
         calcOutLabels(model, cutData->nodes(), pBound, dBound, ddCtx);
         i64 const f = expData->getTarget().f();
-        setH<Model,Node>(cutData->nodes(), f);
+        //setH<Model,Node>(cutData->nodes(), f);
     }
+
 }

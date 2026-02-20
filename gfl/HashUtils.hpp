@@ -10,5 +10,5 @@ namespace gfl
     // - https://www.boost.org/doc/libs/1_55_0/doc/html/hash/reference.html#boost.hash_combine
     GFL_HOST_DEVICE inline
     void hashCombine(u64 & seed, u64 const h)
-    { seed ^= h + 0x9e3779b9 + (seed<<6) + (seed>>2); }
+    {  seed ^= h + 0x9e3779b97f4a7c16ull + (seed<<6) + (seed>>2); }
 }
