@@ -60,6 +60,7 @@ struct ExpansionData
         using namespace gfl;
 
         VectorView<Node>::swap(parents,children);
+        children.clear();
         nodesInfo.clear();
         tmpNodes.clear();
         tmpNodesInfo.clear();

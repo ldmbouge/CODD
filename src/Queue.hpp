@@ -11,6 +11,11 @@
 template<typename Model, typename Node>
 class Queue
 {
+    using PushListener = std::function<void(gfl::i32)>;
+    using PullListener = std::function<void(gfl::i32)>;
+    std::vector<PushListener> pushListeners;
+    std::vector<PullListener> pullListeners;
+
     static constexpr gfl::i32 DefaultLayerSize = 4096;
     using Layer = gfl::Vector<Node>;
 
@@ -31,12 +36,25 @@ class Queue
 public:
     Queue() noexcept = default;
 
+
+    void onPush(PushListener l) { pushListeners.emplace_back(std::move(l));}
+    void onPull(PullListener l) { pullListeners.emplace_back(std::move(l));}
+
+    void
+    notifyPush(gfl::i32 const n)
+    { for(auto const & l : pushListeners) { l(n); }}
+
+    void
+    notifyPull(gfl::i32 const n)
+    { for(auto const & l : pullListeners) { l(n); }}
+
     void push(Node const & node) noexcept
     {
         using namespace gfl;
 
         i32 const depth = node.depth();
         layer(depth).pushBack(node);
+        notifyPush(1);
     }
 
     void push(gfl::ArrayView<Node> const & nodes) noexcept
@@ -46,17 +64,18 @@ public:
         if (nodes.size() > 0)
         {
             i32 const depth = nodes[0].depth();
-            auto const same_depth = [depth](Node const & n) { return n.depth() == depth; };
+            auto const sameDepth = [depth](Node const & n) { return n.depth() == depth; };
             auto const revDual = [](Node const & n1, Node const & n2)
-                { return isWorse<Model>(n1.dual(),n2.dual()); };
-            assert(std::all_of(nodes.begin(), nodes.end(), same_depth));
+                { return isWorse<Model>(n1.f(),n2.f()); };
+
+            assert(std::all_of(nodes.begin(), nodes.end(), sameDepth));
             assert(std::is_sorted(nodes.begin(), nodes.end(), revDual));
 
             Layer & l = layer(depth);
-            i32 const old_size = layers.size();
-            l.resizeBy(nodes.size());
-            std::memcpy(&layers[old_size], nodes.data(), nodes.dataMemSize());
-            std::inplace_merge(l.begin(), &l[old_size], l.end(), revDual);
+            i32 const oldSize = l.resizeBy(nodes.size());
+            std::memcpy(&l[oldSize], nodes.data(), nodes.dataMemSize());
+            std::inplace_merge(l.begin(), &l[oldSize], l.end(), revDual);
+            notifyPush(nodes.size());
         }
     }
 
@@ -80,7 +99,14 @@ public:
         using namespace gfl;
 
         f64 bestDual = worst<Model>();
-        for (auto const & l : layers){ better<Model>( l.back().dual(), bestDual); }
+        for (auto const & l : layers)
+        {
+            if (not l.empty())
+            {
+                Node const & node = l.back();
+                bestDual = better<Model>(bestDual, node.f());
+            }
+        }
         return bestDual;
     }
 
@@ -94,14 +120,22 @@ public:
         i32 lIdx = 0;
         for (i32 i = 0; i < layers.size(); ++i)
         {
-            f64 const dual = layers[i].back().dual();
-            if (isBetter<Model>(dual, bestDual))
+            if (not layers[i].empty())
             {
-                bestDual = dual;
-                lIdx = i;
+                f64 const dual = layers[i].back().f();
+                if (isBetter<Model>(dual, bestDual))
+                {
+                    bestDual = dual;
+                    lIdx = i;
+                }
             }
         }
         Node const & bestNode = layers[lIdx].popBack();
+        notifyPull(1);
+
+        // printf("EXTRACTED:\n");
+        // Node::print(bestNode);
+        // printf("\n");
         return bestNode;
     }
 };

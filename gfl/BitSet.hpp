@@ -19,7 +19,7 @@ namespace gfl
         static_assert(NumWords > 0);
 
     public:
-        using WordType = u32;
+        using WordType = u64;
         static constexpr i32 WordBitSize = std::numeric_limits<WordType>::digits;
 
     private:
@@ -35,7 +35,10 @@ namespace gfl
         GFL_HOST_DEVICE BitSet(i32 min, i32 max) noexcept;
         GFL_HOST_DEVICE BitSet(std::initializer_list<i32> vals) noexcept;
 
-        GFL_HOST_DEVICE static constexpr i32 num_words(i32 const maxValue) noexcept{ return ceil<i32>(maxValue, WordBitSize); }
+        GFL_HOST_DEVICE static constexpr i32 num_words(i32 const maxValue) noexcept
+        {
+            return ceil<i32>(maxValue, WordBitSize);
+        }
 
         GFL_HOST_DEVICE static constexpr i32 capacity() noexcept { return WordBitSize * NumWords; }
 
@@ -74,14 +77,13 @@ namespace gfl
         friend BitSet operator~(BitSet a) noexcept { a.complement(); return a; }
 
         GFL_HOST_DEVICE
-        void print(char const * fmt = "%d") noexcept;
+        void print(char const * fmt = "%d") const noexcept;
 
         GFL_HOST_DEVICE
         u64 hash() const noexcept
         {
             u64 seed = 0;
-            for (auto i = 0;i < NumWords; i++)
-                hashCombine(seed, scast<u64>(words_[i]));
+            for (auto i = 0;i < NumWords; i++) hashCombine(seed, words_[i]);
             return seed;
         }
     };
@@ -215,13 +217,8 @@ namespace gfl
     GFL_HOST_DEVICE
     bool BitSet<NumWords>::isEqual(BitSet const& other) const noexcept
     {
-        for (i32 i = 0; i < NumWords; ++i)
-        {
-            if (words_[i] != other.words_[i])
-            {
-                return false;
-            }
-        }
+        using namespace gfl;
+        for (int i = 0; i < NumWords; ++i) if (words_[i] != other.words_[i]) return false;
         return true;
     }
 
@@ -271,7 +268,7 @@ namespace gfl
 
     template<i32 NumWords>
     GFL_HOST_DEVICE
-    void BitSet<NumWords>::print(char const * fmt) noexcept
+    void BitSet<NumWords>::print(char const * fmt) const noexcept
     {
         if (std::strcmp(fmt,"%b") == 0)
         {

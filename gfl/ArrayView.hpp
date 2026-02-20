@@ -110,6 +110,25 @@ namespace gfl
         GFL_HOST_DEVICE
         void swap(ArrayView & other) noexcept { swap(*this, other); }
 
+
+        GFL_HOST_DEVICE
+        ArrayView slice(i32 const begin, i32 const end) const noexcept
+        {
+            assert(0 <= begin);
+            assert(begin <= end);
+            assert(end <= size_);
+            return ArrayView<T>(end - begin, data_ + begin);
+        }
+
+        GFL_HOST_DEVICE
+        ArrayView slice(i32 const count) const noexcept
+        {
+            assert(count != 0);
+            if (count >= 0) return slice(0,count);
+                       else return slice(size_ + count, size_);
+
+        }
+
         GFL_HOST_DEVICE static
         void print(T const * begin, T const * end, char const * fmt = "%d") noexcept
         {

@@ -115,3 +115,33 @@ gfl::f64 score(gfl::f64 const a) noexcept
     else
         return a;
 }
+
+template<typename Model>
+constexpr
+gfl::f64 isTighter(gfl::f64 const a, gfl::f64 const b) noexcept
+{
+    return isWorse<Model>(a, b);
+}
+
+template<typename Model>
+constexpr
+gfl::f64 tighter(gfl::f64 const a, gfl::f64 const b) noexcept
+{
+    return worse<Model>(a, b);
+}
+
+
+template<typename Model>
+constexpr
+gfl::f64 isLooser(gfl::f64 const a, gfl::f64 const b) noexcept
+{
+    return isBetter<Model>(a, b);
+}
+
+template<typename Model>
+constexpr
+gfl::f64 looser(gfl::f64 const a, gfl::f64 const b) noexcept
+{
+    return better<Model>(a, b);
+}
+

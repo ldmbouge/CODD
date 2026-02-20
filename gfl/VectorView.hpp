@@ -29,7 +29,7 @@ namespace gfl
 
         GFL_HOST_DEVICE
         VectorView(i32 const capacity, T * data) noexcept :
-            ArrayView<T>(data, 0),
+            ArrayView<T>(0,data),
             capacity_(capacity)
         {
             assert(data != nullptr);
@@ -54,15 +54,6 @@ namespace gfl
 
         GFL_HOST_DEVICE
         void clear() noexcept { size_ = 0; }
-
-        GFL_HOST_DEVICE
-        ArrayView<T> slice(i32 const begin, i32 const end) const noexcept
-        {
-            assert(0 <= begin);
-            assert(begin <= end);
-            assert(end <= size_);
-            return ArrayView<T>(end - begin, data_ + begin);
-        }
 
         GFL_HOST_DEVICE static
         void swap(VectorView & a, VectorView & b) noexcept

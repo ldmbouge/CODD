@@ -7,13 +7,13 @@
 #include <GFL.hpp>
 #include <Utils.hpp>
 
-template<gfl::i32 BranchFactor>
-class Misp : public MispData<BranchFactor>
+template<gfl::i32 BranchFactor, gfl::i32 Items>
+class Misp : public MispData<Items>
 {
-    using MispData<BranchFactor>::nodes;
-    using MispData<BranchFactor>::edges;
-    using MispData<BranchFactor>::adj;
-    using ItemSet = gfl::BitSet<gfl::BitSet<>::num_words(BranchFactor)>;
+    using MispData<Items>::nodes;
+    using MispData<Items>::edges;
+    using MispData<Items>::adj;
+    using ItemSet = gfl::BitSet<gfl::BitSet<>::num_words(Items)>;
 
 public:
     constexpr static bool is_maximization = true;
@@ -54,6 +54,9 @@ public:
             s.sel.print();
             printf(">");
         }
+
+        GFL_HOST_DEVICE
+        void print() const noexcept{ print(*this); }
 
         friend class Misp;
     };

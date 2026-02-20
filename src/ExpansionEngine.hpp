@@ -26,8 +26,8 @@ public:
         using namespace gfl;
 
         width_ = width;
-        expData = new (expData) ExpansionData();
-        cutData = new (cutData) CutsetData();
+        expData = new (alloc) ExpansionData();
+        cutData = new (alloc) CutsetData();
         i32 const maxNodes = width * branchFactor;
         expData->init(maxNodes, alloc);
         cutData->init(width, branchFactor, depth, alloc);
@@ -51,6 +51,9 @@ public:
         }
         onlyBestTarget(model,expData->children, expData->nodesInfo);
         finializeCutset<Model,Node>(model,expData,cutData,primal,dual,DDRelaxed);
+        // printf("CUTSET:\n");
+        // for(auto const & c : cutData->nodes()) {Node::print(c);printf("\n");}
+        // printf("\n");
     }
 
     bool hasTarget() const noexcept {return expData->hasTarget();}
@@ -63,11 +66,19 @@ private:
 
         expandParents(model, expData, pBound);
         filterChildren<Model,Node>(expData);
+        // printf("BEFORE MERGE:\n");
+        // for(auto const & c : expData->children) {Node::print(c);printf("\n");}
+        // printf("\n");
+
         if (expData->children.size() > width_)
         {
             mergeChildren<Model,Node>(width_,expData,cutData);
         }
+        // printf("AFTER MERGE:\n");
+        // for(auto const & c : expData->children) {Node::print(c);printf("\n");}
+        // printf("\n");
         calcOutLabels<Model,Node>(model,expData->children,pBound,dBound,DDRelaxed);
+
     }
 
 #ifdef __CUDACC__

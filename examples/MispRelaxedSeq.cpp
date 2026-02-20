@@ -5,9 +5,10 @@
 int main(int argc,char* argv[])
 {
     constexpr int BranchFactor = 2;
+    constexpr int Items = 200;
     constexpr int Depth = 200;
 
-    using Model = Misp<BranchFactor>;
+    using Model = Misp<BranchFactor,Items>;
     using Node = Node<Model::State,Model::OutLabels,Depth>;
 
     static_assert(IsModel<Model>);

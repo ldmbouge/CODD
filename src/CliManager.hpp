@@ -10,40 +10,39 @@
 
 class CliManager
 {
-public:
-    int width;
-    int timeout;
-    bool use_gpu;
-    long long int mem_size;
-    std::string instance_path;
 
-private:
+    int width_{0};
+    int timeout_{std::numeric_limits<int>::max()};
+    bool gpu_{false};
+    long long int memSize_{0};
+    std::string instance_{};
     cxxopts::Options options_;
 
 public:
     CliManager(std::string const& programName, std::string const& description);
     void parse(int argc, char* argv[]);
 
+    int width() const { return width_; }
+    int timeout() const { return timeout_; }
+    bool gpu() const { return gpu_; }
+    long long int memSize() const { return memSize_ * 1024ll * 1024ll * 1024ll; }
+    std::string const& instance() const { return instance_; }
+
 private:
     void validate();
 };
 
 inline
-CliManager::CliManager(std::string const& programName, std::string const& description)
-    : width(-1),
-      timeout(std::numeric_limits<int>::max()),
-      use_gpu(false),
-      mem_size(-1),
-      instance_path(),
+CliManager::CliManager(std::string const& programName, std::string const& description) :
       options_(programName, description)
 {
     options_.add_options("Available")
-        ("w,width", "DD width", cxxopts::value(width))
+        ("w,width", "DD width", cxxopts::value(width_))
         ("h,help", "Show this help message and exit")
-        ("m,memory", "Working memory in GB", cxxopts::value(mem_size))
-        ("g,gpu", "Use GPU acceleration", cxxopts::value(use_gpu))
-        ("i,instance", "Path to the instance file", cxxopts::value(instance_path))
-        ("t,timeout", "Timeout in seconds", cxxopts::value(timeout));
+        ("m,memory", "Working memory in GB", cxxopts::value(memSize_))
+        ("g,gpu", "Use GPU acceleration", cxxopts::value(gpu_))
+        ("i,instance", "Path to the instance file", cxxopts::value(instance_))
+        ("t,timeout", "Timeout in seconds", cxxopts::value(timeout_));
 
     options_.parse_positional({"instance"});
     options_.custom_help("<OPTIONS>");
@@ -69,44 +68,44 @@ void CliManager::validate()
 {
     bool hasError = false;
 
-    if (instance_path.empty())
+    if (instance_.empty())
     {
         std::cerr << "Error: Instance file is required" << std::endl;
         hasError = true;
     }
-    else if (!std::filesystem::exists(instance_path))
+    else if (!std::filesystem::exists(instance_))
     {
-        std::cerr << "Error: Instance file does not exist: " << instance_path << std::endl;
+        std::cerr << "Error: Instance file does not exist: " << instance_ << std::endl;
         hasError = true;
     }
-    else if (!std::filesystem::is_regular_file(instance_path))
+    else if (!std::filesystem::is_regular_file(instance_))
     {
-        std::cerr << "Error: Instance path is not a regular file: " << instance_path << std::endl;
+        std::cerr << "Error: Instance path is not a regular file: " << instance_ << std::endl;
         hasError = true;
     }
     else
     {
-        std::ifstream f(instance_path);
+        std::ifstream f(instance_);
         if (!f.is_open())
         {
-            std::cerr << "Error: Instance file cannot be opened: " << instance_path << std::endl;
+            std::cerr << "Error: Instance file cannot be opened: " << instance_ << std::endl;
             hasError = true;
         }
     }
 
-    if (width <= 0)
+    if (width_ <= 0)
     {
         std::cerr << "Error: Width must be greater than 0" << std::endl;
         hasError = true;
     }
 
-    if (timeout <= 0)
+    if (timeout_ <= 0)
     {
         std::cerr << "Error: Timeout must be greater than 0" << std::endl;
         hasError = true;
     }
 
-    if (mem_size <= 0)
+    if (memSize_ <= 0)
     {
         std::cerr << "Error: Memory must be greater than 0" << std::endl;
         hasError = true;

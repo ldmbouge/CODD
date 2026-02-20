@@ -26,7 +26,7 @@ class LogManager
     static constexpr gfl::i32 w_queue    = 12;
 
     static constexpr auto fmt_str =
-        "{:>{}}   {:<{}}   {:>{}}   {:>{}}   {:>{}}   {:>{}}   {:>{}}\n";
+        "{:<{}}   {:<{}}   {:>{}}   {:>{}}   {:>{}}   {:>{}}   {:>{}}\n";
 
     gfl::f64 solution_time_{0.0};
     gfl::f64 last_print_time_{0.0};
@@ -94,9 +94,9 @@ public:
             bnb_mgr.gapClosed()    ? "Completed" :
             search_time >= timeout ? "Timeout"   :
                                      "Interrupted";
-
-        fmt::print("\n");
-        fmt::print("Search Status = {}\n", status_str);
+        fmt::print("Extracted     = {}\n", stats_mgr.extracted());
+        fmt::print("Queue         = {}\n", stats_mgr.inserted() - stats_mgr.extracted());
+        fmt::print("Status        = {}\n", status_str);
         fmt::print("Search Time   = {:.2f} s\n", search_time);
         fmt::print("Solution Time = {:.2f} s\n", solution_time_);
         fmt::print("Solution Cost = {:.2f}\n", bnb_mgr.primal());

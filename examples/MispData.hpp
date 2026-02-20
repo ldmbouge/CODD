@@ -5,11 +5,11 @@
 
 #include <GFL.hpp>
 
-template<gfl::i32 BranchFactor>
+template<gfl::i32 Items>
 class MispData
 {
 protected:
-    using ItemSet = gfl::BitSet<gfl::BitSet<>::num_words(BranchFactor)>;
+    using ItemSet = gfl::BitSet<gfl::BitSet<>::num_words(Items)>;
 
     gfl::i32               nodes{0};
     gfl::i32               edges{0};

@@ -36,7 +36,7 @@ public:
     bool pruneAncestor(Model const * const model, Node const & node) noexcept
     {
         assert(node.isTarget(model));
-        return isWorseEq<Model>(node.primal(), primal_);
+        return isWorseEq<Model>(node.g(), primal_);
     }
 
     bool primalUpdated() noexcept
@@ -53,13 +53,13 @@ public:
         using namespace gfl;
 
         assert(node.isTarget(model));
-        if (isBetter<Model>(node.primal(), primal_))
+        if (not node.approximated() and isBetter<Model>(node.f(), primal_))
         {
-            primal_ = node.primal();
+            primal_ = node.g();
             primal_updated_ = true;
             auto const path = node.path();
             solution_.resizeTo(path.size());
-            memcpy(solution_.data(), path.data(), sizeof(i16) * path.size());
+            memcpy(solution_.data(), path.data(), path.dataMemSize());
             return true;
         }
         return false;

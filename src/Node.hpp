@@ -2,6 +2,7 @@
 
 #include <GFL.hpp>
 #include <type_traits>
+#include <cmath>
 
 #include "ArenaAllocator.hpp"
 #include "BoundsUtils.hpp"
@@ -11,8 +12,8 @@ class alignas(gfl::DefaultAlign) Node
 {
     State state_{};
     OutLabels outLabels{};
-    gfl::f64 f{0};
-    gfl::f64 g{0};
+    gfl::f64 g_{0};
+    gfl::f64 h_{0};
     gfl::u8 approximated_{0};
     gfl::u8 ancestorInCutset_{0};
     gfl::i16 pathLen{0};
@@ -22,32 +23,31 @@ class alignas(gfl::DefaultAlign) Node
 
 public:
     GFL_HOST_DEVICE
-    Node(State const & s, gfl::f64 const f, gfl::f64 const g, gfl::i32 const label, Node const & pNode) noexcept :
-            state_(s), f(f), g(g),
+    Node(State const & s, gfl::f64 const g, gfl::f64 const h, gfl::i32 const label, Node const & pNode) noexcept :
+            state_(s), g_(g), h_(h),
             approximated_(pNode.approximated_),
             ancestorInCutset_(pNode.ancestorInCutset_),
             pathLen(pNode.pathLen+1)
     {
-        for (int i = 0; i < pNode.pathLen; i += 1) prefixPath[i] = pNode.prefixPath[i];
-        prefixPath[pathLen] = label;
+        for (int i = 0; i < pNode.pathLen; i += 1)  prefixPath[i] = pNode.prefixPath[i];
+        prefixPath[pNode.pathLen] = label;
     }
 
     GFL_HOST_DEVICE
-    Node(State const & s, OutLabels const & outLabels, gfl::f64 const f) noexcept :
-        state_(s),
-        outLabels(outLabels),
-        f(f)
+    Node(State const & s, OutLabels const & outLabels, gfl::f64 const h) noexcept :
+        state_(s), outLabels(outLabels), h_(h)
     {}
 
     State const & state() const noexcept { return state_; }
     void state(State const & state) noexcept {state_ = state; }
 
-    gfl::f64 primal() const noexcept { return g; }
-    void primal(gfl::f64 const primal) noexcept { g = primal; }
+    gfl::f64 f() const noexcept { return g_ + h_; }
 
-    gfl::f64 dual() const noexcept { return f; }
+    gfl::f64 g() const noexcept { return g_; }
+    void g(gfl::f64 const g) noexcept { g_ = g; }
 
-    void dual(gfl::f64 const dual) noexcept { f = dual; }
+    gfl::f64 h() const noexcept { return h_; }
+    void h(gfl::f64 const h) noexcept { h_ = h; }
 
     gfl::i16 depth() const noexcept { return pathLen; }
 
@@ -64,8 +64,9 @@ public:
     bool isTarget(Model const * const model) const
     {
         assert(model != nullptr);
-        assert(f == g);
-        return model->isTarget(state_);
+        bool target = model->isTarget(state_);
+        assert(not target or f() == g());
+        return target;
     }
 
     gfl::ArrayView<gfl::i16 const> path() const noexcept
@@ -80,21 +81,14 @@ public:
     void print(Node const & node)
     {
         using namespace gfl;
-        printf("F: %.1f", node.f);
-        printf(" | "); printf("G: %.1f", node.g);
+        printf("F: %.1f", node.f());
+        printf(" | "); printf("G: %.1f", node.g());
+        printf(" | "); printf("H: %.1f", node.h());
         printf(" | "); printf("EXT: %d", 1 - node.approximated());
         printf(" | "); printf("CUT: %d", node.ancestorInCutset());
         printf(" | "); printf("DPT: %d", node.pathLen);
         printf(" | "); printf("LBS: "); ArrayView<i16>::print(node.prefixPath, node.pathLen);  // This is correct
-        printf(" | "); printf("ST: "); node.state_.print();
-    }
-
-    template<typename Cmp>
-    GFL_HOST_DEVICE
-    constexpr static
-    bool cmpByF(Node const & n1, Node const & n2)
-    {
-        return Cmp(n1.f,n2.f);
+        printf(" | "); printf("ST: "); State::print(node.state_);
     }
 };
 
@@ -133,7 +127,7 @@ struct NodeInfo
     void print(NodeInfo const & ni)
     {
         using namespace gfl;
-        printf("INFO: (%7llu,%7lu,%7.2f)", scast<llu>(ni.hash) % 10000000ll, ni.flag, ni.score);
+        printf("INFO: (%7lu,%7llu,%7.2f)", ni.flag, scast<llu>(ni.hash) % 10000000ll, std::fmod(ni.score,10000000.0));
         printf(" | "); printf("IDX: %lld", scast<lld>(ni.idx));
         printf(" | "); printf("PIDX: %lld", scast<lld>(ni.pIdx));
     }

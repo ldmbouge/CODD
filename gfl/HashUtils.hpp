@@ -5,15 +5,10 @@
 
 namespace gfl
 {
-    // https://stackoverflow.com/a/50978188
+    // References
+    // - https://softwareengineering.stackexchange.com/a/402543
+    // - https://www.boost.org/doc/libs/1_55_0/doc/html/hash/reference.html#boost.hash_combine
     GFL_HOST_DEVICE inline
-    void hashCombine(u64 & seed, u64 h)
-    {
-        h ^= h >> 32;
-        h *= 0x5555555555555555ull;
-        h ^= h >> 32;
-        h *= 17316035218449499591ull;
-        h ^= h >> 32;
-        seed = ((seed << 21) | (seed >> 43)) ^ h;
-    }
+    void hashCombine(u64 & seed, u64 const h)
+    { seed ^= h + 0x9e3779b9 + (seed<<6) + (seed>>2); }
 }

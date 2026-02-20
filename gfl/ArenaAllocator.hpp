@@ -43,10 +43,8 @@ namespace gfl
         T * allocate(i64 const count, i32 const align) noexcept
         {
             uptr const size = sizeof(T) * scast<uptr>(count);
-            uptr memory = current;
-            uptr const offset = memory % scast<uptr>(align);
-            if (offset != 0) memory += scast<uptr>(align) - offset;
-            uptr const newCurrent = memory + scast<uptr>(size);
+            uptr const memory = roundUp<uptr>(current, align);
+            uptr const newCurrent = memory + size;
             if (newCurrent > end)
             {
                 constexpr char const * errorMsg = "ArenaAllocator::allocate failed: out of memory\n";
