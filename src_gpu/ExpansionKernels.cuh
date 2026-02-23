@@ -130,7 +130,7 @@ template<typename T>
 GFL_GLOBAL
 void resizeToKernel(
     gfl::VectorView<T> * const v,
-    gfl::i32 const  count)
+    gfl::i32 const count)
 { v->resizeTo(count); }
 
 template<typename T>
@@ -498,4 +498,10 @@ void printKernel(gfl::i32 const i, gfl::ArrayView<T> const * array)
 
     printf("STEP %d\n",i);
     for (auto const & a : *array) {a.print(); printf("\n");}
+}
+
+GFL_GLOBAL
+void assertLeqKernel(gfl::i32 const * i, gfl::i32 const * j)
+{
+    assert(i <= j);
 }

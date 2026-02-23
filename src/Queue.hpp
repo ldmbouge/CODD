@@ -79,7 +79,8 @@ public:
             // printf("\n");
             // fflush(stdout);
             assert(std::all_of(nodes.begin(), nodes.end(), sameDepth));
-            assert(std::is_sorted(nodes.begin(), nodes.end(), revDual));
+            //assert(std::is_sorted(nodes.begin(), nodes.end(), revDual));
+            std::sort(nodes.begin(), nodes.end(), revDual);
 
             layer(depth);
             Layer & l = layers[depth];

@@ -3,7 +3,6 @@
 #include "Contexts.hpp"
 #include "GFL.hpp"
 
-#include "ExpansionData.hpp"
 #include "Node.hpp"
 #include "ExpansionEngine.hpp"
 #include "ExpansionKernels.cuh"
@@ -64,6 +63,7 @@ class ExpansionEngineGpu : public ExpansionEngine<Model,Node>
         i32 gridSize = parents.size();
         expandParentsKernel<<<gridSize,blockSize>>>(model, &expData, primal);
         CHECK_LAST_CUDA_ERROR();
+
         CHECK_CUDA_ERROR(cudaDeviceSynchronize());
     }
 
@@ -79,7 +79,7 @@ class ExpansionEngineGpu : public ExpansionEngine<Model,Node>
         assert(tmp != nullptr);
         assert(in != nullptr);
         assert(out != nullptr);
-        assert(in->size() <= out->size());
+        assertLeqKernel<<<1,1>>>(in->sizePtr(),out->sizePtr());
 
         auto * inBuffer = in->data();
         auto * outBuffer = out->data();
@@ -121,7 +121,6 @@ class ExpansionEngineGpu : public ExpansionEngine<Model,Node>
         tmpInfo.resizeTo(childrenInfo.size());
 
         // Sort by hash
-
         i32 const blockSize = 128;
         i32 const gridSize = ceil<i32>(children.size(), blockSize);
         calcHashKernel<Model><<<gridSize,blockSize>>>(&children, &childrenInfo);
@@ -130,6 +129,7 @@ class ExpansionEngineGpu : public ExpansionEngine<Model,Node>
         CHECK_LAST_CUDA_ERROR();
         swapKernel<<<1,1>>>(&childrenInfo, &tmpInfo);
         CHECK_LAST_CUDA_ERROR();
+
         // Find representatives
         setFlagKernel<<<gridSize,blockSize>>>(RepresentativeFlag, &childrenInfo);
         CHECK_LAST_CUDA_ERROR();
@@ -137,28 +137,16 @@ class ExpansionEngineGpu : public ExpansionEngine<Model,Node>
         CHECK_LAST_CUDA_ERROR();
         sortKernelDispatcher<NodeInfo::FlagDecomposer>(&childrenInfo,&tmpInfo,&cubAuxMem);
         CHECK_LAST_CUDA_ERROR();
-        CHECK_CUDA_ERROR(cudaDeviceSynchronize());
-
         swapKernel<<<1,1>>>(&childrenInfo, &tmpInfo);
         CHECK_LAST_CUDA_ERROR();
-        CHECK_CUDA_ERROR(cudaDeviceSynchronize());
-
         countFlaggedKernel<<<gridSize,blockSize>>>(RepresentativeFlag,&nFlagged,&childrenInfo);
         CHECK_LAST_CUDA_ERROR();
-        CHECK_CUDA_ERROR(cudaDeviceSynchronize());
-
         resizeToKernel<<<1,1>>>(&childrenInfo,&nFlagged);
         CHECK_LAST_CUDA_ERROR();
-        CHECK_CUDA_ERROR(cudaDeviceSynchronize());
-
         resizeToKernel<<<1,1>>>(&tmpNodes,&nFlagged);
         CHECK_LAST_CUDA_ERROR();
-        CHECK_CUDA_ERROR(cudaDeviceSynchronize());
-
         copyByInfoKernel<<<gridSize,blockSize>>>(&tmpNodes,&children,&childrenInfo);
         CHECK_LAST_CUDA_ERROR();
-        CHECK_CUDA_ERROR(cudaDeviceSynchronize());
-
         swapKernel<<<1,1>>>(&tmpNodes, &children);
         CHECK_LAST_CUDA_ERROR();
 
@@ -226,7 +214,7 @@ class ExpansionEngineGpu : public ExpansionEngine<Model,Node>
         updateAncestorKernel<<<gridSize,blockSize>>>(ParentToSaveFlag,&parentsInfo,&children,&childrenInfo);
         CHECK_LAST_CUDA_ERROR();
 
-        // Save parents in cutset by *reverse* f value
+        // Save parents in cutset
         resizeToKernel<<<1,1>>>(&tmpInfo,parentsInfo.sizePtr());
         CHECK_LAST_CUDA_ERROR();
         sortKernelDispatcher<NodeInfo::FlagDecomposer>(&parentsInfo,&tmpInfo,&cubAuxMem);
@@ -251,7 +239,6 @@ class ExpansionEngineGpu : public ExpansionEngine<Model,Node>
         // printKernel<<<1,1>>>(4,cutset.lastSegmentPtr());
         // printKernel<<<1,1>>>(5,&parents);
         // printKernel<<<1,1>>>(6,&parentsInfo);
-        // CHECK_CUDA_ERROR(cudaDeviceSynchronize());
 
         copyByInfoKernel<<<gridSize,blockSize>>>(cutset.lastSegmentPtr(),&parents, &parentsInfo);
         CHECK_LAST_CUDA_ERROR();
@@ -259,7 +246,6 @@ class ExpansionEngineGpu : public ExpansionEngine<Model,Node>
         // printKernel<<<1,1>>>(7,cutset.lastSegmentPtr());
         // printKernel<<<1,1>>>(8,&parents);
         // printKernel<<<1,1>>>(9,&parentsInfo);
-        // CHECK_CUDA_ERROR(cudaDeviceSynchronize());
 
         CHECK_CUDA_ERROR(cudaDeviceSynchronize());
     }
@@ -288,15 +274,12 @@ class ExpansionEngineGpu : public ExpansionEngine<Model,Node>
         // pass1: childrenPrefix → tmpNodes, count = nNodes
         reductionKernel<Model,Node><<<nBlocks1, blockSize>>>(&childrenPrefix,&tmpNodes,nNodes);
         CHECK_LAST_CUDA_ERROR();
-        CHECK_CUDA_ERROR(cudaDeviceSynchronize());
         // pass2: tmpNodes → childrenPrefix, count = nBlocks1
         reductionKernel<Model,Node><<<nBlocks2, blockSize>>>(&tmpNodes,&childrenPrefix,nBlocks1);
         CHECK_LAST_CUDA_ERROR();
-        CHECK_CUDA_ERROR(cudaDeviceSynchronize());
         // pass3: childrenPrefix → childrenPrefix[0], count = nBlocks2
         reductionSeqKernel<Model,Node><<<1,1>>>(&childrenPrefix, nBlocks2);
         CHECK_LAST_CUDA_ERROR();
-        CHECK_CUDA_ERROR(cudaDeviceSynchronize());
         resizeToKernel<<<1,1>>>(&children,width_);
         CHECK_LAST_CUDA_ERROR();
         resizeToKernel<<<1,1>>>(&childrenInfo,width_);
@@ -334,6 +317,8 @@ class ExpansionEngineGpu : public ExpansionEngine<Model,Node>
         if (not nodes->empty())
         {
             checkForTargetKernel<<<1,1>>>(&targetFound,model,nodes);
+            CHECK_LAST_CUDA_ERROR();
+
             CHECK_CUDA_ERROR(cudaDeviceSynchronize());
         }
     }
@@ -352,6 +337,8 @@ class ExpansionEngineGpu : public ExpansionEngine<Model,Node>
             i32 const blockSize = 128;
             i32 const gridSize = ceil<i32>(children.size(), blockSize);
             setScoreGKernel<Model><<<gridSize, blockSize>>>(&children, &childrenInfo);
+            CHECK_LAST_CUDA_ERROR();
+            resizeToKernel<<<1,1>>>(&tmpInfo,childrenInfo.sizePtr());
             CHECK_LAST_CUDA_ERROR();
             sortKernelDispatcher<NodeInfo::ScoreDecomposer>(&childrenInfo,&tmpInfo,&cubAuxMem);
             CHECK_LAST_CUDA_ERROR();

@@ -123,8 +123,7 @@ namespace gfl
         void pushBackGpu(T const & value) noexcept
         {
             i32 const oldSize = resizeBy(1);
-            cudaMemcpyAsync(&at(oldSize), &value, sizeof(T), cudaMemcpyHostToDevice);
-            cudaDeviceSynchronize();
+            cudaMemcpy(&at(oldSize), &value, sizeof(T), cudaMemcpyHostToDevice);
         }
 #endif
 

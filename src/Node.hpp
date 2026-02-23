@@ -131,10 +131,10 @@ struct NodeInfo
 {
     union
     {
-        gfl::i64 flag{0};
         gfl::u64 hash;
         gfl::f64 score;
     };
+    gfl::i32 flag{0};
     gfl::i32 idx{0};
     gfl::i32 pIdx{0};
 
@@ -166,7 +166,7 @@ struct NodeInfo
     struct FlagDecomposer
     {
         GFL_HOST_DEVICE
-        gfl::tuple<gfl::i64&> operator()(NodeInfo & nodeInfo) const { return {nodeInfo.flag};}
+        gfl::tuple<gfl::i32&> operator()(NodeInfo & nodeInfo) const { return {nodeInfo.flag};}
     };
 #endif
 
@@ -189,7 +189,7 @@ struct NodeInfo
         using namespace gfl;
         printf("IDX: %lld", scast<lld>(ni.idx));
         printf(" | "); printf("PIDX: %lld", scast<lld>(ni.pIdx));
-        printf(" | "); printf("INFO: (%7lu,%7llu,%7.2f)", ni.flag, scast<llu>(ni.hash) % 10000000ll, std::fmod(ni.score,10000000.0));
+        printf(" | "); printf("INFO: (%7d,%7llu,%7.2f)", ni.flag, scast<llu>(ni.hash) % 10000000ll, std::fmod(ni.score,10000000.0));
     }
 
     GFL_HOST_DEVICE
