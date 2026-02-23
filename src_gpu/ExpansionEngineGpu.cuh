@@ -54,14 +54,15 @@ class ExpansionEngineGpu : public ExpansionEngine<Model,Node>
 
     void expandParents(
         Model const * const model,
-        gfl::f64 const primal)
+        gfl::f64 const primal,
+        gfl::i32 const brachFactor)
     {
         using namespace gfl;
         auto & parents = expData.parents;
 
-        i32 blockSize = 128;
-        i32 gridSize = parents.size();
-        expandParentsKernel<<<gridSize,blockSize>>>(model, &expData, primal);
+        i32 blockSize = 32;
+        i32 gridSize = ceil<i32>(parents.size() *brachFactor,blockSize) ;
+        expandParentsKernel<<<gridSize,blockSize>>>(model, &expData, primal, brachFactor);
         CHECK_LAST_CUDA_ERROR();
 
         CHECK_CUDA_ERROR(cudaDeviceSynchronize());
@@ -388,11 +389,12 @@ class ExpansionEngineGpu : public ExpansionEngine<Model,Node>
     void expandLayerRelaxed(
         Model const * model,
         gfl::f64 const primal,
-        gfl::f64 const dual)
+        gfl::f64 const dual,
+        gfl::i32 const brachFactor)
     {
         using namespace gfl;
         auto & children = expData.children;
-        expandParents(model,primal);
+        expandParents(model,primal,brachFactor);
         if (children.size() > 0)
         {
             filterRepresentedChildren();
@@ -426,7 +428,8 @@ public:
            Model const * model,
            Node const & node,
            gfl::f64 const primal,
-           gfl::f64 const dual)
+           gfl::f64 const dual,
+           gfl::i32 const brachFactor)
     {
         using namespace gfl;
         auto & children = expData.children;
@@ -434,11 +437,11 @@ public:
         expData.clear();
         cutData.clear();
         expData.parents.pushBackGpu(node);
-        expandLayerRelaxed(model, primal, dual);
+        expandLayerRelaxed(model, primal, dual, brachFactor);
         while (not children.empty() and not targetFound)
         {
             swapParentsAndChildren();
-            expandLayerRelaxed(model,primal,dual);
+            expandLayerRelaxed(model,primal,dual, brachFactor);
         }
         keepOnlyBestChild();
         finalizeCutset(model,primal,dual);

@@ -10,7 +10,9 @@ GFL_GLOBAL
 void expandParentsKernel(
     Model const * const model,
     ExpansionData<Node> * const expData,
-    gfl::f64 const primal)
+    gfl::f64 const primal,
+    gfl::i32 const branchFactor
+    )
 {
     using namespace gfl;
 
@@ -18,48 +20,75 @@ void expandParentsKernel(
     auto & children = expData->children;
     auto & childrenInfo = expData->childrenInfo;
 
-    i32 const pIdx = blockIdx.x;
+    assert(blockDim.x == 32);
+
+    __shared__ i32 nChildren_s;
+    __shared__ Node children_s[32];
+    __shared__ NodeInfo childrenInfo_s[32];
+    __shared__ i32 offset_g;
+
+    i32 const tIdx = blockIdx.x * blockDim.x + threadIdx.x;
+    i32 const pIdx = tIdx / branchFactor;
+    i32 const label = tIdx % branchFactor;
+
+    if (threadIdx.x == 0)
+    {
+        nChildren_s = 0;
+        offset_g = -1;
+    }
+    __syncwarp();
+
+    if (pIdx < parents.size())
     {
         Node const & pNode = parents[pIdx];
         auto const & pLabels = pNode.labels();
-        auto const & [minLabel, maxLabel, nLabels] = pLabels.summary();
-        if (nLabels > 0)
+
+        if (pLabels.contains(label))
         {
-            for (i32 label = minLabel + threadIdx.x; label <= maxLabel; label += blockDim.x)
+            // Transition
+            auto const cState = model->stf(pNode.state(), label);
+            if (cState.has_value())
             {
-                if (pLabels.contains(label))
+                f64 const tCost = model->scf(pNode.state(), label);
+                f64 const cG = pNode.g() + tCost;
+                f64 cH =  pNode.h() > 0 ? pNode.f() - cG : 0; // Deal with shallow target states
+                if constexpr (Model::has_heur)
                 {
-                    // Transition
-                    auto const cState = model->stf(pNode.state(), label);
-                    if (cState.has_value())
-                    {
-                        f64 const tCost = model->scf(pNode.state(), label);
-                        f64 const cG = pNode.g() + tCost;
-                        f64 cH =  pNode.h() > 0 ? pNode.f() - cG : 0; // Deal with shallow target states
-                        if constexpr (Model::has_heur)
-                        {
-                            f64 const h = model->h(cState.value(), BBCtx);
-                            cH = tighter<Model>(cH,h);
-                        }
-                        assert(cH >= 0);
+                    f64 const h = model->h(cState.value(), BBCtx);
+                    cH = tighter<Model>(cH,h);
+                }
+                assert(cH >= 0);
 
-                        // Conditions to keep the child
-                        if (isBetter<Model>(cG + cH,primal))
-                        {
-
-                            // Node
-                            childrenInfo.resizeByAtomic(1);
-                            i32 const cIdx = children.resizeByAtomic(1);
-                            Node & cNode = children[cIdx];
-                            new (&cNode) Node(cState.value(), cG, cH, label, pNode);
-                            NodeInfo & cInfo = childrenInfo[cIdx];
-                            new (&cInfo) NodeInfo(cIdx, pIdx);
-                        }
-                    }
+                // Conditions to keep the child
+                if (isBetter<Model>(cG + cH,primal))
+                {
+                    i32 const cIdx_s = atomicAdd_block(&nChildren_s,1);
+                    children_s[cIdx_s] = Node(cState.value(), cG, cH, label, pNode);
+                    childrenInfo_s[cIdx_s] = NodeInfo(-1, pIdx);
                 }
             }
         }
     }
+    __syncwarp();
+
+    if (nChildren_s > 0)
+    {
+
+        if (threadIdx.x == 0)
+        {
+            childrenInfo.resizeByAtomic(nChildren_s);
+            offset_g = children.resizeByAtomic(nChildren_s);
+        }
+        __syncwarp();
+        if (threadIdx.x < nChildren_s)
+        {
+            i32 const cIdx_g = offset_g + threadIdx.x;
+            childrenInfo_s[threadIdx.x].idx = cIdx_g;
+            childrenInfo[cIdx_g] = childrenInfo_s[threadIdx.x];
+            children[cIdx_g] = children_s[threadIdx.x];
+        }
+    }
+
 }
 
 template<typename Model, typename Node>
