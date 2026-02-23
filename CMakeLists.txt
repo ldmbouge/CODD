@@ -17,6 +17,32 @@ set(CMAKE_CXX_FLAGS_DEBUG          " -O0 -g -fno-omit-frame-pointer") # -fconcep
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO " -O2 -g -fno-omit-frame-pointer -DNDEBUG -march=native")
 set(CMAKE_CXX_FLAGS_RELEASE        " -O3 -DNDEBUG -march=native")
 
+# CUDA
+option(ENABLE_GPU "Enable GPU support" OFF)
+if (ENABLE_GPU)
+    if(NOT CMAKE_CUDA_ARCHITECTURES)
+        set(CMAKE_CUDA_ARCHITECTURES "native")
+    endif()
+    enable_language(CUDA)
+    find_package(CUDAToolkit REQUIRED)
+    set(CMAKE_CUDA_STANDARD 20)
+    set(CMAKE_CUDA_STANDARD_REQUIRED ON)
+    set(CMAKE_CUDA_SEPARABLE_COMPILATION ON)
+    set(CMAKE_CUDA_FLAGS " --extended-lambda")
+    set(CMAKE_CUDA_FLAGS_DEBUG          " -O0 -g -G")
+    set(CMAKE_CUDA_FLAGS_RELWITHDEBINFO " -O2    -lineinfo -DNDEBUG")
+    set(CMAKE_CUDA_FLAGS_RELEASE        " -O3              -DNDEBUG")
+    # Forward C++ options
+    separate_arguments(CXX_COMPILE_OPTIONS_TMP UNIX_COMMAND "${CXX_COMPILE_OPTIONS}")
+    list(JOIN CXX_COMPILE_OPTIONS_TMP "," CXX_COMPILE_OPTIONS_TMP)
+    string(APPEND CMAKE_CUDA_FLAGS " -Xcompiler=${CXX_COMPILE_OPTIONS_TMP}")
+    string(REGEX REPLACE "  +" " " CUDA_COMPILE_OPTIONS "${CMAKE_CUDA_FLAGS} ${CMAKE_CUDA_FLAGS_${BUILD_TYPE_UPPER}}")
+    string(APPEND CMAKE_CUDA_FLAGS " --diag-suppress  68")
+    string(APPEND CMAKE_CUDA_FLAGS " --diag-suppress 186")
+    string(APPEND CMAKE_CUDA_FLAGS " --diag-suppress 830")
+    string(APPEND CMAKE_CUDA_FLAGS " --diag-suppress 550")
+endif()
+
 # Dependencies
 include(FetchContent)
 FetchContent_Declare(
@@ -31,6 +57,9 @@ FetchContent_MakeAvailable(cxxopts fmt)
 
 # Core sources
 include_directories(src)
+
+# GPU sources
+include_directories(src_gpu)
 
 # GPU Friendly Library
 include_directories(gfl)
@@ -58,3 +87,6 @@ endfunction()
 
 # C++
 add_executables("examples" "*.cpp" "cxxopts;fmt::fmt")
+
+# GPU
+add_executables("examples_gpu" "*.cu" "cxxopts;fmt::fmt")

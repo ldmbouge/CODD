@@ -8,22 +8,26 @@ struct ExpansionData
 {
     gfl::VectorView<Node> parents{};
     gfl::VectorView<Node> children{};
-    gfl::VectorView<NodeInfo> nodesInfo{};
 
+    gfl::VectorView<NodeInfo> childrenInfo{};
+    gfl::VectorView<NodeInfo> parentInfo{};
+
+    gfl::ArrayView<Node> tmpView;
     gfl::VectorView<Node> tmpNodes{};
-    gfl::VectorView<NodeInfo> tmpNodesInfo{};
-
+    gfl::VectorView<NodeInfo> tmpInfo{};
 
     void init(gfl::i32 const nNodes, gfl::ArenaAllocator & alloc) noexcept
     {
         using namespace gfl;
 
         parents = VectorView<Node>(nNodes, alloc);
+        parentInfo = VectorView<NodeInfo>(nNodes, alloc);
+
         children = VectorView<Node>(nNodes, alloc);
-        nodesInfo = VectorView<NodeInfo>(nNodes, alloc);
+        childrenInfo = VectorView<NodeInfo>(nNodes, alloc);
 
         tmpNodes = VectorView<Node>(nNodes, alloc);
-        tmpNodesInfo = VectorView<NodeInfo>(nNodes, alloc);
+        tmpInfo = VectorView<NodeInfo>(nNodes, alloc);
     }
 
     void init(gfl::ArenaAllocator & alloc, gfl::i32 const nParents, gfl::i32 const maxBranchFactor) noexcept
@@ -33,21 +37,25 @@ struct ExpansionData
         i32 const nChildren = nParents * maxBranchFactor;
 
         parents = VectorView<Node>(nParents,alloc);
+        parentInfo = VectorView<NodeInfo>(nParents, alloc);
+
         children = VectorView<Node>(nChildren, alloc);
-        nodesInfo = VectorView<NodeInfo>(nChildren,alloc);
+        childrenInfo = VectorView<NodeInfo>(nChildren,alloc);
 
         tmpNodes = VectorView<Node>(nChildren,alloc);
-        tmpNodesInfo = VectorView<NodeInfo>(nChildren,alloc);
+        tmpInfo = VectorView<NodeInfo>(nChildren,alloc);
     }
 
     void clear() noexcept
     {
         parents.clear();
+        parentInfo.clear();
+
         children.clear();
-        nodesInfo.clear();
+        childrenInfo.clear();
 
         tmpNodes.clear();
-        tmpNodesInfo.clear();
+        tmpInfo.clear();
     }
 
     void addToParents(Node const & node) noexcept
@@ -60,10 +68,11 @@ struct ExpansionData
         using namespace gfl;
 
         VectorView<Node>::swap(parents,children);
+        parentInfo.clear();
         children.clear();
-        nodesInfo.clear();
+        childrenInfo.clear();
         tmpNodes.clear();
-        tmpNodesInfo.clear();
+        tmpInfo.clear();
     }
 
     bool hasTarget() const noexcept
@@ -85,11 +94,11 @@ struct ExpansionData
 
         i64 memSize = 0;
         memSize += VectorView<Node>::dataMemSize(nParents) + DefaultAlign; // parents
-        memSize += VectorView<Node>::dataMemSize(nParents) + DefaultAlign; // children
-        memSize += VectorView<NodeInfo>::dataMemSize(nParents) + DefaultAlign; // auxNodesInfo
-        memSize += VectorView<NodeInfo>::dataMemSize(nParents) + DefaultAlign; // auxNodesInfo
+        memSize += VectorView<NodeInfo>::dataMemSize(nParents) + DefaultAlign; // parentsInfo
+        memSize += VectorView<Node>::dataMemSize(nChildren) + DefaultAlign; // children
+        memSize += VectorView<NodeInfo>::dataMemSize(nChildren) + DefaultAlign; // childrenInfo
         memSize += VectorView<Node>::dataMemSize(nChildren) + DefaultAlign; // tmpNodes
-        memSize += VectorView<NodeInfo>::dataMemSize(nChildren) + DefaultAlign; // tmpNodesInfo
+        memSize += VectorView<NodeInfo>::dataMemSize(nChildren) + DefaultAlign; // tmpInfo
 
         return memSize;
     }

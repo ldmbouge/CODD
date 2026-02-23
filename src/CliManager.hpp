@@ -13,7 +13,6 @@ class CliManager
 
     int width_{0};
     int timeout_{std::numeric_limits<int>::max()};
-    bool gpu_{false};
     long long int memSize_{0};
     std::string instance_{};
     cxxopts::Options options_;
@@ -24,7 +23,6 @@ public:
 
     int width() const { return width_; }
     int timeout() const { return timeout_; }
-    bool gpu() const { return gpu_; }
     long long int memSize() const { return memSize_ * 1024ll * 1024ll * 1024ll; }
     std::string const& instance() const { return instance_; }
 
@@ -40,7 +38,6 @@ CliManager::CliManager(std::string const& programName, std::string const& descri
         ("w,width", "DD width", cxxopts::value(width_))
         ("h,help", "Show this help message and exit")
         ("m,memory", "Working memory in GB", cxxopts::value(memSize_))
-        ("g,gpu", "Use GPU acceleration", cxxopts::value(gpu_))
         ("i,instance", "Path to the instance file", cxxopts::value(instance_))
         ("t,timeout", "Timeout in seconds", cxxopts::value(timeout_));
 

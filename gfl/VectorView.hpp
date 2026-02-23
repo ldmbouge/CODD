@@ -10,15 +10,16 @@ namespace gfl
     template<typename T>
     class VectorView : public ArrayView<T>
     {
+    public:
+        using ArrayView<T>::at;
+
     protected:
         using ArrayView<T>::size_;
         using ArrayView<T>::data_;
-        using ArrayView<T>::at;
 
         i32 capacity_{0};
 
     public:
-        GFL_HOST_DEVICE
         VectorView() noexcept = default;
 
         VectorView(VectorView const &) noexcept = default;
@@ -117,6 +118,14 @@ namespace gfl
             i32 const oldSize = resizeBy(1);
             std::memcpy(&at(oldSize), &value, sizeof(T));
         }
+
+#ifdef __CUDACC__
+        void pushBackGpu(T const & value) noexcept
+        {
+            i32 const oldSize = resizeBy(1);
+            cudaMemcpyAsync(&at(oldSize), &value, sizeof(T), cudaMemcpyHostToDevice);
+        }
+#endif
 
         GFL_HOST_DEVICE
         void pushBackAtomic(ArrayView<T> const & items) noexcept

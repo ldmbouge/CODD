@@ -51,29 +51,44 @@ public:
         return Node(state, labels, h);
     }
 
+    GFL_HOST_DEVICE
     State const & state() const noexcept { return state_; }
+    GFL_HOST_DEVICE
     void state(State const & state) noexcept {state_ = state; }
 
+    GFL_HOST_DEVICE
     gfl::f64 f() const noexcept { return g_ + h_; }
 
+    GFL_HOST_DEVICE
     gfl::f64 g() const noexcept { return g_; }
+    GFL_HOST_DEVICE
     void g(gfl::f64 const g) noexcept { g_ = g; }
 
+    GFL_HOST_DEVICE
     gfl::f64 h() const noexcept { return h_; }
+    GFL_HOST_DEVICE
     void h(gfl::f64 const h) noexcept { h_ = h; }
 
+    GFL_HOST_DEVICE
     gfl::i16 depth() const noexcept { return pathLen; }
 
+    GFL_HOST_DEVICE
     bool approximated() const noexcept { return approximated_; }
+    GFL_HOST_DEVICE
     void approximated(bool const approximated) noexcept { approximated_ = approximated; }
 
+    GFL_HOST_DEVICE
     bool ancestorInCutset() const noexcept { return ancestorInCutset_; }
+    GFL_HOST_DEVICE
     void ancestorInCutset(bool const ancestorInCutset)  noexcept { ancestorInCutset_ = ancestorInCutset; }
 
+    GFL_HOST_DEVICE
     OutLabels const & labels() const noexcept { return outLabels; }
+    GFL_HOST_DEVICE
     void labels(OutLabels const & labels) noexcept { outLabels = labels; }
 
     template<typename Model>
+    GFL_HOST_DEVICE
     bool isTarget(Model const * const model) const
     {
         assert(model != nullptr);
@@ -81,6 +96,7 @@ public:
         assert(not target or f() == g());
         return target;
     }
+
 
     gfl::ArrayView<gfl::i16 const> path() const noexcept
     {
@@ -111,7 +127,7 @@ struct NodeInfo
 {
     union
     {
-        gfl::u64 flag{0};
+        gfl::i64 flag{0};
         gfl::u64 hash;
         gfl::f64 score;
     };
@@ -129,13 +145,37 @@ struct NodeInfo
     constexpr static
     bool cmpByHash(NodeInfo const & n1, NodeInfo const & n2) {return n1.hash < n2.hash;}
 
+#ifdef __CUDACC__
+    struct HashDecomposer
+    {
+        GFL_HOST_DEVICE
+        gfl::tuple<gfl::u64&> operator()(NodeInfo & nodeInfo) const { return {nodeInfo.hash};}
+    };
+#endif
+
     GFL_HOST_DEVICE
     constexpr static
     bool cmpByFlag(NodeInfo const & n1, NodeInfo const & n2) {return n1.flag < n2.flag;}
 
+#ifdef __CUDACC__
+    struct FlagDecomposer
+    {
+        GFL_HOST_DEVICE
+        gfl::tuple<gfl::i64&> operator()(NodeInfo & nodeInfo) const { return {nodeInfo.flag};}
+    };
+#endif
+
     GFL_HOST_DEVICE
     constexpr static
     bool cmpByScore(NodeInfo const & n1, NodeInfo const & n2) {return n1.score < n2.score;}
+
+#ifdef __CUDACC__
+    struct ScoreDecomposer
+    {
+        GFL_HOST_DEVICE
+        gfl::tuple<gfl::f64&> operator()(NodeInfo & nodeInfo) const { return {nodeInfo.score};}
+    };
+#endif
 
     GFL_HOST_DEVICE
     static

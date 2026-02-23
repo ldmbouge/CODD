@@ -29,7 +29,7 @@ namespace gfl
         WordType words_[NumWords]{};
 
     public:
-        GFL_HOST_DEVICE BitSet() noexcept = default;
+        BitSet() noexcept = default;
 
         GFL_HOST_DEVICE BitSet(i32 val) noexcept;
         GFL_HOST_DEVICE BitSet(i32 min, i32 max) noexcept;
@@ -110,7 +110,7 @@ namespace gfl
         i32 const maxWordIdx = max / WordBitSize;
         i32 const maxBitIdx  = max % WordBitSize;
 
-        constexpr WordType fullWord = std::numeric_limits<WordType>::max();
+        constexpr WordType fullWord = numeric_limits<WordType>::max();
         WordType const minWordMask = suffixMaskInclusive<WordType>(minBitIdx);
         WordType const maxWordMask = prefixMaskInclusive<WordType>(maxBitIdx);
 

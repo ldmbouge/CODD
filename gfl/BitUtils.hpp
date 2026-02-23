@@ -236,8 +236,8 @@ namespace gfl
         static_assert(std::is_integral_v<T>);
         static_assert(std::is_unsigned_v<T>);
 
-        i32 constexpr bitSize = std::numeric_limits<T>::digits;
-        T constexpr fullMask = std::numeric_limits<T>::max();
+        i32 constexpr bitSize = numeric_limits<T>::digits;
+        T constexpr fullMask = numeric_limits<T>::max();
         T constexpr emptyMask = scast<T>(0);
 
         bool const isLow = bitIdx < 0;
@@ -261,8 +261,8 @@ namespace gfl
         static_assert(std::is_integral_v<T>);
         static_assert(std::is_unsigned_v<T>);
 
-        i32 constexpr bitSize = std::numeric_limits<T>::digits;
-        T constexpr fullMask = std::numeric_limits<T>::max();
+        i32 constexpr bitSize = numeric_limits<T>::digits;
+        T constexpr fullMask = numeric_limits<T>::max();
         T constexpr emptyMask = scast<T>(0);
 
         bool const isLow = bitIdx < 0;

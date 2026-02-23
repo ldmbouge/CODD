@@ -49,7 +49,7 @@ void expandParents(
 
     auto const & parents = expData->parents;
     auto & children = expData->children;
-    auto & childrenInfo = expData->childrenInfo;
+    auto & childrenInfo = expData->nodesInfo;
 
     assert(infoConsistent(children, childrenInfo));
 
@@ -124,35 +124,44 @@ void sort(gfl::ArrayView<NodeInfo> & nodesInfo, Fn cmp)
 
 template<typename Model, typename Node>
 GFL_HOST_DEVICE
-void flagRepresented(NodeInfo & iInfo, NodeInfo & jInfo, Node const & iNode, Node const & jNode, gfl::i64 const flag)
+void flagRepresented(NodeInfo & iInfo, NodeInfo & jInfo, Node const & iNode, Node const & jNode)
 {
     using namespace gfl;
 
     if (Model::State::equal(iNode.state(), jNode.state()))
     {
-        if (iNode.approximated() == jNode.approximated() or iNode.g() != jNode.g())
-        {
-            if (isBetterEq<Model>(iNode.g(), jNode.g()))
-                jInfo.flag = flag;
-            else
-                iInfo.flag = flag;
-        }
-        else // iNode.approximated() != jNode.approximated() and iNode.g() == jNode.g()
-        {
-            if (iNode.approximated())
-                iInfo.flag = flag;
-            else
-                jInfo.flag = flag;
+       if (iNode.approximated() == jNode.approximated())
+       {
+          if (isBetterEq<Model>(iNode.g(), jNode.g()))
+             jInfo.flag = 1;
+          else iInfo.flag = 1;
+       }
+       else
+       {
+          if (iNode.g() == jNode.g())
+          {
+             if (iNode.approximated())
+                iInfo.flag = 1;
+             else jInfo.flag = 1;
+          }
+          else
+          {
+             if (isBetterEq<Model>(iNode.g(), jNode.g()))
+                jInfo.flag = 1;
+             else iInfo.flag = 1;               
+          }
        }
     }
-
     if constexpr (Model::has_dom)
     {
-        // TODO Every approximated-aware policy leads to a different trade-off
         if (isBetterEq<Model>(iNode.g(), jNode.g()) and Model::dom(iNode.state(), jNode.state()))
-            jInfo.flag = flag;
+        {
+            jInfo.flag = 1;
+        }
         else if (isBetterEq<Model>(jNode.g(), iNode.g()) and Model::dom(jNode.state(), iNode.state()))
-            iInfo.flag = flag;
+        {
+            iInfo.flag = 1;
+        }
     }
 }
 
@@ -189,7 +198,7 @@ void flagRepresented(
             Node const & jNode = nodes[jInfo.idx];
             if (iInfo.hash == jInfo.hash)
             {
-                flagRepresented<Model>(iInfo,jInfo, iNode, jNode, flag);
+                flagRepresented<Model>(iInfo,jInfo, iNode, jNode);
             }
             else
             {
@@ -200,10 +209,7 @@ void flagRepresented(
 }
 
 inline
-void countFlagged(
-    gfl::u64 const flag,
-    gfl::i32 * const count,
-    gfl::ArrayView<NodeInfo> const & nodesInfo)
+void countFlagged(gfl::i32 * const count, gfl::ArrayView<NodeInfo> const & nodesInfo, gfl::u64 const flag)
 {
     using namespace gfl;
 
@@ -252,7 +258,7 @@ void filterChildren(ExpansionData<Node> * const expData)
 
     auto & children = expData->children;
     auto & tmpChildren = expData->tmpNodes;
-    auto & childrenInfo = expData->childrenInfo;
+    auto & childrenInfo = expData->nodesInfo;
 
     assert(infoConsistent(children, childrenInfo));
 
@@ -263,16 +269,16 @@ void filterChildren(ExpansionData<Node> * const expData)
     //printInfo(childrenInfo);
     
     i32 nRepresentatives = 0;
-    setFlag(0,childrenInfo);
-    flagRepresented<Model,Node>(1,children,childrenInfo);
-    countFlagged(0, &nRepresentatives, childrenInfo);
+    setFlag(0, childrenInfo);
+    flagRepresented<Model,Node>(childrenInfo, children);
+    countFlagged(&nRepresentatives, childrenInfo, 0);
     //std::cout << "#flag:" << nRepresentatives << " input size:" << children.size() << "\n";
     sort(childrenInfo, NodeInfo::cmpByFlag);
 
     childrenInfo.resizeTo(nRepresentatives);
     tmpChildren.resizeTo(nRepresentatives);
     copyByInfo(tmpChildren,children, childrenInfo);
-    VectorView<Node>::swap(tmpChildren, children);
+    VectorView<Node>::swap(tmpChildren, children);fs
 
     assert(infoConsistent(children, childrenInfo));
 }
@@ -366,15 +372,14 @@ void saveCutset(
 
     sort(parentInfo, NodeInfo::cmpByFlag);
     i32 nParentsToCopy = 0;
-    countFlagged(1, &nParentsToCopy, parentInfo);
+    countFlagged(&nParentsToCopy, parentInfo, 1);
 
     if (nParentsToCopy > 0)
     {
         ArrayView<NodeInfo> parentsToCopyInfo = parentInfo.slice(-nParentsToCopy);
         setRevScoreF<Model,Node>(parents, parentsToCopyInfo);
         sort(parentsToCopyInfo, NodeInfo::cmpByScore);
-        cutData->addSegment(nParentsToCopy);
-        ArrayView<Node> segment = *cutData->lastSegmentPtr();
+        ArrayView<Node> segment = cutData->addSegment(nParentsToCopy);
         copyByInfo(segment, parents, parentsToCopyInfo);
     }
 
@@ -399,18 +404,15 @@ void initInfoIdx(gfl::ArrayView<NodeInfo> const & nodesInfo)
 
 
 template<typename Model, typename Node>
-void mergeChildren(
-    gfl::i64 const width,
-    ExpansionData<Node> * const expData,
-    CutsetData<Node> * const cutData)
+void mergeChildren(gfl::i64 const width, ExpansionData<Node> * const expData, CutsetData<Node> * const cutData)
 {
     using namespace gfl;
 
     auto const & parents = expData->parents;
     auto & children = expData->children;
     auto & tmpChildren = expData->tmpNodes;
-    auto & childrenInfo = expData->childrenInfo;
-    auto & parentInfo = expData->parentInfo;
+    auto & childrenInfo = expData->nodesInfo;
+    auto & parentInfo = expData->tmpNodesInfo;
 
     assert(width < children.size());
 
@@ -431,7 +433,7 @@ void mergeChildren(
     // Flag the parents of the nodes that will be merged
     parentInfo.resizeTo(parents.size());
     initInfoIdx(parentInfo);
-    setFlag(0,parentInfo);
+    setFlag(parentInfo,0);
     flagParentsToSave(width, children, childrenInfo, parentInfo);
 
     // Merge the last children - (width - 1) nodes

@@ -57,6 +57,10 @@ namespace gfl
         GFL_HOST_DEVICE
         i32 size() const noexcept { return size_; }
 
+        GFL_HOST_DEVICE
+        // Needed for CUDA to access size at running time vs launch time.
+        i32 const * sizePtr() const noexcept { return &size_; }
+
         GFL_HOST_DEVICE static
         i32 dataMemSize(i32 const size) noexcept { return sizeof(T) * size; }
 

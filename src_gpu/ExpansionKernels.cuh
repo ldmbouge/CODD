@@ -1,0 +1,463 @@
+#pragma once
+
+#include <GFL.hpp>
+
+#include "Contexts.hpp"
+#include "ExpansionData.hpp"
+
+template<typename Model, typename Node>
+GFL_GLOBAL
+void expandParentsKernel(
+    Model const * const model,
+    ExpansionData<Node> * const expData,
+    gfl::f64 const primal)
+{
+    using namespace gfl;
+
+    auto const & parents = expData->parents;
+    auto & children = expData->children;
+    auto & childrenInfo = expData->nodesInfo;
+
+    i32 const pIdx = blockIdx.x;
+    {
+        Node const & pNode = parents[pIdx];
+        auto const & pLabels = pNode.labels();
+        auto const & [minLabel, maxLabel, nLabels] = pLabels.summary();
+        if (nLabels > 0)
+        {
+            for (i32 label = threadIdx.x; label <= maxLabel; label += blockDim.x)
+            {
+                if (pLabels.contains(label))
+                {
+                    // Transition
+                    auto const cState = model->stf(pNode.state(), label);
+                    if (cState.has_value())
+                    {
+                        f64 const tCost = model->scf(pNode.state(), label);
+                        f64 const cG = pNode.g() + tCost;
+                        f64 cH =  pNode.h() > 0 ? pNode.f() - cG : 0; // Deal with shallow target states
+                        if constexpr (Model::has_heur)
+                        {
+                            f64 const h = model->h(cState.value(), BBCtx);
+                            cH = tighter<Model>(cH,h);
+                        }
+                        assert(cH >= 0);
+
+                        // Conditions to keep the child
+                        if (isBetter<Model>(cG + cH,primal))
+                        {
+                            // Node
+                            childrenInfo.resizeByAtomic(1);
+                            i32 const cIdx = children.resizeByAtomic(1);
+                            Node & cNode = children[cIdx];
+                            new (&cNode) Node(cState.value(), cG, cH, label, pNode);
+                            NodeInfo & cInfo = childrenInfo[cIdx];
+                            new (&cInfo) NodeInfo(cIdx, pIdx);
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+template<typename Model, typename Node>
+GFL_GLOBAL
+void calcHashKernel(
+    gfl::VectorView<Node> const * const nodes,
+    gfl::VectorView<NodeInfo> const * const nodesInfo)
+{
+    using namespace gfl;
+
+    assert(nodes->size() == nodesInfo->size());
+    auto [begin,end] = calcSlice<i32>(blockIdx.x, gridDim.x,nodesInfo->size());
+    for (i32 i = begin + threadIdx.x; i < end; i += blockDim.x)
+    {
+        NodeInfo & info = nodesInfo->at(i);
+        Node const & node = nodes->at(info.idx);
+        if constexpr (Model::has_dom)
+            info.hash = Model::domHash(node.state());
+        else
+            info.hash = Model::State::hash(node.state());
+    }
+}
+
+template<typename KeyDecomposer, typename Buffer>
+GFL_GLOBAL
+void sortKernel(
+    Buffer * const inBuffer,
+    Buffer * const outBuffer,
+    gfl::ArrayView<gfl::u8> const * const cubAuxMem,
+    bool reverse = false)
+{
+    using namespace gfl;
+
+    assert(cubAuxMem != nullptr);
+    assert(inBuffer != nullptr);
+    assert(outBuffer != nullptr);
+    assert(inBuffer->size() == outBuffer->size());
+
+    cudaStream_t gpuSortQueue;
+    cudaStreamCreateWithFlags(&gpuSortQueue, cudaStreamNonBlocking);
+    if (reverse)
+        cub::DeviceRadixSort::SortKeysDescending(
+            cubAuxMem->data(),
+            cubAuxMem->dataMemSize(),
+            inBuffer->data(),
+            outBuffer->data(),
+            inBuffer->size(),
+            KeyDecomposer{},
+            gpuSortQueue);
+    else
+        cub::DeviceRadixSort::SortKeys(
+            cubAuxMem->data(),
+            cubAuxMem->dataMemSize(),
+            inBuffer->data(),
+            outBuffer->data(),
+            inBuffer->size(),
+            KeyDecomposer{},
+            gpuSortQueue);
+    cudaStreamDestroy(gpuSortQueue);
+}
+
+template<typename T>
+GFL_GLOBAL
+void swapKernel(T * const a, T * const b) { T::swap(*a,*b); }
+
+template<typename T>
+GFL_GLOBAL
+void resizeToKernel(
+    gfl::VectorView<T> * const v,
+    gfl::i32 const  count)
+{ v->resizeTo(count); }
+
+template<typename T>
+GFL_GLOBAL
+void resizeToKernel(
+    gfl::VectorView<T> * const v,
+    gfl::i32 const * const count)
+{ v->resizeTo(*count); }
+
+template<typename T>
+GFL_GLOBAL
+void setValueKernel( T * const t, T const v) { *t = v; }
+
+GFL_GLOBAL
+void setFlagKernel(
+    gfl::i64 const flag,
+    gfl::ArrayView<NodeInfo> const * const nodesInfo
+)
+{
+    using namespace gfl;
+
+    auto [begin,end] = calcSlice<i32>(blockIdx.x, gridDim.x,nodesInfo->size());
+    for (i32 i = begin + threadIdx.x; i < end; i += blockDim.x)
+    {
+        NodeInfo & info = nodesInfo->at(i);
+        info.flag = flag;
+    }
+}
+
+template<typename Model, typename Node>
+void flagRepresentedChildrenKernel(
+    gfl::i64 const flag,
+    gfl::ArrayView<Node>  const * const nodes,
+    gfl::ArrayView<NodeInfo> const * const nodesInfo
+    )
+{
+    using namespace gfl;
+
+    auto [begin,end] = calcSlice<i32>(blockIdx.x, gridDim.x,nodesInfo->size());
+    for (i32 i = begin + threadIdx.x; i < end; i += blockDim.x)
+    {
+        NodeInfo & iInfo = nodesInfo->at(i);
+        Node const & iNode = nodes->at(iInfo.idx);
+        for (i32 j = i + 1; j < nodesInfo->size(); j += 1)
+        {
+            NodeInfo & jInfo = nodesInfo->at(j);
+            Node const & jNode = nodes->at(jInfo.idx);
+            if (iInfo.hash == jInfo.hash)
+                flagRepresented<Model>(iInfo,jInfo, iNode, jNode, flag);
+            else
+                break;
+        }
+    }
+}
+
+GFL_GLOBAL
+void countFlaggedKernel(
+    gfl::u64 const flag,
+    gfl::i32 * const count,
+    gfl::ArrayView<NodeInfo> const * const nodesInfo
+    )
+{
+    using namespace gfl;
+    __shared__ i32 count_s;
+
+    if (threadIdx.x == 0) { count_s = 0;}
+    __syncthreads();
+
+    i32 count_r = 0;
+    auto [begin,end] = calcSlice<i32>(blockIdx.x, gridDim.x,nodesInfo->size());
+    for (i32 i = begin + threadIdx.x; i < end; i += blockDim.x)
+    {
+        NodeInfo const & info = nodesInfo->at(i);
+        count_r += info.flag == flag;
+    }
+    if (count_r > 0) atomicAdd_block(&count_s, count_r);
+    __syncthreads();
+
+    if (threadIdx.x == 0 and count_s > 0) { atomicAdd(count,count_s); }
+}
+
+template<typename Node>
+GFL_GLOBAL
+void copyByInfoKernel(
+    gfl::ArrayView<Node> const * const dst,
+    gfl::ArrayView<Node> const * const  src,
+    gfl::ArrayView<NodeInfo> const * const nodesInfo)
+{
+    using namespace gfl;
+
+    assert(src->size() >= nodesInfo->size());
+    assert(dst->size() == nodesInfo->size());
+
+    auto [begin,end] = calcSlice<i32>(blockIdx.x, gridDim.x, nodesInfo->size());
+    for (i32 i = begin + threadIdx.x; i < end; i += blockDim.x)
+    {
+        NodeInfo & info = nodesInfo->at(i);
+        Node & sNode = src->at(info.idx);
+        Node & dNode = dst->at(i);
+        dNode = sNode;
+        info.idx = i;
+    }
+}
+
+template<typename Model, typename Node>
+GFL_GLOBAL
+void setScoreGKernel(
+    gfl::ArrayView<Node> const * const nodes,
+    gfl::ArrayView<NodeInfo> const * const nodesInfo)
+{
+    using namespace gfl;
+
+    assert(nodes->size() == nodesInfo->size());
+    auto [begin,end] = calcSlice<i32>(blockIdx.x, gridDim.x, nodesInfo->size());
+    for (i32 i = begin + threadIdx.x; i < end; i += blockDim.x)
+    {
+        NodeInfo & info = nodesInfo->at(i);
+        Node const & node = nodes->at(info.idx);
+        info.score = score<Model>(node.g());
+    }
+}
+
+template<typename Model, typename Node>
+GFL_GLOBAL
+void setScoreFKernel(
+    gfl::ArrayView<Node> const * const nodes,
+    gfl::ArrayView<NodeInfo> const * const nodesInfo)
+{
+    using namespace gfl;
+
+    assert(nodes->size() == nodesInfo->size());
+    auto [begin,end] = calcSlice<i32>(blockIdx.x, gridDim.x, nodesInfo->size());
+    for (i32 i = begin + threadIdx.x; i < end; i += blockDim.x)
+    {
+        NodeInfo & info = nodesInfo->at(i);
+        Node const & node = nodes->at(info.idx);
+        info.score = score<Model>(node.f());
+    }
+}
+
+GFL_GLOBAL
+void resetInfoKernel(gfl::ArrayView<NodeInfo> const * const nodesInfo)
+{
+    using namespace gfl;
+
+    auto [begin,end] = calcSlice<i32>(blockIdx.x, gridDim.x, nodesInfo->size());
+    for (i32 i = begin + threadIdx.x; i < end; i += blockDim.x)
+    {
+        NodeInfo & info = nodesInfo->at(i);
+        info.idx = i;
+    }
+}
+
+template<typename Node>
+GFL_GLOBAL
+void flagParentsToSaveKernel(
+    gfl::i64 const flag,
+    gfl::ArrayView<NodeInfo> const * const parentInfo,
+    gfl::i32 const width,
+    gfl::ArrayView<Node> const * const children,
+    gfl::ArrayView<NodeInfo> const * const childrenInfo
+)
+{
+    using namespace gfl;
+
+    assert(children->size() == childrenInfo->size());
+
+    // Merge a suffix so that the total number of nodes is width
+    i32 const nChildrenToMerge = children->size() - (width - 1);
+    auto [begin,end] = calcSlice<i32>(blockIdx.x, gridDim.x, nChildrenToMerge);
+    for (i32 i = begin + threadIdx.x; i < end; i += blockDim.x)
+    {
+        i32 const j = (width - 1) + i;
+        NodeInfo const & info = childrenInfo->at(j);
+        assert(info.idx == j);
+        Node const & node = children->at(info.idx);
+        if (not node.ancestorInCutset())
+        {
+            parentInfo->at(info.pIdx).flag = flag;
+        }
+    }
+}
+
+template< typename Node>
+GFL_GLOBAL
+void updateAncestorKernel(
+    gfl::i64 const flag,
+    gfl::ArrayView<NodeInfo> const * const parentInfo,
+    gfl::ArrayView<Node> const * const children,
+    gfl::ArrayView<NodeInfo> const * const childrenInfo)
+{
+    using namespace gfl;
+
+    assert(children->size() == childrenInfo->size());
+
+    auto [begin,end] = calcSlice<i32>(blockIdx.x, gridDim.x, children->size());
+    for (i32 i = begin + threadIdx.x; i < end; i += blockDim.x)
+    {
+        auto const & info = childrenInfo->at(i);
+        assert(info.idx == i);
+        auto & node = children->at(info.idx);
+        if (parentInfo->at(info.pIdx).flag == flag)
+        {
+            node.ancestorInCutset(true);
+        }
+    }
+}
+
+template<typename Node>
+GFL_GLOBAL
+void resizeByKernel(
+    CutsetData<Node> * const cutset,
+    gfl::i32 const * const count)
+{ cutset->addSegment(count);}
+
+template<typename Node>
+GFL_HOST_DEVICE
+void initChildrenPrefix(
+    gfl::i32 const width,
+    gfl::ArrayView<Node> const * const children,
+    gfl::ArrayView<NodeInfo> * const childrenPrefix)
+{
+    using namespace gfl;
+
+    i32 const prefixSize = width - 1;
+    *childrenPrefix = children->slice(prefixSize, children->size());
+}
+
+
+template<typename Model, typename Node>
+GFL_HOST_DEVICE
+void mergeNodeWith(Node & main, Node const & toMerge)
+{
+    main.state(Model::smf(main.state(), toMerge.state()));
+    main.g(better<Model>(main.g(), toMerge.g()));
+    main.h(looser<Model>(main.h(), toMerge.h()));
+}
+
+template<typename Model, typename Node>
+GFL_GLOBAL
+__global__ void reductionKernel(
+    gfl::ArrayView<Node> const * const inBuffer,
+    gfl::ArrayView<Node> const * const outBuffer,
+    gfl::i32 const count)
+{
+    using namespace gfl;
+
+    assert(blockDim.x == 32);
+    assert(blockDim.x * sizeof(Node) <= getSharedMemSize());
+
+    __shared__ Node tmpNodes[32];
+
+    auto [begin, end] = calcSlice<int>(blockIdx.x, gridDim.x, count);
+    i32 const nodesOfBlock = min<i32>(blockDim.x, end - begin);
+    if (threadIdx.x < nodesOfBlock)
+    {
+        Node fNode_r = inBuffer->at(begin + threadIdx.x);
+        for (i32 i = begin + threadIdx.x + blockDim.x; i < end; i += blockDim.x)
+        {
+            Node const & iNode = inBuffer->at(i);
+            mergeNodeWith<Model>( fNode_r, iNode);
+        }
+        tmpNodes[threadIdx.x] = fNode_r;
+    }
+    __syncwarp();
+
+    if (threadIdx.x == 0 and nodesOfBlock > 0)
+    {
+        Node fNode_r = tmpNodes[0];
+        for (int i = 1; i < nodesOfBlock; ++i)
+        {
+            Node const & iNode = tmpNodes[i];
+            mergeNodeWith<Model>( fNode_r, iNode);
+        }
+        outBuffer->at(blockIdx.x) = fNode_r;
+    }
+}
+
+template<typename Model, typename Node>
+GFL_GLOBAL
+void reductionSeqKernel(
+    gfl::ArrayView<Node> const * const inBuffer,
+    gfl::i32 const count)
+{
+    using namespace gfl;
+
+    assert(blockDim.x == 1);
+    assert(gridDim.x == 1);
+    assert(count > 0);
+
+    Node result = inBuffer->at(0);
+    for (i32 i = 1; i < count; ++i)
+    {
+        mergeNodeWith<Model>(result, inBuffer->at(i));
+    }
+}
+
+template<typename Model, typename Node>
+void calcOutLabelsKernel(
+        Model const * const model,
+        gfl::ArrayView<Node> const * const nodes,
+        gfl::f64 const primal,
+        gfl::f64 const dual,
+        DDContext const ddCtx)
+{
+    using namespace gfl;
+
+    auto [begin,end] = calcSlice<i32>(blockIdx.x, gridDim.x, nodes->size());
+    for (i32 i = begin + threadIdx.x; i < end; i += blockDim.x)
+    {
+        Node & node = nodes[i];
+        node.labels(model->lgf(node.state(), primal, dual, ddCtx));
+    }
+}
+
+template<typename Model, typename Node>
+void setHKernel(
+    gfl::f64 const f,
+    gfl::ArrayView<Node> const * nodes)
+{
+    using namespace gfl;
+
+    auto [begin,end] = calcSlice<i32>(blockIdx.x, gridDim.x, nodes->size());
+    for (i32 i = begin + threadIdx.x; i < end; i += blockDim.x)
+    {
+        Node & node = nodes[i];
+        f64 const h = f - node.g();
+        assert(h >= 0);
+        node.h(tighter<Model>(node.h(), h));
+    }
+}
+

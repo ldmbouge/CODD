@@ -5,8 +5,10 @@
 template <typename Node>
 class CutsetData
 {
+
     gfl::VectorView<Node> nodes_{};
     gfl::VectorView<gfl::ArrayView<Node>> segments_{};
+    gfl::ArrayView<Node> lastSegment_;
 
 public:
     void init(
@@ -16,6 +18,7 @@ public:
             gfl::ArenaAllocator & alloc) noexcept
     {
         using namespace gfl;
+
 
         nodes_ = VectorView<Node>(width * branch_factor * depth,alloc),
         segments_ = VectorView<ArrayView<Node>>(depth, alloc);
@@ -43,13 +46,14 @@ public:
     gfl::ArrayView<gfl::ArrayView<Node>> segments() const noexcept {return segments_;}
 
     GFL_HOST_DEVICE
-    gfl::ArrayView<Node> addSegment(gfl::i32 const size) noexcept
+    void addSegment(gfl::i32 const size) noexcept
     {
         using namespace gfl;
 
         i32 const oldSize = nodes_.resizeBy(size);
-        ArrayView<Node> segment = nodes_.slice(oldSize, nodes_.size());
-        segments_.pushBack(segment);
-        return segments().back();
+        lastSegment_ = nodes_.slice(oldSize, nodes_.size());
+        segments_.pushBack(lastSegment_);
     }
+
+    gfl::ArrayView<Node> const * lastSegmentPtr() const noexcept { return &lastSegment_;}
 };

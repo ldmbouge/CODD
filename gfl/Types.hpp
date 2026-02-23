@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <FunQual.hpp>
 
 namespace gfl
 {
@@ -31,12 +32,14 @@ namespace gfl
     using llu = unsigned long long int;
 
     template<typename To, typename From>
+    GFL_HOST_DEVICE
     constexpr To scast(From from) noexcept
     {
         return static_cast<To>(from);
     }
 
     template<typename To, typename From>
+    GFL_HOST_DEVICE
     constexpr To rcast(From from) noexcept
     {
         return reinterpret_cast<To>(from);

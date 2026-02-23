@@ -30,4 +30,14 @@ namespace gfl
 
         return make_tuple(begin, end);
     }
+
+#ifdef __CUDACC__
+    GFL_DEVICE inline
+    i32 getSharedMemSize() noexcept
+    {
+        i32 size;
+        asm volatile ("mov.u32 %0, %dynamic_smem_size;" : "=r"(size));
+        return size;
+    }
+#endif
 }

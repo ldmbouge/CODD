@@ -28,6 +28,7 @@ public:
     public:
         State() = default;
 
+        GFL_HOST_DEVICE
         State(ItemSet const & sel, gfl::i32 const n) noexcept : sel(sel), n(n) {}
 
         GFL_HOST_DEVICE
