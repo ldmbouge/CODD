@@ -24,18 +24,18 @@ class ExpansionEngineGpu : public ExpansionEngine<Model,Node>
 
     gfl::ArrayView<gfl::u8> cubAuxMem;
 
-    void swapParentsAndChildren(ExpansionData<Node> const * const expData)
-    { expData->swapParentsAndChildren(); }
+    void swapParentsAndChildren()
+    { expData.swapParentsAndChildren(); }
 
     void expandParents(
         Model const * const model,
         gfl::f64 const primal)
     {
         using namespace gfl;
-        auto & parents = expData->parents;
+        auto & parents = expData.parents;
 
         i32 blockSize = 128;
-        i32 gridSize = ceil(parents.size(), blockSize);
+        i32 gridSize = ceil<i32>(parents.size(), blockSize);
         expandParentsKernel<<<gridSize,blockSize>>>(model, &expData, primal);
         cudaDeviceSynchronize();
     }
@@ -43,10 +43,10 @@ class ExpansionEngineGpu : public ExpansionEngine<Model,Node>
     void filterRepresentedChildren()
     {
         using namespace gfl;
-        auto & children = expData->children;
-        auto & tmpNodes = expData->tmpNodes;
-        auto & childrenInfo = expData->childrenInfo;
-        auto & tmpInfo = expData->tmpNodesInfo;
+        auto & children = expData.children;
+        auto & tmpNodes = expData.tmpNodes;
+        auto & childrenInfo = expData.childrenInfo;
+        auto & tmpInfo = expData.tmpInfo;
         i64 const RepresentedFlag = 1;
         i64 const RepresentativeFlag = 0;
 
@@ -56,41 +56,41 @@ class ExpansionEngineGpu : public ExpansionEngine<Model,Node>
 
         // Sort by hash
         i32 const blockSize = 128;
-        i32 const gridSize = ceil(children.size(), blockSize);
-        calcHashKernel<<<gridSize,blockSize>>>(&children, &childrenInfo);
-        sortKernel<NodeInfo::HashDecomposer><<<1,1>>>(cubAuxMem,&childrenInfo, &tmpInfo);
+        i32 const gridSize = ceil<i32>(children.size(), blockSize);
+        calcHashKernel<Model><<<gridSize,blockSize>>>(&children, &childrenInfo);
+        sortKernel<NodeInfo::HashDecomposer><<<1,1>>>(&childrenInfo,&tmpInfo,&cubAuxMem);
         swapKernel<<<1,1>>>(&childrenInfo, &tmpInfo);
 
         // Find representatives
-        setFlagKernel(RepresentativeFlag, &childrenInfo);
-        flagRepresentedChildrenKernel<<<gridSize,blockSize>>>(RepresentedFlag,&children,&childrenInfo);
-        sortKernel<NodeInfo::FlagDecomposer><<<1,1>>>(&childrenInfo,&tmpInfo,cubAuxMem);
+        setFlagKernel<<<gridSize,blockSize>>>(RepresentativeFlag, &childrenInfo);
+        flagRepresentedChildrenKernel<Model><<<gridSize,blockSize>>>(RepresentedFlag,&children,&childrenInfo);
+        sortKernel<NodeInfo::FlagDecomposer><<<1,1>>>(&childrenInfo,&tmpInfo,&cubAuxMem);
         swapKernel<<<1,1>>>(&childrenInfo, &tmpInfo);
         countFlaggedKernel<<<gridSize,blockSize>>>(RepresentativeFlag,&nFlagged,&childrenInfo);
-        resizeToKernel(&childrenInfo,&nFlagged);
-        resizeToKernel(&tmpNodes,&nFlagged);
-        copyByInfoKernel<<<gridSize,blockSize>>>(&tmpNodes,&children,&childrenInfo,&nFlagged);
+        resizeToKernel<<<1,1>>>(&childrenInfo,&nFlagged);
+        resizeToKernel<<<1,1>>>(&tmpNodes,&nFlagged);
+        copyByInfoKernel<<<gridSize,blockSize>>>(&tmpNodes,&children,&childrenInfo);
         swapKernel<<<1,1>>>(&tmpNodes, &children);
 
         cudaDeviceSynchronize();
     }
 
-    void sortChildrenByG(ExpansionData<Node> * const expData)
+    void sortChildrenByG()
     {
         using namespace gfl;
-        auto & children = expData->children;
-        auto & tmpNodes = expData->tmpNodes;
-        auto & childrenInfo = expData->childrenInfo;
-        auto & tmpInfo = expData->tmpNodesInfo;
+        auto & children = expData.children;
+        auto & tmpNodes = expData.tmpNodes;
+        auto & childrenInfo = expData.childrenInfo;
+        auto & tmpInfo = expData.tmpInfo;
 
         // Init
         tmpNodes.resizeTo(children.size());
 
         // Processing
         i32 const blockSize = 128;
-        i32 const gridSize = ceil(children.size(), blockSize);
-        setScoreGKernel<<<gridSize,blockSize>>>(&children, &childrenInfo);
-        sortKernel<NodeInfo::ScoreDecomposer><<<1,1>>>(&childrenInfo, &tmpInfo,cubAuxMem);
+        i32 const gridSize = ceil<i32>(children.size(), blockSize);
+        setScoreGKernel<Model><<<gridSize,blockSize>>>(&children, &childrenInfo);
+        sortKernel<NodeInfo::ScoreDecomposer><<<1,1>>>(&childrenInfo,&tmpInfo,&cubAuxMem);
         swapKernel<<<1,1>>>(&childrenInfo, &tmpInfo);
         copyByInfoKernel<<<gridSize,blockSize>>>(&tmpNodes,&children, &childrenInfo);
         swapKernel<<<1,1>>>(&tmpNodes, &children);
@@ -101,12 +101,12 @@ class ExpansionEngineGpu : public ExpansionEngine<Model,Node>
     void saveCutset()
     {
         using namespace gfl;
-        auto const & parents = expData->parents;
-        auto & children = expData->children;
-        auto & tmpNodes = expData->tmpNodes;
-        auto & parentsInfo = expData->parentInfo;
-        auto & childrenInfo = expData->childrenInfo;
-        auto & tmpInfo = expData->tmpInfo;
+        auto const & parents = expData.parents;
+        auto & children = expData.children;
+        auto & tmpNodes = expData.tmpNodes;
+        auto & parentsInfo = expData.parentInfo;
+        auto & childrenInfo = expData.childrenInfo;
+        auto & tmpInfo = expData.tmpInfo;
         auto & cutset = cutData;
         i64 const ParentToNotSaveFlag = 1;
         i64 const ParentToSaveFlag = 0;
@@ -117,24 +117,24 @@ class ExpansionEngineGpu : public ExpansionEngine<Model,Node>
 
         // Find parents to save
         i32 const blockSize = 128;
-        i32 const gridSize = ceil(expData->children.size(),blockSize);
+        i32 const gridSize = ceil<i32>(expData.children.size(),blockSize);
         resetInfoKernel<<<gridSize,blockSize>>>(&parentsInfo);
         setFlagKernel<<<gridSize,blockSize>>>(ParentToNotSaveFlag,&parentsInfo);
         flagParentsToSaveKernel<<<gridSize,blockSize>>>(ParentToSaveFlag,&parentsInfo,width_,&children,&childrenInfo);
 
         // Update children ancestor flag
-        updateAncestorKernel(ParentToSaveFlag,&parentsInfo,&children,&childrenInfo);
+        updateAncestorKernel<<<gridSize,blockSize>>>(ParentToSaveFlag,&parentsInfo,&children,&childrenInfo);
 
         // Save parents in cutset by *reverse* f value
-        sortKernel<NodeInfo::FlagDecomposer><<<1,1>>>(&parentsInfo,&tmpInfo,cubAuxMem);
+        sortKernel<NodeInfo::FlagDecomposer><<<1,1>>>(&parentsInfo,&tmpInfo,&cubAuxMem);
         swapKernel<<<1,1>>>(&tmpInfo, &parentsInfo);
         countFlaggedKernel<<<gridSize,blockSize>>>(ParentToSaveFlag,&nFlagged,&parentsInfo);
         resizeToKernel<<<1,1>>>(&parentsInfo, &nFlagged);
-        setScoreFKernel<<<gridSize,blockSize>>>(&parents,parentsInfo);
-        sortKernel<NodeInfo::ScoreDecomposer><<<1,1>>>(&parentsInfo, &tmpInfo, cubAuxMem,true);
+        setScoreFKernel<Model><<<gridSize,blockSize>>>(&parents,&parentsInfo);
+        sortKernel<NodeInfo::ScoreDecomposer><<<1,1>>>(&parentsInfo,&tmpInfo,&cubAuxMem,true);
         swapKernel<<<1,1>>>(&tmpInfo, &parentsInfo);
         resizeByKernel<<<1,1>>>(&cutset, &nFlagged);
-        copyByInfoKernel(cutset->lastSegmentPtr(), &parents, &parentsInfo);
+        copyByInfoKernel<<<gridSize,blockSize>>>(cutset.lastSegmentPtr(),&parents,&parentsInfo);
 
         cudaDeviceSynchronize();
     }
@@ -143,14 +143,15 @@ class ExpansionEngineGpu : public ExpansionEngine<Model,Node>
     {
         using namespace gfl;
 
-        auto const & parents = expData->parents;
-        auto & children = expData->children;
-        auto & tmpNodes = expData->tmpNodes;
-        auto & childrenInfo = expData->nodesInfo;
-        auto & childrenPrefix = expData->tmpView;
+        auto const & parents = expData.parents;
+        auto & children = expData.children;
+        auto & tmpNodes = expData.tmpNodes;
+        auto & childrenInfo = expData.childrenInfo;
+        auto & childrenPrefix = expData.tmpView;
 
         // Init
         tmpNodes.resizeTo(children.size());
+        initChildrenPrefix(width_,&children,&childrenPrefix);
 
         // Merge the last children - (width - 1) nodes
         i32 const blockSize       = 32;
@@ -159,7 +160,6 @@ class ExpansionEngineGpu : public ExpansionEngine<Model,Node>
         i32 const nNodes          = children.size(); // real item count
         i32 const nBlocks1        = ceil<i32>(nNodes,   reductionFactor);  // gridDim for pass1, real count for pass2
         i32 const nBlocks2        = ceil<i32>(nBlocks1, reductionFactor);  // gridDim for pass2, real count for pass3
-        initChildrenPrefix<Model>(width_, &children, &childrenPrefix);
         // pass1: childrenPrefix → tmpNodes, count = nNodes
         reductionKernel<Model,Node><<<nBlocks1, blockSize>>>(&childrenPrefix,&tmpNodes,nNodes);
         // pass2: tmpNodes → childrenPrefix, count = nBlocks1
@@ -181,7 +181,7 @@ class ExpansionEngineGpu : public ExpansionEngine<Model,Node>
         using namespace gfl;
 
         i32 const blockSize = 128;
-        i32 const gridSize = ceil(nodes->size(),blockSize);
+        i32 const gridSize = ceil<i32>(nodes->size(),blockSize);
         calcOutLabelsKernel<<<gridSize,blockSize>>>(model,nodes,primal,dual,DDRelaxed);
 
         cudaDeviceSynchronize();
@@ -191,21 +191,21 @@ class ExpansionEngineGpu : public ExpansionEngine<Model,Node>
     {
         using namespace gfl;
 
-        auto & children = expData->children;
-        auto & tmpNodes = expData->tmpNodes;
-        auto & childrenInfo = expData->nodesInfo;
-        auto & tmpInfo = expData->tmpInfo;
+        auto & children = expData.children;
+        auto & tmpNodes = expData.tmpNodes;
+        auto & childrenInfo = expData.childrenInfo;
+        auto & tmpInfo = expData.tmpInfo;
 
         if (not children.empty())
         {
             i32 const blockSize = 128;
-            i32 const gridSize = ceil(children.size(), blockSize);
-            setScoreGKernel<<<gridSize, blockSize>>>(&children, &childrenInfo);
-            sortKernel<NodeInfo::ScoreDecomposer><<<1,1>>>(&childrenInfo,&tmpInfo,cubAuxMem);
-            swapKernel(&tmpInfo, &childrenInfo);
+            i32 const gridSize = ceil<i32>(children.size(), blockSize);
+            setScoreGKernel<Model><<<gridSize, blockSize>>>(&children, &childrenInfo);
+            sortKernel<NodeInfo::ScoreDecomposer><<<1,1>>>(&childrenInfo,&tmpInfo,&cubAuxMem);
+            swapKernel<<<1,1>>>(&tmpInfo, &childrenInfo);
             resizeToKernel<<<1,1>>>(&childrenInfo,1);
-            copyByInfoKernel(&tmpNodes, &children, &childrenInfo);
-            swapKernel(&tmpNodes, &children);
+            copyByInfoKernel<<<gridSize, blockSize>>>(&tmpNodes, &children, &childrenInfo);
+            swapKernel<<<1,1>>>(&tmpNodes, &children);
             resizeToKernel<<<1,1>>>(&children,1);
         }
     }
@@ -217,19 +217,19 @@ class ExpansionEngineGpu : public ExpansionEngine<Model,Node>
     {
         using namespace gfl;
 
-        auto & children = expData->children;
-        auto & tmpNodes = expData->tmpNodes;
-        auto & childrenInfo = expData->nodesInfo;
-        auto & tmpInfo = expData->tmpInfo;
+        auto & children = expData.children;
+        auto & tmpNodes = expData.tmpNodes;
+        auto & childrenInfo = expData.childrenInfo;
+        auto & tmpInfo = expData.tmpInfo;
         auto & cutset = cutData;
 
         if (not children.empty())
         {
-            i64 const f = expData->getTarget().f();
+            i64 const f = expData.getTarget().f();
             i32 const blockSize = 128;
-            i32 const gridSize = ceil(cutset->nodes().size(), blockSize);
-            calcOutLabelsKernel<<<gridSize,blockSize>>>(model,&cutset->nodes(),primal,dual,DDRelaxed);
-            setHKernel<<<gridSize,blockSize>>>(f,&cutset->nodes());
+            i32 const gridSize = ceil<i32>(cutset.nodes().size(), blockSize);
+            calcOutLabelsKernel<<<gridSize,blockSize>>>(model,cutset.nodesPtr(),primal,dual,DDRelaxed);
+            setHKernel<Model><<<gridSize,blockSize>>>(f,cutset.nodesPtr());
         }
     }
 
@@ -239,7 +239,7 @@ class ExpansionEngineGpu : public ExpansionEngine<Model,Node>
         gfl::f64 const dual)
     {
         using namespace gfl;
-        auto & children = expData->children;
+        auto & children = expData.children;
 
         expandParents(model,primal);
         filterRepresentedChildren();
@@ -260,11 +260,11 @@ public:
            gfl::f64 const dual)
     {
         using namespace gfl;
-        auto & children = expData->children;
+        auto & children = expData.children;
 
-        expData->clear();
-        cutData->clear();
-        expData->parents.pushBack(node);
+        expData.clear();
+        cutData.clear();
+        expData.parents.pushBack(node);
         expandLayerRelaxed(model, primal, dual);
         while (not children.empty() and not children.front().isTarget(model))
         {
@@ -272,7 +272,7 @@ public:
             expandLayerRelaxed(model,primal,dual);
         }
         keepOnlyBestChild();
-        finializeCutset(model,primal,dual);
+        finalizeCutset(model,primal,dual);
     }
 
 

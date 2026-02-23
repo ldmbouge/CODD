@@ -136,6 +136,7 @@ struct NodeInfo
 
     NodeInfo() = default;
 
+    GFL_HOST_DEVICE
     NodeInfo(gfl::i32 const idx, gfl::i32 const pIdx) noexcept :
         idx(idx),
         pIdx(pIdx)
@@ -182,7 +183,7 @@ struct NodeInfo
     void print(NodeInfo const & ni)
     {
         using namespace gfl;
-        printf("INFO: (%7llu,%7llu,%7.2f)", ni.flag, scast<llu>(ni.hash) % 10000000ll, std::fmod(ni.score,10000000.0));
+        printf("INFO: (%7lu,%7llu,%7.2f)", ni.flag, scast<llu>(ni.hash) % 10000000ll, std::fmod(ni.score,10000000.0));
         printf(" | "); printf("IDX: %lld", scast<lld>(ni.idx));
         printf(" | "); printf("PIDX: %lld", scast<lld>(ni.pIdx));
     }

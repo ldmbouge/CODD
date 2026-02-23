@@ -201,7 +201,7 @@ void flagRepresented(
 
 inline
 void countFlagged(
-    gfl::u64 const flag,
+    gfl::i64 const flag,
     gfl::i32 * const count,
     gfl::ArrayView<NodeInfo> const & nodesInfo)
 {

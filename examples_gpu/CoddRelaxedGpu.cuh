@@ -63,7 +63,7 @@ int runRelaxedGpu(int argc, char* argv[])
         bnb.dual(queue.bestDual());
         assert(bnb.consistent());
 
-        eng->fullyExpandRelaxed(model, node, bnb.primal(), bnb.dual());
+        eng->expandRelaxed(model, node, bnb.primal(), bnb.dual());
 
         // Check relaxation and manage cutset
         if (eng->hasTarget())

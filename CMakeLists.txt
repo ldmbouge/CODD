@@ -89,4 +89,6 @@ endfunction()
 add_executables("examples" "*.cpp" "cxxopts;fmt::fmt")
 
 # GPU
-add_executables("examples_gpu" "*.cu" "cxxopts;fmt::fmt")
+if(ENABLE_GPU)
+    add_executables("examples_gpu" "*.cu" "cxxopts;fmt::fmt")
+endif()

@@ -51,28 +51,28 @@ bool isWorseEq(gfl::f64 const a, gfl::f64 const b) noexcept
 }
 
 template<typename Model>
-constexpr
+GFL_HOST_DEVICE constexpr
 gfl::f64 better(gfl::f64 const a, gfl::f64 const b) noexcept
 {
     return isBetter<Model>(a, b) ? a : b;
 }
 
 template<typename Model>
-constexpr
+GFL_HOST_DEVICE constexpr
 gfl::f64 betterEq(gfl::f64 const a, gfl::f64 const b) noexcept
 {
     return isBetterEq<Model>(a, b) ? a : b;
 }
 
 template<typename Model>
-constexpr
+GFL_HOST_DEVICE constexpr
 gfl::f64 worse(gfl::f64 const a, gfl::f64 const b) noexcept
 {
     return isWorse<Model>(a, b) ? a : b;
 }
 
 template<typename Model>
-constexpr
+GFL_HOST_DEVICE constexpr
 gfl::f64 worseEq(gfl::f64 const a, gfl::f64 const b) noexcept
 {
     return isWorseEq<Model>(a, b) ? a : b;
@@ -93,21 +93,21 @@ gfl::f64 best() noexcept
 }
 
 template<typename Model>
-constexpr
+GFL_HOST_DEVICE constexpr
 gfl::f64 worst() noexcept
 {
     return -best<Model>();
 }
 
 template<typename Model>
-constexpr
+GFL_HOST_DEVICE constexpr
 bool isValid(gfl::f64 const a) noexcept
 {
     return a != worst<Model>() and a != best<Model>();
 }
 
 template<typename Model>
-constexpr
+GFL_HOST_DEVICE constexpr
 gfl::f64 score(gfl::f64 const a) noexcept
 {
     if constexpr (Model::is_maximization)
@@ -117,14 +117,14 @@ gfl::f64 score(gfl::f64 const a) noexcept
 }
 
 template<typename Model>
-constexpr
+GFL_HOST_DEVICE constexpr
 gfl::f64 isTighter(gfl::f64 const a, gfl::f64 const b) noexcept
 {
     return isWorse<Model>(a, b);
 }
 
 template<typename Model>
-constexpr
+GFL_HOST_DEVICE constexpr
 gfl::f64 tighter(gfl::f64 const a, gfl::f64 const b) noexcept
 {
     return worse<Model>(a, b);
@@ -132,14 +132,14 @@ gfl::f64 tighter(gfl::f64 const a, gfl::f64 const b) noexcept
 
 
 template<typename Model>
-constexpr
+GFL_HOST_DEVICE constexpr
 gfl::f64 isLooser(gfl::f64 const a, gfl::f64 const b) noexcept
 {
     return isBetter<Model>(a, b);
 }
 
 template<typename Model>
-constexpr
+GFL_HOST_DEVICE constexpr
 gfl::f64 looser(gfl::f64 const a, gfl::f64 const b) noexcept
 {
     return better<Model>(a, b);

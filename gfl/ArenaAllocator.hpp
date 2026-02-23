@@ -54,7 +54,7 @@ namespace gfl
                 std::fprintf(stderr, "%s", errorMsg);
                 std::fflush(stderr);
 #endif
-                std::abort();
+                abort();
             }
             current = newCurrent;
             return rcast<T*>(memory);

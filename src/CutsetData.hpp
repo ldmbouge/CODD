@@ -41,6 +41,7 @@ public:
 
     GFL_HOST_DEVICE
    gfl::ArrayView<Node> nodes() const noexcept {return nodes_;}
+   gfl::ArrayView<Node> const * nodesPtr() const noexcept {return &nodes_;}
 
     GFL_HOST_DEVICE
     gfl::ArrayView<gfl::ArrayView<Node>> segments() const noexcept {return segments_;}

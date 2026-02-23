@@ -16,7 +16,7 @@ void expandParentsKernel(
 
     auto const & parents = expData->parents;
     auto & children = expData->children;
-    auto & childrenInfo = expData->nodesInfo;
+    auto & childrenInfo = expData->childrenInfo;
 
     i32 const pIdx = blockIdx.x;
     {
@@ -64,8 +64,8 @@ void expandParentsKernel(
 template<typename Model, typename Node>
 GFL_GLOBAL
 void calcHashKernel(
-    gfl::VectorView<Node> const * const nodes,
-    gfl::VectorView<NodeInfo> const * const nodesInfo)
+    gfl::ArrayView<Node> const * const nodes,
+    gfl::ArrayView<NodeInfo> const * const nodesInfo)
 {
     using namespace gfl;
 
@@ -97,12 +97,13 @@ void sortKernel(
     assert(outBuffer != nullptr);
     assert(inBuffer->size() == outBuffer->size());
 
+    size_t auxDataMemSize = scast<size_t>(cubAuxMem->dataMemSize());
     cudaStream_t gpuSortQueue;
     cudaStreamCreateWithFlags(&gpuSortQueue, cudaStreamNonBlocking);
     if (reverse)
         cub::DeviceRadixSort::SortKeysDescending(
             cubAuxMem->data(),
-            cubAuxMem->dataMemSize(),
+            auxDataMemSize,
             inBuffer->data(),
             outBuffer->data(),
             inBuffer->size(),
@@ -111,7 +112,7 @@ void sortKernel(
     else
         cub::DeviceRadixSort::SortKeys(
             cubAuxMem->data(),
-            cubAuxMem->dataMemSize(),
+            auxDataMemSize,
             inBuffer->data(),
             outBuffer->data(),
             inBuffer->size(),
@@ -159,6 +160,7 @@ void setFlagKernel(
 }
 
 template<typename Model, typename Node>
+GFL_GLOBAL
 void flagRepresentedChildrenKernel(
     gfl::i64 const flag,
     gfl::ArrayView<Node>  const * const nodes,
@@ -342,14 +344,13 @@ GFL_GLOBAL
 void resizeByKernel(
     CutsetData<Node> * const cutset,
     gfl::i32 const * const count)
-{ cutset->addSegment(count);}
+{ cutset->addSegment(*count);}
 
 template<typename Node>
-GFL_HOST_DEVICE
 void initChildrenPrefix(
     gfl::i32 const width,
     gfl::ArrayView<Node> const * const children,
-    gfl::ArrayView<NodeInfo> * const childrenPrefix)
+    gfl::ArrayView<Node> * const childrenPrefix)
 {
     using namespace gfl;
 
@@ -427,6 +428,7 @@ void reductionSeqKernel(
 }
 
 template<typename Model, typename Node>
+GFL_GLOBAL
 void calcOutLabelsKernel(
         Model const * const model,
         gfl::ArrayView<Node> const * const nodes,
@@ -439,12 +441,13 @@ void calcOutLabelsKernel(
     auto [begin,end] = calcSlice<i32>(blockIdx.x, gridDim.x, nodes->size());
     for (i32 i = begin + threadIdx.x; i < end; i += blockDim.x)
     {
-        Node & node = nodes[i];
+        Node & node = nodes->at(i);
         node.labels(model->lgf(node.state(), primal, dual, ddCtx));
     }
 }
 
 template<typename Model, typename Node>
+GFL_GLOBAL
 void setHKernel(
     gfl::f64 const f,
     gfl::ArrayView<Node> const * nodes)
@@ -454,7 +457,7 @@ void setHKernel(
     auto [begin,end] = calcSlice<i32>(blockIdx.x, gridDim.x, nodes->size());
     for (i32 i = begin + threadIdx.x; i < end; i += blockDim.x)
     {
-        Node & node = nodes[i];
+        Node & node = nodes->at(i);
         f64 const h = f - node.g();
         assert(h >= 0);
         node.h(tighter<Model>(node.h(), h));
