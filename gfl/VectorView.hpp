@@ -124,6 +124,7 @@ namespace gfl
         {
             i32 const oldSize = resizeBy(1);
             cudaMemcpyAsync(&at(oldSize), &value, sizeof(T), cudaMemcpyHostToDevice);
+            cudaDeviceSynchronize();
         }
 #endif
 

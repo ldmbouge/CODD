@@ -19,8 +19,8 @@ private:
     using CutsetData = CutsetData<Node>;
 
     gfl::i32 width_{0};
-    ExpansionData * expData{nullptr};
-    CutsetData * cutData{nullptr};
+    ExpansionData expData{nullptr};
+    CutsetData cutData{nullptr};
 #ifdef __CUDACC__
     gfl::ArrayView<gfl::u8> cubAuxMem;
 #endif

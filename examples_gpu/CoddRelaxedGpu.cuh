@@ -35,7 +35,7 @@ int runRelaxedGpu(int argc, char* argv[])
 
     // Expansion engine
     ExpansionEngine * const eng = new (engAlloc) ExpansionEngine();
-    eng->initFullRelaxedExpansion(cli.width(), BranchFactor, Depth, buffAlloc);
+    eng->initRelaxedExpansion(cli.width(), BranchFactor, Depth, buffAlloc);
 
     // Bounds and solutions manager
     BnBManager<Model,Node> bnb;
@@ -68,13 +68,13 @@ int runRelaxedGpu(int argc, char* argv[])
         // Check relaxation and manage cutset
         if (eng->hasTarget())
         {
-            Node const & trg = eng->getTarget();
+            Node const trg = eng->getTargetFromGpu();
             if (not bnb.pruneAncestor(trg))
             {
                 bnb.primal(trg);
                 assert(bnb.consistent());
                 auto const & cutset = eng->cutset();
-                queue.push(cutset);
+                queue.pushFromGpu(cutset);
             }
         }
         log.progress(stats,bnb);

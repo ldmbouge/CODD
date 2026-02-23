@@ -10,3 +10,4 @@
 #include <ParallelUtils.hpp>
 #include <BitSet.hpp>
 #include <HashUtils.hpp>
+#include <Interval.hpp>

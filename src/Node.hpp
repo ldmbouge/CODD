@@ -107,7 +107,7 @@ public:
    friend std::ostream& operator<<(std::ostream& os,const Node& n) {
       return os << (n.approximated_ ? "1" : "0");
    }
-    GFL_HOST
+    GFL_HOST_DEVICE
     static
     void print(Node const & node)
     {
@@ -117,10 +117,14 @@ public:
         printf(" | "); printf("H: %.1f", node.h());
         printf(" | "); printf("EXT: %d", 1 - node.approximated());
         printf(" | "); printf("CUT: %d", node.ancestorInCutset());
-        printf(" | "); printf("DPT: %d", node.pathLen);
-        printf(" | "); printf("LBS: "); ArrayView<i16>::print(node.prefixPath, node.pathLen);  // This is correct
-        //printf(" | "); printf("ST: "); State::print(node.state_);
+        printf(" | "); printf("PTH: "); ArrayView<i16>::print(node.prefixPath, node.pathLen);  // This is correct
+        printf(" | "); printf("LBS: "); node.labels().print();
+        printf(" | "); printf("ST: "); State::print(node.state_);
     }
+
+    GFL_HOST_DEVICE
+    void print() const
+    { print(*this); }
 };
 
 struct NodeInfo
@@ -183,10 +187,14 @@ struct NodeInfo
     void print(NodeInfo const & ni)
     {
         using namespace gfl;
-        printf("INFO: (%7lu,%7llu,%7.2f)", ni.flag, scast<llu>(ni.hash) % 10000000ll, std::fmod(ni.score,10000000.0));
-        printf(" | "); printf("IDX: %lld", scast<lld>(ni.idx));
+        printf("IDX: %lld", scast<lld>(ni.idx));
         printf(" | "); printf("PIDX: %lld", scast<lld>(ni.pIdx));
+        printf(" | "); printf("INFO: (%7lu,%7llu,%7.2f)", ni.flag, scast<llu>(ni.hash) % 10000000ll, std::fmod(ni.score,10000000.0));
     }
+
+    GFL_HOST_DEVICE
+    void print() const
+    { print(*this);}
 };
 
 static_assert(std::is_trivially_copyable_v<NodeInfo>);

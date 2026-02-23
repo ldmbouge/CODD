@@ -58,6 +58,9 @@ namespace gfl
         i32 size() const noexcept { return size_; }
 
         GFL_HOST_DEVICE
+        bool empty() const noexcept { return size_ == 0; } // Usefult for vectorview
+
+        GFL_HOST_DEVICE
         // Needed for CUDA to access size at running time vs launch time.
         i32 const * sizePtr() const noexcept { return &size_; }
 

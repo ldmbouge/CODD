@@ -25,7 +25,7 @@ void expandParentsKernel(
         auto const & [minLabel, maxLabel, nLabels] = pLabels.summary();
         if (nLabels > 0)
         {
-            for (i32 label = threadIdx.x; label <= maxLabel; label += blockDim.x)
+            for (i32 label = minLabel + threadIdx.x; label <= maxLabel; label += blockDim.x)
             {
                 if (pLabels.contains(label))
                 {
@@ -46,6 +46,7 @@ void expandParentsKernel(
                         // Conditions to keep the child
                         if (isBetter<Model>(cG + cH,primal))
                         {
+
                             // Node
                             childrenInfo.resizeByAtomic(1);
                             i32 const cIdx = children.resizeByAtomic(1);
@@ -188,7 +189,7 @@ void flagRepresentedChildrenKernel(
 
 GFL_GLOBAL
 void countFlaggedKernel(
-    gfl::u64 const flag,
+    gfl::i64 const flag,
     gfl::i32 * const count,
     gfl::ArrayView<NodeInfo> const * const nodesInfo
     )
@@ -261,7 +262,7 @@ void setScoreFKernel(
 {
     using namespace gfl;
 
-    assert(nodes->size() == nodesInfo->size());
+    assert(nodes->size() >= nodesInfo->size());
     auto [begin,end] = calcSlice<i32>(blockIdx.x, gridDim.x, nodesInfo->size());
     for (i32 i = begin + threadIdx.x; i < end; i += blockDim.x)
     {
@@ -378,15 +379,15 @@ __global__ void reductionKernel(
     using namespace gfl;
 
     assert(blockDim.x == 32);
-    assert(blockDim.x * sizeof(Node) <= getSharedMemSize());
-
     __shared__ Node tmpNodes[32];
+    //assert(blockDim.x * sizeof(Node) <= getSharedMemSize());
 
     auto [begin, end] = calcSlice<int>(blockIdx.x, gridDim.x, count);
     i32 const nodesOfBlock = min<i32>(blockDim.x, end - begin);
     if (threadIdx.x < nodesOfBlock)
     {
         Node fNode_r = inBuffer->at(begin + threadIdx.x);
+        fNode_r.approximated(true);
         for (i32 i = begin + threadIdx.x + blockDim.x; i < end; i += blockDim.x)
         {
             Node const & iNode = inBuffer->at(i);
@@ -421,6 +422,7 @@ void reductionSeqKernel(
     assert(count > 0);
 
     Node result = inBuffer->at(0);
+    result.approximated(true);
     for (i32 i = 1; i < count; ++i)
     {
         mergeNodeWith<Model>(result, inBuffer->at(i));
@@ -449,18 +451,51 @@ void calcOutLabelsKernel(
 template<typename Model, typename Node>
 GFL_GLOBAL
 void setHKernel(
-    gfl::f64 const f,
-    gfl::ArrayView<Node> const * nodes)
+    gfl::ArrayView<Node> const * children,
+    gfl::ArrayView<Node> const * cutset)
 {
     using namespace gfl;
 
-    auto [begin,end] = calcSlice<i32>(blockIdx.x, gridDim.x, nodes->size());
+    f64 const f = children->at(0).f();
+
+    auto [begin,end] = calcSlice<i32>(blockIdx.x, gridDim.x, cutset->size());
     for (i32 i = begin + threadIdx.x; i < end; i += blockDim.x)
     {
-        Node & node = nodes->at(i);
+        Node & node = cutset->at(i);
         f64 const h = f - node.g();
         assert(h >= 0);
         node.h(tighter<Model>(node.h(), h));
     }
 }
 
+template<typename Model, typename Node>
+GFL_GLOBAL
+void checkForTargetKernel(
+    bool * const found,
+    Model const * const model,
+    gfl::VectorView<Node> const * nodes)
+{
+    assert(nodes != nullptr);
+    assert(not nodes->empty());
+    assert(gridDim.x == 1);
+    assert(blockDim.x == 1);
+
+    using namespace gfl;
+
+    *found = nodes->at(0).isTarget(model);
+}
+
+
+template<typename T>
+GFL_GLOBAL
+void printKernel(gfl::i32 const i, gfl::ArrayView<T> const * array)
+{
+    assert(array != nullptr);
+    assert(gridDim.x == 1);
+    assert(blockDim.x == 1);
+
+    using namespace gfl;
+
+    printf("STEP %d\n",i);
+    for (auto const & a : *array) {a.print(); printf("\n");}
+}

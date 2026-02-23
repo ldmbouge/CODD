@@ -77,7 +77,10 @@ namespace gfl
         friend BitSet operator~(BitSet a) noexcept { a.complement(); return a; }
 
         GFL_HOST_DEVICE
-        void print(char const * fmt = "%d") const noexcept;
+        void printAsInts() const noexcept;
+
+        GFL_HOST_DEVICE
+        void print() const noexcept;
 
         GFL_HOST_DEVICE
         u64 hash() const noexcept
@@ -267,28 +270,28 @@ namespace gfl
     }
 
     template<i32 NumWords>
-    GFL_HOST_DEVICE
-    void BitSet<NumWords>::print(char const * fmt) const noexcept
+    GFL_HOST
+    void BitSet<NumWords>::printAsInts() const noexcept
     {
-        if (std::strcmp(fmt,"%b") == 0)
+        bool comma = false;
+        for(i32 val = 0; val < capacity(); ++val)
         {
-            for (i32 wIdx = 0; wIdx < NumWords; ++wIdx)
+            if (contains(val))
             {
-                gfl::printBits(words_[wIdx]);
+                printf(comma ? "," : "");
+                printf("%d", val);
+                comma = true;
             }
         }
-        else
+    }
+
+    template<i32 NumWords>
+    GFL_HOST_DEVICE
+    void BitSet<NumWords>::print() const noexcept
+    {
+        for (i32 wIdx = 0; wIdx < NumWords; ++wIdx)
         {
-            bool comma = false;
-            for(i32 val = 0; val < capacity(); ++val)
-            {
-                if (contains(val))
-                {
-                    printf(comma ? "," : "");
-                    printf(fmt, val);
-                    comma = true;
-                }
-            }
+            gfl::printBits(words_[wIdx]);
         }
     }
 

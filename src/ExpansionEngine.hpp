@@ -24,10 +24,9 @@ protected:
     ExpansionData expData;
     CutsetData cutData;
 
-
 public:
 
-    void initFullRelaxedExpansion(gfl::i32 const width, gfl::i32 const branchFactor, gfl::i32 const depth, gfl::ArenaAllocator & alloc)
+    void initRelaxedExpansion(gfl::i32 const width, gfl::i32 const branchFactor, gfl::i32 const depth, gfl::ArenaAllocator & alloc)
     {
         using namespace gfl;
 
@@ -62,7 +61,10 @@ public:
 
     bool hasTarget() const noexcept {return expData->hasTarget();}
     Node const & getTarget() const noexcept {return expData->getTarget();}
-    gfl::ArrayView<gfl::ArrayView<Node>> cutset() const noexcept {return cutData.segments();}
+    gfl::tuple<gfl::ArrayView<Node>, gfl::ArrayView<gfl::i32>> cutset() const noexcept
+    {
+        return {cutData.nodes(),cutData.offsets()};
+    }
 
 private:
     void expandLayerRelaxed(Model const * const model, gfl::f64 const pBound, gfl::f64 const dBound)

@@ -20,6 +20,10 @@ class Queue
     static constexpr gfl::i32 DefaultLayerCount = 1024;
     using Layer = std::vector<Node>;
 
+    std::vector<Node> cutsetNodesBuffer;
+    std::vector<gfl::i32> cutsetOffsetsBuffer;
+
+
     std::vector<Layer> layers{DefaultLayerCount};
 
     Layer & layer(gfl::i32 const lIdx) noexcept
@@ -66,13 +70,21 @@ public:
             auto const revDual   = [](Node const & n1, Node const & n2)
                 { return isWorse<Model>(n1.f(), n2.f()); };
 
+            // printf("CUTSET (%d) SEG:\n", nodes.size());
+            // for(auto const & n : nodes)
+            // {
+            //     n.print();
+            //     printf("\n");
+            // }
+            // printf("\n");
+            // fflush(stdout);
             assert(std::all_of(nodes.begin(), nodes.end(), sameDepth));
             assert(std::is_sorted(nodes.begin(), nodes.end(), revDual));
 
             layer(depth);
-            Layer & l         = layers[depth];
-            i32 const oldSize =l.size();
-                l.resize( l.size() + nodes.size());
+            Layer & l = layers[depth];
+            i32 const oldSize = l.size();
+            l.resize( l.size() + nodes.size());
             std::memcpy(&l[oldSize], nodes.data(), nodes.dataMemSize());
             std::inplace_merge(l.begin(), l.begin() + oldSize, l.end(), revDual);
             notifyPush(nodes.size());
@@ -82,6 +94,38 @@ public:
     void push(gfl::ArrayView<gfl::ArrayView<Node>> const & cutset)
     {
         for (auto const & segment : cutset) { push(segment); }
+    }
+
+    void pushFromGpu(gfl::tuple<gfl::ArrayView<Node>, gfl::ArrayView<gfl::i32>> const & cutset)
+    {
+        using namespace gfl;
+
+        auto [nodesGpu, offsetsGpu] = cutset;
+        auto & nodesCpu = cutsetNodesBuffer;
+        auto & offsetsCpu = cutsetOffsetsBuffer;
+
+        nodesCpu.resize(nodesGpu.size());
+        CHECK_CUDA_ERROR(cudaMemcpy(
+            nodesCpu.data(),
+            nodesGpu.data(),
+            nodesGpu.dataMemSize(),
+            cudaMemcpyDeviceToHost));
+
+        offsetsCpu.resize(offsetsGpu.size());
+        CHECK_CUDA_ERROR(cudaMemcpy(
+            offsetsCpu.data(),
+            offsetsGpu.data(),
+            offsetsGpu.dataMemSize(),
+            cudaMemcpyDeviceToHost));
+
+        for (i32 i = 0; i < offsetsCpu.size(); ++i)
+        {
+            i32 const begin = offsetsCpu.at(i);
+            i32 const end   = (i + 1 < offsetsCpu.size()) ? offsetsCpu.at(i + 1) : nodesCpu.size();
+            i32 const size = end - begin;
+            ArrayView slice(size, nodesCpu.data() + begin);
+            push(slice);
+        }
     }
 
     bool empty() const noexcept

@@ -52,7 +52,7 @@ public:
         static
         void print(State const & s)
         {
-            printf("<SEL=");
+            printf("<N=%d,SEL=",s.n);
             s.sel.print();
             printf(">");
         }
@@ -65,7 +65,6 @@ public:
 
     State initial() const noexcept
     {
-       std::cout << "nodes-1: " << nodes -1  << "\n";
         return State(ItemSet(0,nodes-1),0);
     }
 
@@ -94,7 +93,7 @@ public:
         if (s.n == nodes)
            return gfl::nullopt;
         else {
-           if (!s.sel.contains(s.n) && l)  return gfl::nullopt;
+            if (!s.sel.contains(s.n) && l)  return gfl::nullopt;
             ItemSet out = s.sel;
             out.remove(s.n);
             

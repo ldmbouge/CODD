@@ -24,7 +24,7 @@ namespace gfl
             {
 
                 i32 const newCapacity = capacity * GrowthFactor;
-                printf("CAPACITY = %d -> %d\n", capacity_, newCapacity);
+                //printf("CAPACITY = %d -> %d\n", capacity_, newCapacity);
                 checkOrAbort(newCapacity <= MaxElements, "Vector exceeded MaxElements");
                 vmCommit(data_, newCapacity);   // pointer stays the same, no copy
                 capacity_ = newCapacity;
