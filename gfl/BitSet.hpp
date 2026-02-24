@@ -44,6 +44,8 @@ namespace gfl
 
         GFL_HOST_DEVICE i32 size() const noexcept;
         GFL_HOST_DEVICE tuple<i32,i32,i32> summary() const noexcept;
+        GFL_HOST_DEVICE static f32 iou(BitSet const& a, BitSet const& b) noexcept;
+        GFL_HOST_DEVICE f32 iou(BitSet const& other ) const noexcept;
         GFL_HOST_DEVICE bool empty() const noexcept;
 
         GFL_HOST_DEVICE void clear() noexcept;
@@ -315,5 +317,31 @@ namespace gfl
             count += cWord;
         }
         return {smallest,largest,count};
+    }
+
+
+    // Intersection Over Union
+    // Reference: https://en.wikipedia.org/wiki/Jaccard_index
+    template<i32 NumWords>
+    GFL_HOST_DEVICE
+    f32 BitSet<NumWords>::iou(BitSet const & a, BitSet const & b) noexcept
+    {
+        using namespace gfl;
+
+        f32 intersectionSize = 0.0;
+        f32 unionSize = 0.0;
+        for (int wIdx = 0; wIdx < NumWords; wIdx += 1)
+        {
+            intersectionSize += popcount(a.words_[wIdx] & b.words_[wIdx]);
+            unionSize += popcount(a.words_[wIdx] | b.words_[wIdx]);
+        }
+        return unionSize > 0.0 ? intersectionSize / unionSize : 0.0;
+    }
+
+    template<i32 NumWords>
+    GFL_HOST_DEVICE
+    f32 BitSet<NumWords>::iou(BitSet const & other) const noexcept
+    {
+        return iou(*this,other);
     }
 }

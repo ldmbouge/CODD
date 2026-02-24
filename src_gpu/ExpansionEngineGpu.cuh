@@ -115,7 +115,7 @@ class ExpansionEngineGpu : public ExpansionEngine<Model,Node>
         CHECK_CUDA_ERROR(cudaDeviceSynchronize());
     }
 
-    void sortChildrenByG()
+    void sortChildrenByG(Model const * const model)
     {
         using namespace gfl;
         auto & children = expData.children;
@@ -130,7 +130,7 @@ class ExpansionEngineGpu : public ExpansionEngine<Model,Node>
         // Processing
         i32 const blockSize = 128;
         i32 const gridSize = ceil<i32>(children.size(), blockSize);
-        setScoreGKernel<Model><<<gridSize,blockSize>>>(&children, &childrenInfo);
+        setScoreMergeKernel<Model><<<gridSize,blockSize>>>(model, &children, &childrenInfo);
         CHECK_LAST_CUDA_ERROR();
         sortKernel<NodeInfo::ScoreDecomposer><<<1,1>>>(&childrenInfo,&tmpInfo,&cubAuxMem);
         CHECK_LAST_CUDA_ERROR();
@@ -373,7 +373,7 @@ class ExpansionEngineGpu : public ExpansionEngine<Model,Node>
 
             if (children.size() > width_)
             {
-                sortChildrenByG();
+                sortChildrenByG(model);
                 saveCutset();
                 mergeChildren();
             }

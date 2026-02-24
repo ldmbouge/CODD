@@ -124,6 +124,17 @@ public:
         assert(s1.n == s2.n);
         return State(s1.sel | s2.sel,s1.n);
     }
+    // State similarity function
+    GFL_HOST_DEVICE
+    static
+    gfl::f32 ssf(State const & s1, State const & s2) noexcept
+    {
+        using namespace gfl;
+        f32 n = 0.0;
+        f32 mean = 0.0;
+        gfl::sim_combine(mean,n,s1.sel.iou(s2.sel));
+        return mean;
+    };
 
     constexpr static bool has_heur = true;
     GFL_HOST_DEVICE
