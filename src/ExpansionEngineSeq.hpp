@@ -64,7 +64,9 @@ private:
 
 
        filterChildren<Model,Node>(&expData);
-       //std::cout << "BEFORE MERGE:" << expData->children << "\n";
+        printf("BEFORE MRG:\n");
+        for(auto const & c : expData.children) {Node::print(c);printf("\n");}
+        printf("\n");
        if (expData.children.size() > width_)
           {
              mergeChildren<Model,Node>(width_,&expData,&cutData);
@@ -81,7 +83,9 @@ private:
        //    }
        // }
        calcOutLabels<Model,Node>(model,expData.children,pBound,dBound,DDRelaxed);
-       //std::cout << "AFTER MERGE:" << expData->children << expData->children.size() << "\n";
+        printf("AFTER MRG:\n");
+        for(auto const & c : expData.children) {Node::print(c);printf("\n");}
+        printf("\n");
     }
 
 #ifdef __CUDACC__

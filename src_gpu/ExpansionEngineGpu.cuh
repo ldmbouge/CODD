@@ -68,45 +68,6 @@ class ExpansionEngineGpu : public ExpansionEngine<Model,Node>
         CHECK_CUDA_ERROR(cudaDeviceSynchronize());
     }
 
-    template<typename KeyDecomposer>
-    void sortKernelDispatcher(
-        gfl::ArrayView<NodeInfo> * const in,
-        gfl::ArrayView<NodeInfo> * const out,
-        gfl::ArrayView<gfl::u8> const * const tmp,
-        bool reverse = false)
-    {
-        using namespace gfl;
-
-        assert(tmp != nullptr);
-        assert(in != nullptr);
-        assert(out != nullptr);
-        assertLeqKernel<<<1,1>>>(in->sizePtr(),out->sizePtr());
-
-        auto * inBuffer = in->data();
-        auto * outBuffer = out->data();
-        i32 const nElements = in->size();
-        auto * tmpBuffer = tmp->data();
-        size_t tmpBufferSize = scast<size_t>(tmp->dataMemSize());
-        if (reverse)
-            cub::DeviceRadixSort::SortKeysDescending(
-                tmpBuffer,
-                tmpBufferSize,
-                inBuffer,
-                outBuffer,
-                nElements,
-                KeyDecomposer{});
-        else
-            cub::DeviceRadixSort::SortKeys(
-                tmpBuffer,
-                tmpBufferSize,
-                inBuffer,
-                outBuffer,
-                nElements,
-                KeyDecomposer{});
-        CHECK_LAST_CUDA_ERROR();
-    }
-
-
     void filterRepresentedChildren()
     {
         using namespace gfl;
@@ -126,7 +87,7 @@ class ExpansionEngineGpu : public ExpansionEngine<Model,Node>
         i32 const gridSize = ceil<i32>(children.size(), blockSize);
         calcHashKernel<Model><<<gridSize,blockSize>>>(&children, &childrenInfo);
         CHECK_LAST_CUDA_ERROR();
-        sortKernelDispatcher<NodeInfo::HashDecomposer>(&childrenInfo,&tmpInfo,&cubAuxMem);
+        sortKernel<NodeInfo::HashDecomposer><<<1,1>>>(&childrenInfo,&tmpInfo,&cubAuxMem);
         CHECK_LAST_CUDA_ERROR();
         swapKernel<<<1,1>>>(&childrenInfo, &tmpInfo);
         CHECK_LAST_CUDA_ERROR();
@@ -136,7 +97,7 @@ class ExpansionEngineGpu : public ExpansionEngine<Model,Node>
         CHECK_LAST_CUDA_ERROR();
         flagRepresentedChildrenKernel<Model><<<gridSize,blockSize>>>(RepresentedFlag,&children,&childrenInfo);
         CHECK_LAST_CUDA_ERROR();
-        sortKernelDispatcher<NodeInfo::FlagDecomposer>(&childrenInfo,&tmpInfo,&cubAuxMem);
+        sortKernel<NodeInfo::FlagDecomposer><<<1,1>>>(&childrenInfo,&tmpInfo,&cubAuxMem);
         CHECK_LAST_CUDA_ERROR();
         swapKernel<<<1,1>>>(&childrenInfo, &tmpInfo);
         CHECK_LAST_CUDA_ERROR();
@@ -164,13 +125,14 @@ class ExpansionEngineGpu : public ExpansionEngine<Model,Node>
 
         // Init
         tmpNodes.resizeTo(children.size());
+        tmpInfo.resizeTo(childrenInfo.size());
 
         // Processing
         i32 const blockSize = 128;
         i32 const gridSize = ceil<i32>(children.size(), blockSize);
         setScoreGKernel<Model><<<gridSize,blockSize>>>(&children, &childrenInfo);
         CHECK_LAST_CUDA_ERROR();
-        sortKernelDispatcher<NodeInfo::ScoreDecomposer>(&childrenInfo,&tmpInfo,&cubAuxMem);
+        sortKernel<NodeInfo::ScoreDecomposer><<<1,1>>>(&childrenInfo,&tmpInfo,&cubAuxMem);
         CHECK_LAST_CUDA_ERROR();
         swapKernel<<<1,1>>>(&childrenInfo, &tmpInfo);
         CHECK_LAST_CUDA_ERROR();
@@ -218,17 +180,19 @@ class ExpansionEngineGpu : public ExpansionEngine<Model,Node>
         // Save parents in cutset
         resizeToKernel<<<1,1>>>(&tmpInfo,parentsInfo.sizePtr());
         CHECK_LAST_CUDA_ERROR();
-        sortKernelDispatcher<NodeInfo::FlagDecomposer>(&parentsInfo,&tmpInfo,&cubAuxMem);
+        sortKernel<NodeInfo::FlagDecomposer><<<1,1>>>(&parentsInfo,&tmpInfo,&cubAuxMem);
         CHECK_LAST_CUDA_ERROR();
         swapKernel<<<1,1>>>(&tmpInfo, &parentsInfo);
         CHECK_LAST_CUDA_ERROR();
         countFlaggedKernel<<<gridSize,blockSize>>>(ParentToSaveFlag,&nFlagged,&parentsInfo);
         CHECK_LAST_CUDA_ERROR();
         resizeToKernel<<<1,1>>>(&parentsInfo, &nFlagged);
-        CHECK_CUDA_ERROR(cudaDeviceSynchronize());
+        CHECK_LAST_CUDA_ERROR();
+        resizeToKernel<<<1,1>>>(&tmpInfo, &nFlagged);
+        CHECK_LAST_CUDA_ERROR();
         setScoreFKernel<Model><<<gridSize,blockSize>>>(&parents,&parentsInfo);
         CHECK_LAST_CUDA_ERROR();
-        sortKernelDispatcher<NodeInfo::ScoreDecomposer>(&parentsInfo,&tmpInfo,&cubAuxMem,true);
+        sortKernel<NodeInfo::ScoreDecomposer><<<1,1>>>(&parentsInfo,&tmpInfo,&cubAuxMem,true);
         CHECK_LAST_CUDA_ERROR();
         swapKernel<<<1,1>>>(&tmpInfo, &parentsInfo);
         CHECK_LAST_CUDA_ERROR();
@@ -319,9 +283,8 @@ class ExpansionEngineGpu : public ExpansionEngine<Model,Node>
         {
             checkForTargetKernel<<<1,1>>>(&targetFound,model,nodes);
             CHECK_LAST_CUDA_ERROR();
-
-            CHECK_CUDA_ERROR(cudaDeviceSynchronize());
         }
+        CHECK_CUDA_ERROR(cudaDeviceSynchronize());
     }
 
     void keepOnlyBestChild()
@@ -341,7 +304,7 @@ class ExpansionEngineGpu : public ExpansionEngine<Model,Node>
             CHECK_LAST_CUDA_ERROR();
             resizeToKernel<<<1,1>>>(&tmpInfo,childrenInfo.sizePtr());
             CHECK_LAST_CUDA_ERROR();
-            sortKernelDispatcher<NodeInfo::ScoreDecomposer>(&childrenInfo,&tmpInfo,&cubAuxMem);
+            sortKernel<NodeInfo::ScoreDecomposer><<<1,1>>>(&childrenInfo,&tmpInfo,&cubAuxMem);
             CHECK_LAST_CUDA_ERROR();
             swapKernel<<<1,1>>>(&tmpInfo, &childrenInfo);
             CHECK_LAST_CUDA_ERROR();
@@ -371,7 +334,7 @@ class ExpansionEngineGpu : public ExpansionEngine<Model,Node>
         auto & tmpInfo = expData.tmpInfo;
         auto & cutset = cutData;
 
-        if (not children.empty() and not cutset.nodes().empty())
+        if (targetFound and not cutset.nodes().empty())
         {
             // printf("CUTSET SIZE = %d\n", cutset.nodes().size());
             // fflush(stdout);
@@ -395,18 +358,25 @@ class ExpansionEngineGpu : public ExpansionEngine<Model,Node>
         using namespace gfl;
         auto & children = expData.children;
         expandParents(model,primal,brachFactor);
+        //printKernel<<<1,1>>>(0,&children);
+        //cudaDeviceSynchronize();
         if (children.size() > 0)
         {
             filterRepresentedChildren();
+
             if (children.size() > width_)
             {
                 sortChildrenByG();
                 saveCutset();
                 mergeChildren();
             }
+
             calcOutLabels(model,&children,primal,dual);
+
             checkForTarget(model,&children);
         }
+        //printKernel<<<1,1>>>(1,&children);
+        CHECK_CUDA_ERROR(cudaDeviceSynchronize());
     }
 
 public:

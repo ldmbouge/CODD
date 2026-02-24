@@ -422,11 +422,7 @@ void mergeChildren(
     copyByInfo(tmpChildren,children, childrenInfo);
     VectorView<Node>::swap(tmpChildren, children);
 
-    DEBUG_MRG(
-        printf("BEFORE MRG:\n");
-        for(auto const & c : expData->children) {Node::print(c);printf("\n");}
-        printf("\n");
-    )
+
 
     // Flag the parents of the nodes that will be merged
     parentInfo.resizeTo(parents.size());

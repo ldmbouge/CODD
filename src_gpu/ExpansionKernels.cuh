@@ -36,7 +36,7 @@ void expandParentsKernel(
         nChildren_s = 0;
         offset_g = -1;
     }
-    __syncwarp();
+    __syncthreads();
 
     if (pIdx < parents.size())
     {
@@ -69,7 +69,7 @@ void expandParentsKernel(
             }
         }
     }
-    __syncwarp();
+    __syncthreads();
 
     if (nChildren_s > 0)
     {
@@ -79,7 +79,7 @@ void expandParentsKernel(
             childrenInfo.resizeByAtomic(nChildren_s);
             offset_g = children.resizeByAtomic(nChildren_s);
         }
-        __syncwarp();
+        __syncthreads();
         if (threadIdx.x < nChildren_s)
         {
             i32 const cIdx_g = offset_g + threadIdx.x;
@@ -424,7 +424,7 @@ __global__ void reductionKernel(
         }
         tmpNodes[threadIdx.x] = fNode_r;
     }
-    __syncwarp();
+    __syncthreads();
 
     if (threadIdx.x == 0 and nodesOfBlock > 0)
     {
@@ -456,6 +456,7 @@ void reductionSeqKernel(
     {
         mergeNodeWith<Model>(result, inBuffer->at(i));
     }
+    inBuffer->at(0) = result;
 }
 
 template<typename Model, typename Node>
@@ -532,5 +533,5 @@ void printKernel(gfl::i32 const i, gfl::ArrayView<T> const * array)
 GFL_GLOBAL
 void assertLeqKernel(gfl::i32 const * i, gfl::i32 const * j)
 {
-    assert(i <= j);
+    assert(*i <= *j);
 }
