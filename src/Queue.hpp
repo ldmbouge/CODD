@@ -92,42 +92,52 @@ public:
         }
     }
 
-    void push(gfl::ArrayView<gfl::ArrayView<Node>> const & cutset)
-    {
-        for (auto const & segment : cutset) { push(segment); }
-    }
-
-    void pushFromGpu(gfl::tuple<gfl::ArrayView<Node>, gfl::ArrayView<gfl::i32>> const & cutset)
+    void push(gfl::tuple<gfl::ArrayView<Node>, gfl::ArrayView<gfl::i32>> const & cutset)
     {
         using namespace gfl;
 
-        auto [nodesGpu, offsetsGpu] = cutset;
-        auto & nodesCpu = cutsetNodesBuffer;
-        auto & offsetsCpu = cutsetOffsetsBuffer;
-
-        nodesCpu.resize(nodesGpu.size());
-        CHECK_CUDA_ERROR(cudaMemcpy(
-            nodesCpu.data(),
-            nodesGpu.data(),
-            nodesGpu.dataMemSize(),
-            cudaMemcpyDeviceToHost));
-
-        offsetsCpu.resize(offsetsGpu.size());
-        CHECK_CUDA_ERROR(cudaMemcpy(
-            offsetsCpu.data(),
-            offsetsGpu.data(),
-            offsetsGpu.dataMemSize(),
-            cudaMemcpyDeviceToHost));
-
-        for (i32 i = 0; i < offsetsCpu.size(); ++i)
+        auto [nodes, offsets] = cutset;
+        for (i32 i = 0; i < offsets.size(); ++i)
         {
-            i32 const begin = offsetsCpu.at(i);
-            i32 const end   = (i + 1 < offsetsCpu.size()) ? offsetsCpu.at(i + 1) : nodesCpu.size();
+            i32 const begin = offsets.at(i);
+            i32 const end   = (i + 1 < offsets.size()) ? offsets.at(i + 1) : nodes.size();
             i32 const size = end - begin;
-            ArrayView slice(size, nodesCpu.data() + begin);
+            ArrayView slice(size, nodes.data() + begin);
             push(slice);
         }
     }
+
+    // void pushFromGpu(gfl::tuple<gfl::ArrayView<Node>, gfl::ArrayView<gfl::i32>> const & cutset)
+    // {
+    //     using namespace gfl;
+    //
+    //     auto [nodesGpu, offsetsGpu] = cutset;
+    //     auto & nodesCpu = cutsetNodesBuffer;
+    //     auto & offsetsCpu = cutsetOffsetsBuffer;
+    //
+    //     nodesCpu.resize(nodesGpu.size());
+    //     CHECK_CUDA_ERROR(cudaMemcpy(
+    //         nodesCpu.data(),
+    //         nodesGpu.data(),
+    //         nodesGpu.dataMemSize(),
+    //         cudaMemcpyDeviceToHost));
+    //
+    //     offsetsCpu.resize(offsetsGpu.size());
+    //     CHECK_CUDA_ERROR(cudaMemcpy(
+    //         offsetsCpu.data(),
+    //         offsetsGpu.data(),
+    //         offsetsGpu.dataMemSize(),
+    //         cudaMemcpyDeviceToHost));
+    //
+    //     for (i32 i = 0; i < offsetsCpu.size(); ++i)
+    //     {
+    //         i32 const begin = offsetsCpu.at(i);
+    //         i32 const end   = (i + 1 < offsetsCpu.size()) ? offsetsCpu.at(i + 1) : nodesCpu.size();
+    //         i32 const size = end - begin;
+    //         ArrayView slice(size, nodesCpu.data() + begin);
+    //         push(slice);
+    //     }
+    // }
 
     bool empty() const noexcept
     {

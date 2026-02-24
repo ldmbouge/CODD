@@ -4,39 +4,21 @@
 
 #include "ExpansionData.hpp"
 #include "CutsetData.hpp"
+#include "ExpansionEngine.hpp"
 #include "ExpansionFunctions.hpp"
-#
-#ifdef __CUDACC__
-#include <Sort.cuh>
-#include <cub/cub.cuh>
-#endif
+#include "Sort.cuh"
+
 
 template<typename Model,typename Node>
-class ExpansionEngine
+class ExpansionEngineSeq : public ExpansionEngine<Model,Node>
 {
 private:
-    using ExpansionData = ExpansionData<Node>;
-    using CutsetData = CutsetData<Node>;
+    using ExpansionEngine<Model,Node>::expData;
+    using ExpansionEngine<Model,Node>::cutData;
+    using ExpansionEngine<Model,Node>::width_;
 
-    gfl::i32 width_{0};
-    ExpansionData expData{nullptr};
-    CutsetData cutData{nullptr};
-#ifdef __CUDACC__
-    gfl::ArrayView<gfl::u8> cubAuxMem;
-#endif
 
 public:
-    void initFullRelaxedExpansion(gfl::i32 const width, gfl::i32 const branchFactor, gfl::i32 const depth, gfl::ArenaAllocator & alloc)
-    {
-        using namespace gfl;
-
-        width_ = width;
-        expData = new (alloc) ExpansionData();
-        cutData = new (alloc) CutsetData();
-        i32 const maxNodes = width * branchFactor;
-        expData->init(maxNodes, alloc);
-        cutData->init(width, branchFactor, depth, alloc);
-    }
 
     void fullyExpandRelaxed(
             Model const * model,
@@ -45,28 +27,28 @@ public:
             gfl::f64 const dual)
    {
       using namespace gfl;
-      expData->clear();
-      cutData->clear();
-      expData->parents.pushBack(node);
+      expData.clear();
+      cutData.clear();
+      expData.parents.pushBack(node);
       expandLayerRelaxed(model, primal, dual);
-      while (not expData->children.empty() and not expData->children.front().isTarget(model))
+      while (not expData.children.empty() and not expData.children.front().isTarget(model))
          {
-            expData->swapParentsAndChildren();
+            expData.swapParentsAndChildren();
             expandLayerRelaxed(model, primal, dual);
          }
-      onlyBestTarget(model,expData->children, expData->nodesInfo);
-      finializeCutset<Model,Node>(model,expData,cutData,primal,dual,DDRelaxed);
+      onlyBestTarget(model,expData.children, expData.childrenInfo);
+      finializeCutset<Model,Node>(model,&expData,&cutData,primal,dual,DDRelaxed);
    }
 
-   bool hasTarget() const noexcept {return expData->hasTarget();}
-    Node const & getTarget() const noexcept {return expData->getTarget();}
-    gfl::ArrayView<gfl::ArrayView<Node>> cutset() const noexcept {return cutData->segments();}
+   bool hasTarget() const noexcept {return expData.hasTarget();}
+    Node const & getTarget() const noexcept {return expData.getTarget();}
+
 
 private:
     void expandLayerRelaxed(Model const * const model, gfl::f64 const pBound, gfl::f64 const dBound)
     {
        //std::cout << "PARENTS ARE:" << expData->parents << "\n";
-       expandParents(model, expData, pBound);
+       expandParents(model, &expData, pBound);
        //std::cout << "RAW MEAT:" << expData->children << "\n";
 
        // std::cout << "----------------------------------------------------------------------" << "\n";
@@ -81,11 +63,11 @@ private:
        // std::cout << "----------------------------------------------------------------------" << "\n";
 
 
-       filterChildren<Model,Node>(expData);
+       filterChildren<Model,Node>(&expData);
        //std::cout << "BEFORE MERGE:" << expData->children << "\n";
-       if (expData->children.size() > width_)
+       if (expData.children.size() > width_)
           {
-             mergeChildren<Model,Node>(width_,expData,cutData);
+             mergeChildren<Model,Node>(width_,&expData,&cutData);
           }
        // if  (expData->children[0].depth() >= 41) {
        //    std::cout << "We are deep! " << "\n";
@@ -98,7 +80,7 @@ private:
        //       }
        //    }
        // }
-       calcOutLabels<Model,Node>(model,expData->children,pBound,dBound,DDRelaxed);
+       calcOutLabels<Model,Node>(model,expData.children,pBound,dBound,DDRelaxed);
        //std::cout << "AFTER MERGE:" << expData->children << expData->children.size() << "\n";
     }
 

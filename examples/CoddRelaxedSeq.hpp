@@ -6,7 +6,6 @@
 #include "ExpansionEngineSeq.hpp"
 #include "Queue.hpp"
 #include "BnBManager.hpp"
-#include "ExpansionEngineGpu.cuh"
 #include "LogManager.hpp"
 #include "StatsManager.hpp"
 
@@ -14,7 +13,7 @@ template<typename Model, typename Node, int BranchFactor, int Depth>
 int runRelaxedSeq(int argc, char* argv[])
 {
     using namespace gfl;
-    using ExpansionEngine = ExpansionEngineGpu<Model,Node>;
+    using ExpansionEngine = ExpansionEngineSeq<Model,Node>;
 
     CliManager cli("CODD", "A C++ solver for DIDP models.");
     cli.parse(argc, argv);
@@ -36,7 +35,7 @@ int runRelaxedSeq(int argc, char* argv[])
 
     // Expansion engine
     ExpansionEngine * const eng = new (engAlloc) ExpansionEngine();
-    eng->initFullRelaxedExpansion(cli.width(), BranchFactor, Depth, buffAlloc);
+    eng->initRelaxedExpansion(cli.width(), BranchFactor, Depth, buffAlloc);
 
     // Bounds and solutions manager
     BnBManager<Model,Node> bnb;
