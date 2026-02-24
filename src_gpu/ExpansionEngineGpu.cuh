@@ -36,7 +36,7 @@ class ExpansionEngineGpu : public ExpansionEngine<Model,Node>
                 dummyNodeInfo,
                 dummyNodeInfo,
                 nNodes,
-                DummyDecomposer64{}); // Bigger key used
+                DummyDecomposer96{}); // Bigger key used
         CHECK_LAST_CUDA_ERROR();
         return memSize;
     }
@@ -295,6 +295,9 @@ class ExpansionEngineGpu : public ExpansionEngine<Model,Node>
         auto & tmpNodes = expData.tmpNodes;
         auto & childrenInfo = expData.childrenInfo;
         auto & tmpInfo = expData.tmpInfo;
+        i32 const ApproximatedFlag = 1;
+        i32 const ExactFlag = 0;
+
 
         if (not children.empty())
         {
@@ -302,9 +305,13 @@ class ExpansionEngineGpu : public ExpansionEngine<Model,Node>
             i32 const gridSize = ceil<i32>(children.size(), blockSize);
             setScoreGKernel<Model><<<gridSize, blockSize>>>(&children, &childrenInfo);
             CHECK_LAST_CUDA_ERROR();
+            setFlagKernel<<<gridSize, blockSize>>>(ExactFlag,&childrenInfo);
+            CHECK_LAST_CUDA_ERROR();
+            setApproximatedFlagKernel<<<gridSize, blockSize>>>(ApproximatedFlag,&children, &childrenInfo);
+            CHECK_LAST_CUDA_ERROR();
             resizeToKernel<<<1,1>>>(&tmpInfo,childrenInfo.sizePtr());
             CHECK_LAST_CUDA_ERROR();
-            sortKernel<NodeInfo::ScoreDecomposer><<<1,1>>>(&childrenInfo,&tmpInfo,&cubAuxMem);
+            sortKernel<NodeInfo::ScoreFlagDecomposer><<<1,1>>>(&childrenInfo,&tmpInfo,&cubAuxMem);
             CHECK_LAST_CUDA_ERROR();
             swapKernel<<<1,1>>>(&tmpInfo, &childrenInfo);
             CHECK_LAST_CUDA_ERROR();

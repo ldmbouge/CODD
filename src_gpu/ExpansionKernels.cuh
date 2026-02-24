@@ -36,7 +36,7 @@ void expandParentsKernel(
         nChildren_s = 0;
         offset_g = -1;
     }
-    __syncthreads();
+    __syncwarp();
 
     if (pIdx < parents.size())
     {
@@ -69,7 +69,7 @@ void expandParentsKernel(
             }
         }
     }
-    __syncthreads();
+    __syncwarp();
 
     if (nChildren_s > 0)
     {
@@ -79,7 +79,7 @@ void expandParentsKernel(
             childrenInfo.resizeByAtomic(nChildren_s);
             offset_g = children.resizeByAtomic(nChildren_s);
         }
-        __syncthreads();
+        __syncwarp();
         if (threadIdx.x < nChildren_s)
         {
             i32 const cIdx_g = offset_g + threadIdx.x;
@@ -298,6 +298,28 @@ void setScoreFKernel(
         NodeInfo & info = nodesInfo->at(i);
         Node const & node = nodes->at(info.idx);
         info.score = score<Model>(node.f());
+    }
+}
+
+template<typename Node>
+GFL_GLOBAL
+void setApproximatedFlagKernel(
+    gfl::i32 const flag,
+    gfl::ArrayView<Node> const * const nodes,
+    gfl::ArrayView<NodeInfo> const * const nodesInfo)
+{
+    using namespace gfl;
+
+    assert(nodes->size() == nodesInfo->size());
+    auto [begin,end] = calcSlice<i32>(blockIdx.x, gridDim.x, nodesInfo->size());
+    for (i32 i = begin + threadIdx.x; i < end; i += blockDim.x)
+    {
+        NodeInfo & info = nodesInfo->at(i);
+        Node const & node = nodes->at(info.idx);
+        if (node.approximated())
+        {
+            info.flag = flag;
+        }
     }
 }
 

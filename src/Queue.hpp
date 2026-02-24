@@ -85,8 +85,7 @@ public:
             //assert(std::is_sorted(nodes.begin(), nodes.end(), revDual));
             std::sort(nodes.begin(), nodes.end(), revDual);
 
-            layer(depth);
-            Layer & l = layers[depth];
+            Layer & l = layer(depth);
             i32 const oldSize = l.size();
             l.resize( l.size() + nodes.size());
             std::memcpy(&l[oldSize], nodes.data(), nodes.dataMemSize());
@@ -109,7 +108,6 @@ public:
             push(slice);
         }
     }
-
 
     void pushFromGpu(gfl::tuple<gfl::ArrayView<Node>, gfl::ArrayView<gfl::i32>> const & cutset)
     {
@@ -142,7 +140,6 @@ public:
             push(slice);
         }
     }
-
 
     bool empty() const noexcept
     {

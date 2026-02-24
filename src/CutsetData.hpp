@@ -64,6 +64,10 @@ public:
      void addSegment(gfl::i32 const size) noexcept
     {
         using namespace gfl;
+
+        assert(nodes_.size() + size <= nodes_.capacity());
+        assert(offsets_.size() < offsets_.capacity());
+
         i32 const begin = nodes_.resizeBy(size);
         offsets_.pushBack(begin);
         lastSegment_ = nodes_.slice(begin, nodes_.size());

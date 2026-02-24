@@ -16,13 +16,15 @@ class LogManager
     static constexpr gfl::i32 wGap      = 10;
     static constexpr gfl::i32 wExpanded = 12;
     static constexpr gfl::i32 wQueue    = 12;
+    static constexpr gfl::i32 wNps      = 12;
 
     static constexpr auto fmtStr =
-        "{:>{}}   {:>{}}   {:>{}}   {:>{}}   {:>{}}   {:>{}}\n";
+        "{:>{}}   {:>{}}   {:>{}}   {:>{}}   {:>{}}   {:>{}}   {:>{}}\n";
 
     gfl::f64 solutionTime_{0.0};
     gfl::f64 lastPrintTime_{0.0};
     gfl::f64 logInterval_{5.0};
+    gfl::i64 lastExtracted_{0};
 
 public:
     LogManager() noexcept = default;
@@ -46,7 +48,8 @@ public:
             "Dual",     wDual,
             "Gap [%]",  wGap,
             "Expanded", wExpanded,
-            "Queue",    wQueue
+            "Queue",    wQueue,
+            "N/s",      wNps
         );
     }
 
@@ -94,18 +97,26 @@ private:
     {
         using namespace gfl;
 
-        lastPrintTime_ = stats.elapsed<sec>();
+        f64 const time      = stats.elapsed<sec>();
+        f64 const dt        = time - lastPrintTime_;
+        i64 const extracted = stats.extracted();
+        i64 const dn        = extracted - lastExtracted_;
+        f64 const nps       = dt > 0.0 ? scast<f64>(dn) / dt : 0.0;
+
+        lastPrintTime_ = time;
+        lastExtracted_ = extracted;
 
         bool const hasPrimal = isValid<Model>(bnb.primal());
         bool const hasDual   = isValid<Model>(bnb.dual());
         bool const hasGap    = hasPrimal and hasDual;
 
-        auto const timeStr     = fmt::format("{:.2f}",lastPrintTime_);
+        auto const timeStr     = fmt::format("{:.2f}", time);
         auto const primalStr   = hasPrimal ? fmt::format("{:.2f}", bnb.primal()) : "-";
         auto const dualStr     = hasDual   ? fmt::format("{:.2f}", bnb.dual())   : "-";
         auto const gapStr      = hasGap    ? fmt::format("{:.2f}", bnb.gap())    : "-";
-        auto const expandedStr = fmt::format("{}", stats.extracted());
-        auto const queueStr    = fmt::format("{}", stats.inserted() - stats.extracted());
+        auto const expandedStr = fmt::format("{}", extracted);
+        auto const queueStr    = fmt::format("{}", stats.inserted() - extracted);
+        auto const npsStr      = dt > 0.0 ? fmt::format("{:.0f}", nps) : "-";
 
         fmt::print(fmtStr,
             timeStr,     wTime,
@@ -113,7 +124,8 @@ private:
             dualStr,     wDual,
             gapStr,      wGap,
             expandedStr, wExpanded,
-            queueStr,    wQueue
+            queueStr,    wQueue,
+            npsStr,      wNps
         );
     }
 };

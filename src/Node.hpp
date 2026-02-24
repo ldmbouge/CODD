@@ -11,13 +11,13 @@ template<typename State, typename OutLabels,  int Depth>
 class alignas(gfl::DefaultAlign) Node
 {
     State state_;
-    OutLabels outLabels{};
+    OutLabels outLabels;
     gfl::f64 g_{0};
     gfl::f64 h_{0};
     gfl::u8 approximated_;
     gfl::u8 ancestorInCutset_{0};
     gfl::i16 pathLen{0};
-    gfl::i16 prefixPath[Depth]{};
+    gfl::i16 prefixPath[Depth];
 
 public:
 
@@ -179,6 +179,14 @@ struct NodeInfo
     {
         GFL_HOST_DEVICE
         gfl::tuple<gfl::f64&> operator()(NodeInfo & nodeInfo) const { return {nodeInfo.score};}
+    };
+#endif
+
+#ifdef __CUDACC__
+    struct ScoreFlagDecomposer
+    {
+        GFL_HOST_DEVICE
+        gfl::tuple<gfl::f64&,gfl::i32&> operator()(NodeInfo & nodeInfo) const { return {nodeInfo.score, nodeInfo.flag};}
     };
 #endif
 
