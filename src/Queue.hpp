@@ -21,23 +21,22 @@ class Queue
 
     static constexpr gfl::i32 DefaultLayerSize  = 4096;
     static constexpr gfl::i32 DefaultLayerCount = 1024;
-    using Layer = std::vector<Node>;
+    using Layer = gfl::Vector<Node>;
 
     std::vector<Node> cutsetNodesBuffer;
     std::vector<gfl::i32> cutsetOffsetsBuffer;
 
 
-    std::vector<Layer> layers{DefaultLayerCount};
+    gfl::Vector<Layer> layers{DefaultLayerCount};
 
     Layer & layer(gfl::i32 const lIdx) noexcept
     {
         using namespace gfl;
         if (lIdx >= layers.size())
         {
-           //i32 const oldSize = layers.size();
-            layers.resize(lIdx + 1);
-            // ArrayView<Layer> newLayers = layers.slice(oldSize, layers.size());
-            // for (auto & l : newLayers) { new (&l) Layer(DefaultLayerSize); }
+            i32 const oldSize = layers.resizeTo(lIdx + 1);
+            ArrayView<Layer> newLayers = layers.slice(oldSize, layers.size());
+            for (auto & l : newLayers) { new (&l) Layer(DefaultLayerSize); }
         }
         return layers[lIdx];
     }
@@ -58,7 +57,7 @@ public:
         using namespace gfl;
         i32 const depth = node.depth();
         layer(depth);
-        layers[depth].push_back(node);
+        layers[depth].pushBack(node);
         notifyPush(1);
     }
 
@@ -86,8 +85,7 @@ public:
             std::sort(nodes.begin(), nodes.end(), revDual);
 
             Layer & l = layer(depth);
-            i32 const oldSize = l.size();
-            l.resize( l.size() + nodes.size());
+            i32 const oldSize = l.resizeBy(nodes.size());
             std::memcpy(&l[oldSize], nodes.data(), nodes.dataMemSize());
             std::inplace_merge(l.begin(), l.begin() + oldSize, l.end(), revDual);
             notifyPush(nodes.size());
@@ -177,7 +175,7 @@ public:
             }
         }
         Node const bestNode = layers[lIdx].back();
-        layers[lIdx].pop_back();
+        layers[lIdx].popBack();
         notifyPull(1);
         return bestNode;
     }
