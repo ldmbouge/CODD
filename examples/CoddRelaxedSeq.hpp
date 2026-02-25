@@ -24,7 +24,7 @@ int runRelaxedSeq(int argc, char* argv[])
     constexpr i32 modelMemSize = 256 * 1024; // Small, it MUST fit in shared memory
     assert(modelMemSize > sizeof(Model)); // At least, instance data not included
     ArenaAllocator modelAlloc(modelMemSize, heapReserve(modelMemSize));
-    constexpr i32 engMemSize = 1024; // Small, it MUST be on managed memory
+    constexpr i32 engMemSize = 10 * 1024; // Small, it MUST be on managed memory
     assert(engMemSize > sizeof(ExpansionEngine));
     ArenaAllocator engAlloc(engMemSize, heapReserve(engMemSize));
     ArenaAllocator buffAlloc(cli.memSize(), heapReserve(cli.memSize()));

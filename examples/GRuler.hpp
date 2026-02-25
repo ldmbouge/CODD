@@ -92,8 +92,6 @@ public:
     {
         return s.k == n;
     }
-
-    constexpr static bool has_simple_lgf = false;
     GFL_HOST_DEVICE
     OutLabels lgf(State const & s, double pBound, double dBound, DDContext ddCtx) const noexcept
     {
