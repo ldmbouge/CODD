@@ -61,6 +61,73 @@ namespace gfl
         GFL_HOST_DEVICE BitSet& complement() noexcept;
 
         GFL_HOST_DEVICE
+        BitSet shiftLeft(i32 const k) const noexcept
+        {
+            assert(k > 0);
+
+            BitSet result;
+            i32 const wordShift = k / WordBitSize;
+            i32 const bitShift  = k % WordBitSize;
+
+            for (i32 i = 0; i < NumWords; ++i)
+            {
+                i32 const src = i - wordShift;
+                // src contributes upper bits, src-1 contributes lower bits (overflow)
+                WordType const upper = (src >= 0 and src < NumWords) ? words_[src] << bitShift : 0;
+                WordType const lower = (bitShift > 0 and src - 1 >= 0 and src - 1 < NumWords) ? words_[src - 1] >> (WordBitSize - bitShift) : 0;
+                result.words_[i] = upper | lower;
+            }
+            return result;
+        }
+
+
+
+        GFL_HOST_DEVICE
+        BitSet shiftRight(i32 const k) const noexcept
+        {
+            assert(k > 0);
+
+            BitSet result;
+            i32 const wordShift = k / WordBitSize;
+            i32 const bitShift  = k % WordBitSize;
+
+            for (i32 i = 0; i < NumWords; ++i)
+            {
+                i32 const src = i + wordShift;
+                // src contributes lower bits, src+1 contributes upper bits (overflow)
+                WordType const lower = (src >= 0 and src < NumWords) ? words_[src] >> bitShift : 0;
+                WordType const upper = (bitShift > 0 and src + 1 < NumWords) ? words_[src + 1] << (WordBitSize - bitShift) : 0;
+                result.words_[i] = lower | upper;
+            }
+            return result;
+        }
+
+        GFL_HOST_DEVICE
+        BitSet reversed() const noexcept
+        {
+            using namespace gfl;
+            BitSet result;
+            for (i32 i = 0; i < NumWords; ++i)
+            {
+                result.words_[i] = bitreverse(words_[NumWords - 1 - i]);
+            }
+            return result;
+        }
+
+        GFL_HOST_DEVICE
+        BitSet(i32 const ofs, BitSet const & s) noexcept : words_{}
+        {
+             // Computes { ofs - v | v in s }
+
+             // for (i32 i = 0; i < capacity(); ++i)
+             // {
+             //     if (s.contains(i)) insert(ofs - i);
+             // }
+
+            *this = s.reversed().shiftRight(capacity() - ofs - 1);
+        }
+
+        GFL_HOST_DEVICE
         friend bool operator==(BitSet const& a, BitSet const& b) noexcept { return a.isEqual(b); }
 
         GFL_HOST_DEVICE
@@ -77,6 +144,9 @@ namespace gfl
 
         GFL_HOST_DEVICE
         friend BitSet operator~(BitSet a) noexcept { a.complement(); return a; }
+
+        GFL_HOST_DEVICE
+        friend BitSet operator-(i32 const l, BitSet const & s) noexcept { return BitSet(l, s);}
 
         GFL_HOST_DEVICE
         void printAsInts() const noexcept;

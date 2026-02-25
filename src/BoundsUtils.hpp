@@ -103,7 +103,7 @@ template<typename Model>
 GFL_HOST_DEVICE constexpr
 bool isValid(gfl::f64 const a) noexcept
 {
-    return a != worst<Model>() and a != best<Model>();
+    return isBetter<Model>(a, worst<Model>()) and isWorse<Model>(a,best<Model>());
 }
 
 template<typename Model>
@@ -118,7 +118,7 @@ gfl::f64 score(gfl::f64 const a) noexcept
 
 template<typename Model>
 GFL_HOST_DEVICE constexpr
-gfl::f64 isTighter(gfl::f64 const a, gfl::f64 const b) noexcept
+bool isTighter(gfl::f64 const a, gfl::f64 const b) noexcept
 {
     return isWorse<Model>(a, b);
 }
@@ -133,7 +133,7 @@ gfl::f64 tighter(gfl::f64 const a, gfl::f64 const b) noexcept
 
 template<typename Model>
 GFL_HOST_DEVICE constexpr
-gfl::f64 isLooser(gfl::f64 const a, gfl::f64 const b) noexcept
+bool isLooser(gfl::f64 const a, gfl::f64 const b) noexcept
 {
     return isBetter<Model>(a, b);
 }

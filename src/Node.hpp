@@ -47,7 +47,8 @@ public:
 
         auto const state = model->initial();
         auto const labels = model->lgf(state, worst<Model>(), best<Model>(), DDExact);
-        f64 const h =  Model::has_heur ? model->h(state, DDInit) : best<Model>();
+        f64 h = best<Model>();
+        if constexpr (Model::has_heur) h = model->h(state, DDInit);
         return Node(state, labels, h);
     }
 
@@ -93,7 +94,6 @@ public:
     {
         assert(model != nullptr);
         bool target = model->isTarget(state_);
-        assert(not target or f() == g());
         return target;
     }
 
@@ -119,7 +119,7 @@ public:
         printf(" | "); printf("CUT: %d", node.ancestorInCutset());
         printf(" | "); printf("PTH: "); ArrayView<i16>::print(node.prefixPath, node.pathLen);  // This is correct
         printf(" | "); printf("LBS: "); node.labels().print();
-        printf(" | "); printf("ST: "); State::print(node.state_);
+        printf(" | "); printf("ST: "); node.state_.print();
     }
 
     GFL_HOST_DEVICE

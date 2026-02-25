@@ -9,6 +9,7 @@ template<typename Model, typename Node>
 class LogManager
 {
     using BnBManager = BnBManager<Model, Node>;
+    using Queue = Queue<Model, Node>;
 
     static constexpr gfl::i32 wTime     = 10;
     static constexpr gfl::i32 wPrimal   = 10;
@@ -16,7 +17,7 @@ class LogManager
     static constexpr gfl::i32 wGap      = 10;
     static constexpr gfl::i32 wExpanded = 12;
     static constexpr gfl::i32 wQueue    = 12;
-    static constexpr gfl::i32 wNps      = 12;
+    static constexpr gfl::i32 wNps      = 10;
 
     static constexpr auto fmtStr =
         "{:>{}}   {:>{}}   {:>{}}   {:>{}}   {:>{}}   {:>{}}   {:>{}}\n";
@@ -26,12 +27,17 @@ class LogManager
     gfl::f64 logInterval_{5.0};
     gfl::i64 lastExtracted_{0};
 
-public:
-    LogManager() noexcept = default;
+    BnBManager & bnb_;
+    Queue const & q_;
+    StatsManager const & stats_;
 
-    explicit
-    LogManager(gfl::f64 const logInterval) noexcept : logInterval_(logInterval)
-    {}
+public:
+    LogManager(BnBManager & bnb, Queue const & q, StatsManager const & stats, gfl::f64 const logInterval = 5.0) :
+        bnb_(bnb), q_(q), stats_(stats), logInterval_(logInterval)
+    {
+        bnb.onPrimal([this]{this->primal();});
+        bnb.onDual([this]{this->dual();});
+    }
 
     ~LogManager() = default;
 
@@ -49,73 +55,70 @@ public:
             "Gap [%]",  wGap,
             "Expanded", wExpanded,
             "Queue",    wQueue,
-            "N/s",      wNps
+            "Nodes/s",      wNps
         );
     }
 
-    void primal(StatsManager const & stats, BnBManager const & bnb)
+    void primal()
     {
         using namespace gfl;
-        solutionTime_ = stats.elapsed<sec>();
-        log(bnb, stats);
+        solutionTime_ = stats_.elapsed<sec>();
+        log();
     }
 
-    void dual(StatsManager const & stats, BnBManager const & bnb)
-    {
-        log(bnb, stats);
-    }
+    void dual(){ log(); }
 
-    void progress(StatsManager const & stats, BnBManager const & bnb)
+    void progress()
     {
         using namespace gfl;
-        f64 const time = stats.elapsed<sec>();
-        if (time - lastPrintTime_ >= logInterval_) log(bnb, stats);
+        if (stats_.elapsed<sec>() - lastPrintTime_ >= logInterval_) log();
     }
 
-    void summary(StatsManager const & stats, BnBManager const & bnb, gfl::f64 const timeout)
+    void summary()
     {
         using namespace gfl;
 
-        f64 const searchTime = stats.duration<sec>();
+        f64 const searchTime = stats_.duration<sec>();
         auto const statusStr =
-            bnb.solved()          ? "Completed" :
-            searchTime >= timeout ? "Timeout"   :
-                                    "Error";
+            bnb_.solved()          ? "Solved" :
+            q_.empty()             ? "Completed" :
+            stats_.timeout()       ? "Timeout"   :
+                                     "Error";
         fmt::print("Status        = {}\n", statusStr);
-        fmt::print("Extracted     = {}\n", stats.extracted());
-        fmt::print("Queue         = {}\n", stats.inserted() - stats.extracted());
+        fmt::print("Extracted     = {}\n", q_.pulled());
+        fmt::print("Queue         = {}\n", q_.size());
         fmt::print("Search Time   = {:.2f}\n", searchTime);
         fmt::print("Solution Time = {:.2f}\n", solutionTime_);
-        fmt::print("Solution Cost = {:.2f}\n", bnb.primal());
-        fmt::print("Solution Path = "); bnb.solution().print();
+        fmt::print("Solution Cost = {:.2f}\n", bnb_.primal());
+        fmt::print("Solution Path = "); bnb_.solution().print();
         fmt::print("\n");
     }
 
 private:
 
-    void log(BnBManager const & bnb, StatsManager const & stats)
+    void log()
     {
         using namespace gfl;
 
-        f64 const time      = stats.elapsed<sec>();
+        f64 const time      = stats_.elapsed<sec>();
         f64 const dt        = time - lastPrintTime_;
-        i64 const extracted = stats.extracted();
+        i64 const extracted = q_.pulled();
         i64 const dn        = extracted - lastExtracted_;
         f64 const nps       = dt > 0.0 ? scast<f64>(dn) / dt : 0.0;
 
         lastPrintTime_ = time;
         lastExtracted_ = extracted;
 
-        bool const hasPrimal = isValid<Model>(bnb.primal());
-        bool const hasDual   = isValid<Model>(bnb.dual());
+        bool const hasPrimal = isValid<Model>(bnb_.primal());
+        bool const hasDual   = isValid<Model>(bnb_.dual());
         bool const hasGap    = hasPrimal and hasDual;
 
         auto const timeStr     = fmt::format("{:.2f}", time);
-        auto const primalStr   = hasPrimal ? fmt::format("{:.2f}", bnb.primal()) : "-";
-        auto const dualStr     = hasDual   ? fmt::format("{:.2f}", bnb.dual())   : "-";
-        auto const gapStr      = hasGap    ? fmt::format("{:.2f}", bnb.gap())    : "-";
+        auto const primalStr   = hasPrimal ? fmt::format("{:.2f}", bnb_.primal()) : "-";
+        auto const dualStr     = hasDual   ? fmt::format("{:.2f}", bnb_.dual())   : "-";
+        auto const gapStr      = hasGap    ? fmt::format("{:.2f}", bnb_.gap())    : "-";
         auto const expandedStr = fmt::format("{}", extracted);
-        auto const queueStr    = fmt::format("{}", stats.inserted() - extracted);
+        auto const queueStr    = fmt::format("{}", q_.size());
         auto const npsStr      = dt > 0.0 ? fmt::format("{:.0f}", nps) : "-";
 
         fmt::print(fmtStr,

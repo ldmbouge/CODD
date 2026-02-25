@@ -41,30 +41,20 @@ int runRelaxedSeq(int argc, char* argv[])
     BnBManager<Model,Node> bnb;
 
     // Search statistics
-    StatsManager stats;
-
-    // Log manager
-    LogManager<Model,Node> log;
-    bnb.onPrimal([&log,&stats,&bnb]{
-       std::cout << "OhAh  We have primal:" << bnb.primal() << "\n";
-       log.primal(stats,bnb);
-    });
-    bnb.onDual([&log,&stats,&bnb]{
-       //std::cout << "OhOh  We have dual:" << bnb.dual() << "\n";
-       log.dual(stats,bnb);
-    });
+    StatsManager stats(cli.timeout());
 
     // Layers
     Queue<Model,Node> queue;
-    queue.onPush([&](i32 const n){stats.inserted(n);});
-    queue.onPull([&](i32 const n){stats.extracted(n);});
     queue.push(Node::makeRoot(model));
+
+    // Log manager
+    LogManager<Model,Node> log(bnb,queue,stats);
 
     // BnB search
     log.header();
     stats.start();
     int cnt = 0;
-    while (stats.elapsed<sec>() <= cli.timeout() and not bnb.solved())
+    while (not queue.empty() and stats.elapsed<sec>() <= cli.timeout() and not bnb.solved())
     {
        //std::cout << "ITER CNT:" << cnt++ << " ----------------------------------------\n";
         Node const node = queue.pullBest();
@@ -75,22 +65,26 @@ int runRelaxedSeq(int argc, char* argv[])
         eng->fullyExpandRelaxed(model, node, bnb.primal(), bnb.dual());
 
         // Check relaxation and manage cutset
-        if (eng->hasTarget())
+        auto [bestTarget, bestExactTarget] = eng->getTargets();
+        if (bestExactTarget.has_value())
         {
-            Node const & trg = eng->getTarget();
-            if (not bnb.pruneAncestor(trg))
+            bnb.primal(bestExactTarget.value());
+        }
+        if (bestTarget.has_value())
+        {
+            if (not bnb.pruneAncestor(bestTarget.value()))
             {
                 //std::cout << "who is a bad boy?"; Node::print(trg); std::cout << "\n";
-                bnb.primal(trg);
+                bnb.dual(bestTarget.value());
                 assert(bnb.consistent());
                 auto const & cutset = eng->cutset();
                 queue.push(cutset);
             }
         }
-        log.progress(stats,bnb);
+        log.progress();
     }
     stats.end();
-    log.summary(stats,bnb,cli.timeout());
+    log.summary();
 
     return EXIT_SUCCESS;
 }

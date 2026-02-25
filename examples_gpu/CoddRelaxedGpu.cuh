@@ -3,7 +3,7 @@
 #include <GFL.hpp>
 
 #include "CliManager.hpp"
-#include "Queue.hpp"
+#include "QueueGpu.cuh"
 #include "BnBManager.hpp"
 #include "LogManager.hpp"
 #include "StatsManager.hpp"
@@ -24,7 +24,7 @@ int runRelaxedGpu(int argc, char* argv[])
     constexpr i32 modelMemSize = 256 * 1024; // Small, it MUST fit in shared memory
     assert(modelMemSize > sizeof(Model)); // At least, instance data not included
     ArenaAllocator modelAlloc(modelMemSize, cudaReserveManaged(modelMemSize));
-    constexpr i32 engMemSize = 1024; // Small, it MUST be on managed memory
+    constexpr i32 engMemSize = 2048; // Small, it MUST be on managed memory
     assert(engMemSize > sizeof(ExpansionEngine));
     ArenaAllocator engAlloc(engMemSize, cudaReserveManaged(engMemSize));
     ArenaAllocator buffAlloc(cli.memSize(), cudaReserveDevice(cli.memSize()));
@@ -41,23 +41,21 @@ int runRelaxedGpu(int argc, char* argv[])
     BnBManager<Model,Node> bnb;
 
     // Search statistics
-    StatsManager stats;
+    StatsManager stats(cli.timeout());
 
     // Log manager
-    LogManager<Model,Node> log;
-    bnb.onPrimal([&log,&stats,&bnb]{log.primal(stats,bnb);});
-    bnb.onDual([&log,&stats,&bnb]{log.dual(stats,bnb);});
 
     // Layers
-    Queue<Model,Node> queue;
-    queue.onPush([&](i32 const n){stats.inserted(n);});
-    queue.onPull([&](i32 const n){stats.extracted(n);});
+    QueueGpu<Model,Node> queue;
     queue.push(Node::makeRoot(model));
+
+    // Log manager
+    LogManager<Model,Node> log(bnb,queue,stats);
 
     // BnB search
     log.header();
     stats.start();
-    while (stats.elapsed<sec>() <= cli.timeout() and not bnb.solved())
+    while (not queue.empty() and stats.elapsed<sec>() <= cli.timeout() and not bnb.solved())
     {
         Node const node = queue.pullBest();
         bnb.dual(queue.bestDual());
@@ -66,21 +64,26 @@ int runRelaxedGpu(int argc, char* argv[])
         eng->expandRelaxed(model, node, bnb.primal(), bnb.dual(), BranchFactor);
 
         // Check relaxation and manage cutset
-        if (eng->hasTarget())
+        auto [bestTarget, bestExactTarget] = eng->getTargets();
+        if (bestExactTarget.has_value())
         {
-            Node const trg = eng->getTargetFromGpu();
-            if (not bnb.pruneAncestor(trg))
+            bnb.primal(bestExactTarget.value());
+        }
+        if (bestTarget.has_value())
+        {
+            if (not bnb.pruneAncestor(bestTarget.value()))
             {
-                bnb.primal(trg);
+                //std::cout << "who is a bad boy?"; Node::print(trg); std::cout << "\n";
+                bnb.dual(bestTarget.value());
                 assert(bnb.consistent());
                 auto const & cutset = eng->cutset();
                 queue.pushFromGpu(cutset);
             }
         }
-        log.progress(stats,bnb);
+        log.progress();
     }
     stats.end();
-    log.summary(stats,bnb,cli.timeout());
+    log.summary();
 
     return EXIT_SUCCESS;
 }

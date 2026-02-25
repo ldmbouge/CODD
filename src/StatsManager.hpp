@@ -4,13 +4,15 @@
 
 class StatsManager
 {
+
+    // TODO manage edge cases with std::optional
     gfl::TimePoint start_{};
     gfl::TimePoint end_{};
-    gfl::i64 extracted_{0};
-    gfl::i64 inserted_{0};
+    gfl::f64 timeout_{};
 
 public:
-    StatsManager() = default;
+    explicit
+    StatsManager(gfl::f64 const timeout) : timeout_(timeout){};
     ~StatsManager() = default;
 
     StatsManager(StatsManager const &) = delete;
@@ -27,9 +29,5 @@ public:
     template <typename TUnit>
     gfl::f64 elapsed() const noexcept { return gfl::elapsed<TUnit>(start_); }
 
-    gfl::i64 extracted() const noexcept { return extracted_; }
-    void extracted(gfl::i64 const count) noexcept { extracted_ += count; }
-
-    gfl::i64 inserted() const noexcept { return inserted_; }
-    void inserted(gfl::i64 const count) noexcept { inserted_ += count; }
+    bool timeout() const noexcept { return duration<gfl::sec>() > timeout_; }
 };

@@ -59,21 +59,18 @@ namespace gfl
             return VectorView<T>::resizeTo(size);
         }
 
-        GFL_HOST_DEVICE
         i32 resizeBy(i32 const delta) noexcept
         {
             reserve(size_ + delta);
             return VectorView<T>::resizeBy(delta);
         }
 
-        GFL_HOST_DEVICE
         void pushBack(ArrayView<T> const& elements) noexcept
         {
             reserve(size_ + elements.size());
             VectorView<T>::pushBack(elements);
         }
 
-        GFL_HOST_DEVICE
         void pushBack(T const & value) noexcept
         {
             reserve(size_ + 1);

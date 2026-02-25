@@ -287,41 +287,30 @@ class ExpansionEngineGpu : public ExpansionEngine<Model,Node>
         CHECK_CUDA_ERROR(cudaDeviceSynchronize());
     }
 
-    void keepOnlyBestChild()
+    void onlyBestTargets()
     {
         using namespace gfl;
-
-        auto & children = expData.children;
-        auto & tmpNodes = expData.tmpNodes;
-        auto & childrenInfo = expData.childrenInfo;
+        auto & targets = expData.children;
+        auto & targetsInfo = expData.childrenInfo;
         auto & tmpInfo = expData.tmpInfo;
-        i32 const ApproximatedFlag = 1;
-        i32 const ExactFlag = 0;
 
-
-        if (not children.empty())
+        if (not targets.empty())
         {
             i32 const blockSize = 128;
-            i32 const gridSize = ceil<i32>(children.size(), blockSize);
-            setScoreGKernel<Model><<<gridSize, blockSize>>>(&children, &childrenInfo);
+            i32 const gridSize = ceil<i32>(targets.size(), blockSize);
+            setScoreGKernel<Model><<<gridSize, blockSize>>>(&targets, &targetsInfo);
             CHECK_LAST_CUDA_ERROR();
-            setFlagKernel<<<gridSize, blockSize>>>(ExactFlag,&childrenInfo);
+            resizeToKernel<<<1,1>>>(&tmpInfo,targetsInfo.sizePtr());
             CHECK_LAST_CUDA_ERROR();
-            setApproximatedFlagKernel<<<gridSize, blockSize>>>(ApproximatedFlag,&children, &childrenInfo);
+            sortKernel<NodeInfo::ScoreFlagDecomposer><<<1,1>>>(&targetsInfo,&tmpInfo,&cubAuxMem);
             CHECK_LAST_CUDA_ERROR();
-            resizeToKernel<<<1,1>>>(&tmpInfo,childrenInfo.sizePtr());
+            swapKernel<<<1,1>>>(&tmpInfo, &targetsInfo);
             CHECK_LAST_CUDA_ERROR();
-            sortKernel<NodeInfo::ScoreFlagDecomposer><<<1,1>>>(&childrenInfo,&tmpInfo,&cubAuxMem);
-            CHECK_LAST_CUDA_ERROR();
-            swapKernel<<<1,1>>>(&tmpInfo, &childrenInfo);
-            CHECK_LAST_CUDA_ERROR();
-            resizeToKernel<<<1,1>>>(&childrenInfo,1);
-            CHECK_LAST_CUDA_ERROR();
-            resizeToKernel<<<1,1>>>(&tmpNodes,1);
-            CHECK_LAST_CUDA_ERROR();
-            copyByInfoKernel<<<gridSize, blockSize>>>(&tmpNodes, &children, &childrenInfo);
-            CHECK_LAST_CUDA_ERROR();
-            swapKernel<<<1,1>>>(&tmpNodes, &children);
+            copyBestTargetsKernel<<<1,1>>>(
+                &expData.bestTargetNode,
+                &expData.bestExactTargetNode,
+                &targets,
+                &targetsInfo);
             CHECK_LAST_CUDA_ERROR();
 
             CHECK_CUDA_ERROR(cudaDeviceSynchronize());
@@ -349,7 +338,7 @@ class ExpansionEngineGpu : public ExpansionEngine<Model,Node>
             i32 const gridSize = ceil<i32>(cutset.nodes().size(), blockSize);
             calcOutLabelsKernel<<<gridSize,blockSize>>>(model,cutset.nodesPtr(),primal,dual,DDRelaxed);
             CHECK_LAST_CUDA_ERROR();
-            setHKernel<Model><<<gridSize,blockSize>>>(&children,cutset.nodesPtr());
+            setHKernel<Model><<<gridSize,blockSize>>>(&expData.bestTargetNode,cutset.nodesPtr());
             CHECK_LAST_CUDA_ERROR();
 
             CHECK_CUDA_ERROR(cudaDeviceSynchronize());
@@ -364,25 +353,29 @@ class ExpansionEngineGpu : public ExpansionEngine<Model,Node>
     {
         using namespace gfl;
         auto & children = expData.children;
+        auto & parents = expData.parents;
+
+        //printKernel<<<1,1>>>(0,&parents);
         expandParents(model,primal,brachFactor);
-        //printKernel<<<1,1>>>(0,&children);
-        //cudaDeviceSynchronize();
+        //printKernel<<<1,1>>>(1,&children);
+        cudaDeviceSynchronize();
         if (children.size() > 0)
         {
             filterRepresentedChildren();
-
+            //printKernel<<<1,1>>>(2,&children);
             if (children.size() > width_)
             {
                 sortChildrenByG(model);
                 saveCutset();
                 mergeChildren();
             }
+            //printKernel<<<1,1>>>(3,&children);
 
             calcOutLabels(model,&children,primal,dual);
 
             checkForTarget(model,&children);
         }
-        //printKernel<<<1,1>>>(1,&children);
+        //printKernel<<<1,1>>>(4,&children);
         CHECK_CUDA_ERROR(cudaDeviceSynchronize());
     }
 
@@ -420,87 +413,7 @@ public:
             swapParentsAndChildren();
             expandLayerRelaxed(model,primal,dual, brachFactor);
         }
-        keepOnlyBestChild();
+        onlyBestTargets();
         finalizeCutset(model,primal,dual);
     }
-
-
-    bool hasTarget() const noexcept {return expData.hasTarget();}
-    Node const & getTarget() const noexcept {return expData.getTarget();}
-
-    Node const getTargetFromGpu() const noexcept
-    {
-        Node trg;
-        cudaMemcpy(&trg,&expData.children.front(),sizeof(Node),cudaMemcpyDeviceToHost);
-        return trg;
-    }
-
-
-
-// #ifdef __CUDACC__
-//     static
-//     gfl::i64 cubAuxMemSize(gfl::i64 const nNodes)
-//     {
-//         std::size_t memSize = 0;
-//         void * dummyTmpMem = nullptr;
-//         NodeInfo * dummyNodeInfo = nullptr;
-//         cub::DeviceRadixSort::SortKeys( // Initialize cubTmpMemSize
-//                 dummyTmpMem,
-//                 memSize,
-//                 dummyNodeInfo,
-//                 dummyNodeInfo,
-//                 nNodes,
-//                 DummyDecomposer64{}); // Bigger key used
-//         CHECK_LAST_CUDA_ERROR();
-//         return memSize;
-//     }
-//
-//     static
-// #ifdef __CUDACC__
-//     gfl::i64 dataMemSize(gfl::i64 const nParents, gfl::i32 const maxBranchFactor, bool cubAuxMem = false)
-// #else
-//     gfl::i64 dataMemSize(gfl::i64 const nParents, gfl::i32 const maxBranchFactor)
-// #endif
-//     {
-//         using namespace gfl;
-//
-//         i64 const nChildren = nParents * maxBranchFactor;
-//
-//         i64 memSize = 0;
-//         memSize += VectorView<Node>::dataMemSize(nParents) + DefaultAlign; // parents
-//         memSize += VectorView<Node>::dataMemSize(nParents) + DefaultAlign; // children
-//         memSize += VectorView<NodeInfo>::dataMemSize(nParents) + DefaultAlign; // auxNodesInfo
-//         memSize += VectorView<NodeInfo>::dataMemSize(nParents) + DefaultAlign; // auxNodesInfo
-// #ifdef __CUDACC__
-//         if (cubAuxMem) memSize += cubAuxMemSize(nChildren) + DefaultAlign; // auxMem for GPU sort
-// #endif
-//         memSize += VectorView<Node>::dataMemSize(nChildren) + DefaultAlign; // tmpNodes
-//         memSize += VectorView<NodeInfo>::dataMemSize(nChildren) + DefaultAlign; // tmpNodesInfo
-//
-//         return memSize;
-//     }
-//
-//     template<typename Fn>
-//     static
-//     gfl::i64 calcMaxParents(Fn calcMemSize, gfl::i64 const maxMemSize)
-//     {
-//         using namespace gfl;
-//
-//         // Binary search on the number of parents
-//         i64 lbParents = 0;
-//         i64 ubParents = 1;
-//         while (calcMemSize(ubParents) <= maxMemSize)
-//         {
-//             lbParents = ubParents;
-//             ubParents *= 2;
-//         }
-//         while (lbParents < ubParents)
-//         {
-//             i64 const midParents = lbParents + (ubParents - lbParents + 1) / 2;
-//             i64 const memSize = calcMemSize(midParents);
-//             if (memSize <= maxMemSize) lbParents = midParents;  // still fits
-//             else ubParents = midParents - 1; // too big
-//         }
-//         return lbParents;
-//     }
 };

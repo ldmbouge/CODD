@@ -13,6 +13,7 @@ class BnBManager
 
     gfl::f64 primal_{worst<Model>()};
     gfl::f64 dual_{best<Model>()};
+    bool queueExhausted_{false};
     gfl::Vector<gfl::i16> solution_{128};
 
 public:
@@ -67,7 +68,7 @@ public:
     {
         using namespace gfl;
 
-        if (not node.approximated() and isBetter<Model>(node.f(), primal_))
+        if (not node.approximated() and isBetter<Model>(node.g(), primal_))
         {
             primal_ = node.g();
             auto const path = node.path();
@@ -84,6 +85,17 @@ public:
         if (isValid<Model>(dual) and isTighter<Model>(dual, dual_))
         {
             dual_ = dual;
+            notifyDual();
+        }
+    }
+
+    void dual(Node const & node) noexcept
+    {
+        using namespace gfl;
+        // Node should be a target from relaxed
+        if (not isValid<Model>(dual_) and isValid<Model>(node.g()))
+        {
+            dual_ = node.g();
             notifyDual();
         }
     }

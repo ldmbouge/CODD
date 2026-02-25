@@ -6,6 +6,10 @@
 template<typename Node>
 struct ExpansionData
 {
+
+    gfl::optional<Node> bestTargetNode;
+    gfl::optional<Node> bestExactTargetNode;
+
     gfl::VectorView<Node> parents{};
     gfl::VectorView<Node> children{};
 
@@ -48,6 +52,9 @@ struct ExpansionData
 
     void clear() noexcept
     {
+        bestTargetNode.reset();
+        bestExactTargetNode.reset();
+        
         parents.clear();
         parentInfo.clear();
 

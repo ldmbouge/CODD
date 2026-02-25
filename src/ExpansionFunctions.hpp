@@ -70,13 +70,12 @@ void expandParents(
                     {
                         f64 const tCost = model->scf(pNode.state(), label);
                         f64 const cG = pNode.g() + tCost;
-                        f64 cH =  pNode.h() > 0 ? pNode.f() - cG : 0; // Deal with shallow target states
+                        f64 cH = pNode.f() - cG;
                         if constexpr (Model::has_heur)
                         {
                             f64 const h = model->h(cState.value(), BBCtx);
                             cH = tighter<Model>(cH,h);
                         }
-                        assert(cH >= 0);
 
                         // Conditions to keep the child
                         if (isBetter<Model>(cG + cH,primal))
@@ -472,19 +471,30 @@ void calcOutLabels(
 
 
 template<typename Model, typename Node>
-void onlyBestTarget(Model const * const model, gfl::VectorView<Node> & nodes, gfl::ArrayView<NodeInfo> & nodesInfo)
+void onlyBestTargets(Model const * const model, ExpansionData<Node> * const expData)
 {
     using namespace gfl;
 
-    if (not nodes.empty())
+    auto & targets = expData->children;
+    auto & targetsInfo = expData->childrenInfo;
+
+    if (not targets.empty())
     {
-        assert(nodes.front().isTarget(model)); // All of them should be targets
-        setScoreG<Model>(nodes, nodesInfo);
-        sort(nodesInfo, NodeInfo::cmpByScore);
-        NodeInfo const & info = nodesInfo[0];
-        Node const & node = nodes[info.idx];
-        nodes[0] = node;
-        nodes.resizeTo(1);
+        assert(targets.front().isTarget(model)); // All of them should be targets
+        setScoreG<Model>(targets, targetsInfo);
+        sort(targetsInfo, NodeInfo::cmpByScore);
+        NodeInfo const & bestInfo = targetsInfo[0];
+        expData->bestTargetNode = targets[bestInfo.idx];
+        for (i32 i = 0; i < targets.size(); ++i)
+        {
+            NodeInfo const & bestExactInfo = targetsInfo[i];
+            Node const & node = targets[bestExactInfo.idx];
+            if (not node.approximated())
+            {
+                expData->bestExactTargetNode = node;
+                break;
+            }
+        }
     }
 }
 
@@ -498,7 +508,6 @@ void setH(gfl::ArrayView<Node> const & nodes, gfl::f64 const f)
     {
         Node & node = nodes[i];
         f64 const h = f - node.g();
-        assert(h >= 0);
         node.h(tighter<Model>(node.h(), h));
     }
 }
@@ -517,7 +526,7 @@ void finializeCutset(
     if (expData->hasTarget())
     {
         calcOutLabels(model, cutData->nodes(), pBound, dBound, ddCtx);
-        i64 const f = expData->getTarget().f();
+        f64 const f = expData->getTarget().g();
         setH<Model,Node>(cutData->nodes(), f);
     }
 

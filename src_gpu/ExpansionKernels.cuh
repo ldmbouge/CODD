@@ -38,6 +38,7 @@ void expandParentsKernel(
     }
     __syncwarp();
 
+
     if (pIdx < parents.size())
     {
         Node const & pNode = parents[pIdx];
@@ -51,14 +52,12 @@ void expandParentsKernel(
             {
                 f64 const tCost = model->scf(pNode.state(), label);
                 f64 const cG = pNode.g() + tCost;
-                f64 cH =  pNode.h() > 0 ? pNode.f() - cG : 0; // Deal with shallow target states
+                f64 cH = pNode.f() - cG;
                 if constexpr (Model::has_heur)
                 {
                     f64 const h = model->h(cState.value(), BBCtx);
                     cH = tighter<Model>(cH,h);
                 }
-                assert(cH >= 0);
-
                 // Conditions to keep the child
                 if (isBetter<Model>(cG + cH,primal))
                 {
@@ -82,6 +81,7 @@ void expandParentsKernel(
         __syncwarp();
         if (threadIdx.x < nChildren_s)
         {
+            //printf("Adding child\n");
             i32 const cIdx_g = offset_g + threadIdx.x;
             childrenInfo_s[threadIdx.x].idx = cIdx_g;
             childrenInfo[cIdx_g] = childrenInfo_s[threadIdx.x];
@@ -262,6 +262,31 @@ void copyByInfoKernel(
         Node & dNode = dst->at(i);
         dNode = sNode;
         info.idx = i;
+    }
+}
+
+template<typename Node>
+GFL_GLOBAL
+void copyBestTargetsKernel(
+    gfl::optional<Node> * const bestTarget,
+    gfl::optional<Node> * const bestExactTarget,
+    gfl::ArrayView<Node> const  * const  targets,
+    gfl::ArrayView<NodeInfo> const * const targetsInfo)
+{
+    using namespace gfl;
+
+    NodeInfo const & bestInfo = targetsInfo->at(0);
+    *bestTarget = targets->at(bestInfo.idx);
+
+    for (i32 i = 0; i < targetsInfo->size(); ++i)
+    {
+        NodeInfo const & targetInfo = targetsInfo->at(0);
+        Node const & target = targets->at(targetInfo.idx);
+        if (not target.approximated())
+        {
+            *bestExactTarget = target;
+            break;
+        }
     }
 }
 
@@ -537,19 +562,26 @@ void calcOutLabelsKernel(
 template<typename Model, typename Node>
 GFL_GLOBAL
 void setHKernel(
-    gfl::ArrayView<Node> const * children,
+    gfl::optional<Node> const * bestTarget,
     gfl::ArrayView<Node> const * cutset)
 {
     using namespace gfl;
 
-    f64 const f = children->at(0).f();
+    assert(bestTarget->has_value());
+
+    __shared__ f64 f;
+
+    if (threadIdx.x == 0)
+    {
+        f = bestTarget->value().g();
+    }
+    __syncthreads();
 
     auto [begin,end] = calcSlice<i32>(blockIdx.x, gridDim.x, cutset->size());
     for (i32 i = begin + threadIdx.x; i < end; i += blockDim.x)
     {
         Node & node = cutset->at(i);
         f64 const h = f - node.g();
-        assert(h >= 0);
         node.h(tighter<Model>(node.h(), h));
     }
 }
