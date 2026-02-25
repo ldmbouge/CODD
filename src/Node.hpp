@@ -21,7 +21,7 @@ class alignas(gfl::DefaultAlign) Node
 
 public:
 
-    Node() = default;
+    Node() noexcept {};
 
     GFL_HOST_DEVICE
     Node(State const & s, gfl::f64 const g, gfl::f64 const h, gfl::i32 const label, Node const & pNode) noexcept :
@@ -41,7 +41,7 @@ public:
 
     template<typename Model>
     static
-    Node makeRoot(Model const * const model)
+    Node * makeRoot(Model const * const model)
     {
         using namespace gfl;
 
@@ -49,7 +49,7 @@ public:
         auto const labels = model->lgf(state, worst<Model>(), best<Model>(), DDExact);
         f64 h = best<Model>();
         if constexpr (Model::has_heur) h = model->h(state, DDInit);
-        return Node(state, labels, h);
+        return new Node(state, labels, h);
     }
 
     GFL_HOST_DEVICE

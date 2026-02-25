@@ -57,9 +57,9 @@ int runRelaxedSeq(int argc, char* argv[])
     while (not queue.empty() and stats.elapsed<sec>() <= cli.timeout() and not bnb.solved())
     {
        //std::cout << "ITER CNT:" << cnt++ << " ----------------------------------------\n";
-        Node const node = queue.pullBest();
+        Node const * const node = queue.pullBest();
         //std::cout << "NODE:";Node::print(node);std::cout << "\n";
-        bnb.dual(queue.bestDual());
+        bnb.dual(node->f());
         assert(bnb.consistent());
 
         eng->fullyExpandRelaxed(model, node, bnb.primal(), bnb.dual());

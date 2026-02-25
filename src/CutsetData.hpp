@@ -69,7 +69,7 @@ public:
         assert(offsets_.size() < offsets_.capacity());
 
         i32 const begin = nodes_.resizeBy(size);
-        offsets_.pushBack(begin);
+        offsets_.pushBack(&begin);
         lastSegment_ = nodes_.slice(begin, nodes_.size());
     }
 

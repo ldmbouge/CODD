@@ -113,17 +113,17 @@ namespace gfl
         }
 
         GFL_HOST_DEVICE
-        void pushBack(T const & value) noexcept
+        void pushBack(T const * value) noexcept
         {
             i32 const oldSize = resizeBy(1);
-            std::memcpy(&at(oldSize), &value, sizeof(T));
+            std::memcpy(&at(oldSize), value, sizeof(T));
         }
 
 #ifdef __CUDACC__
-        void pushBackGpu(T const & value) noexcept
+        void pushBackGpu(T const * value) noexcept
         {
             i32 const oldSize = resizeBy(1);
-            cudaMemcpy(&at(oldSize), &value, sizeof(T), cudaMemcpyHostToDevice);
+            cudaMemcpy(&at(oldSize), value, sizeof(T), cudaMemcpyHostToDevice);
         }
 #endif
 

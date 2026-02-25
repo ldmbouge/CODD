@@ -396,7 +396,7 @@ public:
 
     void expandRelaxed(
            Model const * model,
-           Node const & node,
+           Node const * node,
            gfl::f64 const primal,
            gfl::f64 const dual,
            gfl::i32 const brachFactor)

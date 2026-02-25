@@ -57,8 +57,8 @@ int runRelaxedGpu(int argc, char* argv[])
     stats.start();
     while (not queue.empty() and stats.elapsed<sec>() <= cli.timeout() and not bnb.solved())
     {
-        Node const node = queue.pullBest();
-        bnb.dual(queue.bestDual());
+        Node const * node = queue.pullBest();
+        bnb.dual(node->f());
         assert(bnb.consistent());
 
         eng->expandRelaxed(model, node, bnb.primal(), bnb.dual(), BranchFactor);
