@@ -1,0 +1,221 @@
+#pragma once
+
+#include "ExpansionEngine.hpp"
+#include "ExpansionKernels.cuh"
+
+template<typename Model, typename Node>
+void filterRepresentedKernel(ExpansionEngine<Model,Node> * const expData)
+{
+    using namespace gfl;
+    auto & children = expData.children;
+    auto & tmpNodes = expData.tmpNodes;
+    auto & childrenInfo = expData.childrenInfo;
+    auto & tmpInfo = expData.tmpInfo;
+    auto & nFlagged = expData->nFlagged;
+    auto & cubAuxMem = expData->cubAuxMem;
+    constexpr i64 RepresentedFlag = 1;
+    constexpr i64 RepresentativeFlag = 0;
+
+    if (not children.empty())
+    {
+        i32 const blockSize = 128;
+        i32 const gridSize = ceil<i32>(children.size(), blockSize);
+
+        // Init
+        nFlagged = 0;
+        tmpInfo.resizeTo(childrenInfo.size());
+
+        // Sort by hash
+        calcHashKernel<Model><<<gridSize,blockSize>>>(&children, &childrenInfo);
+        sortKernel<NodeInfo::HashDecomposer><<<1,1>>>(&childrenInfo,&tmpInfo,&cubAuxMem);
+        swapKernel<<<1,1>>>(&childrenInfo, &tmpInfo);
+
+        // Find representatives
+        setFlagKernel<<<gridSize,blockSize>>>(RepresentativeFlag, &childrenInfo);
+        flagRepresentedChildrenKernel<Model><<<gridSize,blockSize>>>(RepresentedFlag,&children,&childrenInfo);
+        sortKernel<NodeInfo::FlagDecomposer><<<1,1>>>(&childrenInfo,&tmpInfo,&cubAuxMem);
+        swapKernel<<<1,1>>>(&childrenInfo, &tmpInfo);
+        countFlaggedKernel<<<gridSize,blockSize>>>(RepresentativeFlag,&nFlagged,&childrenInfo);
+        resizeToKernel<<<1,1>>>(&childrenInfo,&nFlagged);
+        resizeToKernel<<<1,1>>>(&tmpNodes,&nFlagged);
+        copyByInfoKernel<<<gridSize,blockSize>>>(&tmpNodes,&children,&childrenInfo);
+        swapKernel<<<1,1>>>(&tmpNodes, &children);
+    }
+}
+
+template<typename Model, typename Node>
+void sortByGKernel(
+    Model const * const model,
+    ExpansionEngine<Model,Node> * const expData)
+{
+    using namespace gfl;
+    auto & children = expData->children;
+    auto & tmpNodes = expData->tmpNodes;
+    auto & childrenInfo = expData->childrenInfo;
+    auto & tmpInfo = expData->tmpInfo;
+    auto & cubAuxMem = expData->cubAuxMem;
+
+    if (children.size() > expData->width_)
+    {
+        // Init
+        tmpNodes.resizeTo(children.size());
+        tmpInfo.resizeTo(childrenInfo.size());
+
+        // Processing
+        i32 const blockSize = 128;
+        i32 const gridSize = ceil<i32>(children.size(), blockSize);
+
+        setScoreMergeKernel<Model><<<gridSize,blockSize>>>(model, &children, &childrenInfo);
+        sortKernel<NodeInfo::ScoreDecomposer><<<1,1>>>(&childrenInfo,&tmpInfo,&cubAuxMem);
+        swapKernel<<<1,1>>>(&childrenInfo, &tmpInfo);
+        resizeToKernel<<<1,1>>>(&childrenInfo,children.sizePtr());
+        copyByInfoKernel<<<gridSize,blockSize>>>(&tmpNodes,&children, &childrenInfo);
+        swapKernel<<<1,1>>>(&tmpNodes, &children);
+    }
+}
+
+template<typename Model, typename Node>
+GFL_GLOBAL
+void saveCutsetKernel(ExpansionEngine<Model,Node> * const expData )
+{
+    using namespace gfl;
+    auto const & parents = expData->parents;
+    auto & children = expData->children;
+    auto & tmpNodes = expData->tmpNodes;
+    auto & parentsInfo = expData->parentInfo;
+    auto & childrenInfo = expData->childrenInfo;
+    auto & tmpInfo = expData->tmpInfo;
+    auto & nFlagged = expData->nFlagged;
+    auto & cutset = cutData;
+    auto & cubAuxMem = expData->cubAuxMem;
+    constexpr i64 ParentToNotSaveFlag = 1;
+    constexpr i64 ParentToSaveFlag = 0;
+
+    if (children.size() > expData->width_)
+    {
+
+        // Init
+        nFlagged = 0;
+        parentsInfo.resizeTo(parents.size());
+
+        // Find parents to save
+        i32 const blockSize = 128;
+        i32 const gridSize = ceil<i32>(expData.children.size(),blockSize);
+        resetInfoKernel<<<gridSize,blockSize>>>(&parentsInfo);
+        setFlagKernel<<<gridSize,blockSize>>>(ParentToNotSaveFlag,&parentsInfo);
+        flagParentsToSaveKernel<<<gridSize,blockSize>>>(ParentToSaveFlag,&parentsInfo,expData->width_,&children,&childrenInfo);
+
+        // Update children ancestor flag
+        updateAncestorKernel<<<gridSize,blockSize>>>(ParentToSaveFlag,&parentsInfo,&children,&childrenInfo);
+
+        // Save parents in cutset
+        resizeToKernel<<<1,1>>>(&tmpInfo,parentsInfo.sizePtr());
+        sortKernel<NodeInfo::FlagDecomposer><<<1,1>>>(&parentsInfo,&tmpInfo,&cubAuxMem);
+        swapKernel<<<1,1>>>(&tmpInfo, &parentsInfo);
+        countFlaggedKernel<<<gridSize,blockSize>>>(ParentToSaveFlag,&nFlagged,&parentsInfo);
+        resizeToKernel<<<1,1>>>(&parentsInfo, &nFlagged);
+        resizeToKernel<<<1,1>>>(&tmpInfo, &nFlagged);
+        setScoreFKernel<Model><<<gridSize,blockSize>>>(&parents,&parentsInfo);
+        sortKernel<NodeInfo::ScoreDecomposer><<<1,1>>>(&parentsInfo,&tmpInfo,&cubAuxMem,true);
+        swapKernel<<<1,1>>>(&tmpInfo, &parentsInfo);
+        resizeToKernel<<<1,1>>>(&parentsInfo, &nFlagged);
+        resizeByKernel<<<1,1>>>(&cutset, &nFlagged);
+
+        // printKernel<<<1,1>>>(4,cutset.lastSegmentPtr());
+        // printKernel<<<1,1>>>(5,&parents);
+        // printKernel<<<1,1>>>(6,&parentsInfo);
+
+        copyByInfoKernel<<<gridSize,blockSize>>>(cutset.lastSegmentPtr(),&parents, &parentsInfo);
+        // printKernel<<<1,1>>>(7,cutset.lastSegmentPtr());
+        // printKernel<<<1,1>>>(8,&parents);
+        // printKernel<<<1,1>>>(9,&parentsInfo);
+    }
+}
+
+template<typename Model, typename Node>
+GFL_GLOBAL
+void mergeChildrenKernel(ExpansionEngine<Model,Node> * const expData )
+{
+    using namespace gfl;
+
+    auto const & parents = expData.parents;
+    auto & children = expData.children;
+    auto & tmpNodes = expData.tmpNodes;
+    auto & childrenInfo = expData.childrenInfo;
+    auto & childrenPrefix = expData.tmpView;
+    auto & width = expData->width_;
+
+    if (children.size() > expData->width_)
+    {
+        // Init
+        tmpNodes.resizeTo(children.size());
+        initChildrenPrefix(width,&children,&childrenPrefix);
+
+        // Merge the last children - (width - 1) nodes
+        i32 const blockSize       = 32;
+        i32 const nodesPerThread  = 32;
+        i32 const reductionFactor = blockSize * nodesPerThread;  // 1024
+        i32 const nNodes          = childrenPrefix.size(); // real item count
+        i32 const nBlocks1        = ceil<i32>(nNodes,   reductionFactor);  // gridDim for pass1, real count for pass2
+        i32 const nBlocks2        = ceil<i32>(nBlocks1, reductionFactor);  // gridDim for pass2, real count for pass3
+        // pass1: childrenPrefix → tmpNodes, count = nNodes
+        reductionKernel<Model,Node><<<nBlocks1, blockSize>>>(&childrenPrefix,&tmpNodes,nNodes);
+        // pass2: tmpNodes → childrenPrefix, count = nBlocks1
+        reductionKernel<Model,Node><<<nBlocks2, blockSize>>>(&tmpNodes,&childrenPrefix,nBlocks1);
+        // pass3: childrenPrefix → childrenPrefix[0], count = nBlocks2
+        resizeToKernel<<<1,1>>>(&children,width);
+        resizeToKernel<<<1,1>>>(&childrenInfo,width);
+    }
+}
+
+
+
+template<typename Model, typename Node>
+GFL_GLOBAL
+void checkForTargetKernel(
+    Model const * const model,
+     ExpansionEngine<Model,Node> * const expData)
+{
+    assert(nodes != nullptr);
+    assert(not nodes->empty());
+    assert(gridDim.x == 1);
+    assert(blockDim.x == 1);
+
+    using namespace gfl;
+
+    auto & bestTarget = expData->bestTargetNode;
+    auto & bestExactTargetNode = expData->bestExactTargetNode;
+
+    bestTarget.reset();
+    bestExactTargetNode.reset();
+    if (nodes->at(0).isTarget(model);
+}
+
+
+
+template<typename Model, typename Node>
+GFL_GLOBAL
+void expandLayerRelaxedKernel(
+        Model const * model,
+        ExpansionEngine<Model,Node> * const expData,
+        gfl::f64 const primal,
+        gfl::f64 const dual,
+        gfl::i32 const brachFactor)
+{
+    using namespace gfl;
+
+    auto & children = expData->children;
+    auto & parents = expData->parents;
+
+    i32 blockSize = 32;
+    i32 gridSize = ceil<i32>(parents.size() *brachFactor,blockSize) ;
+    expandParentsKernel<<<gridSize,blockSize>>>(model, expData, primal, brachFactor);
+    filterRepresentedKernel<<<1,1>>>(expData);
+    sortByGKernel<<<1,1>>>(expData);
+    saveCutsetKernel<<<1,1>>>(expData);
+    mergeChildrenKernel<<<1,1>>>(expData);
+    calcOutLabelsKernel<<<gridSize,blockSize>>>(model,&children,primal,dual,DDRelaxed);
+    checkForTargetKernel(model,&children);
+}
+
+

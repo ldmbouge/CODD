@@ -274,15 +274,15 @@ class ExpansionEngineGpu : public ExpansionEngine<Model,Node>
 
     void checkForTarget(
         Model const * const model,
+        gfl::optional<Node> * target,
         gfl::VectorView<Node> * const nodes)
     {
         using namespace gfl;
 
-        targetFound = false;
+        target->reset();
         if (not nodes->empty())
         {
-            checkForTargetKernel<<<1,1>>>(&targetFound,model,nodes);
-            CHECK_LAST_CUDA_ERROR();
+            checkForTargetKernel<<<1,1>>>(target,model,nodes);
         }
         CHECK_CUDA_ERROR(cudaDeviceSynchronize());
     }
@@ -373,7 +373,7 @@ class ExpansionEngineGpu : public ExpansionEngine<Model,Node>
 
             calcOutLabels(model,&children,primal,dual);
 
-            checkForTarget(model,&children);
+            checkForTarget(model,&expData.bestTargetNode,&children);
         }
         //printKernel<<<1,1>>>(4,&children);
         CHECK_CUDA_ERROR(cudaDeviceSynchronize());
@@ -408,7 +408,7 @@ public:
         cutData.clear();
         expData.parents.pushBackGpu(node);
         expandLayerRelaxed(model, primal, dual, brachFactor);
-        while (not children.empty() and not targetFound)
+        while (not children.empty() and not expData.bestTargetNode.has_value())
         {
             swapParentsAndChildren();
             expandLayerRelaxed(model,primal,dual, brachFactor);

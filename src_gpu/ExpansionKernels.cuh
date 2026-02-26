@@ -607,6 +607,29 @@ void checkForTargetKernel(
 }
 
 
+template<typename Model, typename Node>
+GFL_GLOBAL
+void checkForTargetKernel(
+    gfl::optional<Node> * const target,
+    Model const * const model,
+    gfl::VectorView<Node> const * nodes)
+{
+    assert(nodes != nullptr);
+    assert(not nodes->empty());
+    assert(gridDim.x == 1);
+    assert(blockDim.x == 1);
+
+    using namespace gfl;
+
+    Node & n =  nodes->at(0);
+
+    if (n.isTarget(model))
+    {
+        *target = n;
+    }
+}
+
+
 template<typename T>
 GFL_GLOBAL
 void printKernel(gfl::i32 const i, gfl::ArrayView<T> const * array)
