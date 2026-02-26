@@ -146,41 +146,67 @@ void saveCutsetKernel(ExpansionEngineGpu<Model,Node> * const expEng )
     if (children.size() > expEng->width_)
     {
 
-        // Init
-        nFlagged = 0;
-        parentsInfo.resizeTo(parents.size());
+        // // Init
+        // nFlagged = 0;
+        // parentsInfo.resizeTo(parents.size());
+        //
+        // // Find parents to save
+        // i32 const blockSize = 128;
+        // i32 const gridSize = ceil<i32>(expData.children.size(),blockSize);
+        // resetInfoKernel<<<gridSize,blockSize>>>(&parentsInfo);
+        // setFlagKernel<<<gridSize,blockSize>>>(ParentToNotSaveFlag,&parentsInfo);
+        // flagParentsToSaveKernel<<<gridSize,blockSize>>>(ParentToSaveFlag,&parentsInfo,expEng->width_,&children,&childrenInfo);
+        //
+        // // Update children ancestor flag
+        // updateAncestorKernel<<<gridSize,blockSize>>>(ParentToSaveFlag,&parentsInfo,&children,&childrenInfo);
+        //
+        // // Save parents in cutset
+        // resizeToKernel<<<1,1>>>(&tmpInfo,parentsInfo.sizePtr());
+        // sortKernel<NodeInfo::FlagDecomposer><<<1,1>>>(&parentsInfo,&tmpInfo,&cubAuxMem);
+        // swapKernel<<<1,1>>>(&tmpInfo, &parentsInfo);
+        // countFlaggedKernel<<<gridSize,blockSize>>>(ParentToSaveFlag,&nFlagged,&parentsInfo);
+        // resizeToKernel<<<1,1>>>(&parentsInfo, &nFlagged);
+        // resizeToKernel<<<1,1>>>(&tmpInfo, &nFlagged);
+        // setScoreFKernel<Model><<<gridSize,blockSize>>>(&parents,&parentsInfo);
+        // sortKernel<NodeInfo::ScoreDecomposer><<<1,1>>>(&parentsInfo,&tmpInfo,&cubAuxMem,true);
+        // swapKernel<<<1,1>>>(&tmpInfo, &parentsInfo);
+        // resizeToKernel<<<1,1>>>(&parentsInfo, &nFlagged);
+        // resizeByKernel<<<1,1>>>(&cutset, &nFlagged);
+        //
+        // // printKernel<<<1,1>>>(4,cutset.lastSegmentPtr());
+        // // printKernel<<<1,1>>>(5,&parents);
+        // // printKernel<<<1,1>>>(6,&parentsInfo);
+        //
+        // copyByInfoKernel<<<gridSize,blockSize>>>(cutset.lastSegmentPtr(),&parents, &parentsInfo);
+        // // printKernel<<<1,1>>>(7,cutset.lastSegmentPtr());
+        // // printKernel<<<1,1>>>(8,&parents);
+        // // printKernel<<<1,1>>>(9,&parentsInfo);
+        if (childrenInfo.size() > expEng->width_)  // ← childrenInfo
+        {
+            nFlagged = 0;
+            parentsInfo.resizeTo(parents.size());
 
-        // Find parents to save
-        i32 const blockSize = 128;
-        i32 const gridSize = ceil<i32>(expData.children.size(),blockSize);
-        resetInfoKernel<<<gridSize,blockSize>>>(&parentsInfo);
-        setFlagKernel<<<gridSize,blockSize>>>(ParentToNotSaveFlag,&parentsInfo);
-        flagParentsToSaveKernel<<<gridSize,blockSize>>>(ParentToSaveFlag,&parentsInfo,expEng->width_,&children,&childrenInfo);
+            i32 const blockSize = 128;
+            i32 const gridSize = ceil<i32>(childrenInfo.size(), blockSize);  // ← childrenInfo
+            resetInfoIdxKernel<<<gridSize,blockSize>>>(&parentsInfo);
+            setFlagKernel<<<gridSize,blockSize>>>(ParentToNotSaveFlag, &parentsInfo);
+            flagParentsToSaveKernel<<<gridSize,blockSize>>>(ParentToSaveFlag, &parentsInfo, expEng->width_, &children, &childrenInfo);
 
-        // Update children ancestor flag
-        updateAncestorKernel<<<gridSize,blockSize>>>(ParentToSaveFlag,&parentsInfo,&children,&childrenInfo);
+            updateAncestorKernel<<<gridSize,blockSize>>>(ParentToSaveFlag, &parentsInfo, &children, &childrenInfo);
 
-        // Save parents in cutset
-        resizeToKernel<<<1,1>>>(&tmpInfo,parentsInfo.sizePtr());
-        sortKernel<NodeInfo::FlagDecomposer><<<1,1>>>(&parentsInfo,&tmpInfo,&cubAuxMem);
-        swapKernel<<<1,1>>>(&tmpInfo, &parentsInfo);
-        countFlaggedKernel<<<gridSize,blockSize>>>(ParentToSaveFlag,&nFlagged,&parentsInfo);
-        resizeToKernel<<<1,1>>>(&parentsInfo, &nFlagged);
-        resizeToKernel<<<1,1>>>(&tmpInfo, &nFlagged);
-        setScoreFKernel<Model><<<gridSize,blockSize>>>(&parents,&parentsInfo);
-        sortKernel<NodeInfo::ScoreDecomposer><<<1,1>>>(&parentsInfo,&tmpInfo,&cubAuxMem,true);
-        swapKernel<<<1,1>>>(&tmpInfo, &parentsInfo);
-        resizeToKernel<<<1,1>>>(&parentsInfo, &nFlagged);
-        resizeByKernel<<<1,1>>>(&cutset, &nFlagged);
-
-        // printKernel<<<1,1>>>(4,cutset.lastSegmentPtr());
-        // printKernel<<<1,1>>>(5,&parents);
-        // printKernel<<<1,1>>>(6,&parentsInfo);
-
-        copyByInfoKernel<<<gridSize,blockSize>>>(cutset.lastSegmentPtr(),&parents, &parentsInfo);
-        // printKernel<<<1,1>>>(7,cutset.lastSegmentPtr());
-        // printKernel<<<1,1>>>(8,&parents);
-        // printKernel<<<1,1>>>(9,&parentsInfo);
+            resizeToKernel<<<1,1>>>(&tmpInfo, parentsInfo.sizePtr());
+            sortKernel<NodeInfo::FlagDecomposer><<<1,1>>>(&parentsInfo, &tmpInfo, &cubAuxMem);
+            swapKernel<<<1,1>>>(&tmpInfo, &parentsInfo);
+            countFlaggedKernel<<<gridSize,blockSize>>>(ParentToSaveFlag, &nFlagged, &parentsInfo);
+            resizeToKernel<<<1,1>>>(&parentsInfo, &nFlagged);
+            resizeToKernel<<<1,1>>>(&tmpInfo, &nFlagged);
+            setScoreFKernel<Model><<<gridSize,blockSize>>>(&parents, &parentsInfo);
+            sortKernel<NodeInfo::ScoreDecomposer><<<1,1>>>(&parentsInfo, &tmpInfo, &cubAuxMem, true);
+            swapKernel<<<1,1>>>(&tmpInfo, &parentsInfo);
+            resizeToKernel<<<1,1>>>(&parentsInfo, &nFlagged);
+            resizeByKernel<<<1,1>>>(&cutset, &nFlagged);
+            copyByInfoKernel<<<gridSize,blockSize>>>(cutset.lastSegmentPtr(), &parents, &parentsInfo);
+        }
     }
 }
 

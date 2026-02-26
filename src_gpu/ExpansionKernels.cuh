@@ -522,16 +522,15 @@ void flagParentsToSaveKernel(
 {
     using namespace gfl;
 
-    assert(children->size() == childrenInfo->size());
+    assert(children->size() >= childrenInfo->size());
 
     // Merge a suffix so that the total number of nodes is width
-    i32 const nChildrenToMerge = children->size() - (width - 1);
+    i32 const nChildrenToMerge = childrenInfo->size() - (width - 1);
     auto [begin,end] = calcSlice<i32>(blockIdx.x, gridDim.x, nChildrenToMerge);
     for (i32 i = begin + threadIdx.x; i < end; i += blockDim.x)
     {
         i32 const j = (width - 1) + i;
         NodeInfo const & info = childrenInfo->at(j);
-        assert(info.idx == j);
         Node const & node = children->at(info.idx);
         if (not node.ancestorInCutset())
         {
@@ -575,13 +574,12 @@ void updateAncestorKernel(
 {
     using namespace gfl;
 
-    assert(children->size() == childrenInfo->size());
+    assert(children->size() >= childrenInfo->size());
 
-    auto [begin,end] = calcSlice<i32>(blockIdx.x, gridDim.x, children->size());
+    auto [begin,end] = calcSlice<i32>(blockIdx.x, gridDim.x, childrenInfo->size());
     for (i32 i = begin + threadIdx.x; i < end; i += blockDim.x)
     {
         auto const & info = childrenInfo->at(i);
-        assert(info.idx == i);
         auto & node = children->at(info.idx);
         if (parentInfo->at(info.pIdx).flag == flag)
         {

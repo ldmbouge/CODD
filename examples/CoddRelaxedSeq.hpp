@@ -36,6 +36,9 @@ int runRelaxedSeq(int argc, char* argv[])
     // Expansion engine
     ExpansionEngine * const eng = new (engAlloc) ExpansionEngine();
     eng->initRelaxedExpansion(cli.width(), BranchFactor, Depth, buffAlloc);
+    printf("Working memory: ");
+    printMemSize(buffAlloc.usedSize());
+    printf("\n");
 
     // Bounds and solutions manager
     BnBManager<Model,Node> bnb;
@@ -59,6 +62,8 @@ int runRelaxedSeq(int argc, char* argv[])
        //std::cout << "ITER CNT:" << cnt++ << " ----------------------------------------\n";
         Node const * const node = queue.pullBest();
         //std::cout << "NODE:";Node::print(node);std::cout << "\n";
+        if (isWorseEq<Model>(node->f(), bnb.primal()))
+            continue;
         bnb.dual(node->f());
         assert(bnb.consistent());
 

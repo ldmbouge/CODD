@@ -68,6 +68,7 @@ int runRelaxedGpu(int argc, char* argv[])
         while (not queue.empty() and parentsBuffer.size() < nodesToPull)
         {
             Node const * node = queue.pullBest();
+            if (isWorseEq<Model>(node->f(), bnb.primal())) continue;
             parentsBuffer.push_back(*node);
         }
         bnb.dual(parentsBuffer.front().f());
