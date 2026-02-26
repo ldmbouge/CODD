@@ -155,6 +155,9 @@ namespace gfl
         void print() const noexcept;
 
         GFL_HOST_DEVICE
+        i32 smallest() const noexcept;
+
+        GFL_HOST_DEVICE
         u64 hash() const noexcept
         {
             u64 seed = 0;
@@ -366,6 +369,24 @@ namespace gfl
             gfl::printBits(words_[wIdx]);
         }
     }
+
+    template<i32 NumWords>
+    GFL_HOST_DEVICE
+    i32 BitSet<NumWords>::smallest() const noexcept
+    {
+        using namespace gfl;
+
+        i32 smallest = numeric_limits<i32>::max();
+        for (i32 wIdx = 0; wIdx < NumWords; ++wIdx)
+        {
+            i32 const wBegin = wIdx * sizeof(unsigned long long) * 8;
+            i32 const sWord = words_[wIdx] != 0 ? wBegin + lsb(words_[wIdx]) : numeric_limits<i32>::max();
+            smallest = min<int>(smallest, sWord);
+
+        }
+        return smallest;
+    }
+
 
     template<i32 NumWords>
     GFL_HOST_DEVICE

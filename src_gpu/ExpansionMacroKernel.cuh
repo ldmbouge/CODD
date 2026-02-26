@@ -23,10 +23,12 @@ void filterRepresentedKernel(ExpansionEngineGpu<Model,Node> * const expEng)
     if (not children.empty())
     {
         i32 const blockSize = 128;
-        i32 const gridSize = ceil<i32>(children.size(), blockSize);
+        i32 const gridSize = ceil<i32>(childrenInfo.size(), blockSize);
 
         // Init
         nFlagged = 0;
+        assert(childrenInfo.size() <= tmpInfo.capacity());
+        assert(children.size() == childrenInfo.size()); // ← add this
         tmpInfo.resizeTo(childrenInfo.size());
 
         // Sort by hash
@@ -41,9 +43,9 @@ void filterRepresentedKernel(ExpansionEngineGpu<Model,Node> * const expEng)
         swapKernel<<<1,1>>>(&childrenInfo, &tmpInfo);
         countFlaggedKernel<<<gridSize,blockSize>>>(RepresentativeFlag,&nFlagged,&childrenInfo);
         resizeToKernel<<<1,1>>>(&childrenInfo,&nFlagged);
-        resizeToKernel<<<1,1>>>(&tmpNodes,&nFlagged);
-        copyByInfoKernel<<<gridSize,blockSize>>>(&tmpNodes,&children,&childrenInfo);
-        swapKernel<<<1,1>>>(&tmpNodes, &children);
+        //resizeToKernel<<<1,1>>>(&tmpNodes,&nFlagged);
+        //copyByInfoKernel<<<gridSize,blockSize>>>(&tmpNodes,&children,&childrenInfo);
+        //swapKernel<<<1,1>>>(&tmpNodes, &children);
     }
 }
 
@@ -64,19 +66,62 @@ void sortByGKernel(
     if (children.size() > expEng->width_)
     {
         // Init
-        tmpNodes.resizeTo(children.size());
+        //tmpNodes.resizeTo(children.size());
         tmpInfo.resizeTo(childrenInfo.size());
 
         // Processing
         i32 const blockSize = 128;
-        i32 const gridSize = ceil<i32>(children.size(), blockSize);
+        i32 const gridSize = ceil<i32>(childrenInfo.size(), blockSize);
 
         setScoreMergeKernel<Model><<<gridSize,blockSize>>>(model, &children, &childrenInfo);
         sortKernel<NodeInfo::ScoreDecomposer><<<1,1>>>(&childrenInfo,&tmpInfo,&cubAuxMem);
         swapKernel<<<1,1>>>(&childrenInfo, &tmpInfo);
-        resizeToKernel<<<1,1>>>(&childrenInfo,children.sizePtr());
-        copyByInfoKernel<<<gridSize,blockSize>>>(&tmpNodes,&children, &childrenInfo);
-        swapKernel<<<1,1>>>(&tmpNodes, &children);
+        //resizeToKernel<<<1,1>>>(&childrenInfo,children.sizePtr());
+        //copyByInfoKernel<<<gridSize,blockSize>>>(&tmpNodes,&children, &childrenInfo);
+        //swapKernel<<<1,1>>>(&tmpNodes, &children);
+    }
+}
+
+template<typename Model, typename Node>
+GFL_GLOBAL
+void saveCutsetNewKernel(ExpansionEngineGpu<Model,Node> * const expEng )
+{
+    using namespace gfl;
+    auto & expData = expEng->expData;
+    auto const & parents = expData.parents;
+    auto & children = expData.children;
+    auto & tmpNodes = expData.tmpNodes;
+    auto & parentsInfo = expData.parentInfo;
+    auto & childrenInfo = expData.childrenInfo;
+    auto & tmpInfo = expData.tmpInfo;
+    auto & nFlagged = expEng->nFlagged;
+    auto & cutset = expEng->cutData;
+    auto & cubAuxMem = expEng->cubAuxMem;
+    auto & suffixChildrenInfo = expData.tmpInfoView;
+    auto & width = expEng->width_;
+    constexpr i64 NotSaveFlag = 1;
+    constexpr i64 SaveFlag = 0;
+
+    if (childrenInfo.size() > width)
+    {
+        // Find children to save
+        nFlagged = 0;
+        i32 const prefixSize = width - 1;
+        suffixChildrenInfo = childrenInfo.slice(prefixSize,childrenInfo.size());
+        i32 const blockSize = 128;
+        i32 const gridSize = ceil<i32>(suffixChildrenInfo.size(),blockSize);
+        setFlagKernel<<<gridSize,blockSize>>>(NotSaveFlag,&suffixChildrenInfo);
+        flagChildrenToSaveKernel<<<gridSize,blockSize>>>(SaveFlag,&suffixChildrenInfo,&children);
+        resizeToKernel<<<1,1>>>(&tmpInfo,suffixChildrenInfo.sizePtr());
+        sortKernel<NodeInfo::FlagDecomposer><<<1,1>>>(
+            &suffixChildrenInfo,
+            scast<ArrayView<NodeInfo>*>(&tmpInfo),
+            &cubAuxMem);
+        countFlaggedKernel<<<gridSize,blockSize>>>(SaveFlag, &nFlagged, &tmpInfo);
+        resizeToKernel<<<1,1>>>(&tmpInfo, &nFlagged);
+        resizeByKernel<<<1,1>>>(&cutset, &nFlagged);
+        //assertCopyPrecondKernel<<<1,1>>>(&children, &tmpInfo, &cutset);
+        copyByInfoKernel<<<gridSize,blockSize>>>(cutset.lastSegmentPtr(), &children, &tmpInfo, false);
     }
 }
 
@@ -159,6 +204,46 @@ void saveCutsetLELKernel(ExpansionEngineGpu<Model,Node> * const expEng )
     }
 }
 
+
+template<typename Model, typename Node>
+GFL_GLOBAL
+void mergeChildrenNewKernel(ExpansionEngine<Model,Node> * const expEng)
+{
+    using namespace gfl;
+
+    auto & expData           = expEng->expData;
+    auto & children          = expData.children;
+    auto & childrenInfo      = expData.childrenInfo;
+    auto & tmpInfo           = expData.tmpInfo;
+    auto & childrenInfoSuffix           = expData.tmpInfoView;
+    auto & width             = expEng->width_;
+
+    if (childrenInfo.size() > width)
+    {
+        // suffix of childrenInfo — nodes to be merged
+        i32 const prefixSize = width - 1;
+        childrenInfoSuffix = childrenInfo.slice(prefixSize,childrenInfo.size());
+
+        i32 const nNodes = childrenInfoSuffix.size();
+        tmpInfo.resizeTo(nNodes);
+        i32 const blockSize       = 32;
+        i32 const nodesPerThread  = 32;
+        i32 const reductionFactor = blockSize * nodesPerThread;
+        i32 const nBlocks1        = ceil<i32>(nNodes,   reductionFactor);
+        i32 const nBlocks2        = ceil<i32>(nBlocks1, reductionFactor);
+
+        // pass1: childrenInfoSuffix → tmpInfo
+        reduceByInfoKernel<Model,Node><<<nBlocks1,blockSize>>>(&children, &childrenInfoSuffix, &tmpInfo, nNodes);
+        // pass2: tmpInfo → childrenInfoSuffix
+        reduceByInfoKernel<Model,Node><<<nBlocks2,blockSize>>>(&children, &tmpInfo, &childrenInfoSuffix, nBlocks1);
+        // pass3: final sequential reduction, result at children[childrenInfoSuffix[0].idx]
+        reduceByInfoSeqKernel<Model,Node><<<1,1>>>(&children, &childrenInfoSuffix, nBlocks2);
+
+        // children array untouched in size — just shrink childrenInfo
+        // the merged node already sits in children[childrenInfo[prefixSize].idx]
+        resizeToKernel<<<1,1>>>(&childrenInfo, width);
+    }
+}
 
 template<typename Model, typename Node>
 GFL_GLOBAL
@@ -246,3 +331,10 @@ void expandRelaxedRecKernel(
 }
 
 
+
+template<typename Model, typename Node>
+GFL_GLOBAL
+void swapParentsAndChildrenKernel(ExpansionEngineGpu<Model,Node> * const expEng)
+{
+    expEng->expData.swapParentsAndChildren();
+}

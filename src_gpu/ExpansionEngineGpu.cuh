@@ -52,7 +52,9 @@ public:
     }
 
     void swapParentsAndChildren()
-    { expData.swapParentsAndChildren(); }
+    {
+        expData.swapParentsAndChildren();
+    }
 
     void expandParents(
         Model const * const model,
@@ -353,18 +355,21 @@ public:
         using namespace gfl;
         auto & children = expData.children;
         auto & parents = expData.parents;
+        auto & childrenInfo = expData.childrenInfo;
+        auto & parentsInfo = expData.parentInfo;
 
         i32 blockSize = 32;
-        i32 gridSize = ceil<i32>(parents.size() *brachFactor,blockSize) ;
-        expandParentsKernel<<<gridSize,blockSize>>>(model, &expData, primal, brachFactor);
+        i32 gridSize = ceil<i32>(parentsInfo.size()*brachFactor,blockSize) ;
+        assert(parentsInfo.size() <= width_);
+        expandParentsNewKernel<<<gridSize,blockSize>>>(model, &expData, primal, brachFactor);
         filterRepresentedKernel<<<1,1>>>(this);
         sortByGKernel<<<1,1>>>(model,this);
         //saveCutsetLELKernel<<<1,1>>>(this);
-        saveCutsetKernel<<<1,1>>>(this);
-        mergeChildrenKernel<<<1,1>>>(this);
-        calcOutLabelsKernel<<<gridSize,blockSize>>>(model,&children,primal,dual,DDRelaxed);
-        checkForTargetKernel<<<1,1>>>(model,&expData.bestTargetNode,&children);
-        CHECK_CUDA_ERROR(cudaDeviceSynchronize());
+        //saveCutsetKernel<<<1,1>>>(this);
+        saveCutsetNewKernel<<<1,1>>>(this);
+        mergeChildrenNewKernel<<<1,1>>>(this);
+        calcOutLabelsNewKernel<<<gridSize,blockSize>>>(model,&children, &childrenInfo, primal,dual,DDRelaxed);
+        checkForTargetNewKernel<<<1,1>>>(model,&expData.bestTargetNode,&children,&childrenInfo);
     }
 
 public:
@@ -391,6 +396,7 @@ public:
     {
         using namespace gfl;
         auto & children = expData.children;
+        auto & childrenInfo = expData.childrenInfo;
 
         expData.clear();
         cutData.clear();
@@ -398,9 +404,12 @@ public:
         //recLvl = 0;
         //expandRelaxedRecKernel<<<1,1>>>(model, this, primal, dual, brachFactor);
         //cudaDeviceSynchronize();
-        while (not children.empty() and not expData.bestTargetNode.has_value())
+        initRootInfoKernel<<<1,1>>>(&expData.childrenInfo);
+        cudaDeviceSynchronize();
+        while (not childrenInfo.empty() and not expData.bestTargetNode.has_value())
         {
-            swapParentsAndChildren();
+            swapParentsAndChildrenKernel<<<1,1>>>(this);
+            cudaDeviceSynchronize();
             //expandLayerRelaxedKernel<<<1,1>>>(model, this, primal, dual, brachFactor);
             expandLayerRelaxed(model, primal, dual, brachFactor);
             cudaDeviceSynchronize();

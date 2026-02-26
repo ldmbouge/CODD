@@ -15,7 +15,7 @@ class alignas(gfl::DefaultAlign) Node
     gfl::f64 g_{0};
     gfl::f64 h_{0};
     gfl::u8 approximated_;
-    gfl::u8 ancestorInCutset_{0};
+    gfl::u8 ancestorInCutset_{0}; // To remove once the new reduction works
     gfl::i16 pathLen{0};
     gfl::i16 prefixPath[Depth];
 

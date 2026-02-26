@@ -17,6 +17,7 @@ struct ExpansionData
     gfl::VectorView<NodeInfo> parentInfo{};
 
     gfl::ArrayView<Node> tmpView;
+    gfl::ArrayView<NodeInfo> tmpInfoView;
     gfl::VectorView<Node> tmpNodes{};
     gfl::VectorView<NodeInfo> tmpInfo{};
 
@@ -76,9 +77,9 @@ struct ExpansionData
         using namespace gfl;
 
         VectorView<Node>::swap(parents,children);
+        VectorView<NodeInfo>::swap(parentInfo,childrenInfo);
         children.clear();
         childrenInfo.clear();
-        parentInfo.clear();
         tmpNodes.clear();
         tmpInfo.clear();
     }
