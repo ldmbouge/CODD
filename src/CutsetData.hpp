@@ -19,10 +19,15 @@ public:
             gfl::ArenaAllocator & alloc) noexcept
     {
         using namespace gfl;
-        nodes_   = VectorView<Node>(width * branch_factor * depth, alloc);
-        //nodes_   = VectorView<Node>(branch_factor * depth * (2 * width - depth + 1) / 2, alloc);
 
+        //Exact Cutset
+        //nodes_   = VectorView<Node>(width * branch_factor * depth, alloc);
+        nodes_   = VectorView<Node>(branch_factor * depth * (2 * width - depth + 1) / 2, alloc);
         offsets_ = VectorView<i32>(depth, alloc);
+
+        // // Last Exact Layer
+        // nodes_   = VectorView<Node>(branch_factor * width, alloc);
+        // offsets_ = VectorView<i32>(1, alloc);
     }
 
     GFL_HOST_DEVICE

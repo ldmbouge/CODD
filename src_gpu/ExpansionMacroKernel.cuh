@@ -1,4 +1,5 @@
 #pragma once
+#include "ExpansionKernels.cuh"
 
 //Forward declaration
 template<typename Model, typename Node>
@@ -140,6 +141,27 @@ void saveCutsetKernel(ExpansionEngineGpu<Model,Node> * const expEng )
 
 template<typename Model, typename Node>
 GFL_GLOBAL
+void saveCutsetLELKernel(ExpansionEngineGpu<Model,Node> * const expEng )
+{
+    using namespace gfl;
+    auto & expData = expEng->expData;
+    auto const & parents = expData.parents;
+    auto & children = expData.children;
+    auto & cutset = expEng->cutData;
+    auto & cubAuxMem = expEng->cubAuxMem;
+
+    if (children.size() > expEng->width_ and cutset.nodes().empty())
+    {
+        i32 const blockSize = 128;
+        i32 const gridSize = ceil<i32>(expData.children.size(),blockSize);
+        cutset.addSegment(children.size());
+        copyAll<<<gridSize,blockSize>>>(cutset.lastSegmentPtr(), &children);
+    }
+}
+
+
+template<typename Model, typename Node>
+GFL_GLOBAL
 void mergeChildrenKernel(ExpansionEngine<Model,Node> * const expEng )
 {
     using namespace gfl;
@@ -196,7 +218,7 @@ void expandLayerRelaxedKernel(
     expandParentsKernel<<<gridSize,blockSize>>>(model, &expData, primal, brachFactor);
     filterRepresentedKernel<<<1,1>>>(expEng);
     sortByGKernel<<<1,1>>>(model,expEng);
-    saveCutsetKernel<<<1,1>>>(expEng);
+    saveCutsetLELKernel<<<1,1>>>(expEng);
     mergeChildrenKernel<<<1,1>>>(expEng);
     calcOutLabelsKernel<<<gridSize,blockSize>>>(model,&children,primal,dual,DDRelaxed);
     checkForTargetKernel<<<1,1>>>(model,&expData.bestTargetNode,&children);

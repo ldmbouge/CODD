@@ -359,6 +359,7 @@ public:
         expandParentsKernel<<<gridSize,blockSize>>>(model, &expData, primal, brachFactor);
         filterRepresentedKernel<<<1,1>>>(this);
         sortByGKernel<<<1,1>>>(model,this);
+        //saveCutsetLELKernel<<<1,1>>>(this);
         saveCutsetKernel<<<1,1>>>(this);
         mergeChildrenKernel<<<1,1>>>(this);
         calcOutLabelsKernel<<<gridSize,blockSize>>>(model,&children,primal,dual,DDRelaxed);

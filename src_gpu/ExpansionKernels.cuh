@@ -268,6 +268,23 @@ void copyByInfoKernel(
     }
 }
 
+template<typename T>
+GFL_GLOBAL
+void copyAll(
+    gfl::ArrayView<T> const * const dst,
+    gfl::ArrayView<T> const * const src)
+{
+    using namespace gfl;
+
+    assert(dst->size() >= src->size());
+
+    auto [begin,end] = calcSlice<i32>(blockIdx.x, gridDim.x, src->size());
+    for (i32 i = begin + threadIdx.x; i < end; i += blockDim.x)
+    {
+        dst->at(i)= src->at(i);
+    }
+}
+
 template<typename Node>
 GFL_GLOBAL
 void copyBestTargetsKernel(
@@ -326,22 +343,22 @@ void setScoreMergeKernel(
         NodeInfo & info = nodesInfo->at(i);
         Node const & node = nodes->at(info.idx);
         f32 const gScore = score<Model>(node.g());
-        f32 simScore = 0.0;
-        f64 bestGScore = score<Model>(worst<Model>());
-        for (auto const & n : *nodes)
-        {
-            simScore += model->ssf(n.state(), node.state());
-            bestGScore = min<f64>(bestGScore,score<Model>(n.g()));
-        }
-        assert(simScore >= 0.0);
-        assert(nodes->size() > 0);
-        f32 const simScoreNorm = simScore / nodes->size();
-        assert(simScoreNorm >= 0.0);
-        assert(simScoreNorm <= 1.0);
-        f32 const gScoreNorm = gScore / fabs(bestGScore);
-        f32 const score = gScoreNorm * (1.0 - 0.05*simScoreNorm);
+        // f32 simScore = 0.0;
+        // f64 bestGScore = score<Model>(worst<Model>());
+        // for (auto const & n : *nodes)
+        // {
+        //     simScore += model->ssf(n.state(), node.state());
+        //     bestGScore = min<f64>(bestGScore,score<Model>(n.g()));
+        // }
+        // assert(simScore >= 0.0);
+        // assert(nodes->size() > 0);
+        // f32 const simScoreNorm = simScore / nodes->size();
+        // assert(simScoreNorm >= 0.0);
+        // assert(simScoreNorm <= 1.0);
+        // f32 const gScoreNorm = gScore / fabs(bestGScore);
+        // f32 const score = gScoreNorm * (1.0 - 0.05*simScoreNorm);
         //printf("%.3f -> %.3f -> %.3f\n", gScore, gScoreNorm, score);
-        info.score = score;
+        info.score = gScore;
     }
 }
 

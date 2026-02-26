@@ -10,7 +10,7 @@ template<typename Model, typename Node>
 class Queue
 {
 protected:
-    static constexpr  gfl::i32 DefaultSegmentSize = 16 * 1024 * 1024; // 16MB
+    static constexpr  gfl::i32 DefaultSegmentSize = 1024 * 1024 * 1024; // 1GB
     static constexpr gfl::i32 InitialQueueSize = 256 * 1024;
 
     static constexpr auto betterF = [](Node const * const n1, Node const * const n2) noexcept {
