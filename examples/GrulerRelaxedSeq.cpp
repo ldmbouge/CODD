@@ -6,7 +6,7 @@ int main(int argc,char* argv[])
 {
     constexpr int BranchFactor = 128;
     constexpr int Marks = 128;
-    constexpr int Depth = 128;
+    constexpr int Depth = 15;
 
     using Model = GRuler<BranchFactor,Marks>;
     using Node = Node<Model::State,Model::OutLabels,Depth>;
