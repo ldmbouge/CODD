@@ -417,4 +417,42 @@ public:
         onlyBestTargets();
         finalizeCutset(model,primal,dual);
     }
+
+    void expandRelaxed(
+        Model const * model,
+        std::vector<Node> const & parents,
+        gfl::f64 const primal,
+        gfl::f64 const dual,
+        gfl::i32 const brachFactor)
+    {
+        using namespace gfl;
+        auto & children = expData.children;
+        auto & childrenInfo = expData.childrenInfo;
+
+        expData.clear();
+        cutData.clear();
+        expData.children.pushBackGpu(parents.data(), parents.size()); // Not on parents! It will swap internally.
+        i32 const blockSize = 128;
+        i32 const gridSizde = ceil<i32>(parents.size(),blockSize);
+        resizeToKernel<<<1,1>>>(&expData.childrenInfo, parents.size());
+        resetInfoIdxKernel<<<gridSizde,blockSize>>>(&expData.childrenInfo);
+        //recLvl = 0;
+        //expandRelaxedRecKernel<<<1,1>>>(model, this, primal, dual, brachFactor);
+        //cudaDeviceSynchronize();
+        //initRootInfoKernel<<<1,1>>>(&expData.childrenInfo);
+        cudaDeviceSynchronize();
+        while (not childrenInfo.empty() and not expData.bestTargetNode.has_value())
+        {
+            swapParentsAndChildrenKernel<<<1,1>>>(this);
+            cudaDeviceSynchronize();
+            //expandLayerRelaxedKernel<<<1,1>>>(model, this, primal, dual, brachFactor);
+            expandLayerRelaxed(model, primal, dual, brachFactor);
+            cudaDeviceSynchronize();
+        }
+        onlyBestTargets();
+        finalizeCutset(model,primal,dual);
+    }
 };
+
+
+

@@ -55,16 +55,26 @@ int runRelaxedGpu(int argc, char* argv[])
     // Log manager
     LogManager<Model,Node> log(bnb,queue,stats);
 
+    i32 const nodesToPull = 1;
+    std::vector<Node> parentsBuffer;
+    parentsBuffer.reserve(nodesToPull);
+
     // BnB search
     log.header();
     stats.start();
     while (not queue.empty() and stats.elapsed<sec>() <= cli.timeout() and not bnb.solved())
     {
-        Node const * node = queue.pullBest();
-        bnb.dual(node->f());
+        parentsBuffer.clear();
+        while (not queue.empty() and parentsBuffer.size() < nodesToPull)
+        {
+            Node const * node = queue.pullBest();
+            parentsBuffer.push_back(*node);
+        }
+        bnb.dual(parentsBuffer.front().f());
         assert(bnb.consistent());
 
-        eng->expandRelaxed(model, node, bnb.primal(), bnb.dual(), BranchFactor);
+        //eng->expandRelaxed(model, node, bnb.primal(), bnb.dual(), BranchFactor);
+        eng->expandRelaxed(model, parentsBuffer, bnb.primal(), bnb.dual(), BranchFactor);
 
         // Check relaxation and manage cutset
         auto [bestTarget, bestExactTarget] = eng->getTargets();

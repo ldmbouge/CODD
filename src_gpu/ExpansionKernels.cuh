@@ -638,7 +638,6 @@ void initRootInfoKernel(
     nodesInfo->at(0).idx = 0;
 }
 
-
 template<typename Model, typename Node>
 GFL_HOST_DEVICE
 void mergeNodeWith(Node & main, Node const & toMerge)

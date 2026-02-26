@@ -283,12 +283,13 @@ namespace gfl
     GFL_HOST_DEVICE
     bool BitSet<NumWords>::contains(i32 const val) const noexcept
     {
-        assert(0 <= val);
-        assert(val < capacity());
-
-        i32 const wordIdx = val / WordBitSize;
-        i32 const bitIdx  = val % WordBitSize;
-        return gfl::test(words_[wordIdx], bitIdx);
+        if (0 <= val and val < capacity())
+        {
+            i32 const wordIdx = val / WordBitSize;
+            i32 const bitIdx  = val % WordBitSize;
+            return gfl::test(words_[wordIdx], bitIdx);
+        }
+        else return false;
     }
 
     template <i32 NumWords>
