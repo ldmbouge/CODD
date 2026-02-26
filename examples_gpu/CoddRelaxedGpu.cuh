@@ -36,6 +36,9 @@ int runRelaxedGpu(int argc, char* argv[])
     // Expansion engine
     ExpansionEngine * const eng = new (engAlloc) ExpansionEngine();
     eng->initRelaxedExpansion(cli.width(), BranchFactor, Depth, buffAlloc);
+    printf("Working memory: ");
+    printMemSize(buffAlloc.usedSize());
+    printf("\n");
 
     // Bounds and solutions manager
     BnBManager<Model,Node> bnb;

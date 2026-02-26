@@ -14,6 +14,21 @@
 namespace gfl
 {
 
+    GFL_HOST_DEVICE inline
+    void printMemSize(i64 const size) noexcept
+    {
+        char const* const units[] = {" B", "KB", "MB", "GB"};
+        auto uIdx = 0;
+        auto dSize = static_cast<double>(size);
+        while (dSize >= 1024 and uIdx < 3)
+        {
+            dSize /= 1024.0;
+            uIdx += 1;
+        }
+        printf("%7.2f %s", dSize, units[uIdx]);
+    }
+
+
     inline
     i64 pageSize() noexcept
     {

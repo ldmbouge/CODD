@@ -20,6 +20,8 @@ public:
     {
         using namespace gfl;
         nodes_   = VectorView<Node>(width * branch_factor * depth, alloc);
+        //nodes_   = VectorView<Node>(branch_factor * depth * (2 * width - depth + 1) / 2, alloc);
+
         offsets_ = VectorView<i32>(depth, alloc);
     }
 
