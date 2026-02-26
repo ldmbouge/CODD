@@ -6,6 +6,7 @@
 #include "Node.hpp"
 #include "ExpansionEngine.hpp"
 #include "ExpansionKernels.cuh"
+#include "ExpansionMacroKernel.cuh"
 
 #ifdef __CUDACC__
 #include "Sort.cuh"
@@ -15,6 +16,7 @@
 template<typename Model,typename Node>
 class ExpansionEngineGpu : public ExpansionEngine<Model,Node>
 {
+public:
     using ExpansionEngine = ExpansionEngine<Model,Node>;
     using ExpansionEngine::expData;
     using ExpansionEngine::cutData;
@@ -22,7 +24,7 @@ class ExpansionEngineGpu : public ExpansionEngine<Model,Node>
     using ExpansionEngine::width_;
 
     gfl::ArrayView<gfl::u8> cubAuxMem;
-    bool targetFound;
+    gfl::i32 recLvl;
 
     static
     gfl::i64 cubAuxMemSize(gfl::i64 const nNodes)
@@ -63,9 +65,6 @@ class ExpansionEngineGpu : public ExpansionEngine<Model,Node>
         i32 blockSize = 32;
         i32 gridSize = ceil<i32>(parents.size() *brachFactor,blockSize) ;
         expandParentsKernel<<<gridSize,blockSize>>>(model, &expData, primal, brachFactor);
-        CHECK_LAST_CUDA_ERROR();
-
-        CHECK_CUDA_ERROR(cudaDeviceSynchronize());
     }
 
     void filterRepresentedChildren()
@@ -330,7 +329,7 @@ class ExpansionEngineGpu : public ExpansionEngine<Model,Node>
         auto & tmpInfo = expData.tmpInfo;
         auto & cutset = cutData;
 
-        if (targetFound and not cutset.nodes().empty())
+        if (expData.bestTargetNode.has_value() and not cutset.nodes().empty())
         {
             // printf("CUTSET SIZE = %d\n", cutset.nodes().size());
             // fflush(stdout);
@@ -355,27 +354,15 @@ class ExpansionEngineGpu : public ExpansionEngine<Model,Node>
         auto & children = expData.children;
         auto & parents = expData.parents;
 
-        //printKernel<<<1,1>>>(0,&parents);
-        expandParents(model,primal,brachFactor);
-        //printKernel<<<1,1>>>(1,&children);
-        cudaDeviceSynchronize();
-        if (children.size() > 0)
-        {
-            filterRepresentedChildren();
-            //printKernel<<<1,1>>>(2,&children);
-            if (children.size() > width_)
-            {
-                sortChildrenByG(model);
-                saveCutset();
-                mergeChildren();
-            }
-            //printKernel<<<1,1>>>(3,&children);
-
-            calcOutLabels(model,&children,primal,dual);
-
-            checkForTarget(model,&expData.bestTargetNode,&children);
-        }
-        //printKernel<<<1,1>>>(4,&children);
+        i32 blockSize = 32;
+        i32 gridSize = ceil<i32>(parents.size() *brachFactor,blockSize) ;
+        expandParentsKernel<<<gridSize,blockSize>>>(model, &expData, primal, brachFactor);
+        filterRepresentedKernel<<<1,1>>>(this);
+        sortByGKernel<<<1,1>>>(model,this);
+        saveCutsetKernel<<<1,1>>>(this);
+        mergeChildrenKernel<<<1,1>>>(this);
+        calcOutLabelsKernel<<<gridSize,blockSize>>>(model,&children,primal,dual,DDRelaxed);
+        checkForTargetKernel<<<1,1>>>(model,&expData.bestTargetNode,&children);
         CHECK_CUDA_ERROR(cudaDeviceSynchronize());
     }
 
@@ -406,12 +393,16 @@ public:
 
         expData.clear();
         cutData.clear();
-        expData.parents.pushBackGpu(node);
-        expandLayerRelaxed(model, primal, dual, brachFactor);
+        expData.children.pushBackGpu(node); // Not on parents! It will swap internally.
+        //recLvl = 0;
+        //expandRelaxedRecKernel<<<1,1>>>(model, this, primal, dual, brachFactor);
+        //cudaDeviceSynchronize();
         while (not children.empty() and not expData.bestTargetNode.has_value())
         {
             swapParentsAndChildren();
-            expandLayerRelaxed(model,primal,dual, brachFactor);
+            //expandLayerRelaxedKernel<<<1,1>>>(model, this, primal, dual, brachFactor);
+            expandLayerRelaxed(model, primal, dual, brachFactor);
+            cudaDeviceSynchronize();
         }
         onlyBestTargets();
         finalizeCutset(model,primal,dual);

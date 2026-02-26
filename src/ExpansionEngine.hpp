@@ -14,15 +14,14 @@
 template<typename Model,typename Node>
 class ExpansionEngine
 {
-protected:
+public:
     using ExpansionData = ExpansionData<Node>;
     using CutsetData = CutsetData<Node>;
 
-    gfl::i32 nFlagged;
-    gfl::i32 width_;
-
     ExpansionData expData;
     CutsetData cutData;
+    gfl::i32 nFlagged;
+    gfl::i32 width_;
 
 public:
 

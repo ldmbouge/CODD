@@ -1,18 +1,21 @@
 #pragma once
 
-#include "ExpansionEngine.hpp"
-#include "ExpansionKernels.cuh"
+//Forward declaration
+template<typename Model, typename Node>
+class ExpansionEngineGpu;
 
 template<typename Model, typename Node>
-void filterRepresentedKernel(ExpansionEngine<Model,Node> * const expData)
+GFL_GLOBAL
+void filterRepresentedKernel(ExpansionEngineGpu<Model,Node> * const expEng)
 {
     using namespace gfl;
+    auto & expData = expEng->expData;
     auto & children = expData.children;
     auto & tmpNodes = expData.tmpNodes;
     auto & childrenInfo = expData.childrenInfo;
     auto & tmpInfo = expData.tmpInfo;
-    auto & nFlagged = expData->nFlagged;
-    auto & cubAuxMem = expData->cubAuxMem;
+    auto & nFlagged = expEng->nFlagged;
+    auto & cubAuxMem = expEng->cubAuxMem;
     constexpr i64 RepresentedFlag = 1;
     constexpr i64 RepresentativeFlag = 0;
 
@@ -44,18 +47,20 @@ void filterRepresentedKernel(ExpansionEngine<Model,Node> * const expData)
 }
 
 template<typename Model, typename Node>
+GFL_GLOBAL
 void sortByGKernel(
     Model const * const model,
-    ExpansionEngine<Model,Node> * const expData)
+    ExpansionEngineGpu<Model,Node> * const expEng)
 {
     using namespace gfl;
-    auto & children = expData->children;
-    auto & tmpNodes = expData->tmpNodes;
-    auto & childrenInfo = expData->childrenInfo;
-    auto & tmpInfo = expData->tmpInfo;
-    auto & cubAuxMem = expData->cubAuxMem;
+    auto & expData = expEng->expData;
+    auto & children = expData.children;
+    auto & tmpNodes = expData.tmpNodes;
+    auto & childrenInfo = expData.childrenInfo;
+    auto & tmpInfo = expData.tmpInfo;
+    auto & cubAuxMem = expEng->cubAuxMem;
 
-    if (children.size() > expData->width_)
+    if (children.size() > expEng->width_)
     {
         // Init
         tmpNodes.resizeTo(children.size());
@@ -76,22 +81,23 @@ void sortByGKernel(
 
 template<typename Model, typename Node>
 GFL_GLOBAL
-void saveCutsetKernel(ExpansionEngine<Model,Node> * const expData )
+void saveCutsetKernel(ExpansionEngineGpu<Model,Node> * const expEng )
 {
     using namespace gfl;
-    auto const & parents = expData->parents;
-    auto & children = expData->children;
-    auto & tmpNodes = expData->tmpNodes;
-    auto & parentsInfo = expData->parentInfo;
-    auto & childrenInfo = expData->childrenInfo;
-    auto & tmpInfo = expData->tmpInfo;
-    auto & nFlagged = expData->nFlagged;
-    auto & cutset = cutData;
-    auto & cubAuxMem = expData->cubAuxMem;
+    auto & expData = expEng->expData;
+    auto const & parents = expData.parents;
+    auto & children = expData.children;
+    auto & tmpNodes = expData.tmpNodes;
+    auto & parentsInfo = expData.parentInfo;
+    auto & childrenInfo = expData.childrenInfo;
+    auto & tmpInfo = expData.tmpInfo;
+    auto & nFlagged = expEng->nFlagged;
+    auto & cutset = expEng->cutData;
+    auto & cubAuxMem = expEng->cubAuxMem;
     constexpr i64 ParentToNotSaveFlag = 1;
     constexpr i64 ParentToSaveFlag = 0;
 
-    if (children.size() > expData->width_)
+    if (children.size() > expEng->width_)
     {
 
         // Init
@@ -103,7 +109,7 @@ void saveCutsetKernel(ExpansionEngine<Model,Node> * const expData )
         i32 const gridSize = ceil<i32>(expData.children.size(),blockSize);
         resetInfoKernel<<<gridSize,blockSize>>>(&parentsInfo);
         setFlagKernel<<<gridSize,blockSize>>>(ParentToNotSaveFlag,&parentsInfo);
-        flagParentsToSaveKernel<<<gridSize,blockSize>>>(ParentToSaveFlag,&parentsInfo,expData->width_,&children,&childrenInfo);
+        flagParentsToSaveKernel<<<gridSize,blockSize>>>(ParentToSaveFlag,&parentsInfo,expEng->width_,&children,&childrenInfo);
 
         // Update children ancestor flag
         updateAncestorKernel<<<gridSize,blockSize>>>(ParentToSaveFlag,&parentsInfo,&children,&childrenInfo);
@@ -134,18 +140,19 @@ void saveCutsetKernel(ExpansionEngine<Model,Node> * const expData )
 
 template<typename Model, typename Node>
 GFL_GLOBAL
-void mergeChildrenKernel(ExpansionEngine<Model,Node> * const expData )
+void mergeChildrenKernel(ExpansionEngine<Model,Node> * const expEng )
 {
     using namespace gfl;
 
+    auto & expData = expEng->expData;
     auto const & parents = expData.parents;
     auto & children = expData.children;
     auto & tmpNodes = expData.tmpNodes;
     auto & childrenInfo = expData.childrenInfo;
     auto & childrenPrefix = expData.tmpView;
-    auto & width = expData->width_;
+    auto & width = expEng->width_;
 
-    if (children.size() > expData->width_)
+    if (children.size() > width)
     {
         // Init
         tmpNodes.resizeTo(children.size());
@@ -172,50 +179,48 @@ void mergeChildrenKernel(ExpansionEngine<Model,Node> * const expData )
 
 template<typename Model, typename Node>
 GFL_GLOBAL
-void checkForTargetKernel(
-    Model const * const model,
-     ExpansionEngine<Model,Node> * const expData)
-{
-    assert(nodes != nullptr);
-    assert(not nodes->empty());
-    assert(gridDim.x == 1);
-    assert(blockDim.x == 1);
-
-    using namespace gfl;
-
-    auto & bestTarget = expData->bestTargetNode;
-    auto & bestExactTargetNode = expData->bestExactTargetNode;
-
-    bestTarget.reset();
-    bestExactTargetNode.reset();
-    if (nodes->at(0).isTarget(model);
-}
-
-
-
-template<typename Model, typename Node>
-GFL_GLOBAL
 void expandLayerRelaxedKernel(
         Model const * model,
-        ExpansionEngine<Model,Node> * const expData,
+        ExpansionEngineGpu<Model,Node> * const expEng,
         gfl::f64 const primal,
         gfl::f64 const dual,
         gfl::i32 const brachFactor)
 {
     using namespace gfl;
-
-    auto & children = expData->children;
-    auto & parents = expData->parents;
+    auto & expData = expEng->expData;
+    auto & children = expData.children;
+    auto & parents = expData.parents;
 
     i32 blockSize = 32;
     i32 gridSize = ceil<i32>(parents.size() *brachFactor,blockSize) ;
-    expandParentsKernel<<<gridSize,blockSize>>>(model, expData, primal, brachFactor);
-    filterRepresentedKernel<<<1,1>>>(expData);
-    sortByGKernel<<<1,1>>>(expData);
-    saveCutsetKernel<<<1,1>>>(expData);
-    mergeChildrenKernel<<<1,1>>>(expData);
+    expandParentsKernel<<<gridSize,blockSize>>>(model, &expData, primal, brachFactor);
+    filterRepresentedKernel<<<1,1>>>(expEng);
+    sortByGKernel<<<1,1>>>(model,expEng);
+    saveCutsetKernel<<<1,1>>>(expEng);
+    mergeChildrenKernel<<<1,1>>>(expEng);
     calcOutLabelsKernel<<<gridSize,blockSize>>>(model,&children,primal,dual,DDRelaxed);
-    checkForTargetKernel(model,&children);
+    checkForTargetKernel<<<1,1>>>(model,&expData.bestTargetNode,&children);
+}
+
+template<typename Model, typename Node>
+GFL_GLOBAL
+void expandRelaxedRecKernel(
+       Model const * model,
+       ExpansionEngineGpu<Model,Node> * const expEng,
+       gfl::f64 const primal,
+       gfl::f64 const dual,
+       gfl::i32 const brachFactor)
+{
+    using namespace gfl;
+    auto & expData = expEng->expData;
+    //printf("Entering LVL %d | C = %d | BT = %d\n", expEng->recLvl++, expEng->expData.children.size(), expData.bestTargetNode.has_value());
+    if (not expData.children.empty() and not expData.bestTargetNode.has_value())
+    {
+        expData.swapParentsAndChildren();
+        //printf("In LVL %d | P = %d\n", expEng->recLvl++, expEng->expData.parents.size());
+        expandLayerRelaxedKernel<<<1,1>>>(model, expEng, primal, dual, brachFactor);
+        expandRelaxedRecKernel<<<1,1,0,cudaStreamTailLaunch>>>(model, expEng, primal, dual, brachFactor);
+    }
 }
 
 

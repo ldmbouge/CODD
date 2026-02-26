@@ -461,6 +461,7 @@ void resizeByKernel(
 { cutset->addSegment(*count);}
 
 template<typename Node>
+GFL_HOST_DEVICE
 void initChildrenPrefix(
     gfl::i32 const width,
     gfl::ArrayView<Node> const * const children,
@@ -610,8 +611,8 @@ void checkForTargetKernel(
 template<typename Model, typename Node>
 GFL_GLOBAL
 void checkForTargetKernel(
-    gfl::optional<Node> * const target,
     Model const * const model,
+    gfl::optional<Node> * const target,
     gfl::VectorView<Node> const * nodes)
 {
     assert(nodes != nullptr);
@@ -621,12 +622,8 @@ void checkForTargetKernel(
 
     using namespace gfl;
 
-    Node & n =  nodes->at(0);
-
-    if (n.isTarget(model))
-    {
-        *target = n;
-    }
+    Node & n = nodes->at(0);
+    if (n.isTarget(model)) *target = n;
 }
 
 

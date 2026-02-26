@@ -70,6 +70,7 @@ struct ExpansionData
         parents.pushBack(node);
     }
 
+    GFL_HOST_DEVICE
     void swapParentsAndChildren()
     {
         using namespace gfl;
