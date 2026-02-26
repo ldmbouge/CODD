@@ -25,7 +25,8 @@ void expandParentsKernel(
     __shared__ i32 nChildren_s;
     __shared__ Node children_s[32];
     __shared__ NodeInfo childrenInfo_s[32];
-    __shared__ i32 offset_g;
+    __shared__ i32 nodeOffset_g;
+    __shared__ i32 infoOffset_g;
 
     i32 const tIdx = blockIdx.x * blockDim.x + threadIdx.x;
     i32 const pIdx = tIdx / branchFactor;
@@ -34,9 +35,10 @@ void expandParentsKernel(
     if (threadIdx.x == 0)
     {
         nChildren_s = 0;
-        offset_g = -1;
+        nodeOffset_g = -1;
+        infoOffset_g = -1;
     }
-    __syncwarp();
+    __syncthreads();
 
 
     if (pIdx < parents.size())
@@ -68,24 +70,25 @@ void expandParentsKernel(
             }
         }
     }
-    __syncwarp();
+    __syncthreads();
 
     if (nChildren_s > 0)
     {
 
         if (threadIdx.x == 0)
         {
-            childrenInfo.resizeByAtomic(nChildren_s);
-            offset_g = children.resizeByAtomic(nChildren_s);
+            infoOffset_g = childrenInfo.resizeByAtomic(nChildren_s);
+            nodeOffset_g = children.resizeByAtomic(nChildren_s);
         }
-        __syncwarp();
+        __syncthreads();
         if (threadIdx.x < nChildren_s)
         {
             //printf("Adding child\n");
-            i32 const cIdx_g = offset_g + threadIdx.x;
-            childrenInfo_s[threadIdx.x].idx = cIdx_g;
-            childrenInfo[cIdx_g] = childrenInfo_s[threadIdx.x];
-            children[cIdx_g] = children_s[threadIdx.x];
+            i32 const nIdx_g = nodeOffset_g + threadIdx.x;
+            i32 const iIdx_g = infoOffset_g + threadIdx.x;
+            childrenInfo_s[threadIdx.x].idx = nIdx_g;
+            childrenInfo[iIdx_g] = childrenInfo_s[threadIdx.x];
+            children[nIdx_g] = children_s[threadIdx.x];
         }
     }
 
