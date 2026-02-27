@@ -12,23 +12,21 @@
 template<typename Model,typename Node>
 class ExpansionEngineSeq : public ExpansionEngine<Model,Node>
 {
-private:
     using ExpansionEngine<Model,Node>::expData;
-    using ExpansionEngine<Model,Node>::cutData;
     using ExpansionEngine<Model,Node>::width_;
-
 public:
+    using ExpansionEngine<Model,Node>::cutData;
 
     void fullyExpandRelaxed(
             Model const * model,
-            Node const * node,
+            std::vector<Node> const & nodes,
             gfl::f64 const primal,
             gfl::f64 const dual)
    {
       using namespace gfl;
       expData.clear();
       cutData.clear();
-      expData.parents.pushBack(node);
+      expData.parents.pushBack(nodes);
       expandLayerRelaxed(model, primal, dual);
       while (not expData.children.empty() and not expData.children.front().isTarget(model))
          {
@@ -82,7 +80,7 @@ private:
        //       }
        //    }
        // }
-       calcOutLabels<Model,Node>(model,expData.children,pBound,dBound,DDRelaxed);
+       calcOutLabels<Model,Node>(model,&expData.children,pBound,dBound,DDRelaxed);
         // printf("AFTER MRG:\n");
         // for(auto const & c : expData.children) {Node::print(c);printf("\n");}
         // printf("\n");

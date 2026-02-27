@@ -113,6 +113,13 @@ namespace gfl
         }
 
         GFL_HOST_DEVICE
+        void pushBack(std::vector<T> const & elements) noexcept
+        {
+            i64 const oldSize = resizeBy(elements.size());
+            std::memcpy(&at(oldSize), elements.data(), sizeof(T) * elements.size());
+        }
+
+        GFL_HOST_DEVICE
         void pushBack(T const * value) noexcept
         {
             i64 const oldSize = resizeBy(1);

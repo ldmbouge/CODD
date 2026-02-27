@@ -53,40 +53,45 @@ int runRelaxedSeq(int argc, char* argv[])
     // Log manager
     LogManager<Model,Node> log(bnb,queue,stats);
 
+    i32 const nodesToPull = 1;
+    std::vector<Node> parentsBuffer;
+    parentsBuffer.reserve(nodesToPull);
+
     // BnB search
     log.header();
     stats.start();
-    int cnt = 0;
     while (not queue.empty() and stats.elapsed<sec>() <= cli.timeout() and not bnb.solved())
     {
-       //std::cout << "ITER CNT:" << cnt++ << " ----------------------------------------\n";
-        Node const * const node = queue.pullBest();
-        //std::cout << "NODE:";Node::print(node);std::cout << "\n";
-        if (isWorseEq<Model>(node->f(), bnb.primal()))
-            continue;
-        bnb.dual(node->f());
-        assert(bnb.consistent());
-
-        eng->fullyExpandRelaxed(model, node, bnb.primal(), bnb.dual());
-
-        // Check relaxation and manage cutset
-        auto [bestTarget, bestExactTarget] = eng->getTargets();
-        if (bestExactTarget.has_value())
+        parentsBuffer.clear();
+        while (not queue.empty() and parentsBuffer.size() < nodesToPull)
         {
-            bnb.primal(bestExactTarget.value());
+            Node const * node = queue.pullBest();
+            parentsBuffer.push_back(*node);
         }
-        if (bestTarget.has_value())
+        if (not parentsBuffer.empty())
         {
-            if (not bnb.pruneAncestor(bestTarget.value()))
+            bnb.dual(parentsBuffer.front().f());
+
+            eng->fullyExpandRelaxed(model, parentsBuffer, bnb.primal(), bnb.dual());
+
+            // Check relaxation and manage cutset
+            auto [bestTarget, bestExactTarget] = eng->getTargets();
+            if (bestExactTarget.has_value())
             {
-                //std::cout << "who is a bad boy?"; Node::print(trg); std::cout << "\n";
-                bnb.dual(bestTarget.value());
-                assert(bnb.consistent());
-                auto const & cutset = eng->cutset();
-                queue.push(cutset);
+                bnb.primal(bestExactTarget.value());
             }
+            if (bestTarget.has_value())
+            {
+                if (not bnb.pruneAncestor(bestTarget.value()))
+                {
+                    //std::cout << "who is a bad boy?"; Node::print(trg); std::cout << "\n";
+                    bnb.dual(bestTarget.value());
+                    auto const & cutset = eng->cutData.nodes();
+                    queue.push(*cutset);
+                }
+            }
+            log.progress();
         }
-        log.progress();
     }
     stats.end();
     log.summary();

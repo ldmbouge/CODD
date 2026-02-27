@@ -215,7 +215,7 @@ void countFlagged(
 }
 
 template<typename Node>
-void copyByInfo(gfl::ArrayView<Node> & dst, gfl::ArrayView<Node> const & src, gfl::ArrayView<NodeInfo> const & nodesInfo)
+void copyByInfo(gfl::ArrayView<Node> const & dst, gfl::ArrayView<Node> const & src, gfl::ArrayView<NodeInfo> const & nodesInfo)
 {
     using namespace gfl;
 
@@ -372,15 +372,17 @@ void saveCutset(
         ArrayView<NodeInfo> parentsToCopyInfo = parentInfo.slice(-nParentsToCopy);
         setRevScoreF<Model,Node>(parents, parentsToCopyInfo);
         sort(parentsToCopyInfo, NodeInfo::cmpByScore);
-        cutData->addSegment(nParentsToCopy);
-        ArrayView<Node> segment = *cutData->lastSegmentPtr();
-        copyByInfo(segment, parents, parentsToCopyInfo);
+        cutData->markAndResizeBy(nParentsToCopy);
+        ArrayView<Node> const * segment = cutData->mark();
+        copyByInfo(*segment, parents, parentsToCopyInfo);
+
+        printf("CUTSET:\n");
+        for(auto const & c : *segment) {Node::print(c);printf("\n");}
+        printf("\n");
     }
 
     DEBUG_CUT (
-        printf("CUTSET:\n");
-        for(auto const & c : cutData->nodes()) {Node::print(c);printf("\n");}
-        printf("\n");
+
     )
 
 }
@@ -453,16 +455,16 @@ void mergeChildren(
 template<typename Model, typename Node>
 void calcOutLabels(
         Model const * const model,
-        gfl::ArrayView<Node> const & nodes,
+        gfl::ArrayView<Node> const * nodes,
         gfl::f64 pBound,
         gfl::f64 dBound,
         DDContext const ddCtx)
 {
     using namespace gfl;
 
-    for (i64 i = 0; i < nodes.size(); i += 1)
+    for (i64 i = 0; i < nodes->size(); i += 1)
     {
-        Node & node = nodes[i];
+        Node & node = nodes->at(i);
         node.labels(model->lgf(node.state(), pBound, dBound, ddCtx));
     }
 }
@@ -527,7 +529,7 @@ void finializeCutset(
     {
         calcOutLabels(model, cutData->nodes(), pBound, dBound, ddCtx);
         f64 const f = expData->getTarget().g();
-        setH<Model,Node>(cutData->nodes(), f);
+        setH<Model,Node>(*cutData->nodes(), f);
     }
 
 }
