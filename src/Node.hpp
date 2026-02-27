@@ -131,10 +131,15 @@ struct NodeInfo
 {
     union
     {
-        gfl::u64 hash;
+        union
+        {
+            gfl::u8 flag;
+            gfl::u64 hash;
+        };
         gfl::f64 score;
+        gfl::u64 payload;
     };
-    gfl::i32 flag{0};
+
     gfl::i32 idx{0};
     gfl::i32 pIdx{0};
 
@@ -165,7 +170,7 @@ struct NodeInfo
     struct FlagDecomposer
     {
         GFL_HOST_DEVICE
-        gfl::tuple<gfl::i32&> operator()(NodeInfo & nodeInfo) const { return {nodeInfo.flag};}
+        gfl::tuple<gfl::u8&> operator()(NodeInfo & nodeInfo) const { return {nodeInfo.flag};}
     };
 #endif
 
@@ -185,7 +190,7 @@ struct NodeInfo
     struct ScoreFlagDecomposer
     {
         GFL_HOST_DEVICE
-        gfl::tuple<gfl::f64&,gfl::i32&> operator()(NodeInfo & nodeInfo) const { return {nodeInfo.score, nodeInfo.flag};}
+        gfl::tuple<gfl::f64&,gfl::u8&> operator()(NodeInfo & nodeInfo) const { return {nodeInfo.score, nodeInfo.flag};}
     };
 #endif
 

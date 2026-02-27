@@ -174,37 +174,31 @@ void sortKernel(
     Buffer * const inBuffer,
     Buffer * const outBuffer,
     gfl::ArrayView<gfl::u8> const * const cubAuxMem,
-    bool reverse = false)
+    bool reverse = false,
+    gfl::i32 const beginBit = 0,
+    gfl::i32 const endBit = sizeof(NodeInfo) * 8)
 {
     using namespace gfl;
 
     assert(cubAuxMem != nullptr);
     assert(inBuffer != nullptr);
     assert(outBuffer != nullptr);
-    assert(inBuffer->size() == outBuffer->size());
+    assert(inBuffer->size() <= outBuffer->size());
 
-    size_t auxDataMemSize = scast<size_t>(cubAuxMem->dataMemSize());
-    cudaStream_t gpuSortQueue;
-    cudaStreamCreateWithFlags(&gpuSortQueue, cudaStreamNonBlocking);
+    auto auxDataMemSize = scast<size_t>(cubAuxMem->dataMemSize());
+    auto nItems = scast<int>(inBuffer->size());
     if (reverse)
         cub::DeviceRadixSort::SortKeysDescending(
-            cubAuxMem->data(),
-            auxDataMemSize,
-            inBuffer->data(),
-            outBuffer->data(),
-            inBuffer->size(),
-            KeyDecomposer{},
-            gpuSortQueue);
+            cubAuxMem->data(), auxDataMemSize,
+            inBuffer->data(), outBuffer->data(),
+            nItems,
+            KeyDecomposer{});
     else
         cub::DeviceRadixSort::SortKeys(
-            cubAuxMem->data(),
-            auxDataMemSize,
-            inBuffer->data(),
-            outBuffer->data(),
-            inBuffer->size(),
-            KeyDecomposer{},
-            gpuSortQueue);
-    cudaStreamDestroy(gpuSortQueue);
+            cubAuxMem->data(), auxDataMemSize,
+            inBuffer->data(), outBuffer->data(),
+            nItems,
+            KeyDecomposer{});
 }
 
 template<typename T>
