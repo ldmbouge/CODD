@@ -53,9 +53,8 @@ int runRelaxedGpu(int argc, char* argv[])
     // Log manager
     LogManager<Model,Node> log(bnb,queue,stats);
 
-    i32 const nodesToPull = 1;
     std::vector<Node> parentsBuffer;
-    parentsBuffer.reserve(nodesToPull);
+    parentsBuffer.reserve(cli.pop());
 
     // BnB search
     log.header();
@@ -63,10 +62,27 @@ int runRelaxedGpu(int argc, char* argv[])
     while (not queue.empty() and stats.elapsed<sec>() <= cli.timeout() and not bnb.solved())
     {
         parentsBuffer.clear();
-        while (not queue.empty() and parentsBuffer.size() < nodesToPull)
+        while (not queue.empty() and parentsBuffer.size() < cli.pop())
         {
-            Node const * node = queue.pullBest();
-            parentsBuffer.push_back(*node);
+            if (parentsBuffer.empty())
+            {
+                Node const * node = queue.pullBest();
+                parentsBuffer.push_back(*node);
+            }
+            else
+            {
+                Node const * node = queue.peekBest();
+                if (parentsBuffer.back().depth() == node->depth())
+                {
+                    node = queue.pullBest();
+                    parentsBuffer.push_back(*node);
+                }
+                else
+                {
+                    break;
+                }
+            }
+            printf("Popoed: %d\n", parentsBuffer.size());
         }
         if (not parentsBuffer.empty())
         {

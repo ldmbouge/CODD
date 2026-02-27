@@ -14,7 +14,12 @@ protected:
     static constexpr gfl::i32 InitialQueueSize = 256 * 1024;
 
     static constexpr auto betterF = [](Node const * const n1, Node const * const n2) noexcept {
-        return isBetter<Model>(n1->f(), n2->f());
+        using namespace gfl;
+        f64 const f1 =  n1->f();
+        f64 const f2 =  n2->f();
+        i32 const d1 = n1->depth();
+        i32 const d2 = n1->depth();
+        return isBetter<Model>(f1,f2) or (f1 == f2 and d1 > d2);
     };
 
     Pool memPool_;
@@ -84,6 +89,16 @@ public:
 
         Node const * const bestNode = heap_.extractMax();
         pulled_++;
+        return bestNode;
+    }
+
+    Node const * peekBest() noexcept
+    {
+        using namespace gfl;
+
+        assert(not empty());
+
+        Node const * const bestNode = heap_.peekMax();
         return bestNode;
     }
 };

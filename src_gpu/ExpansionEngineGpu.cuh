@@ -389,11 +389,11 @@ public:
             checkForTargetKernel<<<1,1>>>(model, &expData.bestTargetNode, &children, &childrenInfo);
             CHECK_LAST_CUDA_ERROR();
             CHECK_CUDA_ERROR(cudaDeviceSynchronize());
-            printf("nChildren %llu\n", childrenInfo.size());
-            fflush(stdout);
+            // printf("nChildren %llu\n", childrenInfo.size());
+            // fflush(stdout);
         }
-        printf("---\n", childrenInfo.size());
-        fflush(stdout);
+        // printf("---\n", childrenInfo.size());
+        // fflush(stdout);
         copyBestTargetsKernel<<<1,1>>>(&bestTrgt,&bestExactTrgt,&children, &childrenInfo);
         CHECK_LAST_CUDA_ERROR();
         finalizeCutset(model, primal, dual);

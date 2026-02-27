@@ -177,6 +177,12 @@ public:
       heapify(1);
       return rv->_val;
    }
+
+    T & peekMax() noexcept {
+       assert(_at >= 1);
+       Location* rv = _data[1];
+       return rv->_val;
+   }
    friend std::ostream& operator<<(std::ostream& os,const Heap<T,Ord>& h) {
       for(int i=1;i < h._at;i++) 
          os << "   " << i << ":" << h._data[i]->_val << "\n";      

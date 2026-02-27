@@ -13,6 +13,7 @@ class CliManager
 
     int width_{0};
     int timeout_{std::numeric_limits<int>::max()};
+    int toPop_{1};
     long long int memSize_{0};
     std::string instance_{};
     cxxopts::Options options_;
@@ -23,6 +24,7 @@ public:
 
     int width() const { return width_; }
     int timeout() const { return timeout_; }
+    int pop() const { return toPop_; }
     long long int memSize() const { return memSize_ * 1024ll * 1024ll * 1024ll; }
     std::string const& instance() const { return instance_; }
 
@@ -38,6 +40,7 @@ CliManager::CliManager(std::string const& programName, std::string const& descri
         ("w,width", "DD width", cxxopts::value(width_))
         ("h,help", "Show this help message and exit")
         ("m,memory", "Working memory in GB", cxxopts::value(memSize_))
+        ("p,pop", "Max nodes to pop in parallel ", cxxopts::value(toPop_))
         ("i,instance", "Path to the instance file", cxxopts::value(instance_))
         ("t,timeout", "Timeout in seconds", cxxopts::value(timeout_));
 
@@ -93,6 +96,11 @@ void CliManager::validate()
     if (width_ <= 0)
     {
         std::cerr << "Error: Width must be greater than 0" << std::endl;
+        hasError = true;
+    }
+    if (toPop_ <= 0)
+    {
+        std::cerr << "Error: Pop must be greater than 0" << std::endl;
         hasError = true;
     }
 
