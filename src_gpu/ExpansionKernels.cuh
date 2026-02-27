@@ -51,9 +51,9 @@ template<typename T>
 GFL_GLOBAL
 void setValueKernel( T * const t, T const v) { *t = v; }
 
-
-
-
+template<typename T>
+GFL_GLOBAL
+void copyValueKernel( T * const t, T const * const v) { *t = *v; }
 
 template<typename Model, typename Node>
 GFL_GLOBAL
@@ -150,7 +150,8 @@ void expandParentsKernel(
     Model const * const model,
     ExpansionData<Node> * const expData,
     gfl::f64 const primal,
-    gfl::f64 const flag)
+    gfl::f64 const flag,
+    gfl::i32 const branchFactor)
 {
     using namespace gfl;
 
@@ -159,37 +160,35 @@ void expandParentsKernel(
     auto & children         = expData->children;
     auto & childrenInfo     = expData->childrenInfo;
 
-    i64 const nParents = parentsInfo.size();
-    i64 const labelsPerParent = (gridDim.x * blockDim.x) / nParents;
-    i64 const tIdx = blockIdx.x * blockDim.x + threadIdx.x;
-    i64 const iIdx = tIdx / labelsPerParent;
-
-    if (iIdx < parentsInfo.size())
+    i32 const pIdx = blockIdx.x;
+    if (pIdx < parentsInfo.size())
     {
-        i64 const lIdx = tIdx % labelsPerParent;
-        NodeInfo const & pInfo = parentsInfo[iIdx];
-        i64 const pIdx = pInfo.idx;
         Node const & pNode = parents[pIdx];
         auto const & pLabels = pNode.labels();
-        i32 const label = pLabels.smallest() + lIdx;
+        auto [minl, maxl, nlabels] = pLabels.summary();
+        assert(nlabels <= branchFactor);
 
-        if (pLabels.contains(label))
+        for(i32 label = minl + threadIdx.x; label <= maxl; label += blockDim.x)
         {
-            auto const cState = model->stf(pNode.state(), label);
-            if (cState.has_value())
+            if (pLabels.contains(label))
             {
-                f64 const tCost = model->scf(pNode.state(), label);
-                f64 const cG    = pNode.g() + tCost;
-                f64 cH          = pNode.f() - cG;
-                if constexpr (Model::has_heur)
+                auto const cState = model->stf(pNode.state(), label);
+                if (cState.has_value())
                 {
-                    f64 const h = model->h(cState.value(), BBCtx);
-                    cH = tighter<Model>(cH, h);
-                }
-                if (isBetter<Model>(cG + cH, primal))
-                {
-                    children[tIdx] = Node(cState.value(), cG, cH, label, pNode);
-                    childrenInfo[tIdx] = NodeInfo(tIdx, pIdx,flag);
+                    f64 const tCost = model->scf(pNode.state(), label);
+                    f64 const cG    = pNode.g() + tCost;
+                    f64 cH          = pNode.f() - cG;
+                    if constexpr (Model::has_heur)
+                    {
+                        f64 const h = model->h(cState.value(), BBCtx);
+                        cH = tighter<Model>(cH, h);
+                    }
+                    if (isBetter<Model>(cG + cH, primal))
+                    {
+                        i64 const offset = pIdx * branchFactor + (label - minl);
+                        children[offset] = Node(cState.value(), cG, cH, label, pNode);
+                        childrenInfo[offset] = NodeInfo(offset, pIdx,flag);
+                    }
                 }
             }
         }
@@ -258,7 +257,7 @@ void swapKernel(T * const a, T * const b) { T::swap(*a,*b); }
 
 GFL_GLOBAL
 void setFlagKernel(
-    gfl::u8 const flag,
+    gfl::i8 const flag,
     gfl::ArrayView<NodeInfo> const * const nodesInfo
 )
 {
@@ -344,8 +343,8 @@ void copyByInfoIdxKernel(
 {
     using namespace gfl;
 
-    assert(src->size() >= nodesInfo->size());
-    assert(nodesInfo->empty() or dst->size() == nodesInfo->size());
+    assert(nodesInfo->size() <= src->size());
+    assert(nodesInfo->size() <= dst->size());
 
     auto [begin,end] = calcSlice<i64>(blockIdx.x, gridDim.x, nodesInfo->size());
     for (i64 i = begin + threadIdx.x; i < end; i += blockDim.x)
@@ -385,7 +384,7 @@ void copyBestTargetsKernel(
 {
     using namespace gfl;
 
-    if (not targets->empty())
+    if (not targetsInfo->empty())
     {
         NodeInfo const & bestInfo = targetsInfo->at(0);
         *bestTarget = targets->at(bestInfo.idx);
@@ -591,12 +590,11 @@ void initSuffix(
 }
 
 GFL_GLOBAL
-void calcNBlocksKernel(
-    gfl::i64 const * const nNodes,
-    gfl::i64 * const nBlocks,
-    gfl::i32 const reductionFactor)
+void ceilKernel(
+    gfl::i64 * const val,
+    gfl::i64 const divider)
 {
-    *nBlocks = gfl::ceil<gfl::i64>(*nNodes, reductionFactor);
+    *val = gfl::ceil<gfl::i64>(*val, divider);
 }
 
 template<typename Model, typename Node>

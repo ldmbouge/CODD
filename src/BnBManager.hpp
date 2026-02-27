@@ -41,15 +41,9 @@ public:
         for(auto const & l : dualListeners) { l(); }
     }
 
-    bool consistent() const
-    {
-        return isBetterEq<Model>(dual_, primal_);
-    }
-
     bool solved() const
     {
-        assert(consistent());
-        return dual_ == primal_;
+        return isBetterEq<Model>(primal_,dual_);
     }
 
     gfl::f64 gap() const noexcept

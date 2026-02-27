@@ -31,7 +31,7 @@ namespace gfl
             begin = wIdx * jobsPerWorker + min<i64>(wIdx, remainder);
             end = begin + jobsPerWorker + extra;
         }
-        return make_tuple(0,-1);
+        return make_tuple(begin,end);
     }
 
 #ifdef __CUDACC__

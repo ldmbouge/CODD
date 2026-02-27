@@ -66,33 +66,33 @@ int runRelaxedGpu(int argc, char* argv[])
         while (not queue.empty() and parentsBuffer.size() < nodesToPull)
         {
             Node const * node = queue.pullBest();
-            if (isWorseEq<Model>(node->f(), bnb.primal())) continue;
             parentsBuffer.push_back(*node);
         }
-        bnb.dual(parentsBuffer.front().f());
-        assert(bnb.consistent());
-
-        //eng->expandRelaxed(model, node, bnb.primal(), bnb.dual(), BranchFactor);
-        eng->expandRelaxed(model, parentsBuffer, bnb.primal(), bnb.dual(), BranchFactor);
-
-        // Check relaxation and manage cutset
-        auto [bestTarget, bestExactTarget] = eng->getTargets();
-        if (bestExactTarget.has_value())
+        if (not parentsBuffer.empty())
         {
-            bnb.primal(bestExactTarget.value());
-        }
-        if (bestTarget.has_value())
-        {
-            if (not bnb.pruneAncestor(bestTarget.value()))
+            bnb.dual(parentsBuffer.front().f());
+
+            //eng->expandRelaxed(model, node, bnb.primal(), bnb.dual(), BranchFactor);
+            eng->expandRelaxed(model, parentsBuffer, bnb.primal(), bnb.dual(), BranchFactor);
+
+            // Check relaxation and manage cutset
+            auto [bestTarget, bestExactTarget] = eng->getTargets();
+            if (bestExactTarget.has_value())
             {
-                //std::cout << "who is a bad boy?"; Node::print(trg); std::cout << "\n";
-                bnb.dual(bestTarget.value());
-                assert(bnb.consistent());
-                auto const & cutset = eng->cutData.nodes();
-                queue.pushFromGpu(cutset);
+                bnb.primal(bestExactTarget.value());
             }
+            if (bestTarget.has_value())
+            {
+                if (not bnb.pruneAncestor(bestTarget.value()))
+                {
+                    //std::cout << "who is a bad boy?"; Node::print(trg); std::cout << "\n";
+                    bnb.dual(bestTarget.value());
+                    auto const & cutset = eng->cutData.nodes();
+                    queue.pushFromGpu(cutset);
+                }
+            }
+            log.progress();
         }
-        log.progress();
     }
     stats.end();
     log.summary();

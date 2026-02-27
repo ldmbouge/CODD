@@ -22,6 +22,7 @@ public:
     CutsetData cutData;
     gfl::i64 nFlagged;
     gfl::i32 width_;
+    gfl::i32 branchFactor_;
     gfl::i64 nNodes;
 
 
@@ -32,8 +33,7 @@ public:
         using namespace gfl;
 
         width_ = width;
-        nFlagged = 0;
-
+        branchFactor_ = branchFactor;
         i32 const maxNodes = width_ * branchFactor;
         expData.init(maxNodes, alloc);
         cutData.init(width, branchFactor, depth, alloc);
