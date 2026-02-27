@@ -66,8 +66,8 @@ void sortByGKernel(
     if (children.size() > expEng->width_)
     {
         // Init
-        //tmpNodes.resizeTo(children.size());
         tmpInfo.resizeTo(childrenInfo.size());
+        tmpNodes.resizeTo(childrenInfo.size());
 
         // Processing
         i32 const blockSize = 128;
@@ -76,9 +76,8 @@ void sortByGKernel(
         setScoreMergeKernel<Model><<<gridSize,blockSize>>>(model, &children, &childrenInfo);
         sortKernel<NodeInfo::ScoreDecomposer><<<1,1>>>(&childrenInfo,&tmpInfo,&cubAuxMem);
         swapKernel<<<1,1>>>(&childrenInfo, &tmpInfo);
-        //resizeToKernel<<<1,1>>>(&childrenInfo,children.sizePtr());
-        //copyByInfoKernel<<<gridSize,blockSize>>>(&tmpNodes,&children, &childrenInfo);
-        //swapKernel<<<1,1>>>(&tmpNodes, &children);
+        copyByInfoKernel<<<gridSize,blockSize>>>(&tmpNodes, &children, &childrenInfo);
+        swapKernel<<<1,1>>>(&tmpNodes, &children);
     }
 }
 
@@ -312,7 +311,7 @@ void mergeChildrenKernel(ExpansionEngine<Model,Node> * const expEng )
 
 template<typename Model, typename Node>
 GFL_GLOBAL
-void expandLayerRelaxedKernel(
+void PLayerRelaxedKernel(
         Model const * model,
         ExpansionEngineGpu<Model,Node> * const expEng,
         gfl::f64 const primal,

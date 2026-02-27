@@ -357,11 +357,28 @@ public:
         auto & parents = expData.parents;
         auto & childrenInfo = expData.childrenInfo;
         auto & parentsInfo = expData.parentInfo;
+        auto & tmpInfo = expData.tmpInfo;
+        constexpr i64 IsNotChildren = 1;
+        constexpr i64 IsChildren = 0;
 
-        i32 blockSize = 32;
-        i32 gridSize = ceil<i32>(parentsInfo.size()*brachFactor,blockSize) ;
+        nFlagged = 0;
+        i64 const maxChildren = parentsInfo.size() * brachFactor;
+        childrenInfo.resizeTo(maxChildren);
+        tmpInfo.resizeTo(maxChildren);
+        children.resizeTo(maxChildren);
+
+        i32 blockSize = 128;
+        i32 gridSize  = ceil<i32>(maxChildren, blockSize);
+        setFlagKernel<<<gridSize,blockSize>>>(IsNotChildren,&childrenInfo);
+
         assert(parentsInfo.size() <= width_);
-        expandParentsNewKernel<<<gridSize,blockSize>>>(model, &expData, primal, brachFactor);
+        expandParentsNewKernel<<<gridSize, blockSize>>>(model, &expData, primal, IsChildren);
+
+        sortKernel<NodeInfo::FlagDecomposer><<<1,1>>>(&childrenInfo,&tmpInfo,&cubAuxMem);
+        swapKernel<<<1,1>>>(&childrenInfo, &tmpInfo);
+        countFlaggedKernel<<<gridSize,blockSize>>>(IsChildren, &nFlagged, &childrenInfo);
+        resizeToKernel<<<1,1>>>(&childrenInfo, &nFlagged);
+
         filterRepresentedKernel<<<1,1>>>(this);
         sortByGKernel<<<1,1>>>(model,this);
         //saveCutsetLELKernel<<<1,1>>>(this);

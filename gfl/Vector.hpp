@@ -15,16 +15,15 @@ namespace gfl
 
         static constexpr i64 MaxBytes    = 8ll * 1024ll * 1024ll * 1024ll; // 8GB
         static constexpr i64 MaxElements = MaxBytes / scast<i64>(sizeof(T));
-        static constexpr i32 GrowthFactor  = 4;
-        static constexpr i32 DefaultSize = 1024;
+        static constexpr i64 GrowthFactor  = 4;
+        static constexpr i64 DefaultSize = 1024;
 
-        void reserve(i32 const capacity) noexcept
+        void reserve(i64 const capacity) noexcept
         {
             if (capacity > capacity_)
             {
 
-                i32 const newCapacity = capacity * GrowthFactor;
-                //printf("CAPACITY = %d -> %d\n", capacity_, newCapacity);
+                i64 const newCapacity = capacity * GrowthFactor;
                 checkOrAbort(newCapacity <= MaxElements, "Vector exceeded MaxElements");
                 vmCommit(data_, newCapacity);   // pointer stays the same, no copy
                 capacity_ = newCapacity;
@@ -41,7 +40,7 @@ namespace gfl
         Vector& operator=(Vector&&) = delete;
 
         explicit
-        Vector(i32 const capacity) noexcept :
+        Vector(i64 const capacity) noexcept :
             VectorView<T>(capacity, vmReserve<T>(MaxElements))
         {
             vmCommit(data_, capacity);
@@ -53,13 +52,13 @@ namespace gfl
             vmRelease(data_, MaxElements);
         }
 
-        i32 resizeTo(i32 const size) noexcept
+        i64 resizeTo(i64 const size) noexcept
         {
             reserve(size);
             return VectorView<T>::resizeTo(size);
         }
 
-        i32 resizeBy(i32 const delta) noexcept
+        i64 resizeBy(i64 const delta) noexcept
         {
             reserve(size_ + delta);
             return VectorView<T>::resizeBy(delta);

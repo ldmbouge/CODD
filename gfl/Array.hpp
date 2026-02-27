@@ -21,7 +21,7 @@ namespace gfl
         Array& operator=(Array && other) = delete;
 
         explicit
-        Array(i32 const size) noexcept :
+        Array(i64 const size) noexcept :
             ArrayView<T>(size, vmReserve<T>(size))
         {
             vmCommit(data_, size);

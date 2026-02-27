@@ -17,7 +17,7 @@ namespace gfl
         using ArrayView<T>::size_;
         using ArrayView<T>::data_;
 
-        i32 capacity_{0};
+        i64 capacity_{0};
 
     public:
         VectorView() noexcept = default;
@@ -29,8 +29,8 @@ namespace gfl
         VectorView& operator=(VectorView&&) = default;
 
         GFL_HOST_DEVICE
-        VectorView(i32 const capacity, T * data) noexcept :
-            ArrayView<T>(0,data),
+        VectorView(i64 const capacity, T * data) noexcept :
+            ArrayView<T>(scast<i64>(0),data),
             capacity_(capacity)
         {
             assert(data != nullptr);
@@ -39,8 +39,8 @@ namespace gfl
 
         template<typename Allocator>
         GFL_HOST_DEVICE
-        VectorView(i32 const capacity, Allocator & alloc) noexcept :
-            ArrayView<T>(0, alloc.template allocate<T>(capacity)),  // Start with size=0
+        VectorView(i64 const capacity, Allocator & alloc) noexcept :
+            ArrayView<T>(scast<i64>(0), alloc.template allocate<T>(capacity)),  // Start with size=0
             capacity_(capacity)
         {
             assert(capacity > 0);
@@ -48,7 +48,7 @@ namespace gfl
         }
 
         GFL_HOST_DEVICE
-        i32 capacity() const noexcept { return capacity_; }
+        i64 capacity() const noexcept { return capacity_; }
 
         GFL_HOST_DEVICE
         bool empty() const noexcept { return size_ == 0; }
@@ -63,7 +63,7 @@ namespace gfl
             ArrayView<T>::swap(a, b);
 
             // Swap capacity_
-            i32 const tmpCapacity = a.capacity_;
+            i64 const tmpCapacity = a.capacity_;
             a.capacity_ = b.capacity_;
             b.capacity_ = tmpCapacity;
         }
@@ -72,19 +72,19 @@ namespace gfl
         void swap(VectorView & other) noexcept { swap(*this, other); }
 
         GFL_HOST_DEVICE
-        i32 resizeTo(i32 const size) noexcept
+        i64 resizeTo(i64 const size) noexcept
         {
             assert(size >= 0);
             assert(size <= capacity_);
-            i32 const oldSize = size_;
+            i64 const oldSize = size_;
             size_ = size;
             return oldSize;
         }
 
         GFL_HOST_DEVICE
-        i32 resizeBy(i32 const delta) noexcept
+        i64 resizeBy(i64 const delta) noexcept
         {
-            i32 const oldSize = size_;
+            i64 const oldSize = size_;
             assert(oldSize + delta >= 0);
             assert(oldSize + delta <= capacity_);
             size_ += delta;
@@ -92,13 +92,13 @@ namespace gfl
         }
 
         GFL_HOST_DEVICE
-        i32 resizeByAtomic(i32 const delta) noexcept
+        i64 resizeByAtomic(i64 const delta) noexcept
         {
 #ifdef __CUDA_ARCH__
-            i32 const oldSize = atomicAdd(&size_, delta);
+            i64 const oldSize = atomicAdd(rcast<llu*>(&size_), scast<llu>(delta));
 #else
-            std::atomic_ref<i32> atomicSize(size_);
-            i32 const oldSize = atomicSize.fetch_add(delta, std::memory_order_relaxed);
+            std::atomic_ref<i64> atomicSize(size_);
+            i64 const oldSize = atomicSize.fetch_add(delta, std::memory_order_relaxed);
 #endif
             assert(oldSize + delta >= 0);
             assert(oldSize + delta <= capacity_);
@@ -108,21 +108,21 @@ namespace gfl
         GFL_HOST_DEVICE
         void pushBack(ArrayView<T> const & elements) noexcept
         {
-            i32 const oldSize = resizeBy(elements.size());
+            i64 const oldSize = resizeBy(elements.size());
             std::memcpy(&at(oldSize), elements.data(), elements.dataMemSize());
         }
 
         GFL_HOST_DEVICE
         void pushBack(T const * value) noexcept
         {
-            i32 const oldSize = resizeBy(1);
+            i64 const oldSize = resizeBy(1);
             std::memcpy(&at(oldSize), value, sizeof(T));
         }
 
 #ifdef __CUDACC__
-        void pushBackGpu(T const * values, i32 const count = 1) noexcept
+        void pushBackGpu(T const * values, i64 const count = 1) noexcept
         {
-            i32 const oldSize = resizeBy(count);
+            i64 const oldSize = resizeBy(count);
             cudaMemcpy(&at(oldSize), values, sizeof(T) * count, cudaMemcpyHostToDevice);
         }
 #endif
@@ -130,7 +130,7 @@ namespace gfl
         GFL_HOST_DEVICE
         void pushBackAtomic(ArrayView<T> const & items) noexcept
         {
-            i32 const oldSize = resizeByAtomic(items.size());
+            i64 const oldSize = resizeByAtomic(items.size());
             std::memcpy(&at(oldSize), items.data(), items.dataMemSize());
         }
 
@@ -138,9 +138,9 @@ namespace gfl
         void pushBackAtomic(T const & value) noexcept {{pushBackAtomic(ArrayView<T>(&value, 1));}}
 
         GFL_HOST_DEVICE
-        ArrayView<T> popBack(i32 const count) noexcept
+        ArrayView<T> popBack(i64 const count) noexcept
         {
-            i32 const oldSize = resizeBy(-count);
+            i64 const oldSize = resizeBy(-count);
             ArrayView<T> items(data_ + size_, data_ + oldSize);
             return items;
         }
@@ -149,9 +149,9 @@ namespace gfl
         T & popBack() noexcept { return popBack(1).front(); }
 
         GFL_HOST_DEVICE
-        ArrayView<T> popBackAtomic(i32 const count) noexcept
+        ArrayView<T> popBackAtomic(i64 const count) noexcept
         {
-            i32 const oldSize = resizeByAtomic(-count);
+            i64 const oldSize = resizeByAtomic(-count);
             ArrayView<T> items(data_ + size_, data_ + oldSize);
             return items;
         }

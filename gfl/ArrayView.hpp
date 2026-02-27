@@ -15,7 +15,7 @@ namespace gfl
     {
     protected:
         T* data_{nullptr};
-        alignas(4) i32 size_{0};  // Aligned for atomic operations in VectorView
+        alignas(8) i64 size_{0};  // Aligned for atomic operations in VectorView
 
     public:
         ArrayView() noexcept = default;
@@ -28,7 +28,7 @@ namespace gfl
         ArrayView& operator=(ArrayView&&) = default;
 
         GFL_HOST_DEVICE
-        ArrayView(i32 const size, T * const data) noexcept :
+        ArrayView(i64 const size, T * const data) noexcept :
             data_(data),
             size_(size)
         {
@@ -38,13 +38,13 @@ namespace gfl
 
         template<typename Allocator>
         GFL_HOST_DEVICE
-        ArrayView(i32 const size, Allocator & alloc) noexcept :
+        ArrayView(i64 const size, Allocator & alloc) noexcept :
             ArrayView(size, alloc.template allocate<T>(size)) {}
 
         GFL_HOST_DEVICE
         ArrayView(T * begin, T * end) noexcept :
             data_(begin),
-            size_(scast<i32>(end - begin))
+            size_(scast<i64>(end - begin))
         {
             assert(begin != nullptr);
             assert(end != nullptr);
@@ -55,23 +55,23 @@ namespace gfl
         T * data() const noexcept { return data_; }
 
         GFL_HOST_DEVICE
-        i32 size() const noexcept { return size_; }
+        i64 size() const noexcept { return size_; }
 
         GFL_HOST_DEVICE
         bool empty() const noexcept { return size_ == 0; } // Usefult for vectorview
 
         GFL_HOST_DEVICE
         // Needed for CUDA to access size at running time vs launch time.
-        i32 const * sizePtr() const noexcept { return &size_; }
+        i64 const * sizePtr() const noexcept { return &size_; }
 
         GFL_HOST_DEVICE static
-        i32 dataMemSize(i32 const size) noexcept { return sizeof(T) * size; }
+        i64 dataMemSize(i64 const size) noexcept { return sizeof(T) * size; }
 
         GFL_HOST_DEVICE
-        i32 dataMemSize() const noexcept { return dataMemSize(size_); }
+        i64 dataMemSize() const noexcept { return dataMemSize(size_); }
 
         GFL_HOST_DEVICE
-        T & at(i32 const idx) const noexcept
+        T & at(i64 const idx) const noexcept
         {
             assert(idx >= 0);
             assert(idx < size_);
@@ -99,7 +99,7 @@ namespace gfl
         }
 
         GFL_HOST_DEVICE
-        T & operator[](i32 const idx) const noexcept
+        T & operator[](i64 const idx) const noexcept
         { return at(idx); }
 
         GFL_HOST_DEVICE static
@@ -109,7 +109,7 @@ namespace gfl
             a.data_ = b.data_;
             b.data_ = tmpData;
 
-            i32 tmpSize = a.size_;
+            i64 tmpSize = a.size_;
             a.size_ = b.size_;
             b.size_ = tmpSize;
         }
@@ -119,7 +119,7 @@ namespace gfl
 
 
         GFL_HOST_DEVICE
-        ArrayView slice(i32 const begin, i32 const end) const noexcept
+        ArrayView slice(i64 const begin, i64 const end) const noexcept
         {
             assert(0 <= begin);
             assert(begin <= end);
@@ -128,7 +128,7 @@ namespace gfl
         }
 
         GFL_HOST_DEVICE
-        ArrayView slice(i32 const count) const noexcept
+        ArrayView slice(i64 const count) const noexcept
         {
             assert(count != 0);
             if (count >= 0) return slice(0,count);
@@ -149,7 +149,7 @@ namespace gfl
             assert(begin <= end);
 
             bool comma = false;
-            for(T const * it = begin; it != end; ++it)
+            for (T const * it = begin; it != end; ++it)
             {
                 printf(comma ? "," : "");
                 printf(fmt, *it);
@@ -158,7 +158,7 @@ namespace gfl
         }
 
         GFL_HOST_DEVICE static
-        void print(T const * begin, i32 count, char const* fmt = "%d") noexcept
+        void print(T const * begin, i64 count, char const* fmt = "%d") noexcept
         { print(begin, begin + count, fmt); }
 
         GFL_HOST_DEVICE

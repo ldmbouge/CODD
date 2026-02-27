@@ -20,8 +20,8 @@ public:
 
     ExpansionData expData;
     CutsetData cutData;
-    gfl::i32 nFlagged;
-    gfl::i32 width_;
+    gfl::i64 nFlagged;
+    gfl::i64 width_;
 
 public:
 

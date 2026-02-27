@@ -141,9 +141,8 @@ struct NodeInfo
     NodeInfo() = default;
 
     GFL_HOST_DEVICE
-    NodeInfo(gfl::i32 const idx, gfl::i32 const pIdx) noexcept :
-        idx(idx),
-        pIdx(pIdx)
+    NodeInfo(gfl::i32 const idx, gfl::i32 const pIdx, gfl::i32 const flag = 0) noexcept :
+        idx(idx), pIdx(pIdx), flag(flag)
     {}
 
     GFL_HOST_DEVICE
