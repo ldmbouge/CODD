@@ -129,24 +129,21 @@ public:
 
 struct NodeInfo
 {
+    // Hold tight! This is brittle
+    gfl::i32 idx{0};
+    gfl::i8 flag;
     union
     {
-        union
-        {
-            gfl::u8 flag;
-            gfl::u64 hash;
-        };
-        gfl::f64 score;
-        gfl::u64 payload;
+        gfl::u32 hash;
+        gfl::f32 score;
     };
+    gfl::i32 pIdx;
 
-    gfl::i32 idx{0};
-    gfl::i32 pIdx{0};
 
     NodeInfo() = default;
 
     GFL_HOST_DEVICE
-    NodeInfo(gfl::i32 const idx, gfl::i32 const pIdx, gfl::i32 const flag = 0) noexcept :
+    NodeInfo(gfl::i32 const idx, gfl::i32 const pIdx, gfl::i8 const flag = 0) noexcept :
         idx(idx), pIdx(pIdx), flag(flag)
     {}
 
@@ -158,7 +155,7 @@ struct NodeInfo
     struct HashDecomposer
     {
         GFL_HOST_DEVICE
-        gfl::tuple<gfl::u64&> operator()(NodeInfo & nodeInfo) const { return {nodeInfo.hash};}
+        gfl::tuple<gfl::u32&> operator()(NodeInfo & nodeInfo) const { return {nodeInfo.hash};}
     };
 #endif
 
@@ -170,7 +167,7 @@ struct NodeInfo
     struct FlagDecomposer
     {
         GFL_HOST_DEVICE
-        gfl::tuple<gfl::u8&> operator()(NodeInfo & nodeInfo) const { return {nodeInfo.flag};}
+        gfl::tuple<gfl::i8&> operator()(NodeInfo & nodeInfo) const { return {nodeInfo.flag};}
     };
 #endif
 
@@ -182,7 +179,7 @@ struct NodeInfo
     struct ScoreDecomposer
     {
         GFL_HOST_DEVICE
-        gfl::tuple<gfl::f64&> operator()(NodeInfo & nodeInfo) const { return {nodeInfo.score};}
+        gfl::tuple<gfl::f32&> operator()(NodeInfo & nodeInfo) const { return {nodeInfo.score};}
     };
 #endif
 
@@ -190,7 +187,7 @@ struct NodeInfo
     struct ScoreFlagDecomposer
     {
         GFL_HOST_DEVICE
-        gfl::tuple<gfl::f64&,gfl::u8&> operator()(NodeInfo & nodeInfo) const { return {nodeInfo.score, nodeInfo.flag};}
+        gfl::tuple<gfl::f32&,gfl::i8&> operator()(NodeInfo & nodeInfo) const { return {nodeInfo.score, nodeInfo.flag};}
     };
 #endif
 
@@ -201,7 +198,7 @@ struct NodeInfo
         using namespace gfl;
         printf("IDX: %lld", scast<lld>(ni.idx));
         printf(" | "); printf("PIDX: %lld", scast<lld>(ni.pIdx));
-        printf(" | "); printf("INFO: (%7d,%7llu,%7.2f)", ni.flag, scast<llu>(ni.hash) % 10000000ll, std::fmod(ni.score,10000000.0));
+        //printf(" | "); printf("INFO: (%7d,%7llu,%7.2f)", ni.flag, scast<llu>(ni.hash) % 10000000ll, fmod(ni.score,10000000.0));
     }
 
     GFL_HOST_DEVICE

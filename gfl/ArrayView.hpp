@@ -58,11 +58,13 @@ namespace gfl
         i64 size() const noexcept { return size_; }
 
         GFL_HOST_DEVICE
-        bool empty() const noexcept { return size_ == 0; } // Usefult for vectorview
+        bool empty() const noexcept { return size_ == 0; } // Usefull for vectorview
 
-        GFL_HOST_DEVICE
+#ifdef __CUDACC__
         // Needed for CUDA to access size at running time vs launch time.
+        GFL_HOST_DEVICE
         i64 const * sizePtr() const noexcept { return &size_; }
+#endif
 
         GFL_HOST_DEVICE static
         i64 dataMemSize(i64 const size) noexcept { return sizeof(T) * size; }

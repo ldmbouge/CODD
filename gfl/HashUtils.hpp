@@ -13,6 +13,12 @@ namespace gfl
     {  seed ^= h + 0x9e3779b97f4a7c15ull + (seed<<6) + (seed>>2); }
 
     GFL_HOST_DEVICE inline
+    u32 hash64to32(u64 const x)
+    {
+        return scast<u32>(x ^ (x >> 32));
+    }
+
+    GFL_HOST_DEVICE inline
     void sim_combine(float & mean, float & n, float const val)
     {
         n += 1.0;

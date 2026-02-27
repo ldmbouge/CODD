@@ -6,7 +6,6 @@
 #include "Node.hpp"
 #include "ExpansionEngine.hpp"
 #include "ExpansionKernels.cuh"
-#include "ExpansionMacroKernel.cuh"
 
 #ifdef __CUDACC__
 #include "Sort.cuh"
@@ -21,10 +20,10 @@ public:
     using ExpansionEngine::expData;
     using ExpansionEngine::cutData;
     using ExpansionEngine::nFlagged;
+    using ExpansionEngine::nNodes;
     using ExpansionEngine::width_;
 
     gfl::ArrayView<gfl::u8> cubAuxMem;
-    gfl::i32 recLvl;
 
     static
     gfl::i64 cubAuxMemSize(gfl::i64 const nNodes)
@@ -50,43 +49,66 @@ public:
         i64 const memSize = cubAuxMemSize(maxNodes);
         cubAuxMem = ArrayView<u8>(memSize,alloc);
     }
-
-    void swapParentsAndChildren()
-    {
-        expData.swapParentsAndChildren();
-    }
-
     void expandParents(
-        Model const * const model,
-        gfl::f64 const primal,
-        gfl::i32 const brachFactor)
+    Model const * model,
+    gfl::f64 const primal,
+    gfl::i32 const maxChildren)
     {
         using namespace gfl;
-        auto & parents = expData.parents;
 
-        i32 blockSize = 32;
-        i32 gridSize = ceil<i32>(parents.size() *brachFactor,blockSize) ;
-        expandParentsKernel<<<gridSize,blockSize>>>(model, &expData, primal, brachFactor);
+        auto & parents     = expData.parents;
+        auto & parentsInfo  = expData.parentInfo;
+        auto & children    = expData.children;
+        auto & childrenInfo = expData.childrenInfo;
+        auto & tmpInfo      = expData.tmpInfo;
+        constexpr u8 IsNotChildren = 1;
+        constexpr u8 IsChildren    = 0;
+
+        i32 const blockSize = 256;
+        i32 const gridSize  = ceil<i32>(maxChildren, blockSize);
+
+        //assert(not parentsInfo.empty());
+
+        resizeToKernel<<<1,1>>>(&children,maxChildren);
+        CHECK_LAST_CUDA_ERROR();
+        resizeToKernel<<<1,1>>>(&childrenInfo,maxChildren);
+        CHECK_LAST_CUDA_ERROR();
+        resizeToKernel<<<1,1>>>(&tmpInfo,maxChildren);
+        CHECK_LAST_CUDA_ERROR();
+
+        setFlagKernel<<<gridSize, blockSize>>>(IsNotChildren, &childrenInfo);
+        CHECK_LAST_CUDA_ERROR();
+        expandParentsKernel<<<gridSize, blockSize>>>(model, &expData, primal, IsChildren);
+        CHECK_LAST_CUDA_ERROR();
+        sortKernel<NodeInfo::FlagDecomposer><<<1,1>>>(&childrenInfo, &tmpInfo, &cubAuxMem);
+        CHECK_LAST_CUDA_ERROR();
+        swapKernel<<<1,1>>>(&childrenInfo, &tmpInfo);
+        CHECK_LAST_CUDA_ERROR();
+        setValueKernel<<<1,1>>>(&nFlagged, scast<i64>(0));  // ← add this
+        CHECK_LAST_CUDA_ERROR();
+        countFlaggedKernel<<<gridSize, blockSize>>>(IsChildren, &nFlagged, &childrenInfo);
+        CHECK_LAST_CUDA_ERROR();
+        resizeToKernel<<<1,1>>>(&childrenInfo, &nFlagged);
+        CHECK_LAST_CUDA_ERROR();
     }
 
-    void filterRepresentedChildren()
+    void filterRepresentedChildren(gfl::i32 const maxChildren)
     {
         using namespace gfl;
         auto & children = expData.children;
-        auto & tmpNodes = expData.tmpNodes;
         auto & childrenInfo = expData.childrenInfo;
+        auto & tmpNodes = expData.tmpNodes;
         auto & tmpInfo = expData.tmpInfo;
-        i64 const RepresentedFlag = 1;
-        i64 const RepresentativeFlag = 0;
+        constexpr u8 Represented = 1;
+        constexpr u8 NotRepresented = 0;
 
-        // Init
-        nFlagged = 0;
-        tmpInfo.resizeTo(childrenInfo.size());
+        i32 const blockSize    = 256;
+        i32 const gridSize     = ceil<i32>(maxChildren, blockSize);
 
         // Sort by hash
-        i32 const blockSize = 128;
-        i32 const gridSize = ceil<i32>(children.size(), blockSize);
         calcHashKernel<Model><<<gridSize,blockSize>>>(&children, &childrenInfo);
+        CHECK_LAST_CUDA_ERROR();
+        resizeToKernel<<<1,1>>>(&tmpInfo,childrenInfo.sizePtr());
         CHECK_LAST_CUDA_ERROR();
         sortKernel<NodeInfo::HashDecomposer><<<1,1>>>(&childrenInfo,&tmpInfo,&cubAuxMem);
         CHECK_LAST_CUDA_ERROR();
@@ -94,164 +116,134 @@ public:
         CHECK_LAST_CUDA_ERROR();
 
         // Find representatives
-        setFlagKernel<<<gridSize,blockSize>>>(RepresentativeFlag, &childrenInfo);
+        setFlagKernel<<<gridSize,blockSize>>>(NotRepresented, &childrenInfo);
         CHECK_LAST_CUDA_ERROR();
-        flagRepresentedChildrenKernel<Model><<<gridSize,blockSize>>>(RepresentedFlag,&children,&childrenInfo);
+        flagRepresentedKernel<Model><<<gridSize,blockSize>>>(Represented,&children,&childrenInfo);
         CHECK_LAST_CUDA_ERROR();
         sortKernel<NodeInfo::FlagDecomposer><<<1,1>>>(&childrenInfo,&tmpInfo,&cubAuxMem);
         CHECK_LAST_CUDA_ERROR();
         swapKernel<<<1,1>>>(&childrenInfo, &tmpInfo);
         CHECK_LAST_CUDA_ERROR();
-        countFlaggedKernel<<<gridSize,blockSize>>>(RepresentativeFlag,&nFlagged,&childrenInfo);
+        setValueKernel<<<1,1>>>(&nFlagged,scast<i64>(0));
+        CHECK_LAST_CUDA_ERROR();
+        countFlaggedKernel<<<gridSize,blockSize>>>(NotRepresented,&nFlagged,&childrenInfo);
         CHECK_LAST_CUDA_ERROR();
         resizeToKernel<<<1,1>>>(&childrenInfo,&nFlagged);
         CHECK_LAST_CUDA_ERROR();
-        resizeToKernel<<<1,1>>>(&tmpNodes,&nFlagged);
-        CHECK_LAST_CUDA_ERROR();
-        copyByInfoKernel<<<gridSize,blockSize>>>(&tmpNodes,&children,&childrenInfo);
-        CHECK_LAST_CUDA_ERROR();
-        swapKernel<<<1,1>>>(&tmpNodes, &children);
-        CHECK_LAST_CUDA_ERROR();
-
-        CHECK_CUDA_ERROR(cudaDeviceSynchronize());
     }
 
-    void sortChildrenByG(Model const * const model)
+    void sortChildrenByG(Model const * const model, gfl::i32 const maxChildren)
     {
         using namespace gfl;
         auto & children = expData.children;
-        auto & tmpNodes = expData.tmpNodes;
         auto & childrenInfo = expData.childrenInfo;
+        auto & tmpNodes = expData.tmpNodes;
         auto & tmpInfo = expData.tmpInfo;
 
-        // Init
-        tmpNodes.resizeTo(children.size());
-        tmpInfo.resizeTo(childrenInfo.size());
+        i32 const blockSize = 256;
+        i32 const gridSize = ceil<i32>(maxChildren, blockSize);
 
-        // Processing
-        i32 const blockSize = 128;
-        i32 const gridSize = ceil<i32>(children.size(), blockSize);
-        setScoreMergeKernel<Model><<<gridSize,blockSize>>>(model, &children, &childrenInfo);
+        resizeToKernel<<<1,1>>>(&tmpNodes,childrenInfo.sizePtr());
+        CHECK_LAST_CUDA_ERROR();
+        resizeToKernel<<<1,1>>>(&tmpInfo,childrenInfo.sizePtr());
+        CHECK_LAST_CUDA_ERROR();
+
+        setScoreAsGKernel<Model><<<gridSize,blockSize>>>(&children, &childrenInfo);
         CHECK_LAST_CUDA_ERROR();
         sortKernel<NodeInfo::ScoreDecomposer><<<1,1>>>(&childrenInfo,&tmpInfo,&cubAuxMem);
         CHECK_LAST_CUDA_ERROR();
         swapKernel<<<1,1>>>(&childrenInfo, &tmpInfo);
         CHECK_LAST_CUDA_ERROR();
-        resizeToKernel<<<1,1>>>(&childrenInfo,children.sizePtr());
-        CHECK_LAST_CUDA_ERROR();
-        copyByInfoKernel<<<gridSize,blockSize>>>(&tmpNodes,&children, &childrenInfo);
+        copyByInfoIdxKernel<<<gridSize,blockSize>>>(&tmpNodes, &children, &childrenInfo);
         CHECK_LAST_CUDA_ERROR();
         swapKernel<<<1,1>>>(&tmpNodes, &children);
         CHECK_LAST_CUDA_ERROR();
-
-        CHECK_CUDA_ERROR(cudaDeviceSynchronize());
     }
 
-    void saveCutset()
+    void saveCutset(gfl::i32 const width, gfl::i32 const maxChildren)
     {
         using namespace gfl;
         auto const & parents = expData.parents;
-        auto & children = expData.children;
-        auto & tmpNodes = expData.tmpNodes;
         auto & parentsInfo = expData.parentInfo;
+        auto & children = expData.children;
         auto & childrenInfo = expData.childrenInfo;
+        auto & tmpNodes = expData.tmpNodes;
         auto & tmpInfo = expData.tmpInfo;
         auto & cutset = cutData;
-        i64 const ParentToNotSaveFlag = 1;
-        i64 const ParentToSaveFlag = 0;
+        constexpr u8 ToNotSave = 1;
+        constexpr u8 ToSave = 0;
 
-        // Init
-        nFlagged = 0;
-        parentsInfo.resizeTo(parents.size());
+        i32 const blockSize = 256;
+        i32 const gridSize = ceil<i32>(maxChildren, blockSize);
 
-        // Find parents to save
-        i32 const blockSize = 128;
-        i32 const gridSize = ceil<i32>(expData.children.size(),blockSize);
-        resetInfoKernel<<<gridSize,blockSize>>>(&parentsInfo);
+        resetInfoIdxKernel<<<gridSize,blockSize>>>(&parentsInfo);
         CHECK_LAST_CUDA_ERROR();
-        setFlagKernel<<<gridSize,blockSize>>>(ParentToNotSaveFlag,&parentsInfo);
+        setFlagKernel<<<gridSize,blockSize>>>(ToNotSave, &parentsInfo);
         CHECK_LAST_CUDA_ERROR();
-        flagParentsToSaveKernel<<<gridSize,blockSize>>>(ParentToSaveFlag,&parentsInfo,width_,&children,&childrenInfo);
+        flagToSaveKernel<<<gridSize,blockSize>>>(ToSave, &parentsInfo, width, &children, &childrenInfo);
         CHECK_LAST_CUDA_ERROR();
-
-        // Update children ancestor flag
-        updateAncestorKernel<<<gridSize,blockSize>>>(ParentToSaveFlag,&parentsInfo,&children,&childrenInfo);
+        updateAncInCutKernel<<<gridSize,blockSize>>>(ToSave, &parentsInfo, &children, &childrenInfo);
         CHECK_LAST_CUDA_ERROR();
-
-        // Save parents in cutset
-        resizeToKernel<<<1,1>>>(&tmpInfo,parentsInfo.sizePtr());
+        resizeToKernel<<<1,1>>>(&tmpInfo, parentsInfo.sizePtr());
         CHECK_LAST_CUDA_ERROR();
-        sortKernel<NodeInfo::FlagDecomposer><<<1,1>>>(&parentsInfo,&tmpInfo,&cubAuxMem);
+        sortKernel<NodeInfo::FlagDecomposer><<<1,1>>>(&parentsInfo, &tmpInfo, &cubAuxMem);
         CHECK_LAST_CUDA_ERROR();
         swapKernel<<<1,1>>>(&tmpInfo, &parentsInfo);
         CHECK_LAST_CUDA_ERROR();
-        countFlaggedKernel<<<gridSize,blockSize>>>(ParentToSaveFlag,&nFlagged,&parentsInfo);
+        setValueKernel<<<1,1>>>(&nFlagged, scast<i64>(0));
+        CHECK_LAST_CUDA_ERROR();
+        countFlaggedKernel<<<gridSize,blockSize>>>(ToSave, &nFlagged, &parentsInfo);
         CHECK_LAST_CUDA_ERROR();
         resizeToKernel<<<1,1>>>(&parentsInfo, &nFlagged);
         CHECK_LAST_CUDA_ERROR();
         resizeToKernel<<<1,1>>>(&tmpInfo, &nFlagged);
         CHECK_LAST_CUDA_ERROR();
-        setScoreFKernel<Model><<<gridSize,blockSize>>>(&parents,&parentsInfo);
+        markAndResizeByKernel<<<1,1>>>(&cutset, &nFlagged);
         CHECK_LAST_CUDA_ERROR();
-        sortKernel<NodeInfo::ScoreDecomposer><<<1,1>>>(&parentsInfo,&tmpInfo,&cubAuxMem,true);
+        copyByInfoIdxKernel<<<gridSize,blockSize>>>(cutset.mark(), &parents, &parentsInfo);
         CHECK_LAST_CUDA_ERROR();
-        swapKernel<<<1,1>>>(&tmpInfo, &parentsInfo);
-        CHECK_LAST_CUDA_ERROR();
-        resizeToKernel<<<1,1>>>(&parentsInfo, &nFlagged);
-        CHECK_LAST_CUDA_ERROR();
-        resizeByKernel<<<1,1>>>(&cutset, &nFlagged);
-        CHECK_LAST_CUDA_ERROR();
-
-        // printKernel<<<1,1>>>(4,cutset.lastSegmentPtr());
-        // printKernel<<<1,1>>>(5,&parents);
-        // printKernel<<<1,1>>>(6,&parentsInfo);
-
-        copyByInfoKernel<<<gridSize,blockSize>>>(cutset.lastSegmentPtr(),&parents, &parentsInfo);
-        CHECK_LAST_CUDA_ERROR();
-
-        // printKernel<<<1,1>>>(7,cutset.lastSegmentPtr());
-        // printKernel<<<1,1>>>(8,&parents);
-        // printKernel<<<1,1>>>(9,&parentsInfo);
-
-        CHECK_CUDA_ERROR(cudaDeviceSynchronize());
     }
 
-    void mergeChildren()
+    void mergeChildren(gfl::i32 const width, gfl::i32 const maxChildren)
     {
         using namespace gfl;
 
-        auto const & parents = expData.parents;
-        auto & children = expData.children;
-        auto & tmpNodes = expData.tmpNodes;
-        auto & childrenInfo = expData.childrenInfo;
-        auto & childrenPrefix = expData.tmpView;
+        auto & children           = expData.children;
+        auto & childrenInfo       = expData.childrenInfo;
+        auto & tmpInfo            = expData.tmpInfo;
+        auto & childrenInfoSuffix = expData.tmpInfoView;
 
-        // Init
-        tmpNodes.resizeTo(children.size());
-        initChildrenPrefix(width_,&children,&childrenPrefix);
-
-        // Merge the last children - (width - 1) nodes
         i32 const blockSize       = 32;
         i32 const nodesPerThread  = 32;
-        i32 const reductionFactor = blockSize * nodesPerThread;  // 1024
-        i32 const nNodes          = childrenPrefix.size(); // real item count
-        i32 const nBlocks1        = ceil<i32>(nNodes,   reductionFactor);  // gridDim for pass1, real count for pass2
-        i32 const nBlocks2        = ceil<i32>(nBlocks1, reductionFactor);  // gridDim for pass2, real count for pass3
-        // pass1: childrenPrefix → tmpNodes, count = nNodes
-        reductionKernel<Model,Node><<<nBlocks1, blockSize>>>(&childrenPrefix,&tmpNodes,nNodes);
-        CHECK_LAST_CUDA_ERROR();
-        // pass2: tmpNodes → childrenPrefix, count = nBlocks1
-        reductionKernel<Model,Node><<<nBlocks2, blockSize>>>(&tmpNodes,&childrenPrefix,nBlocks1);
-        CHECK_LAST_CUDA_ERROR();
-        // pass3: childrenPrefix → childrenPrefix[0], count = nBlocks2
-        reductionSeqKernel<Model,Node><<<1,1>>>(&childrenPrefix, nBlocks2);
-        CHECK_LAST_CUDA_ERROR();
-        resizeToKernel<<<1,1>>>(&children,width_);
-        CHECK_LAST_CUDA_ERROR();
-        resizeToKernel<<<1,1>>>(&childrenInfo,width_);
-        CHECK_LAST_CUDA_ERROR();
+        i32 const reductionFactor = blockSize * nodesPerThread;
+        i32 const suffixMaxSize   = max<i32>(0,maxChildren - (width - 1));
+        i32 const nBlocks1        = max<i32>(1,ceil<i32>(suffixMaxSize, reductionFactor)); // max blocks for pass1
+        i32 const nBlocks2        = max<i32>(1,ceil<i32>(nBlocks1,      reductionFactor)); // max blocks for pass2
 
-        CHECK_CUDA_ERROR(cudaDeviceSynchronize());
+        // Compute suffix = childrenInfo[width_-1 .. end]
+        initSuffix<<<1,1>>>(width, &childrenInfo, &childrenInfoSuffix);
+        CHECK_LAST_CUDA_ERROR();
+        // Resize tmpInfo to max possible pass1 output count
+        resizeToKernel<<<1,1>>>(&tmpInfo, nBlocks1);
+        CHECK_LAST_CUDA_ERROR();
+        // pass1: childrenInfoSuffix → tmpInfo, one result per block
+        reduceByInfoKernel<Model,Node><<<nBlocks1, blockSize>>>(&children, &childrenInfoSuffix, &tmpInfo, childrenInfoSuffix.sizePtr());
+        CHECK_LAST_CUDA_ERROR();
+        // Compute actual number of blocks produced by pass1
+        calcNBlocksKernel<<<1,1>>>(tmpInfo.sizePtr(), &nNodes, reductionFactor);
+        CHECK_LAST_CUDA_ERROR();
+        // pass2: tmpInfo → childrenInfoSuffix, one result per block
+        reduceByInfoKernel<Model,Node><<<nBlocks2, blockSize>>>(&children, &tmpInfo, &childrenInfoSuffix, &nNodes);
+        CHECK_LAST_CUDA_ERROR();
+        // Compute actual number of blocks produced by pass2
+        calcNBlocksKernel<<<1,1>>>(childrenInfoSuffix.sizePtr(), &nNodes, reductionFactor);
+        CHECK_LAST_CUDA_ERROR();
+        // pass3: sequential final reduction, result at children[childrenInfoSuffix[0].idx]
+        reduceByInfoSeqKernel<Model,Node><<<1,1>>>(&children, &childrenInfoSuffix, &nNodes);
+        CHECK_LAST_CUDA_ERROR();
+        // Shrink childrenInfo to width_ — merged node already sits at correct idx
+        shrinkToKernel<<<1,1>>>(&childrenInfo, width);
+        CHECK_LAST_CUDA_ERROR();
     }
 
     void calcOutLabels(
@@ -307,11 +299,7 @@ public:
             CHECK_LAST_CUDA_ERROR();
             swapKernel<<<1,1>>>(&tmpInfo, &targetsInfo);
             CHECK_LAST_CUDA_ERROR();
-            copyBestTargetsKernel<<<1,1>>>(
-                &expData.bestTargetNode,
-                &expData.bestExactTargetNode,
-                &targets,
-                &targetsInfo);
+
             CHECK_LAST_CUDA_ERROR();
 
             CHECK_CUDA_ERROR(cudaDeviceSynchronize());
@@ -331,63 +319,18 @@ public:
         auto & tmpInfo = expData.tmpInfo;
         auto & cutset = cutData;
 
-        if (expData.bestTargetNode.has_value() and not cutset.nodes().empty())
+        if (expData.bestTargetNode.has_value())
         {
-            // printf("CUTSET SIZE = %d\n", cutset.nodes().size());
-            // fflush(stdout);
-            i32 const blockSize = 128;
-            i32 const gridSize = ceil<i32>(cutset.nodes().size(), blockSize);
+            i32 const blockSize = 256;
+            i32 const gridSize = ceil<i32>(cutset.nodes()->size(), blockSize);
             calcOutLabelsKernel<<<gridSize,blockSize>>>(model,cutset.nodesPtr(),primal,dual,DDRelaxed);
             CHECK_LAST_CUDA_ERROR();
             setHKernel<Model><<<gridSize,blockSize>>>(&expData.bestTargetNode,cutset.nodesPtr());
             CHECK_LAST_CUDA_ERROR();
-
-            CHECK_CUDA_ERROR(cudaDeviceSynchronize());
         }
     }
 
-    void expandLayerRelaxed(
-        Model const * model,
-        gfl::f64 const primal,
-        gfl::f64 const dual,
-        gfl::i32 const brachFactor)
-    {
-        using namespace gfl;
-        auto & children = expData.children;
-        auto & parents = expData.parents;
-        auto & childrenInfo = expData.childrenInfo;
-        auto & parentsInfo = expData.parentInfo;
-        auto & tmpInfo = expData.tmpInfo;
-        constexpr i64 IsNotChildren = 1;
-        constexpr i64 IsChildren = 0;
 
-        nFlagged = 0;
-        i64 const maxChildren = parentsInfo.size() * brachFactor;
-        childrenInfo.resizeTo(maxChildren);
-        tmpInfo.resizeTo(maxChildren);
-        children.resizeTo(maxChildren);
-
-        i32 blockSize = 128;
-        i32 gridSize  = ceil<i32>(maxChildren, blockSize);
-        setFlagKernel<<<gridSize,blockSize>>>(IsNotChildren,&childrenInfo);
-
-        assert(parentsInfo.size() <= width_);
-        expandParentsNewKernel<<<gridSize, blockSize>>>(model, &expData, primal, IsChildren);
-
-        sortKernel<NodeInfo::FlagDecomposer><<<1,1>>>(&childrenInfo,&tmpInfo,&cubAuxMem);
-        swapKernel<<<1,1>>>(&childrenInfo, &tmpInfo);
-        countFlaggedKernel<<<gridSize,blockSize>>>(IsChildren, &nFlagged, &childrenInfo);
-        resizeToKernel<<<1,1>>>(&childrenInfo, &nFlagged);
-
-        filterRepresentedKernel<<<1,1>>>(this);
-        sortByGKernel<<<1,1>>>(model,this);
-        //saveCutsetLELKernel<<<1,1>>>(this);
-        saveCutsetKernel<<<1,1>>>(this);
-        //saveCutsetNewKernel<<<1,1>>>(this);
-        mergeChildrenNewKernel<<<1,1>>>(this);
-        calcOutLabelsNewKernel<<<gridSize,blockSize>>>(model,&children, &childrenInfo, primal,dual,DDRelaxed);
-        checkForTargetNewKernel<<<1,1>>>(model,&expData.bestTargetNode,&children,&childrenInfo);
-    }
 
 public:
 
@@ -411,29 +354,46 @@ public:
         gfl::f64 const dual,
         gfl::i32 const brachFactor)
     {
+
         using namespace gfl;
         auto & children = expData.children;
         auto & childrenInfo = expData.childrenInfo;
+        auto & bestTrgt = expData.bestTargetNode;
+        auto & bestExactTrgt = expData.bestExactTargetNode;
 
         expData.clear();
         cutData.clear();
-        expData.children.pushBackGpu(parents.data(), parents.size()); // Not on parents! It will swap internally.
-        i32 const blockSize = 128;
-        i32 const gridSizde = ceil<i32>(parents.size(),blockSize);
+        i32 const maxChildren = parents.size() * brachFactor;
+
+        expData.children.pushBackGpuAsync(parents.data(), parents.size());
+        CHECK_LAST_CUDA_ERROR();
         resizeToKernel<<<1,1>>>(&expData.childrenInfo, parents.size());
-        resetInfoIdxKernel<<<gridSizde,blockSize>>>(&expData.childrenInfo);
-        cudaDeviceSynchronize();
-        //expandRelaxedRecKernel<<<1,1>>>(model, this, primal, dual, brachFactor);
+        CHECK_LAST_CUDA_ERROR();
+        i32 const blockSize = 256;
+        i32 const gridSize = ceil<i32>(maxChildren, blockSize);
+        resetInfoIdxKernel<<<gridSize, blockSize>>>(&expData.childrenInfo);
+        CHECK_LAST_CUDA_ERROR();
+        CHECK_CUDA_ERROR(cudaDeviceSynchronize());
+
         while (not childrenInfo.empty() and not expData.bestTargetNode.has_value())
         {
-            swapParentsAndChildrenKernel<<<1,1>>>(this);
-            cudaDeviceSynchronize();
-            //expandLayerRelaxedKernel<<<1,1>>>(model, this, primal, dual, brachFactor);
-            expandLayerRelaxed(model, primal, dual, brachFactor);
+            swapParentsAndChildrenKernel<<<1,1>>>(&expData);
+            CHECK_LAST_CUDA_ERROR();
+            expandParents(model, primal, maxChildren);
+            filterRepresentedChildren(maxChildren);
+            sortChildrenByG(model, maxChildren);
+            saveCutset(width_,maxChildren);
+            mergeChildren(width_,maxChildren);
+            calcOutLabelsKernel<<<gridSize, blockSize>>>(model, &children, &childrenInfo, primal, dual, DDRelaxed);
+            CHECK_LAST_CUDA_ERROR();
+            checkForTargetKernel<<<1,1>>>(model, &expData.bestTargetNode, &children, &childrenInfo);
+            CHECK_LAST_CUDA_ERROR();
             cudaDeviceSynchronize();
         }
-        onlyBestTargets();
-        finalizeCutset(model,primal,dual);
+        copyBestTargetsKernel<<<1,1>>>(&bestTrgt,&bestExactTrgt,&children, &childrenInfo);
+        CHECK_LAST_CUDA_ERROR();
+        finalizeCutset(model, primal, dual);
+        cudaDeviceSynchronize(); // Final sync
     }
 };
 

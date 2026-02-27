@@ -120,10 +120,10 @@ namespace gfl
         }
 
 #ifdef __CUDACC__
-        void pushBackGpu(T const * values, i64 const count = 1) noexcept
+        void pushBackGpuAsync(T const * values, i64 const count = 1) noexcept
         {
             i64 const oldSize = resizeBy(count);
-            cudaMemcpy(&at(oldSize), values, sizeof(T) * count, cudaMemcpyHostToDevice);
+            cudaMemcpyAsync(&at(oldSize), values, sizeof(T) * count, cudaMemcpyHostToDevice);
         }
 #endif
 

@@ -46,8 +46,6 @@ int runRelaxedGpu(int argc, char* argv[])
     // Search statistics
     StatsManager stats(cli.timeout());
 
-    // Log manager
-
     // Layers
     QueueGpu<Model,Node> queue;
     queue.push(Node::makeRoot(model));
@@ -90,7 +88,7 @@ int runRelaxedGpu(int argc, char* argv[])
                 //std::cout << "who is a bad boy?"; Node::print(trg); std::cout << "\n";
                 bnb.dual(bestTarget.value());
                 assert(bnb.consistent());
-                auto const & cutset = eng->cutset();
+                auto const & cutset = eng->cutData.nodes();
                 queue.pushFromGpu(cutset);
             }
         }

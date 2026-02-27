@@ -21,7 +21,9 @@ public:
     ExpansionData expData;
     CutsetData cutData;
     gfl::i64 nFlagged;
-    gfl::i64 width_;
+    gfl::i32 width_;
+    gfl::i64 nNodes;
+
 
 public:
 
@@ -37,9 +39,6 @@ public:
         cutData.init(width, branchFactor, depth, alloc);
 
     }
-
-    gfl::tuple<gfl::ArrayView<Node>, gfl::ArrayView<gfl::i32>> cutset() const noexcept
-    { return {cutData.nodes(),cutData.offsets()};}
 
     gfl::tuple<gfl::optional<Node> const &,gfl::optional<Node> const &> getTargets() const noexcept
     {return {expData.bestTargetNode, expData.bestExactTargetNode};}

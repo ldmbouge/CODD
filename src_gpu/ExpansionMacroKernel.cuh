@@ -357,9 +357,4 @@ void expandRelaxedRecKernel(
 
 
 
-template<typename Model, typename Node>
-GFL_GLOBAL
-void swapParentsAndChildrenKernel(ExpansionEngineGpu<Model,Node> * const expEng)
-{
-    expEng->expData.swapParentsAndChildren();
-}
+

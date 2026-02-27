@@ -17,18 +17,21 @@ namespace gfl
     {
         assert(wIdx < nWorkers);
         assert(0 <= nWorkers);
-        assert(0 <= nJobs);
 
-        auto const jobsPerWorker = nJobs / nWorkers;
-        auto const remainder = nJobs % nWorkers;
+        T begin = 0;
+        T end = -1;
+        if (nJobs > 0) // There are reasonable cases where nJobs can be negative
+        {
+            auto const jobsPerWorker = nJobs / nWorkers;
+            auto const remainder = nJobs % nWorkers;
 
-        // First 'remainder' workers get one extra job
-        auto const extra = (wIdx < remainder) ? 1 : 0;
+            // First 'remainder' workers get one extra job
+            auto const extra = (wIdx < remainder) ? 1 : 0;
 
-        T const begin = wIdx * jobsPerWorker + min<i64>(wIdx, remainder);
-        T const end = begin + jobsPerWorker + extra;
-
-        return make_tuple(begin, end);
+            begin = wIdx * jobsPerWorker + min<i64>(wIdx, remainder);
+            end = begin + jobsPerWorker + extra;
+        }
+        return make_tuple(0,-1);
     }
 
 #ifdef __CUDACC__

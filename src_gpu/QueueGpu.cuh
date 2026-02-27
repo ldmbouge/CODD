@@ -15,39 +15,21 @@ public:
     using Queue<Model,Node>::memPool_;
 
 
-    void pushFromGpu(gfl::tuple<gfl::ArrayView<Node>, gfl::ArrayView<gfl::i32>> const & cutset)
+    void pushFromGpu(gfl::ArrayView<Node> const * cutsetGpu)
     {
         using namespace gfl;
 
-        auto [nodesGpu, offsetsGpu] = cutset;
 
-        if (not nodesGpu.empty())
+        if (not cutsetGpu->empty())
         {
-            ArrayView<Node> nodesCpu(nodesGpu.size(), new (&memPool_) Node[nodesGpu.size()]);
+            ArrayView<Node> cutsetCpu(cutsetGpu->size(), new (&memPool_) Node[cutsetGpu->size()]);
             CHECK_CUDA_ERROR(cudaMemcpyAsync(
-                nodesCpu.data(),
-                nodesGpu.data(),
-                nodesGpu.dataMemSize(),
+                cutsetCpu.data(),
+                cutsetGpu->data(),
+                cutsetGpu->dataMemSize(),
                 cudaMemcpyDeviceToHost));
-            offsetsCpu.resize(offsetsGpu.size());
-            CHECK_CUDA_ERROR(cudaMemcpyAsync(
-                offsetsCpu.data(),
-                offsetsGpu.data(),
-                offsetsGpu.dataMemSize(),
-                cudaMemcpyDeviceToHost));
-            cudaDeviceSynchronize();
-
-            for (i32 i = 0; i < offsetsCpu.size(); ++i)
-            {
-                i32 const begin = offsetsCpu.at(i);
-                i32 const end   = (i + 1 < offsetsCpu.size()) ? offsetsCpu.at(i + 1) : nodesCpu.size();
-                i32 const size = end - begin;
-                if (size > 0)
-                {
-                    ArrayView slice(size, nodesCpu.data() + begin);
-                    push(slice);
-                }
-            }
+            CHECK_CUDA_ERROR(cudaDeviceSynchronize());
+            push(cutsetCpu);
         }
     }
 };

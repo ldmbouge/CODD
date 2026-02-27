@@ -16,10 +16,12 @@ struct ExpansionData
     gfl::VectorView<NodeInfo> childrenInfo{};
     gfl::VectorView<NodeInfo> parentInfo{};
 
-    gfl::ArrayView<Node> tmpView;
-    gfl::ArrayView<NodeInfo> tmpInfoView;
     gfl::VectorView<Node> tmpNodes{};
     gfl::VectorView<NodeInfo> tmpInfo{};
+
+    gfl::ArrayView<Node> tmpView;
+    gfl::ArrayView<NodeInfo> tmpInfoView;
+
 
     void init(gfl::i32 const nNodes, gfl::ArenaAllocator & alloc) noexcept
     {
