@@ -45,7 +45,7 @@ int runHybrid(int argc, char* argv[])
     ArenaAllocator resEngAlloc(engMemSize, heapReserve(engMemSize));
     ArenaAllocator resBuffAlloc(cli.memSize(), heapReserve(cli.memSize()));
     ResEngCpu * const resEng = new (resEngAlloc) ResEngCpu();
-    i32 const cpuWidth = max<i32>(128, cli.width() / 128) ;
+    i32 const cpuWidth = 4096; //cli.width();
     resEng->initRestrictedExpansion(cpuWidth, BranchFactor, resBuffAlloc);
     printf("Restricted Working memory: ");
     printMemSize(resBuffAlloc.usedSize());
@@ -67,13 +67,17 @@ int runHybrid(int argc, char* argv[])
     std::vector<Node> parentsBuffer;
     parentsBuffer.reserve(cli.pop());
 
+    std::vector<Node> testBuffer;
+
     // BnB search
     log.header();
     stats.start();
-    while (not queue.empty() and stats.elapsed<sec>() <= cli.timeout() ) //and not bnb.solved())
+
+    while (not queue.empty() and stats.elapsed<sec>() <= cli.timeout() and not bnb.solved())
     {
+        f64 const lambda = isValid<Model>(bnb.primal()) ? 1.5 : 2.5;
         parentsBuffer.clear();
-        while (not queue.empty() and parentsBuffer.size() < cli.pop() and parentsBuffer.size() < cpuWidth)
+        while (not queue.empty() and parentsBuffer.size() < cli.pop())
         {
             if (parentsBuffer.empty())
             {
@@ -83,6 +87,27 @@ int runHybrid(int argc, char* argv[])
             else
             {
                 Node const * node = queue.peekBest();
+
+                // //Restricted
+                //  if (isValid<Model>(bnb.primal()))
+                // {
+                //     testBuffer.clear();
+                //     testBuffer.push_back(*node);
+                //     resEng->expandRestricted(model, testBuffer, bnb.primal(), bnb.dual());
+                //     auto [resBestTarget, _] = resEng->getTargets();
+                //     if (resBestTarget.has_value())
+                //     {
+                //         bnb.primal(resBestTarget.value());
+                //     }
+                //     if (resEng->exact)
+                //     {
+                //         queue.pullBest();
+                //         log.progress();
+                //         //pruned++;
+                //         continue;
+                //     }
+                // }
+
                 if (parentsBuffer.back().depth() == node->depth())
                 {
                     node = queue.pullBest();
@@ -93,26 +118,21 @@ int runHybrid(int argc, char* argv[])
                     break;
                 }
             }
-      
         }
+        fflush(stdout);
         if (not parentsBuffer.empty())
         {
+
+            printf("\rExpanding depth=%d f=%.2f qsize=%lld\033[K",
+              parentsBuffer.front().depth(),
+              parentsBuffer.front().f(),
+              queue.size());
+            fflush(stdout);
+
             bnb.dual(parentsBuffer.front().f());
 
-            // Restricted
-            // resEng->expandRestricted(model, parentsBuffer, bnb.primal(), bnb.dual());
-            // auto [resBestTarget, _] = resEng->getTargets();
-            // if (resBestTarget.has_value())
-            // {
-            //     bnb.primal(resBestTarget.value());
-            //     if (resEng->exact)
-            //     {
-            //         continue;
-            //     }
-            // }
-
             // Relaxed
-            relEng->expandRelaxed(model, parentsBuffer, bnb.primal(), bnb.dual());
+            relEng->expandRelaxed(model, parentsBuffer, bnb.primal(), bnb.dual(), lambda);
             auto [relBestTarget, relBestExactTarget] = relEng->getTargets();
             if (relBestExactTarget.has_value())
             {

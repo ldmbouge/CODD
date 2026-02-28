@@ -4,8 +4,8 @@
 
 int main(int argc,char* argv[])
 {
-    constexpr int BranchFactor = 128;
-    constexpr int Items = 128;
+    constexpr int BranchFactor = 190;
+    constexpr int Items = 190;
     constexpr int Depth = 15;
 
     using Model = GRuler<BranchFactor,Items>;

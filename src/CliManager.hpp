@@ -14,6 +14,7 @@ class CliManager
     int width_{0};
     int timeout_{std::numeric_limits<int>::max()};
     int toPop_{1};
+    double lambda {0.0};
     long long int memSize_{0};
     std::string instance_{};
     cxxopts::Options options_;
@@ -42,6 +43,7 @@ CliManager::CliManager(std::string const& programName, std::string const& descri
         ("m,memory", "Working memory in GB", cxxopts::value(memSize_))
         ("p,pop", "Max nodes to pop in parallel ", cxxopts::value(toPop_))
         ("i,instance", "Path to the instance file", cxxopts::value(instance_))
+        ("l,lambda", "Favour exact nodes", cxxopts::value(lambda))
         ("t,timeout", "Timeout in seconds", cxxopts::value(timeout_));
 
     options_.parse_positional({"instance"});

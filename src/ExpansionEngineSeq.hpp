@@ -154,16 +154,33 @@ public:
         childrenInfo.resizeTo(parents.size());
         resetInfoIdx(childrenInfo);
 
+        exact = true;
         while (not childrenInfo.empty() and not expData.bestTargetNode.has_value())
         {
             expData.swapParentsAndChildren();
             expandParents(model,expData,primal);
             filterRepresentedChildren<Model,Node>(expData);
-            sortChildrenByG<Model,Node>(expData);
-            exact = exact and childrenInfo.size() > width_;
+            sortChildrenByF<Model,Node>(expData);
+            exact = exact and (childrenInfo.size() <= width_);
             childrenInfo.resizeTo(min<i64>(width_, childrenInfo.size()));
             calcOutLabels<Model,Node>(model, children, childrenInfo, primal, dual, DDRestricted);
             checkForTarget(model, bestTrgt, children, childrenInfo);
         }
+
+
+        // while (not childrenInfo.empty() and not expData.bestTargetNode.has_value())
+        // {
+        //     expData.swapParentsAndChildren();
+        //     expandParents(model,expData,primal);
+        //     filterRepresentedChildren<Model,Node>(expData);
+        //     //sortChildrenByG<Model,Node>(expData);
+        //     sortChildrenByF<Model,Node>(expData);
+        //     exact = exact and (childrenInfo.size() <= width_);
+        //     childrenInfo.resizeTo(min<i64>(width_, childrenInfo.size()));
+        //     calcOutLabels<Model,Node>(model, children, childrenInfo, primal, dual, DDRestricted);
+        //     checkForTarget(model, bestTrgt, children, childrenInfo);
+        //     printf("RS: %llu (&d)\n", childrenInfo.size());
+        // }
+        // printf("===");
     }
 };

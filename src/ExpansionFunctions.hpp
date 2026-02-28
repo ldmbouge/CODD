@@ -271,6 +271,27 @@ void filterRepresentedChildren(ExpansionData<Node> & expData)
 }
 
 template<typename Model, typename Node>
+void sortChildrenByF(ExpansionData<Node> & expData)
+{
+    using namespace gfl;
+
+    using namespace gfl;
+    auto & children = expData.children;
+    auto & childrenInfo = expData.childrenInfo;
+
+    assert(childrenInfo.size() == children.size());
+
+    for (i32 i = 0; i < childrenInfo.size(); i += 1)
+    {
+        NodeInfo & info = childrenInfo[i];
+        Node const & node = children[info.idx];
+        info.score = score<Model>(node.f());
+    }
+    sort(childrenInfo, NodeInfo::cmpByScore);
+}
+
+
+template<typename Model, typename Node>
 void sortChildrenByG(ExpansionData<Node> & expData)
 {
     using namespace gfl;

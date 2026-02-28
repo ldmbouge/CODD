@@ -47,7 +47,7 @@ public:
 
         auto const state = model->initial();
         auto const labels = model->lgf(state, worst<Model>(), best<Model>(), DDExact);
-        f64 h = best<Model>();
+        f64 h = 0;//worst<Model>();
         if constexpr (Model::has_heur) h = model->h(state, DDInit);
         return new Node(state, labels, h);
     }

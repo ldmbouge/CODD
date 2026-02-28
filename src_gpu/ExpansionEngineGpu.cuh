@@ -135,7 +135,7 @@ public:
         CHECK_LAST_CUDA_ERROR();
     }
 
-    void sortChildrenByG()
+    void sortChildrenByG(gfl::f64 const lambda)
     {
         using namespace gfl;
         auto & children = expData.children;
@@ -151,7 +151,7 @@ public:
         CHECK_LAST_CUDA_ERROR();
         resizeToKernel<<<1,1>>>(&tmpInfo,childrenInfo.sizePtr());
         CHECK_LAST_CUDA_ERROR();
-        setScoreAsGKernel<Model><<<gridSize,blockSize>>>(&children, &childrenInfo);
+        setScoreAsGKernel<Model><<<gridSize,blockSize>>>(&children, &childrenInfo, lambda);
         CHECK_LAST_CUDA_ERROR();
 
         sortKernel<NodeInfo::ScoreDecomposer><<<1,1>>>(&childrenInfo,&tmpInfo,&cubAuxMem);
@@ -345,8 +345,6 @@ public:
 
         ExpEng::initRelaxedExpansion(width, branchFactor, depth, alloc);
         i32 const maxNodes = width_ * branchFactor_;
-        printf("cubAuxMemSize=%lld for maxNodes=%d\n", cubAuxMemSize(maxNodes), maxNodes);
-
         initCubAuxMem(maxNodes,alloc);
     }
 
@@ -354,7 +352,8 @@ public:
         Model const * model,
         std::vector<Node> const & parents,
         gfl::f64 const primal,
-        gfl::f64 const dual)
+        gfl::f64 const dual,
+        gfl::f64 const lambda)
     {
 
         using namespace gfl;
@@ -382,7 +381,7 @@ public:
             CHECK_LAST_CUDA_ERROR();
             expandParents(model, primal);
             filterRepresentedChildren();
-            sortChildrenByG();
+            sortChildrenByG(lambda);
             saveCutset();
             mergeChildren();
             calcOutLabelsKernel<<<gridSize, blockSize>>>(model, &children, &childrenInfo, primal, dual, DDRelaxed);
@@ -395,7 +394,7 @@ public:
         }
         // printf("---\n", childrenInfo.size());
         // fflush(stdout);
-        copyBestTargetsKernel<<<1,1>>>(&bestTrgt,&bestExactTrgt,&children, &childrenInfo);
+        copyBestTargetsKernel<Model,Node><<<1,1>>>(&bestTrgt,&bestExactTrgt,&children, &childrenInfo);
         CHECK_LAST_CUDA_ERROR();
         finalizeCutset(model, primal, dual);
         CHECK_CUDA_ERROR(cudaDeviceSynchronize());

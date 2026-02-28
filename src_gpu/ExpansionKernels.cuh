@@ -397,29 +397,35 @@ void copyAll(
     }
 }
 
-template<typename Node>
+template<typename Model, typename Node>
 GFL_GLOBAL
 void copyBestTargetsKernel(
     gfl::optional<Node> * const bestTarget,
     gfl::optional<Node> * const bestExactTarget,
-    gfl::ArrayView<Node> const  * const  targets,
+    gfl::ArrayView<Node> const * const targets,
     gfl::ArrayView<NodeInfo> const * const targetsInfo)
 {
     using namespace gfl;
 
-    if (not targetsInfo->empty())
+    for (i64 i = 0; i < targetsInfo->size(); ++i)
     {
-        NodeInfo const & bestInfo = targetsInfo->at(0);
-        *bestTarget = targets->at(bestInfo.idx);
+        NodeInfo const & info = targetsInfo->at(i);  // ← was at(0)
+        Node const & node = targets->at(info.idx);
 
-        for (i64 i = 0; i < targetsInfo->size(); ++i)
+        // Best overall (any node)
+        if (not bestTarget->has_value() or
+            isBetter<Model>(node.g(), bestTarget->value().g()))
         {
-            NodeInfo const & targetInfo = targetsInfo->at(0);
-            Node const & target = targets->at(targetInfo.idx);
-            if (not target.approximated())
+            *bestTarget = node;
+        }
+
+        // Best exact (non-approximated)
+        if (not node.approximated())
+        {
+            if (not bestExactTarget->has_value() or
+                isBetter<Model>(node.g(), bestExactTarget->value().g()))
             {
-                *bestExactTarget = target;
-                break;
+                *bestExactTarget = node;
             }
         }
     }
@@ -429,7 +435,8 @@ template<typename Model, typename Node>
 GFL_GLOBAL
 void setScoreAsGKernel(
     gfl::ArrayView<Node> const * const nodes,
-    gfl::ArrayView<NodeInfo> const * const nodesInfo)
+    gfl::ArrayView<NodeInfo> const * const nodesInfo,
+    gfl::f64 const lambda)
 {
     using namespace gfl;
 
@@ -439,7 +446,10 @@ void setScoreAsGKernel(
     {
         NodeInfo & info = nodesInfo->at(i);
         Node const & node = nodes->at(info.idx);
-        info.score = score<Model>(node.g()) * (node.approximated() ? 1.5 : 0.5);
+        info.score = score<Model>(node.g());
+        info.score =
+            node.approximated() ? info.score
+                                : boostScore<Model>(info.score, lambda);
     }
 }
 template<typename Model, typename Node>

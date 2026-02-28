@@ -118,6 +118,16 @@ gfl::f64 score(gfl::f64 const a) noexcept
 
 template<typename Model>
 GFL_HOST_DEVICE constexpr
+gfl::f64 boostScore(gfl::f64 const score, gfl::f64 const lambda)
+{
+    if constexpr (Model::is_maximization)
+        return score * lambda;   // lambda > 1 makes it larger = better
+    else
+        return score / lambda;   // lambda > 1 makes it smaller = better
+}
+
+template<typename Model>
+GFL_HOST_DEVICE constexpr
 bool isTighter(gfl::f64 const a, gfl::f64 const b) noexcept
 {
     return isWorse<Model>(a, b);
