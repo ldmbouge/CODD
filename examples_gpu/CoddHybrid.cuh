@@ -11,7 +11,7 @@
 #include "ExpansionEngineGpu.cuh"
 
 template<typename Model, typename Node, int BranchFactor, int Depth>
-int runRelaxedGpu(int argc, char* argv[])
+int runHybrid(int argc, char* argv[])
 {
     using namespace gfl;
     using RelEngGpu = ExpansionEngineGpu<Model,Node>;
@@ -21,7 +21,7 @@ int runRelaxedGpu(int argc, char* argv[])
     cli.parse(argc, argv);
     std::cout << "Instance: " << cli.instance() << std::endl;
     std::cout << "Width: " << cli.width() << std::endl;
-    std::cout << "Engine: GPU"  << std::endl;
+    std::cout << "Engine: GPU (Relaxed) + CPU (Restricted)"  << std::endl;
 
     // Model (+ Instance) creation
     constexpr i32 modelMemSize = 256 * 1024; // Small, it MUST fit in shared memory
@@ -45,7 +45,7 @@ int runRelaxedGpu(int argc, char* argv[])
     ArenaAllocator resEngAlloc(engMemSize, heapReserve(engMemSize));
     ArenaAllocator resBuffAlloc(cli.memSize(), heapReserve(cli.memSize()));
     ResEngCpu * const resEng = new (resEngAlloc) ResEngCpu();
-    resEng->initRelaxedExpansion(cli.width(), BranchFactor, Depth, resBuffAlloc);
+    resEng->initRestrictedExpansion(cli.width(), BranchFactor, resBuffAlloc);
     printf("Restricted Working memory: ");
     printMemSize(resBuffAlloc.usedSize());
     printf("\n");
@@ -92,27 +92,36 @@ int runRelaxedGpu(int argc, char* argv[])
                     break;
                 }
             }
-
+      
         }
         if (not parentsBuffer.empty())
         {
             bnb.dual(parentsBuffer.front().f());
 
-            //eng->expandRelaxed(model, node, bnb.primal(), bnb.dual(), BranchFactor);
-            //resEng->expandRelaxed(model, parentsBuffer, bnb.primal(), bnb.dual(), BranchFactor);
+            // // Restricted
+            // resEng->expandRestricted(model, parentsBuffer, bnb.primal(), bnb.dual());
+            // auto [resBestTarget, _] = resEng->getTargets();
+            // if (resBestTarget.has_value())
+            // {
+            //     bnb.primal(resBestTarget.value());
+            //     if (resEng->exact)
+            //     {
+            //         continue;
+            //     }
+            // }
 
-            // Check relaxation and manage cutset
-            auto [bestTarget, bestExactTarget] = resEng->getTargets();
-            if (bestExactTarget.has_value())
+            // Relaxed
+            relEng->expandRelaxed(model, parentsBuffer, bnb.primal(), bnb.dual());
+            auto [relBestTarget, relBestExactTarget] = resEng->getTargets();
+            if (relBestExactTarget.has_value())
             {
-                bnb.primal(bestExactTarget.value());
+                bnb.primal(relBestExactTarget.value());
             }
-            if (bestTarget.has_value())
+            if (relBestTarget.has_value())
             {
-                if (not bnb.pruneAncestor(bestTarget.value()))
+                if (not bnb.pruneAncestor(relBestTarget.value()))
                 {
-                    //std::cout << "who is a bad boy?"; Node::print(trg); std::cout << "\n";
-                    bnb.dual(bestTarget.value());
+                    bnb.dual(relBestTarget.value());
                     auto const & cutset = resEng->cutData.nodes();
                     queue.pushFromGpu(cutset);
                 }

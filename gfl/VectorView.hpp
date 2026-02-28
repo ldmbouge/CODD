@@ -112,7 +112,6 @@ namespace gfl
             std::memcpy(&at(oldSize), elements.data(), elements.dataMemSize());
         }
 
-        GFL_HOST_DEVICE
         void pushBack(std::vector<T> const & elements) noexcept
         {
             i64 const oldSize = resizeBy(elements.size());

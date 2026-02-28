@@ -29,6 +29,7 @@ namespace gfl
     template<typename... Types>
     using tuple = backend::tuple<Types...>;
     using backend::make_tuple;
+    using backend::tie;
     using backend::get;
 
     // Numeric Limits

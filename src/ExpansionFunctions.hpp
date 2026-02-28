@@ -41,60 +41,62 @@ void printInfo(gfl::ArrayView<NodeInfo> const & nodesInfo)
 
 template<typename Model, typename Node>
 void expandParents(
-                   Model const * const model,
-                   ExpansionData<Node> * const expData,
-                   gfl::f64 const primal)
+       Model const * const model,
+       ExpansionData<Node> & expData,
+       gfl::f64 const primal)
 {
     using namespace gfl;
 
-    auto const & parents = expData->parents;
-    auto & children = expData->children;
-    auto & childrenInfo = expData->childrenInfo;
-
-    assert(infoConsistent(children, childrenInfo));
+    auto const & parents = expData.parents;
+    auto & children = expData.children;
+    auto & childrenInfo = expData.childrenInfo;
 
     for (i32 pIdx = 0; pIdx < parents.size(); pIdx += 1)
     {
         Node const & pNode = parents[pIdx];
         auto const & pLabels = pNode.labels();
-        auto const & [minLabel, maxLabel, nLabels] = pLabels.summary();
-        if (nLabels > 0)
+        auto const & [minl, maxl, nLabels] = pLabels.summary();
+        for (i32 label = minl; label <= maxl; label += 1)
         {
-            for (i32 label = minLabel; label <= maxLabel; label += 1)
+            if (pLabels.contains(label))
             {
-                if (pLabels.contains(label))
+                // Transition
+                auto const cState = model->stf(pNode.state(), label);
+                if (cState.has_value())
                 {
-                    // Transition
-                    auto const cState = model->stf(pNode.state(), label);
-                    if (cState.has_value())
+                    f64 const tCost = model->scf(pNode.state(), label);
+                    f64 const cG = pNode.g() + tCost;
+                    f64 cH = pNode.f() - cG;
+                    if constexpr (Model::has_heur)
                     {
-                        f64 const tCost = model->scf(pNode.state(), label);
-                        f64 const cG = pNode.g() + tCost;
-                        f64 cH = pNode.f() - cG;
-                        if constexpr (Model::has_heur)
-                        {
-                            f64 const h = model->h(cState.value(), BBCtx);
-                            cH = tighter<Model>(cH,h);
-                        }
-
-                        // Conditions to keep the child
-                        if (isBetter<Model>(cG + cH,primal))
-                        {
-                            // Node
-                            assert(childrenInfo.size() == children.size());
-                            childrenInfo.resizeBy(1);
-                            i32 const cIdx = children.resizeBy(1);
-                            Node & cNode = children[cIdx];
-                            new (&cNode) Node(cState.value(), cG, cH, label, pNode);
-                            NodeInfo & cInfo = childrenInfo[cIdx];
-                            new (&cInfo) NodeInfo(cIdx, pIdx);
-                        }
+                        f64 const h = model->h(cState.value(), BBCtx);
+                        cH = tighter<Model>(cH,h);
+                    }
+                    // Conditions to keep the child
+                    if (isBetter<Model>(cG + cH,primal))
+                    {
+                        // Node
+                        i32 const iIdx = childrenInfo.resizeBy(1);
+                        i32 const cIdx = children.resizeBy(1);
+                        childrenInfo[iIdx] = NodeInfo(cIdx, pIdx);
+                        children[cIdx] = Node(cState.value(), cG, cH, label, pNode);
                     }
                 }
             }
         }
     }
-    assert(infoConsistent(children, childrenInfo));
+}
+
+inline
+void resetInfoIdx(gfl::ArrayView<NodeInfo> const & nodesInfo)
+{
+    using namespace gfl;
+
+    for (i64 i = 0; i < nodesInfo.size(); i += 1)
+    {
+        NodeInfo & info = nodesInfo[i];
+        info.idx = scast<i32>(i);
+    }
 }
 
 template<typename Model, typename Node>
@@ -157,7 +159,7 @@ void flagRepresented(NodeInfo & iInfo, NodeInfo & jInfo, Node const & iNode, Nod
 
 inline
 void setFlag(
-    gfl::u64 const flag,
+    gfl::u8 const flag,
     gfl::VectorView<NodeInfo> & nodesInfo)
 {
     using namespace gfl;
@@ -199,19 +201,20 @@ void flagRepresented(
 }
 
 inline
-void countFlagged(
+gfl::i32 countFlagged(
     gfl::i64 const flag,
-    gfl::i32 * const count,
+
     gfl::ArrayView<NodeInfo> const & nodesInfo)
 {
     using namespace gfl;
 
-    *count = 0;
-    for (i32 i = 0; i < nodesInfo.size(); i += 1)
+    i32 count = 0;
+    for (i32 i = 0; i < nodesInfo.size(); ++i)
     {
         NodeInfo const & info = nodesInfo[i];
-        *count += info.flag == flag;
+        count += info.flag == flag;
     }
+    return count;
 }
 
 template<typename Node>
@@ -245,49 +248,46 @@ void copy(gfl::ArrayView<T> & dst, gfl::ArrayView<T> const & src)
 
 
 template<typename Model, typename Node>
-void filterChildren(ExpansionData<Node> * const expData)
+void filterRepresentedChildren(ExpansionData<Node> & expData)
 {
     using namespace gfl;
+    auto & children = expData.children;
+    auto & childrenInfo = expData.childrenInfo;
+    auto & tmpNodes = expData.tmpNodes;
+    auto & tmpInfo = expData.tmpInfo;
+    constexpr u8 Represented = 1;
+    constexpr u8 NotRepresented = 0;
 
-    auto & children = expData->children;
-    auto & tmpChildren = expData->tmpNodes;
-    auto & childrenInfo = expData->childrenInfo;
-
-    assert(infoConsistent(children, childrenInfo));
-
+    assert(childrenInfo.size() == children.size());
     calcHash<Model>(children, childrenInfo);
     sort(childrenInfo, NodeInfo::cmpByHash);
-    assert(children.size() == childrenInfo.size());
 
-    //printInfo(childrenInfo);
-    
-    i32 nRepresentatives = 0;
-    setFlag(0,childrenInfo);
-    flagRepresented<Model,Node>(1,children,childrenInfo);
-    countFlagged(0, &nRepresentatives, childrenInfo);
-    //std::cout << "#flag:" << nRepresentatives << " input size:" << children.size() << "\n";
+    setFlag(NotRepresented,childrenInfo);
+    flagRepresented<Model,Node>(Represented,children,childrenInfo);
+    i32 const nRepresentatives = countFlagged(NotRepresented, childrenInfo);
+
     sort(childrenInfo, NodeInfo::cmpByFlag);
-
     childrenInfo.resizeTo(nRepresentatives);
-    tmpChildren.resizeTo(nRepresentatives);
-    copyByInfo(tmpChildren,children, childrenInfo);
-    VectorView<Node>::swap(tmpChildren, children);
-
-    assert(infoConsistent(children, childrenInfo));
 }
 
 template<typename Model, typename Node>
-void setScoreG(gfl::ArrayView<Node> & nodes, gfl::ArrayView<NodeInfo> const & nodesInfo)
+void sortChildrenByG(ExpansionData<Node> & expData)
 {
     using namespace gfl;
 
-    assert(nodes.size() == nodesInfo.size());
-    for (i32 i = 0; i < nodesInfo.size(); i += 1)
+    using namespace gfl;
+    auto & children = expData.children;
+    auto & childrenInfo = expData.childrenInfo;
+
+    assert(childrenInfo.size() == children.size());
+
+    for (i32 i = 0; i < childrenInfo.size(); i += 1)
     {
-        NodeInfo & info = nodesInfo[i];
-        Node const & node = nodes[info.idx];
+        NodeInfo & info = childrenInfo[i];
+        Node const & node = children[info.idx];
         info.score = score<Model>(node.g());
     }
+    sort(childrenInfo, NodeInfo::cmpByScore);
 }
 
 template<typename Model, typename Node>
@@ -356,35 +356,76 @@ void updateAncestorFlag(gfl::ArrayView<Node> & children, gfl::ArrayView<NodeInfo
 }
 
 template<typename Model, typename Node>
-void saveCutset(
-    gfl::ArrayView<Node> const & parents,
-    gfl::ArrayView<NodeInfo> & parentInfo,
-    CutsetData<Node> * const cutData)
+void saveCutset(ExpansionData<Node> & expData)
 {
-    using namespace gfl;
-
-    sort(parentInfo, NodeInfo::cmpByFlag);
-    i32 nParentsToCopy = 0;
-    countFlagged(1, &nParentsToCopy, parentInfo);
-
-    if (nParentsToCopy > 0)
-    {
-        ArrayView<NodeInfo> parentsToCopyInfo = parentInfo.slice(-nParentsToCopy);
-        setRevScoreF<Model,Node>(parents, parentsToCopyInfo);
-        sort(parentsToCopyInfo, NodeInfo::cmpByScore);
-        cutData->markAndResizeBy(nParentsToCopy);
-        ArrayView<Node> const * segment = cutData->mark();
-        copyByInfo(*segment, parents, parentsToCopyInfo);
-
-        printf("CUTSET:\n");
-        for(auto const & c : *segment) {Node::print(c);printf("\n");}
-        printf("\n");
-    }
-
-    DEBUG_CUT (
-
-    )
-
+    // using namespace gfl;
+    // auto const & parents = expData.parents;
+    // auto & parentsInfo = expData.parentInfo;
+    // auto & children = expData.children;
+    // auto & childrenInfo = expData.childrenInfo;
+    // auto & tmpNodes = expData.tmpNodes;
+    // auto & tmpInfo = expData.tmpInfo;
+    // auto & cutset = cutData;
+    // constexpr u8 ToNotSave = 1;
+    // constexpr u8 ToSave = 0;
+    //
+    // i32 const maxChildren = width_ * branchFactor_;
+    // i32 const blockSize = 256;
+    // i32 const gridSize = ceil<i32>(maxChildren, blockSize);
+    //
+    // resetInfoIdxKernel<<<gridSize,blockSize>>>(&parentsInfo);
+    // CHECK_LAST_CUDA_ERROR();
+    // setFlagKernel<<<gridSize,blockSize>>>(ToNotSave, &parentsInfo);
+    // CHECK_LAST_CUDA_ERROR();
+    // flagToSaveKernel<<<gridSize,blockSize>>>(ToSave, &parentsInfo, width_, &children, &childrenInfo);
+    // CHECK_LAST_CUDA_ERROR();
+    // updateAncInCutKernel<<<gridSize,blockSize>>>(ToSave, &parentsInfo, &children, &childrenInfo);
+    // CHECK_LAST_CUDA_ERROR();
+    // resizeToKernel<<<1,1>>>(&tmpInfo, parentsInfo.sizePtr());
+    // CHECK_LAST_CUDA_ERROR();
+    // sortKernel<NodeInfo::FlagDecomposer><<<1,1>>>(&parentsInfo, &tmpInfo, &cubAuxMem);
+    // CHECK_LAST_CUDA_ERROR();
+    // swapKernel<<<1,1>>>(&tmpInfo, &parentsInfo);
+    // CHECK_LAST_CUDA_ERROR();
+    // setValueKernel<<<1,1>>>(&nFlagged, scast<i64>(0));
+    // CHECK_LAST_CUDA_ERROR();
+    // countFlaggedKernel<<<gridSize,blockSize>>>(ToSave, &nFlagged, &parentsInfo);
+    // CHECK_LAST_CUDA_ERROR();
+    // resizeToKernel<<<1,1>>>(&parentsInfo, &nFlagged);
+    // CHECK_LAST_CUDA_ERROR();
+    // resizeToKernel<<<1,1>>>(&tmpInfo, &nFlagged);
+    // CHECK_LAST_CUDA_ERROR();
+    // markAndResizeByKernel<<<1,1>>>(&cutset, &nFlagged);
+    // CHECK_LAST_CUDA_ERROR();
+    // copyByInfoIdxKernel<<<gridSize,blockSize>>>(cutset.mark(), &parents, &parentsInfo);
+    // CHECK_LAST_CUDA_ERROR();
+    //
+    //
+    //
+    //
+    // using namespace gfl;
+    //
+    // sort(parentInfo, NodeInfo::cmpByFlag);
+    // i32 nParentsToCopy = 0;
+    // countFlagged(1, &nParentsToCopy, parentInfo);
+    //
+    // if (nParentsToCopy > 0)
+    // {
+    //     ArrayView<NodeInfo> parentsToCopyInfo = parentInfo.slice(-nParentsToCopy);
+    //     setRevScoreF<Model,Node>(parents, parentsToCopyInfo);
+    //     sort(parentsToCopyInfo, NodeInfo::cmpByScore);
+    //     cutData->markAndResizeBy(nParentsToCopy);
+    //     ArrayView<Node> const * segment = cutData->mark();
+    //     copyByInfo(*segment, parents, parentsToCopyInfo);
+    //
+    //     printf("CUTSET:\n");
+    //     for(auto const & c : *segment) {Node::print(c);printf("\n");}
+    //     printf("\n");
+    // }
+    //
+    // DEBUG_CUT (
+    //
+    // )
 }
 
 inline
@@ -455,16 +496,18 @@ void mergeChildren(
 template<typename Model, typename Node>
 void calcOutLabels(
         Model const * const model,
-        gfl::ArrayView<Node> const * nodes,
+        gfl::ArrayView<Node> const & nodes,
+        gfl::ArrayView<NodeInfo> const & nodesInfo,
         gfl::f64 pBound,
         gfl::f64 dBound,
         DDContext const ddCtx)
 {
     using namespace gfl;
 
-    for (i64 i = 0; i < nodes->size(); i += 1)
+    for (i64 i = 0; i < nodesInfo.size(); i += 1)
     {
-        Node & node = nodes->at(i);
+        NodeInfo const & info = nodesInfo[i];
+        Node & node = nodes[info.idx];
         node.labels(model->lgf(node.state(), pBound, dBound, ddCtx));
     }
 }
@@ -532,4 +575,24 @@ void finializeCutset(
         setH<Model,Node>(*cutData->nodes(), f);
     }
 
+}
+
+template<typename Model, typename Node>
+void checkForTarget(
+    Model const * const model,
+    gfl::optional<Node> & target,
+    gfl::ArrayView<Node> const & nodes,
+    gfl::ArrayView<NodeInfo> const & nodesInfo)
+{
+    assert(gridDim.x == 1);
+    assert(blockDim.x == 1);
+
+    using namespace gfl;
+
+    if (not nodesInfo.empty())
+    {
+        NodeInfo const & info = nodesInfo[0];
+        Node const & node = nodes[info.idx];
+        if (node.isTarget(model)) target = node;
+    }
 }

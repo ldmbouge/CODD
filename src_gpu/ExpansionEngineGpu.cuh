@@ -16,13 +16,13 @@ template<typename Model,typename Node>
 class ExpansionEngineGpu : public ExpansionEngine<Model,Node>
 {
 public:
-    using ExpansionEngine = ExpansionEngine<Model,Node>;
-    using ExpansionEngine::expData;
-    using ExpansionEngine::cutData;
-    using ExpansionEngine::nFlagged;
-    using ExpansionEngine::nNodes;
-    using ExpansionEngine::width_;
-    using ExpansionEngine::branchFactor_;
+    using ExpEng = ExpansionEngine<Model,Node>;
+    using ExpEng::expData;
+    using ExpEng::cutData;
+    using ExpEng::nFlagged;
+    using ExpEng::nNodes;
+    using ExpEng::width_;
+    using ExpEng::branchFactor_;
 
     gfl::ArrayView<gfl::u8> cubAuxMem;
 
@@ -343,8 +343,8 @@ public:
     {
         using namespace gfl;
 
-        ExpansionEngine::initRelaxedExpansion(width, branchFactor, depth, alloc);
-        i32 const maxNodes = width * branchFactor;
+        ExpEng::initRelaxedExpansion(width, branchFactor, depth, alloc);
+        i32 const maxNodes = width_ * branchFactor_;
         initCubAuxMem(maxNodes,alloc);
     }
 
@@ -352,8 +352,7 @@ public:
         Model const * model,
         std::vector<Node> const & parents,
         gfl::f64 const primal,
-        gfl::f64 const dual,
-        gfl::i32 const brachFactor)
+        gfl::f64 const dual)
     {
 
         using namespace gfl;
