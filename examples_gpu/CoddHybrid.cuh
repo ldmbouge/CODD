@@ -112,7 +112,7 @@ int runHybrid(int argc, char* argv[])
 
             // Relaxed
             relEng->expandRelaxed(model, parentsBuffer, bnb.primal(), bnb.dual());
-            auto [relBestTarget, relBestExactTarget] = resEng->getTargets();
+            auto [relBestTarget, relBestExactTarget] = relEng->getTargets();
             if (relBestExactTarget.has_value())
             {
                 bnb.primal(relBestExactTarget.value());
@@ -122,7 +122,7 @@ int runHybrid(int argc, char* argv[])
                 if (not bnb.pruneAncestor(relBestTarget.value()))
                 {
                     bnb.dual(relBestTarget.value());
-                    auto const & cutset = resEng->cutData.nodes();
+                    auto const & cutset = relEng->cutData.nodes();
                     queue.pushFromGpu(cutset);
                 }
             }
