@@ -45,7 +45,7 @@ int runHybrid(int argc, char* argv[])
     ArenaAllocator resEngAlloc(engMemSize, heapReserve(engMemSize));
     ArenaAllocator resBuffAlloc(cli.memSize(), heapReserve(cli.memSize()));
     ResEngCpu * const resEng = new (resEngAlloc) ResEngCpu();
-    i32 const cpuWidth = 4096; //cli.width();
+    i32 const cpuWidth = 256; //cli.width();
     resEng->initRestrictedExpansion(cpuWidth, BranchFactor, resBuffAlloc);
     printf("Restricted Working memory: ");
     printMemSize(resBuffAlloc.usedSize());
@@ -72,67 +72,99 @@ int runHybrid(int argc, char* argv[])
     // BnB search
     log.header();
     stats.start();
+    i32 adjToPop = cli.pop();
+
+    i32 prundedByDual = 0;
+    i32 prundedByRes = 0;
 
     while (not queue.empty() and stats.elapsed<sec>() <= cli.timeout() and not bnb.solved())
     {
-        f64 const lambda = isValid<Model>(bnb.primal()) ? 1.5 : 2.5;
+
         parentsBuffer.clear();
-        while (not queue.empty() and parentsBuffer.size() < cli.pop())
+        prundedByDual = 0;
+        prundedByRes = 0;
+
+
+        while (not queue.empty() and parentsBuffer.size() < adjToPop)
         {
-            if (parentsBuffer.empty())
-            {
-                Node const * node = queue.pullBest();
-                parentsBuffer.push_back(*node);
-            }
-            else
             {
                 Node const * node = queue.peekBest();
-
-                // //Restricted
-                //  if (isValid<Model>(bnb.primal()))
-                // {
-                //     testBuffer.clear();
-                //     testBuffer.push_back(*node);
-                //     resEng->expandRestricted(model, testBuffer, bnb.primal(), bnb.dual());
-                //     auto [resBestTarget, _] = resEng->getTargets();
-                //     if (resBestTarget.has_value())
-                //     {
-                //         bnb.primal(resBestTarget.value());
-                //     }
-                //     if (resEng->exact)
-                //     {
-                //         queue.pullBest();
-                //         log.progress();
-                //         //pruned++;
-                //         continue;
-                //     }
-                // }
-
-                if (parentsBuffer.back().depth() == node->depth())
+                if (isBetter<Model>(node->f(), bnb.primal()))
                 {
-                    node = queue.pullBest();
-                    parentsBuffer.push_back(*node);
+
+                    //Restricted
+                    if (isValid<Model>(bnb.primal()))
+                    {
+                        testBuffer.clear();
+                        testBuffer.push_back(*node);
+                        resEng->expandRestricted(model, testBuffer, bnb.primal(), bnb.dual());
+                        auto [resBestTarget, _] = resEng->getTargets();
+                        if (resBestTarget.has_value())
+                        {
+                            bnb.primal(resBestTarget.value());
+                        }
+                        if (resEng->exact)
+                        {
+                            queue.pullBest();
+                            prundedByRes += 1;
+                            log.progress();
+                            continue;
+                        }
+                    }
+
+                    if (parentsBuffer.empty() or parentsBuffer.back().depth() == node->depth())
+                    {
+                        node = queue.pullBest();
+                        parentsBuffer.push_back(*node);
+                    }
+                    else
+                    {
+                        break;
+                    }
                 }
                 else
                 {
-                    break;
+                    prundedByDual += 1;
+                    queue.pullBest();
+                    log.progress();
                 }
             }
+            log.progress();
         }
-        fflush(stdout);
+
+        printf("Final nodes %d (D = %d RS = %d  T = %d) nodes at depth %d\n",
+               (int) parentsBuffer.size(),
+               prundedByDual,
+               prundedByRes,
+               prundedByRes + prundedByDual + (int)parentsBuffer.size(),
+               parentsBuffer.front().depth());
+
         if (not parentsBuffer.empty())
         {
 
-            printf("\rExpanding depth=%d f=%.2f qsize=%lld\033[K",
-              parentsBuffer.front().depth(),
-              parentsBuffer.front().f(),
-              queue.size());
-            fflush(stdout);
+            //fflush(stdout);
 
             bnb.dual(parentsBuffer.front().f());
 
+            f64 const fDepth = scast<f32>(parentsBuffer.front().depth()) / scast<f32>(Depth) ; //1.5;//isValid<Model>(bnb.primal()) ? 1.5 : 3.0;
+            f64 const lambda = isValid<Model>(bnb.primal()) ? 1.5 : 3.0;
+
+
+            printf("Going on GPU with %d nodes\n", parentsBuffer.size());
             // Relaxed
             relEng->expandRelaxed(model, parentsBuffer, bnb.primal(), bnb.dual(), lambda);
+
+            // Avoid loops
+            if (parentsBuffer.size() * 1.1 >= relEng->cutData.nodes()->size() and
+                parentsBuffer.size() * 0.9 <= relEng->cutData.nodes()->size())
+            {
+                adjToPop = ceil<i32>(adjToPop,2);
+            }
+            else
+            {
+                adjToPop = cli.pop();
+            }
+
             auto [relBestTarget, relBestExactTarget] = relEng->getTargets();
             if (relBestExactTarget.has_value())
             {
