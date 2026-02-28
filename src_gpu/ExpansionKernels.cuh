@@ -416,7 +416,7 @@ void setScoreAsGKernel(
     {
         NodeInfo & info = nodesInfo->at(i);
         Node const & node = nodes->at(info.idx);
-        info.score = score<Model>(node.g());;
+        info.score = score<Model>(node.g()) * (node.approximated() ? 1.5 : 0.5);
     }
 }
 template<typename Model, typename Node>

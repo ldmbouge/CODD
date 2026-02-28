@@ -59,7 +59,7 @@ int runRelaxedGpu(int argc, char* argv[])
     // BnB search
     log.header();
     stats.start();
-    while (not queue.empty() and stats.elapsed<sec>() <= cli.timeout() and not bnb.solved())
+    while (not queue.empty() and stats.elapsed<sec>() <= cli.timeout() ) //and not bnb.solved())
     {
         parentsBuffer.clear();
         while (not queue.empty() and parentsBuffer.size() < cli.pop())
@@ -82,7 +82,7 @@ int runRelaxedGpu(int argc, char* argv[])
                     break;
                 }
             }
-            printf("Popoed: %d\n", parentsBuffer.size());
+            //printf("Popoed: %d\n", parentsBuffer.size());
         }
         if (not parentsBuffer.empty())
         {

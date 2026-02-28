@@ -15,7 +15,13 @@ class CutsetData
         gfl::i32 const branchFactor,
         gfl::i32 const depth) noexcept
     {
-        return branchFactor * depth * (2 * width - depth + 1) / 2;
+        using namespace gfl;
+
+        // First k layers are exact
+        i32 const k = std::floor(std::log(width) / std::log(branchFactor));
+
+        // return branchFactor * depth * (2 * width - depth + 1) / 2;
+        return ceil<i32>(width * branchFactor - width, branchFactor) * k;
     }
 
 public:
