@@ -2,68 +2,44 @@
 
 #include <GFL.hpp>
 
-
-template <typename Node>
+template<typename Node>
 class CutsetData
 {
     gfl::VectorView<Node> nodes_;
-    gfl::ArrayView<Node> mark_;
-
-    static
-    gfl::i64 size(
-        gfl::i32 const width,
-        gfl::i32 const branchFactor,
-        gfl::i32 const depth) noexcept
-    {
-        using namespace gfl;
-
-        // First k layers are exact
-        i32 const k = std::floor(std::log(width) / std::log(branchFactor));
-
-        // return branchFactor * depth * (2 * width - depth + 1) / 2;
-        return ceil<i32>(width * branchFactor - width, branchFactor) * k;
-    }
+    gfl::i64 markOffset_ = 0;  // offset into nodes_ where last segment starts
+    gfl::i64 markSize_   = 0;  // size of last segment
 
 public:
-    void init(
-        gfl::i32 const width,
-        gfl::i32 const branchFactor,
-        gfl::i32 const depth,
-        gfl::ArenaAllocator & alloc) noexcept
+    void init(gfl::i64 nNodes, gfl::ArenaAllocator & alloc) noexcept
     {
         using namespace gfl;
-        nodes_  = VectorView<Node>(size(width,branchFactor,depth), alloc);
+        nodes_ = VectorView<Node>(nNodes, alloc);
     }
 
     GFL_HOST_DEVICE
-    static
-    gfl::i64 dataMemSize (
-        gfl::i32 const width,
-        gfl::i32 const branchFactor,
-        gfl::i32 const depth) noexcept
+    void clear() noexcept
     {
-        using namespace gfl;
-
-        i64 const memSize = VectorView<Node>::dataMemSize(size(width,branchFactor,depth)) + DefaultAlign;
-        return memSize;
+        nodes_.clear();
+        markOffset_ = 0;
+        markSize_   = 0;
     }
 
     GFL_HOST_DEVICE
-    void clear() noexcept { nodes_.clear();}
-
-    GFL_HOST_DEVICE
-    gfl::VectorView<Node> const * nodes() const noexcept { return &nodes_;}
-
-    GFL_HOST_DEVICE
-    void markAndResizeBy(gfl::i32 const count) noexcept
+    void markAndResizeBy(gfl::i64 const count) noexcept
     {
-        gfl::u64 const oldSize = nodes_.resizeBy(count);
-        mark_ = nodes_.slice(oldSize, nodes_.size());
+        markOffset_ = nodes_.resizeBy(count);  // returns old size = start of new segment
+        markSize_   = count;
     }
+
+    GFL_HOST_DEVICE
+    gfl::ArrayView<Node> mark() const noexcept
+    {
+        return nodes_.slice(markOffset_, markOffset_ + markSize_);
+    }
+
+    GFL_HOST_DEVICE
+    gfl::VectorView<Node> const * nodes() const noexcept { return &nodes_; }
 
     GFL_HOST_DEVICE
     gfl::ArrayView<Node> const * nodesPtr() const noexcept { return &nodes_; }
-
-    GFL_HOST_DEVICE
-    gfl::ArrayView<Node> const * mark() const noexcept { return &mark_;}
 };

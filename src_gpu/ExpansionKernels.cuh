@@ -210,9 +210,9 @@ void calcHashKernel(
         NodeInfo & info = nodesInfo->at(i);
         Node const & node = nodes->at(info.idx);
         if constexpr (Model::has_dom)
-            info.hash = hash64to32(Model::domHash(node.state()));
+            info.hash = Model::domHash(node.state());
         else
-            info.hash = hash64to32(Model::State::hash(node.state()));
+            info.hash = Model::State::hash(node.state());
     }
 }
 
@@ -231,19 +231,20 @@ void sortKernel(
     assert(outBuffer != nullptr);
     assert(inBuffer->size() <= outBuffer->size());
 
+    // Debug
     auto auxDataMemSize = scast<size_t>(cubAuxMem->dataMemSize());
-    auto nItems = scast<int>(inBuffer->size());
+
     if (reverse)
         cub::DeviceRadixSort::SortKeysDescending(
             cubAuxMem->data(), auxDataMemSize,
             inBuffer->data(), outBuffer->data(),
-            nItems,
+            inBuffer->size(),
             KeyDecomposer{});
     else
         cub::DeviceRadixSort::SortKeys(
             cubAuxMem->data(), auxDataMemSize,
             inBuffer->data(), outBuffer->data(),
-            nItems,
+            inBuffer->size(),
             KeyDecomposer{});
 }
 
@@ -338,8 +339,7 @@ GFL_GLOBAL
 void copyByInfoIdxKernel(
     gfl::ArrayView<Node> const * const dst,
     gfl::ArrayView<Node> const * const  src,
-    gfl::ArrayView<NodeInfo> const * const nodesInfo,
-    bool const updateInfoIdx = true)
+    gfl::ArrayView<NodeInfo> const * const nodesInfo)
 {
     using namespace gfl;
 
@@ -353,7 +353,30 @@ void copyByInfoIdxKernel(
         Node & sNode = src->at(info.idx);
         Node & dNode = dst->at(i);
         dNode = sNode;
-        if (updateInfoIdx) info.idx = i;
+        info.idx = i;
+    }
+}
+template<typename Node>
+GFL_GLOBAL
+void copyByCutsetMarkKernel(
+    CutsetData<Node> * const cutset,
+    gfl::ArrayView<Node> const * const src,
+    gfl::ArrayView<NodeInfo> const * const nodesInfo)
+{
+    using namespace gfl;
+
+    ArrayView<Node> mark = cutset->mark();
+
+    assert(nodesInfo->size() <= src->size());
+    assert(nodesInfo->size() <= mark.size());
+
+    auto [begin,end] = calcSlice<i64>(blockIdx.x, gridDim.x, nodesInfo->size());
+    for (i64 i = begin + threadIdx.x; i < end; i += blockDim.x)
+    {
+        NodeInfo & info = nodesInfo->at(i);
+        Node & sNode    = src->at(info.idx);
+        Node & dNode    = mark.at(i);
+        dNode  = sNode;
     }
 }
 
@@ -571,7 +594,7 @@ void assertCopyPrecondKernel(
 
 template<typename Node>
 GFL_GLOBAL
-void markAndResizeByKernel( CutsetData<Node> * const cutset,gfl::i64 const * const count)
+void markAndResizeByKernel( CutsetData<Node> * const cutset, gfl::i64 const * const count)
 {
     cutset->markAndResizeBy(*count);
 }

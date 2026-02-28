@@ -584,9 +584,6 @@ void checkForTarget(
     gfl::ArrayView<Node> const & nodes,
     gfl::ArrayView<NodeInfo> const & nodesInfo)
 {
-    assert(gridDim.x == 1);
-    assert(blockDim.x == 1);
-
     using namespace gfl;
 
     if (not nodesInfo.empty())

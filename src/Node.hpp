@@ -130,14 +130,14 @@ public:
 struct NodeInfo
 {
     // Hold tight! This is brittle
-    gfl::i32 idx{0};
-    gfl::i8 flag;
+    gfl::i64 idx{0};
+    gfl::u8 flag;
     union
     {
-        gfl::u32 hash;
-        gfl::f32 score;
+        gfl::u64 hash;
+        gfl::f64 score;
     };
-    gfl::i32 pIdx;
+    gfl::i64 pIdx;
 
 
     NodeInfo() = default;
@@ -155,7 +155,7 @@ struct NodeInfo
     struct HashDecomposer
     {
         GFL_HOST_DEVICE
-        gfl::tuple<gfl::u32&> operator()(NodeInfo & nodeInfo) const { return {nodeInfo.hash};}
+        gfl::tuple<gfl::u64&> operator()(NodeInfo & nodeInfo) const { return {nodeInfo.hash};}
     };
 #endif
 
@@ -167,7 +167,7 @@ struct NodeInfo
     struct FlagDecomposer
     {
         GFL_HOST_DEVICE
-        gfl::tuple<gfl::i8&> operator()(NodeInfo & nodeInfo) const { return {nodeInfo.flag};}
+        gfl::tuple<gfl::u8&> operator()(NodeInfo & nodeInfo) const { return {nodeInfo.flag};}
     };
 #endif
 
@@ -179,7 +179,7 @@ struct NodeInfo
     struct ScoreDecomposer
     {
         GFL_HOST_DEVICE
-        gfl::tuple<gfl::f32&> operator()(NodeInfo & nodeInfo) const { return {nodeInfo.score};}
+        gfl::tuple<gfl::f64&> operator()(NodeInfo & nodeInfo) const { return {nodeInfo.score};}
     };
 #endif
 
@@ -187,7 +187,7 @@ struct NodeInfo
     struct ScoreFlagDecomposer
     {
         GFL_HOST_DEVICE
-        gfl::tuple<gfl::f32&,gfl::i8&> operator()(NodeInfo & nodeInfo) const { return {nodeInfo.score, nodeInfo.flag};}
+        gfl::tuple<gfl::f64&,gfl::u8&> operator()(NodeInfo & nodeInfo) const { return {nodeInfo.score, nodeInfo.flag};}
     };
 #endif
 

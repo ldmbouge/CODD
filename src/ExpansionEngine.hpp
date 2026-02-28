@@ -23,6 +23,7 @@ public:
     gfl::i64 nFlagged;
     gfl::i32 width_;
     gfl::i32 branchFactor_;
+    gfl::i32 depth_;
     gfl::i64 nNodes;
     bool exact;
 
@@ -44,12 +45,14 @@ public:
 
         width_ = width;
         branchFactor_ = branchFactor;
-        i32 const maxNodes = width_ * branchFactor_;
-        expData.init(maxNodes, alloc);
-        cutData.init(width_, branchFactor_, depth, alloc);
+        depth_ = depth;
+        expData.init( width_ * branchFactor_, alloc);
+        cutData.init( width_ * depth_, alloc);
 
     }
 
     gfl::tuple<gfl::optional<Node> const &,gfl::optional<Node> const &> getTargets() const noexcept
-    {return {expData.bestTargetNode, expData.bestExactTargetNode};}
+    {
+        return {expData.bestTargetNode, expData.bestExactTargetNode};
+    }
 };

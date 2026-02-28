@@ -45,7 +45,8 @@ int runHybrid(int argc, char* argv[])
     ArenaAllocator resEngAlloc(engMemSize, heapReserve(engMemSize));
     ArenaAllocator resBuffAlloc(cli.memSize(), heapReserve(cli.memSize()));
     ResEngCpu * const resEng = new (resEngAlloc) ResEngCpu();
-    resEng->initRestrictedExpansion(cli.width(), BranchFactor, resBuffAlloc);
+    i32 const cpuWidth = max<i32>(128, cli.width() / 128) ;
+    resEng->initRestrictedExpansion(cpuWidth, BranchFactor, resBuffAlloc);
     printf("Restricted Working memory: ");
     printMemSize(resBuffAlloc.usedSize());
     printf("\n");
@@ -72,7 +73,7 @@ int runHybrid(int argc, char* argv[])
     while (not queue.empty() and stats.elapsed<sec>() <= cli.timeout() ) //and not bnb.solved())
     {
         parentsBuffer.clear();
-        while (not queue.empty() and parentsBuffer.size() < cli.pop())
+        while (not queue.empty() and parentsBuffer.size() < cli.pop() and parentsBuffer.size() < cpuWidth)
         {
             if (parentsBuffer.empty())
             {
@@ -98,7 +99,7 @@ int runHybrid(int argc, char* argv[])
         {
             bnb.dual(parentsBuffer.front().f());
 
-            // // Restricted
+            // Restricted
             // resEng->expandRestricted(model, parentsBuffer, bnb.primal(), bnb.dual());
             // auto [resBestTarget, _] = resEng->getTargets();
             // if (resBestTarget.has_value())

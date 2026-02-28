@@ -203,9 +203,9 @@ public:
         CHECK_LAST_CUDA_ERROR();
         resizeToKernel<<<1,1>>>(&tmpInfo, &nFlagged);
         CHECK_LAST_CUDA_ERROR();
-        markAndResizeByKernel<<<1,1>>>(&cutset, &nFlagged);
+        markAndResizeByKernel<<<1,1>>>(&cutset, &nFlagged);       // ← updates markOffset_/markSize_
         CHECK_LAST_CUDA_ERROR();
-        copyByInfoIdxKernel<<<gridSize,blockSize>>>(cutset.mark(), &parents, &parentsInfo);
+        copyByCutsetMarkKernel<<<gridSize,blockSize>>>(&cutset, &parents, &parentsInfo); // ← mark() called device-side
         CHECK_LAST_CUDA_ERROR();
     }
 
@@ -345,6 +345,8 @@ public:
 
         ExpEng::initRelaxedExpansion(width, branchFactor, depth, alloc);
         i32 const maxNodes = width_ * branchFactor_;
+        printf("cubAuxMemSize=%lld for maxNodes=%d\n", cubAuxMemSize(maxNodes), maxNodes);
+
         initCubAuxMem(maxNodes,alloc);
     }
 
