@@ -12,74 +12,6 @@
 
 template<typename Model>
 GFL_HOST_DEVICE constexpr
-bool isBetter(gfl::f64 const a, gfl::f64 const b) noexcept
-{
-    if constexpr (Model::is_maximization)
-        return a > b;
-    else
-        return a < b;
-}
-
-template<typename Model>
-GFL_HOST_DEVICE constexpr
-bool isBetterEq(gfl::f64 const a, gfl::f64 const b) noexcept
-{
-    if constexpr (Model::is_maximization)
-        return a >= b;
-    else
-        return a <= b;
-}
-
-template<typename Model>
-GFL_HOST_DEVICE constexpr
-bool isWorse(gfl::f64 const a, gfl::f64 const b) noexcept
-{
-    if constexpr (Model::is_maximization)
-        return a < b;
-    else
-        return a > b;
-}
-
-template<typename Model>
-GFL_HOST_DEVICE constexpr
-bool isWorseEq(gfl::f64 const a, gfl::f64 const b) noexcept
-{
-    if constexpr (Model::is_maximization)
-        return a <= b;
-    else
-        return a >= b;
-}
-
-template<typename Model>
-GFL_HOST_DEVICE constexpr
-gfl::f64 better(gfl::f64 const a, gfl::f64 const b) noexcept
-{
-    return isBetter<Model>(a, b) ? a : b;
-}
-
-template<typename Model>
-GFL_HOST_DEVICE constexpr
-gfl::f64 betterEq(gfl::f64 const a, gfl::f64 const b) noexcept
-{
-    return isBetterEq<Model>(a, b) ? a : b;
-}
-
-template<typename Model>
-GFL_HOST_DEVICE constexpr
-gfl::f64 worse(gfl::f64 const a, gfl::f64 const b) noexcept
-{
-    return isWorse<Model>(a, b) ? a : b;
-}
-
-template<typename Model>
-GFL_HOST_DEVICE constexpr
-gfl::f64 worseEq(gfl::f64 const a, gfl::f64 const b) noexcept
-{
-    return isWorseEq<Model>(a, b) ? a : b;
-}
-
-template<typename Model>
-GFL_HOST_DEVICE constexpr
 gfl::f64 best() noexcept
 {
     // Do NOT use numeric_limits<gfl::f64>::max() and/or
@@ -103,7 +35,61 @@ template<typename Model>
 GFL_HOST_DEVICE constexpr
 bool isValid(gfl::f64 const a) noexcept
 {
-    return isBetter<Model>(a, worst<Model>()) and isWorse<Model>(a,best<Model>());
+    if constexpr (Model::is_maximization)
+        return worst<Model>() < a and a < best<Model>();
+    else
+        return best<Model>() < a and a < worst<Model>();
+}
+
+template<typename Model>
+GFL_HOST_DEVICE constexpr
+bool isBetter(gfl::f64 const a, gfl::f64 const b) noexcept
+{
+    if (not isValid<Model>(a))
+        return false;
+    else if (not isValid<Model>(b))
+        return true;
+    else
+        if constexpr (Model::is_maximization)
+            return a > b;
+        else
+            return a < b;
+}
+
+template<typename Model>
+GFL_HOST_DEVICE constexpr
+bool isBetterEq(gfl::f64 const a, gfl::f64 const b) noexcept
+{
+    if (not isValid<Model>(a))
+        return false;
+    else if (not isValid<Model>(b))
+        return true;
+    else
+        if constexpr (Model::is_maximization)
+            return a >= b;
+        else
+            return a <= b;
+}
+
+template<typename Model>
+GFL_HOST_DEVICE constexpr
+bool isWorse(gfl::f64 const a, gfl::f64 const b) noexcept
+{
+    if (not isValid<Model>(a))
+        return true;
+    else if (not isValid<Model>(b))
+        return false;
+    else
+        if constexpr (Model::is_maximization)
+            return a < b;
+        else
+            return a > b;
+    }
+template<typename Model>
+GFL_HOST_DEVICE constexpr
+gfl::f64 better(gfl::f64 const a, gfl::f64 const b) noexcept
+{
+    return isBetter<Model>(a, b) ? a : b;
 }
 
 template<typename Model>
@@ -128,30 +114,9 @@ gfl::f64 boostScore(gfl::f64 const score, gfl::f64 const lambda)
 
 template<typename Model>
 GFL_HOST_DEVICE constexpr
-bool isTighter(gfl::f64 const a, gfl::f64 const b) noexcept
+bool canImprovePrimal(gfl::f64 const f, gfl::f64 const primal)
 {
-    return isWorse<Model>(a, b);
+    return not isValid<Model>(primal) or
+           not isValid<Model>(f) or
+           isBetter<Model>(f, primal);
 }
-
-template<typename Model>
-GFL_HOST_DEVICE constexpr
-gfl::f64 tighter(gfl::f64 const a, gfl::f64 const b) noexcept
-{
-    return worse<Model>(a, b);
-}
-
-
-template<typename Model>
-GFL_HOST_DEVICE constexpr
-bool isLooser(gfl::f64 const a, gfl::f64 const b) noexcept
-{
-    return isBetter<Model>(a, b);
-}
-
-template<typename Model>
-GFL_HOST_DEVICE constexpr
-gfl::f64 looser(gfl::f64 const a, gfl::f64 const b) noexcept
-{
-    return better<Model>(a, b);
-}
-
