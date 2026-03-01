@@ -12,7 +12,7 @@
 
 template<typename Model>
 GFL_HOST_DEVICE constexpr
-gfl::f64 best() noexcept
+gfl::f64 top() noexcept
 {
     // Do NOT use numeric_limits<gfl::f64>::max() and/or
     // numeric_limits<gfl::f64>::lowest(). They are out of scale,
@@ -26,65 +26,60 @@ gfl::f64 best() noexcept
 
 template<typename Model>
 GFL_HOST_DEVICE constexpr
-gfl::f64 worst() noexcept
+gfl::f64 bot() noexcept
 {
-    return -best<Model>();
+    return -top<Model>();
 }
 
 template<typename Model>
 GFL_HOST_DEVICE constexpr
-bool isValid(gfl::f64 const a) noexcept
+bool isTop(gfl::f64 const a) noexcept
 {
     if constexpr (Model::is_maximization)
-        return worst<Model>() < a and a < best<Model>();
+        return a >= top<Model>();
     else
-        return best<Model>() < a and a < worst<Model>();
+        return a <= top<Model>();
+}
+
+template<typename Model>
+GFL_HOST_DEVICE constexpr
+bool isBot(gfl::f64 const a) noexcept
+{
+    if constexpr (Model::is_maximization)
+        return a <= bot<Model>() ;
+    else
+        return a >= bot<Model>();
 }
 
 template<typename Model>
 GFL_HOST_DEVICE constexpr
 bool isBetter(gfl::f64 const a, gfl::f64 const b) noexcept
 {
-    if (not isValid<Model>(a))
-        return false;
-    else if (not isValid<Model>(b))
-        return true;
+    if constexpr (Model::is_maximization)
+        return a > b;
     else
-        if constexpr (Model::is_maximization)
-            return a > b;
-        else
-            return a < b;
+        return a < b;
 }
 
 template<typename Model>
 GFL_HOST_DEVICE constexpr
 bool isBetterEq(gfl::f64 const a, gfl::f64 const b) noexcept
 {
-    if (not isValid<Model>(a))
-        return false;
-    else if (not isValid<Model>(b))
-        return true;
+    if constexpr (Model::is_maximization)
+        return a >= b;
     else
-        if constexpr (Model::is_maximization)
-            return a >= b;
-        else
-            return a <= b;
+        return a <= b;
 }
 
 template<typename Model>
 GFL_HOST_DEVICE constexpr
 bool isWorse(gfl::f64 const a, gfl::f64 const b) noexcept
 {
-    if (not isValid<Model>(a))
-        return true;
-    else if (not isValid<Model>(b))
-        return false;
+    if constexpr (Model::is_maximization)
+        return a < b;
     else
-        if constexpr (Model::is_maximization)
-            return a < b;
-        else
-            return a > b;
-    }
+        return a > b;
+}
 template<typename Model>
 GFL_HOST_DEVICE constexpr
 gfl::f64 better(gfl::f64 const a, gfl::f64 const b) noexcept
@@ -116,7 +111,5 @@ template<typename Model>
 GFL_HOST_DEVICE constexpr
 bool canImprovePrimal(gfl::f64 const f, gfl::f64 const primal)
 {
-    return not isValid<Model>(primal) or
-           not isValid<Model>(f) or
-           isBetter<Model>(f, primal);
+    return isBetter<Model>(f, primal);
 }

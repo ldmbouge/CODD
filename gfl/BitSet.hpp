@@ -147,8 +147,9 @@ namespace gfl
         friend BitSet operator-(i32 const l, BitSet const & s) noexcept { return BitSet(l, s);}
 
         GFL_HOST_DEVICE
-        void printAsInts() const noexcept;
-        void printAs01() const noexcept;
+        void printAsInts(i32 const end = WordBitSize * NumWords) const noexcept;
+
+        void printAs01(i32 const end = WordBitSize * NumWords) const noexcept;
 
         GFL_HOST_DEVICE
         void print() const noexcept;
@@ -349,10 +350,10 @@ namespace gfl
 
     template<i32 NumWords>
     GFL_HOST
-    void BitSet<NumWords>::printAsInts() const noexcept
+    void BitSet<NumWords>::printAsInts(i32 const end) const noexcept
     {
         bool comma = false;
-        for(i32 val = 0; val < capacity(); ++val)
+        for(i32 val = 0; val < end; ++val)
         {
             if (contains(val))
             {
@@ -365,17 +366,14 @@ namespace gfl
 
     template<i32 NumWords>
    GFL_HOST_DEVICE
-   void BitSet<NumWords>::printAs01() const noexcept
+   void BitSet<NumWords>::printAs01(i32 const end) const noexcept
     {
         bool comma = false;
-        for(i32 val = 0; val < capacity(); ++val)
+        for (i32 val = 0; val < end; ++val)
         {
-            if (contains(val))
-            {
-                printf(comma ? "," : "");
-                printf(val ? "1" : "0");
-                comma = true;
-            }
+            printf(comma ? "," : "");
+            printf(contains(val) ? "1" : "0");
+            comma = true;
         }
     }
 

@@ -11,8 +11,8 @@ class BnBManager
     std::vector<PrimalListener> primalListeners;
     std::vector<DualListener> dualListeners;
 
-    gfl::f64 primal_{worst<Model>()};
-    gfl::f64 dual_{best<Model>()};
+    gfl::f64 primal_{bot<Model>()};
+    gfl::f64 dual_{top<Model>()};
     bool queueExhausted_{false};
     Node solution_;
 
@@ -41,7 +41,7 @@ public:
         for(auto const & l : dualListeners) { l(); }
     }
 
-    bool hasPrimal() const noexcept { return isValid<Model>(primal_); }
+    bool hasPrimal() const noexcept { return not isBot<Model>(primal_); }
 
     gfl::f64 primal() const noexcept { return primal_; }
 
@@ -56,13 +56,13 @@ public:
         }
     }
 
-    bool hasDual() const noexcept { return isValid<Model>(dual_); }
+    bool hasDual() const noexcept { return not isTop<Model>(dual_); }
 
     gfl::f64 dual() const noexcept {return dual_;}
 
     void dual(gfl::f64 const dual) noexcept
     {
-        if (isValid<Model>(dual) and isWorse<Model>(dual, dual_))
+        if (not hasDual() or isWorse<Model>(dual, dual_))
         {
             dual_ = dual;
             notifyDual();
@@ -78,7 +78,7 @@ public:
 
     bool solved() const noexcept
     {
-        return hasGap() and isBetterEq<Model>(primal_,dual_);
+        return hasGap() and isBetter<Model>(primal_,dual_);
     }
 
     bool canImprovePrimal(gfl::f64 const f)

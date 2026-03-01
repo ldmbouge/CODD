@@ -234,8 +234,7 @@ public:
         // Resize tmpInfo to max possible pass1 output count
         resizeToKernel<<<1,1>>>(&tmpInfo, nBlocks1);
         CHECK_LAST_CUDA_ERROR();
-        printKernel<<<1,1>>>(21,&childrenInfo, &children);
-        printKernel<<<1,1>>>(211,&childrenInfoSuffix);
+
         // pass1: childrenInfoSuffix → tmpInfo, one result per block
         reduceByInfoKernel<Model,Node><<<nBlocks1, blockSize>>>(&children, &childrenInfoSuffix, &tmpInfo, &nNodes);
         CHECK_LAST_CUDA_ERROR();
@@ -243,7 +242,6 @@ public:
         ceilKernel<<<1,1>>>(&nNodes, reductionFactor);
         CHECK_LAST_CUDA_ERROR();
 
-        printKernel<<<1,1>>>(22,&childrenInfo, &children);
         // pass2: tmpInfo → childrenInfoSuffix, one result per block
         reduceByInfoKernel<Model,Node><<<nBlocks2, blockSize>>>(&children, &tmpInfo, &childrenInfoSuffix, &nNodes);
         CHECK_LAST_CUDA_ERROR();
@@ -251,12 +249,10 @@ public:
         ceilKernel<<<1,1>>>(&nNodes, reductionFactor);
         CHECK_LAST_CUDA_ERROR();
 
-        printKernel<<<1,1>>>(23,&childrenInfo, &children);
         // pass3: sequential final reduction, result at children[childrenInfoSuffix[0].idx]
         reduceByInfoSeqKernel<Model,Node><<<1,1>>>(&children, &childrenInfoSuffix, &nNodes);
         CHECK_LAST_CUDA_ERROR();
 
-        printKernel<<<1,1>>>(24,&childrenInfo, &children);
         // Shrink childrenInfo to width_ — merged node already sits at correct idx
         shrinkToKernel<<<1,1>>>(&childrenInfo, width_);
         CHECK_LAST_CUDA_ERROR();
@@ -390,11 +386,8 @@ public:
             expandParents(model, primal);
             filterRepresentedChildren();
             sortChildrenByG(lambda);
-            printKernel<<<1,1>>>(1,&childrenInfo, &children);
             saveCutset();
-            printKernel<<<1,1>>>(2,&childrenInfo, &children);
             mergeChildren();
-            printKernel<<<1,1>>>(3,&childrenInfo, &children);
             calcOutLabelsKernel<<<gridSize, blockSize>>>(model, &children, &childrenInfo, primal, dual, DDRelaxed);
             CHECK_LAST_CUDA_ERROR();
             checkForTargetKernel<<<1,1>>>(model, &expData.bestTargetNode, &children, &childrenInfo);

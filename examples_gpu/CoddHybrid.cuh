@@ -133,12 +133,12 @@ int runHybrid(int argc, char* argv[])
             log.progress();
         }
 
-        printf("Final nodes %d (D = %d RS = %d  T = %d) nodes at depth %d\n",
-               (int) parentsBuffer.size(),
-               prundedByDual,
-               prundedByRes,
-               prundedByRes + prundedByDual + (int)parentsBuffer.size(),
-               parentsBuffer.front().depth());
+        // printf("Final nodes %d (D = %d RS = %d  T = %d) nodes at depth %d\n",
+        //        (int) parentsBuffer.size(),
+        //        prundedByDual,
+        //        prundedByRes,
+        //        prundedByRes + prundedByDual + (int)parentsBuffer.size(),
+        //        parentsBuffer.front().depth());
 
         if (not parentsBuffer.empty())
         {
@@ -151,7 +151,7 @@ int runHybrid(int argc, char* argv[])
             f64 const lambda = 1.0; //isValid<Model>(bnb.primal()) ? 1.5 : 3.0;
 
 
-            printf("Going on GPU with %d nodes\n", parentsBuffer.size());
+            //printf("Going on GPU with %d nodes\n", parentsBuffer.size());
             {
                 TIMED_SCOPE_N("RelDD");
                 relEng->expandRelaxed(model, parentsBuffer, bnb.primal(), bnb.dual(), lambda);
@@ -171,12 +171,12 @@ int runHybrid(int argc, char* argv[])
             auto [relBestTarget, relBestExactTarget] = relEng->getTargets();
             if (relBestExactTarget.has_value())
             {
-                printf("Find exact from Rel with value: %.3f\n", relBestExactTarget.value().g());
+                //printf("Find exact from Rel with value: %.3f\n", relBestExactTarget.value().g());
                 bnb.primal(relBestExactTarget.value());
             }
             if (relBestTarget.has_value())
             {
-                printf("Best from Rel hash value: %.3f\n", relBestTarget.value().g());
+                //printf("Best from Rel hash value: %.3f\n", relBestTarget.value().g());
                 f64 const dualFromRel = relBestTarget.value().g(); // G is correct!
                 if (bnb.canImprovePrimal(dualFromRel))
                 {
@@ -184,7 +184,7 @@ int runHybrid(int argc, char* argv[])
                     {
                         TIMED_SCOPE_N("Cutset");
                         auto const & cutset = relEng->cutData.nodes();
-                        printf("Pushing %lld from the cutset\n", cutset->size());
+                        //printf("Pushing %lld from the cutset\n", cutset->size());
                         queue.pushFromGpu(cutset, bnb.primal());
                     }
 

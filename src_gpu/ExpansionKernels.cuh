@@ -181,7 +181,7 @@ void expandParentsKernel(
                     if constexpr (Model::has_heur)
                     {
                         f64 const h = model->h(cState.value(), BBCtx);
-                        cH = tighter<Model>(cH, h);
+                        cH = worst<Model>(cH, h);
                     }
                     if (canImprovePrimal<Model>(cG + cH, primal))
                     {
@@ -702,10 +702,6 @@ void reduceByInfoSeqKernel(
 
     if (*count > 0)
     {
-        if (threadIdx.x == 0)
-        {
-            printf("SEQ SIZE %d\n", *count);
-        }
         NodeInfo const & rInfo = inInfo->at(0);
         Node & fNode_r = children->at(rInfo.idx);
         fNode_r.approximated(true);

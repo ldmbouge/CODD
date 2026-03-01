@@ -44,10 +44,10 @@ public:
         using namespace gfl;
 
         auto const state = model->initial();
-        f64 h = worst<Model>();
+        f64 h = top<Model>();
         if constexpr (Model::has_heur) h = model->h(state, DDInit);
         Node * const n = new Node(state, 0, h);
-        n->outLabels_= model->lgf(state, worst<Model>(), best<Model>(), DDExact);
+        n->outLabels_= model->lgf(state, bot<Model>(), top<Model>(), DDExact);
         return n;
     }
 
@@ -200,7 +200,7 @@ public:
     void printSolution() const noexcept
     {
         using namespace gfl;
-       chooses_.printAs01();
+       chooses_.printAs01( this->depth());
     }
 };
 
