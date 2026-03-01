@@ -93,19 +93,10 @@ public:
         if (s.n == nodes)
            return gfl::nullopt;
         else {
-            if (!s.sel.contains(s.n) && l)  return gfl::nullopt;
+            if (l == 1 and not s.sel.contains(s.n))  return gfl::nullopt;
             ItemSet out = s.sel;
             out.remove(s.n);
-            
-            //std::cout << "\tXXX:";out.print();std::cout << " LABEL:" << l << " :N = " << s.n << "\n";
-            //std::cout << "OUT.CONTAINS:" << out.contains(s.n)  << "\n";
-               
-            if (l) { //  and out.contains(s.n)) {
-               //std::cout << "ADJ:";adj[s.n].print(); std::cout << "\n";
-               //std::cout << "\tBADJ:";out.print();std::cout << "\n";
-               out.diffWith(adj[s.n]);
-               //std::cout << "\tAADJ:";out.print();std::cout << "\n";
-            }
+            if (l)  out.diffWith(adj[s.n]);
             return State(out, s.n + 1); // build state accordingly
         }
     }

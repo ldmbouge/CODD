@@ -73,7 +73,7 @@ namespace gfl
         void pushBack(T const & value) noexcept
         {
             reserve(size_ + 1);
-            VectorView<T>::pushBack(value);
+            VectorView<T>::pushBack(&value);
         }
     };
 }

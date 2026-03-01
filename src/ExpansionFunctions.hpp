@@ -54,7 +54,7 @@ void expandParents(
     for (i32 pIdx = 0; pIdx < parents.size(); pIdx += 1)
     {
         Node const & pNode = parents[pIdx];
-        auto const & pLabels = pNode.labels();
+        auto const & pLabels = pNode.outLabels();
         auto const & [minl, maxl, nLabels] = pLabels.summary();
         for (i32 label = minl; label <= maxl; label += 1)
         {
@@ -73,7 +73,7 @@ void expandParents(
                         cH = tighter<Model>(cH,h);
                     }
                     // Conditions to keep the child
-                    if (isBetter<Model>(cG + cH,primal))
+                    if (not isValid<Model>(cG + cH) or isBetter<Model>(cG + cH,primal))
                     {
                         // Node
                         i32 const iIdx = childrenInfo.resizeBy(1);
@@ -300,7 +300,7 @@ void sortChildrenByG(ExpansionData<Node> & expData)
     auto & children = expData.children;
     auto & childrenInfo = expData.childrenInfo;
 
-    assert(childrenInfo.size() == children.size());
+    assert(childrenInfo.size() <= children.size());
 
     for (i32 i = 0; i < childrenInfo.size(); i += 1)
     {
@@ -529,7 +529,7 @@ void calcOutLabels(
     {
         NodeInfo const & info = nodesInfo[i];
         Node & node = nodes[info.idx];
-        node.labels(model->lgf(node.state(), pBound, dBound, ddCtx));
+        node.outLabels(model->lgf(node.state(), pBound, dBound, ddCtx));
     }
 }
 

@@ -148,6 +148,7 @@ namespace gfl
 
         GFL_HOST_DEVICE
         void printAsInts() const noexcept;
+        void printAs01() const noexcept;
 
         GFL_HOST_DEVICE
         void print() const noexcept;
@@ -357,6 +358,22 @@ namespace gfl
             {
                 printf(comma ? "," : "");
                 printf("%d", val);
+                comma = true;
+            }
+        }
+    }
+
+    template<i32 NumWords>
+   GFL_HOST_DEVICE
+   void BitSet<NumWords>::printAs01() const noexcept
+    {
+        bool comma = false;
+        for(i32 val = 0; val < capacity(); ++val)
+        {
+            if (contains(val))
+            {
+                printf(comma ? "," : "");
+                printf(val ? "1" : "0");
                 comma = true;
             }
         }

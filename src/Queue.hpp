@@ -45,13 +45,23 @@ public:
         pushed_++;
     }
 
-    void push(gfl::ArrayView<Node> const & nodes) noexcept
+    void push(Node const * const node, gfl::f64 const primal) noexcept
+    {
+        using namespace gfl;
+        if (canImprovePrimal<Model>(node->f(),primal))
+        {
+            heap_.insertHeap(node);
+            pushed_++;
+        }
+    }
+
+    void push(gfl::ArrayView<Node> const & nodes,  gfl::f64 const primal) noexcept
     {
         using namespace gfl;
 
         if (not nodes.empty())
         {
-            for (auto const & n : nodes) push(&n);
+            for (auto const & n : nodes) push(&n, primal);
         }
     }
 

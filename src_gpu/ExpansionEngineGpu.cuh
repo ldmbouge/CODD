@@ -135,7 +135,7 @@ public:
         CHECK_LAST_CUDA_ERROR();
     }
 
-    void sortChildrenByG(gfl::f64 const lambda)
+    void sortChildrenByG(gfl::f64 const lambda = 1.0)
     {
         using namespace gfl;
         auto & children = expData.children;
@@ -223,8 +223,8 @@ public:
         i32 const nodesPerThread  = 32;
         i32 const reductionFactor = blockSize * nodesPerThread;
         i32 const suffixMaxSize   = max<i32>(0,maxChildren - (width_ - 1));
-        i32 const nBlocks1        = max<i32>(1,ceil<i32>(suffixMaxSize, reductionFactor)); // max blocks for pass1
-        i32 const nBlocks2        = max<i32>(1,ceil<i32>(nBlocks1,      reductionFactor)); // max blocks for pass2
+        i32 const nBlocks1        = ceil<i32>(suffixMaxSize, reductionFactor); // max blocks for pass1
+        i32 const nBlocks2        = ceil<i32>(nBlocks1,      reductionFactor); // max blocks for pass2
 
         // Compute suffix = childrenInfo[width_-1 .. end]
         initSuffix<<<1,1>>>(width_, &childrenInfo, &childrenInfoSuffix);
@@ -234,21 +234,29 @@ public:
         // Resize tmpInfo to max possible pass1 output count
         resizeToKernel<<<1,1>>>(&tmpInfo, nBlocks1);
         CHECK_LAST_CUDA_ERROR();
+        printKernel<<<1,1>>>(21,&childrenInfo, &children);
+        printKernel<<<1,1>>>(211,&childrenInfoSuffix);
         // pass1: childrenInfoSuffix → tmpInfo, one result per block
         reduceByInfoKernel<Model,Node><<<nBlocks1, blockSize>>>(&children, &childrenInfoSuffix, &tmpInfo, &nNodes);
         CHECK_LAST_CUDA_ERROR();
         // Compute actual number of nodes produced by pass1
         ceilKernel<<<1,1>>>(&nNodes, reductionFactor);
         CHECK_LAST_CUDA_ERROR();
+
+        printKernel<<<1,1>>>(22,&childrenInfo, &children);
         // pass2: tmpInfo → childrenInfoSuffix, one result per block
         reduceByInfoKernel<Model,Node><<<nBlocks2, blockSize>>>(&children, &tmpInfo, &childrenInfoSuffix, &nNodes);
         CHECK_LAST_CUDA_ERROR();
         // Compute actual number of nodes produced by pass2
         ceilKernel<<<1,1>>>(&nNodes, reductionFactor);
         CHECK_LAST_CUDA_ERROR();
+
+        printKernel<<<1,1>>>(23,&childrenInfo, &children);
         // pass3: sequential final reduction, result at children[childrenInfoSuffix[0].idx]
         reduceByInfoSeqKernel<Model,Node><<<1,1>>>(&children, &childrenInfoSuffix, &nNodes);
         CHECK_LAST_CUDA_ERROR();
+
+        printKernel<<<1,1>>>(24,&childrenInfo, &children);
         // Shrink childrenInfo to width_ — merged node already sits at correct idx
         shrinkToKernel<<<1,1>>>(&childrenInfo, width_);
         CHECK_LAST_CUDA_ERROR();
@@ -326,8 +334,8 @@ public:
             i32 const gridSize = ceil<i32>(cutset.nodes()->size(), blockSize);
             calcOutLabelsKernel<<<gridSize,blockSize>>>(model,cutset.nodesPtr(),primal,dual,DDRelaxed);
             CHECK_LAST_CUDA_ERROR();
-            setHKernel<Model><<<gridSize,blockSize>>>(&expData.bestTargetNode,cutset.nodesPtr());
-            CHECK_LAST_CUDA_ERROR();
+            // setHKernel<Model><<<gridSize,blockSize>>>(&expData.bestTargetNode,cutset.nodesPtr());
+            // CHECK_LAST_CUDA_ERROR();
         }
     }
 
@@ -382,8 +390,11 @@ public:
             expandParents(model, primal);
             filterRepresentedChildren();
             sortChildrenByG(lambda);
+            printKernel<<<1,1>>>(1,&childrenInfo, &children);
             saveCutset();
+            printKernel<<<1,1>>>(2,&childrenInfo, &children);
             mergeChildren();
+            printKernel<<<1,1>>>(3,&childrenInfo, &children);
             calcOutLabelsKernel<<<gridSize, blockSize>>>(model, &children, &childrenInfo, primal, dual, DDRelaxed);
             CHECK_LAST_CUDA_ERROR();
             checkForTargetKernel<<<1,1>>>(model, &expData.bestTargetNode, &children, &childrenInfo);

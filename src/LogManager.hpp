@@ -90,7 +90,7 @@ public:
         fmt::print("Search Time   = {:.2f}\n", searchTime);
         fmt::print("Solution Time = {:.2f}\n", solutionTime_);
         fmt::print("Solution Cost = {:.2f}\n", bnb_.primal());
-        fmt::print("Solution Path = "); bnb_.solution().print();
+        fmt::print("Solution    = "); bnb_.printSolution();
         fmt::print("\n");
     }
 
@@ -109,14 +109,10 @@ private:
         lastPrintTime_ = time;
         lastExtracted_ = extracted;
 
-        bool const hasPrimal = isValid<Model>(bnb_.primal());
-        bool const hasDual   = isValid<Model>(bnb_.dual());
-        bool const hasGap    = hasPrimal and hasDual;
-
         auto const timeStr     = fmt::format("{:.2f}", time);
-        auto const primalStr   = hasPrimal ? fmt::format("{:.2f}", bnb_.primal()) : "-";
-        auto const dualStr     = hasDual   ? fmt::format("{:.2f}", bnb_.dual())   : "-";
-        auto const gapStr      = hasGap    ? fmt::format("{:.2f}", bnb_.gap())    : "-";
+        auto const primalStr   = bnb_.hasPrimal() ? fmt::format("{:.2f}", bnb_.primal()) : "-";
+        auto const dualStr     = bnb_.hasDual()   ? fmt::format("{:.2f}", bnb_.dual())   : "-";
+        auto const gapStr      = bnb_.hasGap()    ? fmt::format("{:.2f}", bnb_.gap())    : "-";
         auto const expandedStr = fmt::format("{}", extracted);
         auto const queueStr    = fmt::format("{}", q_.size());
         auto const npsStr      = dt > 0.0 ? fmt::format("{:.0f}", nps) : "-";

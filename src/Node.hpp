@@ -7,36 +7,34 @@
 #include "ArenaAllocator.hpp"
 #include "BoundsUtils.hpp"
 
-template<typename State, typename OutLabels,  int Depth>
+template<typename State, typename OutLabels>
 class alignas(gfl::DefaultAlign) Node
 {
     State state_;
-    OutLabels outLabels;
-    gfl::f64 g_{0};
-    gfl::f64 h_{0};
+    OutLabels outLabels_;
+    gfl::f64 g_;
+    gfl::f64 h_;
     gfl::u8 approximated_;
-    gfl::u8 ancestorInCutset_{0}; // To remove once the new reduction works
-    gfl::i16 pathLen{0};
-    gfl::i16 prefixPath[Depth];
+    gfl::u8 ancestorInCutset_;
+    gfl::i16 depth_;
+
+    protected:
+    Node(Node const &) noexcept = default;
 
 public:
-
-    Node() noexcept {};
-
-    GFL_HOST_DEVICE
-    Node(State const & s, gfl::f64 const g, gfl::f64 const h, gfl::i32 const label, Node const & pNode) noexcept :
-       state_(s), g_(g), h_(h),
-       approximated_(pNode.approximated_),
-       ancestorInCutset_(pNode.ancestorInCutset_),
-       pathLen(pNode.pathLen+1)
-    {
-        for (int i = 0; i < pNode.pathLen; i += 1)  prefixPath[i] = pNode.prefixPath[i];
-        prefixPath[pNode.pathLen] = label;
-    }
+    Node() noexcept {}
 
     GFL_HOST_DEVICE
-    Node(State const & s, OutLabels const & outLabels, gfl::f64 const h) noexcept :
-       state_(s), outLabels(outLabels), h_(h),approximated_(0)
+    Node(State const & s,
+        gfl::f64 const g, gfl::f64 const h,
+        gfl::u8 const approximated = false,
+        gfl::u8 const ancestorInCutset = false,
+        gfl::i16 const depth = 0) noexcept :
+            state_(s),
+            g_(g), h_(h),
+            approximated_(approximated),
+            ancestorInCutset_(ancestorInCutset),
+            depth_(depth)
     {}
 
     template<typename Model>
@@ -46,10 +44,11 @@ public:
         using namespace gfl;
 
         auto const state = model->initial();
-        auto const labels = model->lgf(state, worst<Model>(), best<Model>(), DDExact);
-        f64 h = 0;//worst<Model>();
+        f64 h = worst<Model>();
         if constexpr (Model::has_heur) h = model->h(state, DDInit);
-        return new Node(state, labels, h);
+        Node * const n = new Node(state, 0, h);
+        n->outLabels_= model->lgf(state, worst<Model>(), best<Model>(), DDExact);
+        return n;
     }
 
     GFL_HOST_DEVICE
@@ -71,7 +70,7 @@ public:
     void h(gfl::f64 const h) noexcept { h_ = h; }
 
     GFL_HOST_DEVICE
-    gfl::i16 depth() const noexcept { return pathLen; }
+    gfl::i16 depth() const noexcept { return depth_; }
 
     GFL_HOST_DEVICE
     bool approximated() const noexcept { return approximated_; }
@@ -84,9 +83,9 @@ public:
     void ancestorInCutset(bool const ancestorInCutset)  noexcept { ancestorInCutset_ = ancestorInCutset; }
 
     GFL_HOST_DEVICE
-    OutLabels const & labels() const noexcept { return outLabels; }
+    OutLabels const & outLabels() const noexcept { return outLabels_; }
     GFL_HOST_DEVICE
-    void labels(OutLabels const & labels) noexcept { outLabels = labels; }
+    void outLabels(OutLabels const & outLabels) noexcept { outLabels_ = outLabels; }
 
     template<typename Model>
     GFL_HOST_DEVICE
@@ -97,16 +96,6 @@ public:
         return target;
     }
 
-
-    gfl::ArrayView<gfl::i16 const> path() const noexcept
-    {
-        using namespace gfl;
-        ArrayView<i16 const> const path(pathLen, prefixPath);
-        return path;
-    }
-   friend std::ostream& operator<<(std::ostream& os,const Node& n) {
-      return os << (n.approximated_ ? "1" : "0");
-   }
     GFL_HOST_DEVICE
     static
     void print(Node const & node)
@@ -116,15 +105,103 @@ public:
         printf(" | "); printf("G: %.1f", node.g());
         printf(" | "); printf("H: %.1f", node.h());
         printf(" | "); printf("EXT: %d", 1 - node.approximated());
-        printf(" | "); printf("CUT: %d", node.ancestorInCutset());
-        printf(" | "); printf("PTH: "); ArrayView<i16>::print(node.prefixPath, node.pathLen);  // This is correct
-        printf(" | "); printf("LBS: "); node.labels().print();
-        printf(" | "); printf("ST: "); node.state_.print();
+        printf(" | "); printf("AIC: %d", node.ancestorInCutset());
+        printf(" | "); node.state().print();
+
     }
 
     GFL_HOST_DEVICE
     void print() const
     { print(*this); }
+};
+
+template<typename State, typename OutLabels, int MaxDepth>
+class LNode : public Node<State, OutLabels>
+{
+     gfl::i8 prefixLabels[MaxDepth];
+
+    GFL_HOST_DEVICE
+    LNode(Node<State, OutLabels> const & n) noexcept : Node<State, OutLabels>(n)
+    {}
+
+public:
+    LNode() noexcept {}
+
+    GFL_HOST_DEVICE
+    LNode(State const& s,
+          gfl::f64 const g, gfl::f64 const h,
+          gfl::i32 const label,
+          LNode const& pNode) noexcept :
+        Node<State, OutLabels>(s, g, h, pNode.approximated(), pNode.ancestorInCutset(), pNode.depth()+1)
+    {
+        for (gfl::i16 i = 0; i < pNode.depth(); ++i) prefixLabels[i] = pNode.prefixLabels[i];
+        prefixLabels[pNode.depth()] = label;
+    }
+
+    template<typename Model>
+    static
+    LNode * makeRoot(Model const * const model)
+    {
+        using namespace gfl;
+        Node<State, OutLabels> const * n = Node<State, OutLabels>::makeRoot(model);
+        return new LNode(*n);
+    }
+
+    void printSolution() const noexcept
+    {
+        using namespace gfl;
+        ArrayView<i8> solution(this->depth(), &prefixLabels);
+        solution.print();
+    }
+};
+
+template<typename State, typename OutLabels, int MaxChooses>
+class SNode : public Node<State, OutLabels>
+{
+    gfl::BitSet<gfl::BitSet<>::num_words(MaxChooses)> chooses_;
+
+    GFL_HOST_DEVICE
+    SNode(Node<State, OutLabels> const & n) noexcept : Node<State, OutLabels>(n)
+    {
+        chooses_.clear();
+    }
+
+public:
+    SNode() noexcept {}
+
+    GFL_HOST_DEVICE
+    SNode(State const& s,
+          gfl::f64 const g, gfl::f64 const h,
+          gfl::i32 const label,
+          SNode const& pNode) noexcept :
+        Node<State, OutLabels>(s, g, h, pNode.approximated(), pNode.ancestorInCutset(), pNode.depth()+1)
+    {
+        using namespace gfl;
+
+        assert(label == 0 or label == 1);
+        chooses_ = pNode.chooses_;
+        if (label == 1)
+        {
+            i32 const label_ = this->depth();
+            assert(not chooses_.contains(label_));
+            chooses_.insert(label_);
+        }
+    }
+
+    template<typename Model>
+    static
+    SNode * makeRoot(Model const * const model)
+    {
+        using namespace gfl;
+        Node<State, OutLabels> const * n = Node<State, OutLabels>::makeRoot(model);
+        return new SNode(*n);
+    }
+
+    void printSolution() const noexcept
+    {
+        using namespace gfl;
+       chooses_.printAs01();
+    }
 };
 
 struct NodeInfo
@@ -205,5 +282,7 @@ struct NodeInfo
     void print() const
     { print(*this);}
 };
+
+
 
 static_assert(std::is_trivially_copyable_v<NodeInfo>);

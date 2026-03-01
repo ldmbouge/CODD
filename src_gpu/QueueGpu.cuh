@@ -15,7 +15,7 @@ public:
     using Queue<Model,Node>::memPool_;
 
 
-    void pushFromGpu(gfl::ArrayView<Node> const * cutsetGpu)
+    void pushFromGpu(gfl::ArrayView<Node> const * cutsetGpu, gfl::f64 const primal)
     {
         using namespace gfl;
 
@@ -29,7 +29,7 @@ public:
                 cutsetGpu->dataMemSize(),
                 cudaMemcpyDeviceToHost));
             CHECK_CUDA_ERROR(cudaDeviceSynchronize());
-            push(cutsetCpu);
+            push(cutsetCpu,primal);
         }
     }
 };
