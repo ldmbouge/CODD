@@ -48,11 +48,14 @@ void expandParents(
     using namespace gfl;
 
     auto const & parents = expData.parents;
+    auto const & parentsInfo = expData.parentInfo;
     auto & children = expData.children;
     auto & childrenInfo = expData.childrenInfo;
 
-    for (i32 pIdx = 0; pIdx < parents.size(); pIdx += 1)
+    for (i32 iIdx = 0; iIdx < parentsInfo.size(); iIdx += 1)
     {
+        NodeInfo const & info = parentsInfo[iIdx];
+        i32 const pIdx = info.idx;
         Node const & pNode = parents[pIdx];
         auto const & pLabels = pNode.outLabels();
         auto const & [minl, maxl, nLabels] = pLabels.summary();

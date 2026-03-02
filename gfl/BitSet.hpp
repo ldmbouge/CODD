@@ -116,7 +116,6 @@ namespace gfl
         BitSet(i32 const ofs, BitSet const & s) noexcept : words_{}
         {
              // Computes { ofs - v | v in s }
-
              // for (i32 i = 0; i < capacity(); ++i)
              // {
              //     if (s.contains(i)) insert(ofs - i);

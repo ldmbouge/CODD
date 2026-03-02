@@ -55,7 +55,7 @@ int runHybrid(int argc, char* argv[])
     ArenaAllocator resEngAlloc(engMemSize, heapReserve(engMemSize));
     ArenaAllocator resBuffAlloc(cli.memSize(), heapReserve(cli.memSize()));
     ResEngCpu * const resEng = new (resEngAlloc) ResEngCpu();
-    i32 const cpuWidth = 128 ; //cli.width();
+    i32 const cpuWidth = 2 ; //cli.width();
     resEng->initRestrictedExpansion(cpuWidth, BranchFactor, resBuffAlloc);
     printf("Restricted Working memory: ");
     printMemSize(resBuffAlloc.usedSize());

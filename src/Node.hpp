@@ -46,7 +46,7 @@ public:
         using namespace gfl;
 
         auto const state = model->initial();
-        f64 h = worst<Model>();
+        f64 h = best<Model>();
         if constexpr (Model::has_heur) h = model->h(state, DDInit);
         Node * const n = new Node(state, 0, h);
         n->outLabels_= model->lgf(state, best<Model>(), worst<Model>(), DDExact);
@@ -108,6 +108,7 @@ public:
         printf(" | "); printf("H: %.1f", node.h());
         printf(" | "); printf("EXT: %d", 1 - node.approximated());
         printf(" | "); printf("AIC: %d", node.ancestorInCutset());
+        printf(" | "); printf("DPT: %d", node.depth());
         printf(" | "); node.state().print();
 
     }

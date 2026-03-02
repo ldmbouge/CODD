@@ -26,7 +26,6 @@ concept IsDP = requires(M const & m, S const & s, int l, double p, double d, DDC
     { M::is_maximization } -> std::convertible_to<bool>;
 
     { m.initial() }    -> std::same_as<S>;
-    { m.target() }     -> std::same_as<S>;
     { m.isTarget(s) }  -> std::same_as<bool>;
 
     { m.lgf(s,p,d,c) } -> std::same_as<L>;
