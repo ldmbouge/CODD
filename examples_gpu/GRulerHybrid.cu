@@ -4,9 +4,9 @@
 
 int main(int argc,char* argv[])
 {
-    constexpr int BranchFactor = 190;
-    constexpr int Items = 190;
-    constexpr int Depth = 15;
+    constexpr int BranchFactor = 225;
+    constexpr int Items = 225;
+    constexpr int Depth = 16;
 
     using Model = GRuler<BranchFactor,Items>;
     using Node = LNode<Model::State,Model::OutLabels,Depth>;

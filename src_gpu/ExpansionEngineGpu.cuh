@@ -341,8 +341,6 @@ public:
         }
     }
 
-
-
 public:
 
     void initRelaxedExpansion(
@@ -387,8 +385,7 @@ public:
 
         while (not childrenInfo.empty() and not expData.bestTargetNode.has_value())
         {
-            swapParentsAndChildrenKernel<<<1,1>>>(&expData);
-            CHECK_LAST_CUDA_ERROR();
+            expData.swapParentsAndChildren();
             expandParents(model, primal);
             filterRepresentedChildren();
             sortChildrenByG(lambda);

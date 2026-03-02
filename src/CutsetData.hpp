@@ -63,7 +63,7 @@ class CutsetData
         return ceil<i64>(w * effective_depth * (bf - 1), bf);
     }
 
-    gfl::i64 cutsetDecreasing(gfl::i32 const w, gfl::i32 const bf)
+    gfl::i64 cutsetDecreasing(gfl::i32 const w, gfl::i32 const bf, gfl::i32 const depth)
     {
         using namespace gfl;
         i32 const lstar = firstMergeLayer(w, bf);
@@ -77,10 +77,10 @@ class CutsetData
     }
 
 public:
-    void init(gfl::i64 nNodes, gfl::ArenaAllocator & alloc) noexcept
+    void init(gfl::i32 const width, gfl::i32 const branchFactor, gfl::i32 const depth, gfl::ArenaAllocator & alloc) noexcept
     {
         using namespace gfl;
-        nodes_ = VectorView<Node>(nNodes, alloc);
+        nodes_ = VectorView<Node>(width * depth, alloc);
     }
 
     GFL_HOST_DEVICE

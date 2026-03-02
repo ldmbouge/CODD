@@ -55,7 +55,7 @@ int runHybrid(int argc, char* argv[])
     ArenaAllocator resEngAlloc(engMemSize, heapReserve(engMemSize));
     ArenaAllocator resBuffAlloc(cli.memSize(), heapReserve(cli.memSize()));
     ResEngCpu * const resEng = new (resEngAlloc) ResEngCpu();
-    i32 const cpuWidth = 1024; //cli.width();
+    i32 const cpuWidth = 2048 ; //cli.width();
     resEng->initRestrictedExpansion(cpuWidth, BranchFactor, resBuffAlloc);
     printf("Restricted Working memory: ");
     printMemSize(resBuffAlloc.usedSize());
@@ -87,7 +87,7 @@ int runHybrid(int argc, char* argv[])
     i32 prundedByDual = 0;
     i32 prundedByRes = 0;
 
-    while (not queue.empty() and stats.elapsed<sec>() <= cli.timeout() and not bnb.solved())
+    while (not queue.empty() and stats.elapsed<sec>() <= cli.timeout())// and not bnb.solved())
     {
         parentsBuffer.clear();
         prundedByDual = 0;
@@ -101,28 +101,28 @@ int runHybrid(int argc, char* argv[])
                 {
 
                     //Restricted
-                      // testBuffer.clear();
-                      // testBuffer.push_back(*node);
-                      // {
-                      //     TIMED_SCOPE_N("ResDD");
-                      //     resEng->expandRestricted(model, testBuffer, bnb.primal(), bnb.dual());
-                      // }
-                      // auto [resBestTarget, _] = resEng->getTargets();
-                      // if (resBestTarget.has_value())
-                      // {
-                      //     printf("Find exact from Res with value: %.3f\n", resBestTarget.value().g());
-                      //     bnb.primal(resBestTarget.value());
-                      // }
-                      // if (resEng->exact)
-                      // {
-                      //     queue.pullBest();
-                      //     prundedByRes += 1;
-                      //     log.progress();
-                      //     continue;
-                      // }
+                      testBuffer.clear();
+                      testBuffer.push_back(*node);
+                      {
+                          //TIMED_SCOPE_N("ResDD");
+                          resEng->expandRestricted(model, testBuffer, bnb.primal(), bnb.dual());
+                      }
+                      auto [resBestTarget, _] = resEng->getTargets();
+                      if (resBestTarget.has_value())
+                      {
+                          printf("[DBG] RES exact value: %.3f\n", resBestTarget.value().g());
+                          bnb.primal(resBestTarget.value());
+                      }
+                      if (resEng->exact)
+                      {
+                          queue.pullBest();
+                          prundedByRes += 1;
+                          log.progress();
+                          continue;
+                      }
 
                     if (parentsBuffer.empty() or
-                       (parentsBuffer.size() < adjToPop and parentsBuffer.back().f() == node->f() and parentsBuffer.back().depth() == node->depth()))
+                       (parentsBuffer.size() < adjToPop and parentsBuffer.back().depth() == node->depth()))
                     {
                         node = queue.pullBest();
                         parentsBuffer.push_back(*node);
@@ -155,12 +155,12 @@ int runHybrid(int argc, char* argv[])
 
             //fflush(stdout);
 
-            bnb.dual(parentsBuffer.front().f());
+            //bnb.dual(parentsBuffer.front().f());
 
             printf("[DBG] Offloading %ld nodes with f %.2f (Remaining %ld)\n", parentsBuffer.size(), parentsBuffer.back().f(), queue.size());
 
             f64 const fDepth = scast<f32>(parentsBuffer.front().depth()) / scast<f32>(Depth) ; //1.5;//isValid<Model>(bnb.primal()) ? 1.5 : 3.0;
-            f64 const lambda = 1.0;// - fDepth; //bnb.hasPrimal() ? 1.5 : 5.0;
+            f64 const lambda = 1.0; //bnb.havvvvvvvvvvvvvvvvvvvvvsPrimal() ? 1.5 : 15.0;//1.0 + 2 * (1.0 - fDepth); //bnb.hasPrimal() ? 1.5 : 5.0;
 
 
             //printf("Going on GPU with %d nodes\n", parentsBuffer.size());
@@ -196,7 +196,7 @@ int runHybrid(int argc, char* argv[])
                     if (bestOverall.approximated())
                     {
                         auto const & cutset = relEng->cutData.nodes();
-                        printf("[DBG] Pushing %lld nodes to the queue\n", cutset->size());
+                        //printf("[DBG] Pushing %ld nodes to the queue\n", cutset->size());
                         queue.pushFromGpu(cutset, bnb.primal());
                     }
                 }

@@ -70,10 +70,10 @@ void expandParents(
                     if constexpr (Model::has_heur)
                     {
                         f64 const h = model->h(cState.value(), BBCtx);
-                        cH = isWorse<Model>(cH,h);
+                        cH = better<Model>(cH,h);
                     }
                     // Conditions to keep the child
-                    if ( isBetter<Model>(cG + cH,primal))
+                    if (isBetterEq<Model>(cG + cH, primal))
                     {
                         // Node
                         i32 const iIdx = childrenInfo.resizeBy(1);

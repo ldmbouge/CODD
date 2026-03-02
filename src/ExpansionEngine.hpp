@@ -35,8 +35,7 @@ public:
 
         width_ = width;
         branchFactor_ = branchFactor;
-        i32 const maxNodes = width_ * branchFactor_;
-        expData.init(maxNodes, alloc);
+        expData.init(width_ * branchFactor_, alloc);
     }
 
     void initRelaxedExpansion(gfl::i32 const width, gfl::i32 const branchFactor, gfl::i32 const depth, gfl::ArenaAllocator & alloc)
@@ -46,8 +45,23 @@ public:
         width_ = width;
         branchFactor_ = branchFactor;
         depth_ = depth;
-        expData.init( width_ * branchFactor_, alloc);
-        cutData.init( width_ * depth_, alloc);
+
+        printf("Relaxed working memory: ");
+        printMemSize(alloc.usedSize());
+        printf("\n");
+
+        expData.init( width_, branchFactor_, alloc);
+
+        printf("Relaxed working memory: ");
+        printMemSize(alloc.usedSize());
+        printf("\n");
+
+
+        cutData.init( width_, branchFactor, depth, alloc);
+
+        printf("Relaxed working memory: ");
+        printMemSize(alloc.usedSize());
+        printf("\n");
 
     }
 

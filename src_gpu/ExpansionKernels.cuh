@@ -44,6 +44,7 @@ template<typename Node>
 GFL_GLOBAL
 void swapParentsAndChildrenKernel(ExpansionData<Node> * const expData)
 {
+
     expData->swapParentsAndChildren();
 }
 
@@ -92,7 +93,7 @@ void expandParentsKernel(
                     if constexpr (Model::has_heur)
                     {
                         f64 const h = model->h(cState.value(), BBCtx);
-                        cH = worse<Model>(cH, h);
+                        cH = better<Model>(cH, h);
                     }
                     if (isBetterEq<Model>(cG + cH, primal))
                     {

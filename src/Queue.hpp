@@ -19,8 +19,20 @@ protected:
         f64 const f2 =  n2->f();
         i32 const & d1 = n1->depth();
         i32 const & d2 = n2->depth();
-        return isBetter<Model>(f1,f2) or (f1 == f2 and d1 > d2);
-        //return  d1 > d2 or ( d1 == d2  and isBetter<Model>(f1,f2));
+        //return isBetter<Model>(f1,f2) or (f1 == f2 and d1 > d2);
+        return  d1 > d2 or ( d1 == d2  and isBetter<Model>(f1,f2));
+    };
+
+    static constexpr auto deepestG = [](Node const * const n1, Node const * const n2) noexcept {
+        using namespace gfl;
+        f64 const g1 =  n1->g();
+        f64 const g2 =  n2->g();
+        f64 const f1 =  n1->f();
+        f64 const f2 =  n2->f();
+        i32 const & d1 = n1->depth();
+        i32 const & d2 = n2->depth();
+        //return isBetter<Model>(f1,f2) or (f1 == f2 and d1 > d2);
+        return  d1 > d2 or ( d1 == d2  and isBetter<Model>(f1,f2));
     };
 
 

@@ -22,19 +22,34 @@ struct ExpansionData
     gfl::ArrayView<Node> tmpView;
     gfl::ArrayView<NodeInfo> tmpInfoView;
 
-
-    void init(gfl::i32 const nNodes, gfl::ArenaAllocator & alloc) noexcept
+    void init(gfl::i32 const nodes, gfl::ArenaAllocator & alloc) noexcept
     {
         using namespace gfl;
 
-        parents = VectorView<Node>(nNodes, alloc);
-        parentInfo = VectorView<NodeInfo>(nNodes, alloc);
+        parents = VectorView<Node>(nodes, alloc);
+        parentInfo = VectorView<NodeInfo>(nodes, alloc);
 
-        children = VectorView<Node>(nNodes, alloc);
-        childrenInfo = VectorView<NodeInfo>(nNodes, alloc);
+        children = VectorView<Node>(nodes, alloc);
+        childrenInfo = VectorView<NodeInfo>(nodes, alloc);
 
-        tmpNodes = VectorView<Node>(nNodes, alloc);
-        tmpInfo = VectorView<NodeInfo>(nNodes, alloc);
+        tmpNodes = VectorView<Node>(nodes, alloc);
+        tmpInfo = VectorView<NodeInfo>(nodes, alloc);
+    }
+
+
+    void init(gfl::i32 const width, gfl::i32 const branchFactor, gfl::ArenaAllocator & alloc) noexcept
+    {
+        using namespace gfl;
+
+        i32 const nChildren = width * branchFactor;
+        parents = VectorView<Node>(nChildren, alloc);
+        parentInfo = VectorView<NodeInfo>(nChildren, alloc);
+
+        children = VectorView<Node>(nChildren, alloc);
+        childrenInfo = VectorView<NodeInfo>(nChildren, alloc);
+
+        tmpNodes = VectorView<Node>(nChildren, alloc);
+        tmpInfo = VectorView<NodeInfo>(nChildren, alloc);
     }
 
     void init(gfl::ArenaAllocator & alloc, gfl::i32 const nParents, gfl::i32 const maxBranchFactor) noexcept
