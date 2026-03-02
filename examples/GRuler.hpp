@@ -26,6 +26,7 @@ public:
         gfl::i32 sm;  // smallest distance NOT yet used (always >= 1)
 
     public:
+        GFL_HOST_DEVICE
         State() = default;
 
         GFL_HOST_DEVICE

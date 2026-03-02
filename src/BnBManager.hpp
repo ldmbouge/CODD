@@ -11,8 +11,8 @@ class BnBManager
     std::vector<PrimalListener> primalListeners;
     std::vector<DualListener> dualListeners;
 
-    gfl::f64 primal_{bot<Model>()};
-    gfl::f64 dual_{top<Model>()};
+    gfl::f64 primal_{worst<Model>()};
+    gfl::f64 dual_{best<Model>()};
     bool queueExhausted_{false};
     Node solution_;
 
@@ -41,7 +41,7 @@ public:
         for(auto const & l : dualListeners) { l(); }
     }
 
-    bool hasPrimal() const noexcept { return not isBot<Model>(primal_); }
+    bool hasPrimal() const noexcept { return primal_ != worst<Model>(); }
 
     gfl::f64 primal() const noexcept { return primal_; }
 
@@ -56,14 +56,17 @@ public:
         }
     }
 
-    bool hasDual() const noexcept { return not isTop<Model>(dual_); }
+    bool hasDual() const noexcept { return dual_ != best<Model>();}
 
     gfl::f64 dual() const noexcept {return dual_;}
 
     void dual(gfl::f64 const dual) noexcept
     {
-        if (not hasDual() or isWorse<Model>(dual, dual_))
+        //printf("[DBG] BNB Dual: %.2f vs IN Dual: %.2f\n", dual_, dual);
+        if (dual != worst<Model>() and isWorse<Model>(dual, dual_))
         {
+         //   printf("BNB Dual: %.2f vs IN Dual: %.2f\n", dual_, dual);
+         //   printf("%.2f > %.2f ? %d\n", dual , dual_, dual > dual_);
             dual_ = dual;
             notifyDual();
         }
@@ -78,12 +81,7 @@ public:
 
     bool solved() const noexcept
     {
-        return hasGap() and isBetter<Model>(primal_,dual_);
-    }
-
-    bool canImprovePrimal(gfl::f64 const f)
-    {
-        return ::canImprovePrimal<Model>(f,primal_);
+        return hasGap() and isBetterEq<Model>(dual_,primal_);
     }
 
     void printSolution() const noexcept { return solution_.printSolution(); }

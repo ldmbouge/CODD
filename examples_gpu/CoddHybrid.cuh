@@ -19,9 +19,19 @@ int runHybrid(int argc, char* argv[])
 
     CliManager cli("CODD", "A C++ solver for DIDP models.");
     cli.parse(argc, argv);
+
+    if (cli.width()  < BranchFactor)
+    {
+        printf("WARNING: Width too small, increased to %d\n.", BranchFactor);
+        cli.width(BranchFactor);
+    }
+
+
     std::cout << "Instance: " << cli.instance() << std::endl;
     std::cout << "Width: " << cli.width() << std::endl;
     std::cout << "Engine: GPU (Relaxed) + CPU (Restricted)"  << std::endl;
+
+
 
     // Model (+ Instance) creation
     constexpr i32 modelMemSize = 256 * 1024; // Small, it MUST fit in shared memory
@@ -79,41 +89,40 @@ int runHybrid(int argc, char* argv[])
 
     while (not queue.empty() and stats.elapsed<sec>() <= cli.timeout() and not bnb.solved())
     {
-
         parentsBuffer.clear();
         prundedByDual = 0;
         prundedByRes = 0;
-
 
         while (not queue.empty() and parentsBuffer.size() < adjToPop)
         {
             {
                 Node const * node = queue.peekBest();
-                if (bnb.canImprovePrimal(node->f()))
+                if (isBetterEq<Model>(node->f(), bnb.primal()) or not bnb.hasPrimal())
                 {
 
                     //Restricted
-                     // testBuffer.clear();
-                     // testBuffer.push_back(*node);
-                     // {
-                     //     TIMED_SCOPE_N("ResDD");
-                     //     resEng->expandRestricted(model, testBuffer, bnb.primal(), bnb.dual());
-                     // }
-                     // auto [resBestTarget, _] = resEng->getTargets();
-                     // if (resBestTarget.has_value())
-                     // {
-                     //     printf("Find exact from Res with value: %.3f\n", resBestTarget.value().g());
-                     //     bnb.primal(resBestTarget.value());
-                     // }
-                     // if (resEng->exact)
-                     // {
-                     //     queue.pullBest();
-                     //     prundedByRes += 1;
-                     //     log.progress();
-                     //     continue;
-                     // }
+                      // testBuffer.clear();
+                      // testBuffer.push_back(*node);
+                      // {
+                      //     TIMED_SCOPE_N("ResDD");
+                      //     resEng->expandRestricted(model, testBuffer, bnb.primal(), bnb.dual());
+                      // }
+                      // auto [resBestTarget, _] = resEng->getTargets();
+                      // if (resBestTarget.has_value())
+                      // {
+                      //     printf("Find exact from Res with value: %.3f\n", resBestTarget.value().g());
+                      //     bnb.primal(resBestTarget.value());
+                      // }
+                      // if (resEng->exact)
+                      // {
+                      //     queue.pullBest();
+                      //     prundedByRes += 1;
+                      //     log.progress();
+                      //     continue;
+                      // }
 
-                    if (parentsBuffer.empty() or parentsBuffer.back().depth() == node->depth())
+                    if (parentsBuffer.empty() or
+                       (parentsBuffer.size() < adjToPop and parentsBuffer.back().f() == node->f() and parentsBuffer.back().depth() == node->depth()))
                     {
                         node = queue.pullBest();
                         parentsBuffer.push_back(*node);
@@ -133,12 +142,13 @@ int runHybrid(int argc, char* argv[])
             log.progress();
         }
 
-        // printf("Final nodes %d (D = %d RS = %d  T = %d) nodes at depth %d\n",
-        //        (int) parentsBuffer.size(),
-        //        prundedByDual,
-        //        prundedByRes,
-        //        prundedByRes + prundedByDual + (int)parentsBuffer.size(),
-        //        parentsBuffer.front().depth());
+        printf("Final nodes %d (D = %d RS = %d  T = %d) nodes with value %.3f at depth %d\n",
+               (int) parentsBuffer.size(),
+               prundedByDual,
+               prundedByRes,
+               prundedByRes + prundedByDual + (int)parentsBuffer.size(),
+               parentsBuffer.front().f(),
+               parentsBuffer.front().depth());
 
         if (not parentsBuffer.empty())
         {
@@ -147,13 +157,15 @@ int runHybrid(int argc, char* argv[])
 
             bnb.dual(parentsBuffer.front().f());
 
+            printf("[DBG] Offloading %ld nodes with f %.2f (Remaining %ld)\n", parentsBuffer.size(), parentsBuffer.back().f(), queue.size());
+
             f64 const fDepth = scast<f32>(parentsBuffer.front().depth()) / scast<f32>(Depth) ; //1.5;//isValid<Model>(bnb.primal()) ? 1.5 : 3.0;
-            f64 const lambda = 1.0; //isValid<Model>(bnb.primal()) ? 1.5 : 3.0;
+            f64 const lambda = 1.0;// - fDepth; //bnb.hasPrimal() ? 1.5 : 5.0;
 
 
             //printf("Going on GPU with %d nodes\n", parentsBuffer.size());
             {
-                TIMED_SCOPE_N("RelDD");
+                //TIMED_SCOPE_N("RelDD");
                 relEng->expandRelaxed(model, parentsBuffer, bnb.primal(), bnb.dual(), lambda);
             }
 
@@ -171,23 +183,22 @@ int runHybrid(int argc, char* argv[])
             auto [relBestTarget, relBestExactTarget] = relEng->getTargets();
             if (relBestExactTarget.has_value())
             {
-                //printf("Find exact from Rel with value: %.3f\n", relBestExactTarget.value().g());
-                bnb.primal(relBestExactTarget.value());
+                Node const & bestExt = relBestExactTarget.value();
+                printf("[DBG] REL exact value: %.3f\n", bestExt.g());
+                bnb.primal(bestExt);
             }
             if (relBestTarget.has_value())
             {
-                //printf("Best from Rel hash value: %.3f\n", relBestTarget.value().g());
-                f64 const dualFromRel = relBestTarget.value().g(); // G is correct!
-                if (bnb.canImprovePrimal(dualFromRel))
+                Node const & bestOverall = relBestTarget.value();
+                printf("[DBG] REL best value: %.3f (Exact %d)\n", bestOverall.g(), not bestOverall.approximated());; // G is correct!
+                if (isBetter<Model>(bestOverall.g(), bnb.primal()))
                 {
-                    bnb.dual(dualFromRel);
+                    if (bestOverall.approximated())
                     {
-                        TIMED_SCOPE_N("Cutset");
                         auto const & cutset = relEng->cutData.nodes();
-                        //printf("Pushing %lld from the cutset\n", cutset->size());
+                        printf("[DBG] Pushing %lld nodes to the queue\n", cutset->size());
                         queue.pushFromGpu(cutset, bnb.primal());
                     }
-
                 }
             }
             log.progress();
@@ -195,7 +206,7 @@ int runHybrid(int argc, char* argv[])
     }
     stats.end();
     log.summary();
-    Timer::summary();
+    //Timer::summary();
 
     return EXIT_SUCCESS;
 }

@@ -12,7 +12,7 @@
 
 template<typename Model>
 GFL_HOST_DEVICE constexpr
-gfl::f64 top() noexcept
+gfl::f64 best() noexcept
 {
     // Do NOT use numeric_limits<gfl::f64>::max() and/or
     // numeric_limits<gfl::f64>::lowest(). They are out of scale,
@@ -26,29 +26,9 @@ gfl::f64 top() noexcept
 
 template<typename Model>
 GFL_HOST_DEVICE constexpr
-gfl::f64 bot() noexcept
+gfl::f64 worst() noexcept
 {
-    return -top<Model>();
-}
-
-template<typename Model>
-GFL_HOST_DEVICE constexpr
-bool isTop(gfl::f64 const a) noexcept
-{
-    if constexpr (Model::is_maximization)
-        return a >= top<Model>();
-    else
-        return a <= top<Model>();
-}
-
-template<typename Model>
-GFL_HOST_DEVICE constexpr
-bool isBot(gfl::f64 const a) noexcept
-{
-    if constexpr (Model::is_maximization)
-        return a <= bot<Model>() ;
-    else
-        return a >= bot<Model>();
+    return -best<Model>();
 }
 
 template<typename Model>
@@ -78,13 +58,36 @@ bool isWorse(gfl::f64 const a, gfl::f64 const b) noexcept
     if constexpr (Model::is_maximization)
         return a < b;
     else
+    {
         return a > b;
+    }
 }
+
+template<typename Model>
+GFL_HOST_DEVICE constexpr
+bool isWorseEq(gfl::f64 const a, gfl::f64 const b) noexcept
+{
+    if constexpr (Model::is_maximization)
+        return a <= b;
+    else
+    {
+        return a >= b;
+    }
+}
+
 template<typename Model>
 GFL_HOST_DEVICE constexpr
 gfl::f64 better(gfl::f64 const a, gfl::f64 const b) noexcept
 {
     return isBetter<Model>(a, b) ? a : b;
+}
+
+template<typename Model>
+GFL_HOST_DEVICE constexpr
+gfl::f64 worse(gfl::f64 const a, gfl::f64 const b) noexcept
+{
+
+    return isWorse<Model>(a, b) ? a : b;
 }
 
 template<typename Model>
@@ -105,11 +108,4 @@ gfl::f64 boostScore(gfl::f64 const score, gfl::f64 const lambda)
         return score * lambda;   // lambda > 1 makes it larger = better
     else
         return score / lambda;   // lambda > 1 makes it smaller = better
-}
-
-template<typename Model>
-GFL_HOST_DEVICE constexpr
-bool canImprovePrimal(gfl::f64 const f, gfl::f64 const primal)
-{
-    return isBetter<Model>(f, primal);
 }

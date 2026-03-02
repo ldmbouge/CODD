@@ -19,9 +19,11 @@ class alignas(gfl::DefaultAlign) Node
     gfl::i16 depth_;
 
     protected:
+    GFL_HOST_DEVICE
     Node(Node const &) noexcept = default;
 
 public:
+    GFL_HOST_DEVICE
     Node() noexcept {}
 
     GFL_HOST_DEVICE
@@ -44,10 +46,10 @@ public:
         using namespace gfl;
 
         auto const state = model->initial();
-        f64 h = top<Model>();
+        f64 h = worst<Model>();
         if constexpr (Model::has_heur) h = model->h(state, DDInit);
         Node * const n = new Node(state, 0, h);
-        n->outLabels_= model->lgf(state, bot<Model>(), top<Model>(), DDExact);
+        n->outLabels_= model->lgf(state, best<Model>(), worst<Model>(), DDExact);
         return n;
     }
 
@@ -118,13 +120,14 @@ public:
 template<typename State, typename OutLabels, int MaxDepth>
 class LNode : public Node<State, OutLabels>
 {
-     gfl::i8 prefixLabels[MaxDepth];
+     gfl::u8 prefixLabels[MaxDepth];
 
     GFL_HOST_DEVICE
     LNode(Node<State, OutLabels> const & n) noexcept : Node<State, OutLabels>(n)
     {}
 
 public:
+    GFL_HOST_DEVICE
     LNode() noexcept {}
 
     GFL_HOST_DEVICE
@@ -150,8 +153,7 @@ public:
     void printSolution() const noexcept
     {
         using namespace gfl;
-        ArrayView<i8> solution(this->depth(), &prefixLabels);
-        solution.print();
+        ArrayView<u8>::print(prefixLabels, prefixLabels+ this->depth());
     }
 };
 

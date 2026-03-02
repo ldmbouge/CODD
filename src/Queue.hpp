@@ -48,8 +48,9 @@ public:
     void push(Node const * const node, gfl::f64 const primal) noexcept
     {
         using namespace gfl;
-        if (canImprovePrimal<Model>(node->f(),primal))
+        if (isBetterEq<Model>(node->f(),primal))
         {
+            //printf("[DBG] Pushing node with f %.2f\n",node->f());
             heap_.insertHeap(node);
             pushed_++;
         }

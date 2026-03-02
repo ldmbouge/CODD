@@ -9,7 +9,7 @@ int main(int argc,char* argv[])
     constexpr int Depth = 15;
 
     using Model = GRuler<BranchFactor,Items>;
-    using Node = Node<Model::State,Model::OutLabels,Depth>;
+    using Node = LNode<Model::State,Model::OutLabels,Depth>;
 
     static_assert(IsModel<Model>);
     static_assert(std::is_trivially_copyable_v<Node>);

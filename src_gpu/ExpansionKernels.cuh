@@ -57,95 +57,6 @@ void copyValueKernel( T * const t, T const * const v) { *t = *v; }
 
 template<typename Model, typename Node>
 GFL_GLOBAL
-void expandParentsOldKernel(
-    Model const * const model,
-    ExpansionData<Node> * const expData,
-    gfl::f64 const primal,
-    gfl::i64 const branchFactor
-    )
-{
-    using namespace gfl;
-
-    auto const & parents = expData->parents;
-    auto & children = expData->children;
-    auto & childrenInfo = expData->childrenInfo;
-
-    assert(blockDim.x == 32);
-
-    __shared__ i32 nChildren_s;
-    __shared__ Node children_s[32];
-    __shared__ NodeInfo childrenInfo_s[32];
-    __shared__ i64 nodeOffset_g;
-    __shared__ i64 infoOffset_g;
-
-    i64 const tIdx = blockIdx.x * blockDim.x + threadIdx.x;
-    i64 const pIdx = tIdx / branchFactor;
-    i64 const label = tIdx % branchFactor;
-
-    if (threadIdx.x == 0)
-    {
-        nChildren_s = 0;
-        nodeOffset_g = -1;
-        infoOffset_g = -1;
-    }
-    __syncthreads();
-
-
-    if (pIdx < parents.size())
-    {
-        Node const pNode = parents[pIdx];
-        auto const & pLabels = pNode.labels();
-
-        if (pLabels.contains(label))
-        {
-            // Transition
-            auto const cState = model->stf(pNode.state(), label);
-            if (cState.has_value())
-            {
-                f64 const tCost = model->scf(pNode.state(), label);
-                f64 const cG = pNode.g() + tCost;
-                f64 cH = pNode.f() - cG;
-                if constexpr (Model::has_heur)
-                {
-                    f64 const h = model->h(cState.value(), BBCtx);
-                    cH = tighter<Model>(cH,h);
-                }
-                // Conditions to keep the child
-                if (isBetter<Model>(cG + cH,primal))
-                {
-                    i64 const cIdx_s = atomicAdd_block(&nChildren_s,1);
-                    children_s[cIdx_s] = Node(cState.value(), cG, cH, label, pNode);
-                    childrenInfo_s[cIdx_s] = NodeInfo(-1, pIdx);
-                }
-            }
-        }
-    }
-    __syncthreads();
-
-    if (nChildren_s > 0)
-    {
-
-        if (threadIdx.x == 0)
-        {
-            infoOffset_g = childrenInfo.resizeByAtomic(nChildren_s);
-            nodeOffset_g = children.resizeByAtomic(nChildren_s);
-        }
-        __syncthreads();
-        if (threadIdx.x < nChildren_s)
-        {
-            //printf("Adding child\n");
-            i64 const nIdx_g = nodeOffset_g + threadIdx.x;
-            i64 const iIdx_g = infoOffset_g + threadIdx.x;
-            childrenInfo_s[threadIdx.x].idx = nIdx_g;
-            childrenInfo[iIdx_g] = childrenInfo_s[threadIdx.x];
-            children[nIdx_g] = children_s[threadIdx.x];
-        }
-    }
-
-}
-
-template<typename Model, typename Node>
-GFL_GLOBAL
 void expandParentsKernel(
     Model const * const model,
     ExpansionData<Node> * const expData,
@@ -181,14 +92,19 @@ void expandParentsKernel(
                     if constexpr (Model::has_heur)
                     {
                         f64 const h = model->h(cState.value(), BBCtx);
-                        cH = worst<Model>(cH, h);
+                        cH = worse<Model>(cH, h);
                     }
-                    if (canImprovePrimal<Model>(cG + cH, primal))
+                    if (isBetterEq<Model>(cG + cH, primal))
                     {
                         i64 const offset = pIdx * branchFactor + (label - minl);
                         children[offset] = Node(cState.value(), cG, cH, label, pNode);
                         childrenInfo[offset] = NodeInfo(offset, pIdx,flag);
                     }
+                    else
+                    {
+                        printf("%.2f beat by primal %.2f\n",cG + cH, primal);
+                    }
+
                 }
             }
         }
@@ -410,6 +326,9 @@ void copyBestTargetsKernel(
     assert(gridDim.x == 1);
     assert(blockDim.x == 1);
 
+    // Has been set by termination detection
+    bestTarget->reset();
+
     for (i64 i = 0; i < targetsInfo->size(); ++i)
     {
         NodeInfo const & info = targetsInfo->at(i);
@@ -420,6 +339,7 @@ void copyBestTargetsKernel(
             isBetter<Model>(node.g(), bestTarget->value().g()))
         {
             *bestTarget = node;
+            //printf("[DBG] Best found with value %.2f\n", node.f());
         }
 
         // Best exact (non-approximated)
@@ -428,6 +348,7 @@ void copyBestTargetsKernel(
             if (not bestExactTarget->has_value() or
                 isBetter<Model>(node.g(), bestExactTarget->value().g()))
             {
+                //printf("[DBG] Exact found with value %.2f\n", node.f());
                 *bestExactTarget = node;
             }
         }
@@ -528,7 +449,6 @@ void flagToSaveKernel(
     assert(children->size() >= childrenInfo->size());
 
     // Merge a prefix down to one, so that the total number of nodes is width
-    // Merge a prefix down to one, so that the total number of nodes is width
     i64 const prefixSize = childrenInfo->size() - (width - 1);
     auto [begin,end] = calcSlice<i64>(blockIdx.x, gridDim.x, prefixSize);
     for (i64 i = begin + threadIdx.x; i < end; i += blockDim.x)
@@ -536,7 +456,7 @@ void flagToSaveKernel(
         i64 const j = (width - 1) + i;
         NodeInfo const & info = childrenInfo->at(j);
         Node const & node = children->at(info.idx);
-        if (not node.ancestorInCutset())
+        if (not node.ancestorInCutset() and node.depth() > 1)
         {
             parentInfo->at(info.pIdx).flag = flag;
         }
@@ -585,7 +505,7 @@ void updateAncInCutKernel(
     {
         NodeInfo const & info = childrenInfo->at(i);
         Node  & node = children->at(info.idx);
-        if (parentInfo->at(info.pIdx).flag == flag)
+        if (parentInfo->at(info.pIdx).flag == flag and node.depth() > 1)
         {
             node.ancestorInCutset(true);
         }
@@ -621,6 +541,7 @@ void initSuffix(
     gfl::ArrayView<Node> * const suffix)
 {
     using namespace gfl;
+
 
     i64 const prefixSize = min<i64>(width - 1, info->size());
     *suffix = info->slice(prefixSize, info->size());
@@ -775,9 +696,10 @@ void setHKernel(
     auto [begin,end] = calcSlice<i64>(blockIdx.x, gridDim.x, cutset->size());
     for (i64 i = begin + threadIdx.x; i < end; i += blockDim.x)
     {
+
         Node & node = cutset->at(i);
         f64 const h = f - node.g();
-        node.h(tighter<Model>(h, node.h()));
+        node.h(better<Model>(h, node.h()));
     }
 }
 

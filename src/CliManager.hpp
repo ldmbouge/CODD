@@ -24,6 +24,7 @@ public:
     void parse(int argc, char* argv[]);
 
     int width() const { return width_; }
+    void width(int const width) { width_ = width; }
     int timeout() const { return timeout_; }
     int pop() const { return toPop_; }
     long long int memSize() const { return memSize_ * 1024ll * 1024ll * 1024ll; }

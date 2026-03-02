@@ -235,6 +235,7 @@ public:
         resizeToKernel<<<1,1>>>(&tmpInfo, nBlocks1);
         CHECK_LAST_CUDA_ERROR();
 
+        //printKernel<<<1,1>>>(1,&childrenInfoSuffix, &children);
         // pass1: childrenInfoSuffix → tmpInfo, one result per block
         reduceByInfoKernel<Model,Node><<<nBlocks1, blockSize>>>(&children, &childrenInfoSuffix, &tmpInfo, &nNodes);
         CHECK_LAST_CUDA_ERROR();
@@ -242,6 +243,7 @@ public:
         ceilKernel<<<1,1>>>(&nNodes, reductionFactor);
         CHECK_LAST_CUDA_ERROR();
 
+        //printKernel<<<1,1>>>(2,&childrenInfoSuffix, &children);
         // pass2: tmpInfo → childrenInfoSuffix, one result per block
         reduceByInfoKernel<Model,Node><<<nBlocks2, blockSize>>>(&children, &tmpInfo, &childrenInfoSuffix, &nNodes);
         CHECK_LAST_CUDA_ERROR();
@@ -249,13 +251,17 @@ public:
         ceilKernel<<<1,1>>>(&nNodes, reductionFactor);
         CHECK_LAST_CUDA_ERROR();
 
+        //printKernel<<<1,1>>>(3,&childrenInfoSuffix, &children);
         // pass3: sequential final reduction, result at children[childrenInfoSuffix[0].idx]
         reduceByInfoSeqKernel<Model,Node><<<1,1>>>(&children, &childrenInfoSuffix, &nNodes);
         CHECK_LAST_CUDA_ERROR();
 
+        //printKernel<<<1,1>>>(4,&childrenInfoSuffix, &children);
         // Shrink childrenInfo to width_ — merged node already sits at correct idx
         shrinkToKernel<<<1,1>>>(&childrenInfo, width_);
         CHECK_LAST_CUDA_ERROR();
+
+        //printKernel<<<1,1>>>(5,&childrenInfoSuffix, &children);
     }
 
     void calcOutLabels(
@@ -330,8 +336,8 @@ public:
             i32 const gridSize = ceil<i32>(cutset.nodes()->size(), blockSize);
             calcOutLabelsKernel<<<gridSize,blockSize>>>(model,cutset.nodesPtr(),primal,dual,DDRelaxed);
             CHECK_LAST_CUDA_ERROR();
-            // setHKernel<Model><<<gridSize,blockSize>>>(&expData.bestTargetNode,cutset.nodesPtr());
-            // CHECK_LAST_CUDA_ERROR();
+            setHKernel<Model><<<gridSize,blockSize>>>(&expData.bestTargetNode,cutset.nodesPtr());
+            CHECK_LAST_CUDA_ERROR();
         }
     }
 

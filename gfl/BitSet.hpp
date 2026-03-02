@@ -149,6 +149,7 @@ namespace gfl
         GFL_HOST_DEVICE
         void printAsInts(i32 const end = WordBitSize * NumWords) const noexcept;
 
+        GFL_HOST_DEVICE
         void printAs01(i32 const end = WordBitSize * NumWords) const noexcept;
 
         GFL_HOST_DEVICE
