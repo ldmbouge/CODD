@@ -46,20 +46,20 @@ public:
         branchFactor_ = branchFactor;
         depth_ = depth;
 
-        printf("Relaxed working memory: ");
+        printf("[DBG] Relaxed working memory: ");
         printMemSize(alloc.usedSize());
         printf("\n");
 
         expData.init( width_, branchFactor_, alloc);
 
-        printf("Relaxed working memory: ");
+        printf("[DBG] Relaxed working memory: ");
         printMemSize(alloc.usedSize());
         printf("\n");
 
 
         cutData.init( width_, branchFactor, depth, alloc);
 
-        printf("Relaxed working memory: ");
+        printf("[DBG] Relaxed working memory: ");
         printMemSize(alloc.usedSize());
         printf("\n");
 

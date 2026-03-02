@@ -29,6 +29,7 @@ public:
                 cutsetGpu->dataMemSize(),
                 cudaMemcpyDeviceToHost));
             CHECK_CUDA_ERROR(cudaDeviceSynchronize());
+            printf("[DBG] Pushing %ld nodes to the queue with value %.2f\n",  cutsetCpu.size(), cutsetCpu.front().f());
             push(cutsetCpu,primal);
         }
     }
