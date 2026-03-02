@@ -1,0 +1,72 @@
+COMMAND: /usr/bin/time -v /usr/bin/timeout 915 /home/fabio/CODD-NEWDom/cmake-build-release-ilyin/misp5 /home/fabio/CODD-NEWDom/data/misp/brock200_3.clq 128
+TOP=200
+B&B searching...
+dual@root:200
+B&B Nodes          Dual	 Primal	 Gap(%)
+----------------------------------------------
+update in RO 8.000000
+
+CHECKER is 1 SUM:8
+TIME:28.000000
+P TIGHTEN: 0.029000 <P:8.000000, D:200.000000, INC:(40)[0 0 0 0 0 0 1 0 1 0 0 0 0 1 1 0 0 0 1 0 0 0 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0 0 0 1 ]> 8.000000 8.000000 + 0.000000 #3919
+update in RO 9.000000
+
+CHECKER is 1 SUM:9
+TIME:29.000000
+P TIGHTEN: 0.030000 <P:9.000000, D:200.000000, INC:(63)[0 0 0 1 1 1 0 0 0 0 1 0 0 0 0 0 0 0 0 0 1 1 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 1 ]> 9.000000 9.000000 + 0.000000 #6878
+update in RO 10.000000
+
+CHECKER is 1 SUM:10
+TIME:30.000000
+P TIGHTEN: 0.031000 <P:10.000000, D:200.000000, INC:(80)[0 0 0 0 1 0 0 0 1 0 0 1 0 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 ]> 10.000000 10.000000 + 0.000000 #8903
+update in RO 11.000000
+
+CHECKER is 1 SUM:11
+TIME:30.000000
+P TIGHTEN: 0.031000 <P:11.000000, D:200.000000, INC:(86)[0 0 0 1 1 0 0 0 1 0 0 0 0 0 1 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0 1 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 ]> 11.000000 11.000000 + 0.000000 #9392
+update in RO 12.000000
+
+CHECKER is 1 SUM:12
+TIME:30.000000
+P TIGHTEN: 0.031000 <P:12.000000, D:200.000000, INC:(86)[0 0 0 1 1 0 0 0 1 0 0 0 0 0 1 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0 1 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 1 ]> 12.000000 12.000000 + 0.000000 #9392
+update in RO 13.000000
+
+CHECKER is 1 SUM:13
+TIME:69.000000
+P TIGHTEN: 0.070000 <P:13.000000, D:49.000000, INC:(150)[0 0 0 0 0 0 0 0 0 1 1 0 0 0 0 0 0 0 0 0 0 1 0 0 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 1 0 1 ]> 13.000000 13.000000 + 0.000000 #10485
+update in RX 14.000000 1.609000 <P:13.000000, D:40.000000, INC:(150)[0 0 0 0 0 0 0 0 0 1 1 0 0 0 0 0 0 0 0 0 0 1 0 0 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 1 0 1 ]>
+
+CHECKER is 1 SUM:14
+TIME:1608.000000
+D TIGHTEN: 1.609000 <P:14.000000, D:40.000000, INC:(178)[0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 1 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 1 1 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 1 ]>
+update in RO 15.000000
+
+CHECKER is 1 SUM:15
+TIME:3207.000000
+P TIGHTEN: 3.208000 <P:15.000000, D:27.000000, INC:(178)[0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 1 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 1 1 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 1 ]> 15.000000 15.000000 + 0.000000 #8047
+B&B( 7337)	 22.000000	 15.000000	 46.6667%	 time:5.0010s
+Done(128):15.0000000000000000	 #nodes:34338/46701	 P/D:0/0	 Time:3.2069999999999999/7.5359999999999996s	 LIM?:0	 Seen:0
+	Command being timed: "/usr/bin/timeout 915 /home/fabio/CODD-NEWDom/cmake-build-release-ilyin/misp5 /home/fabio/CODD-NEWDom/data/misp/brock200_3.clq 128"
+	User time (seconds): 7.50
+	System time (seconds): 0.04
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:07.54
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 70656
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 18188
+	Voluntary context switches: 3
+	Involuntary context switches: 26
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+

@@ -42,6 +42,7 @@ if (ENABLE_GPU)
     string(APPEND CMAKE_CUDA_FLAGS " --diag-suppress 830")
     string(APPEND CMAKE_CUDA_FLAGS " --diag-suppress 550")
     string(APPEND CMAKE_CUDA_FLAGS " --diag-suppress 20054") # Object,struct,types not automatically initialized in shared.
+    string(APPEND CMAKE_CUDA_FLAGS " --diag-suppress 20054") # Object,struct,types not automatically initialized in shared.
 endif()
 
 # Dependencies

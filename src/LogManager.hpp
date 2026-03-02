@@ -68,7 +68,7 @@ public:
 
     void dual()
     {
-        log();
+log();
     }
 
     void progress()

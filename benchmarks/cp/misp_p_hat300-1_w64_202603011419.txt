@@ -1,0 +1,56 @@
+COMMAND: /usr/bin/time -v /usr/bin/timeout 915 /home/fabio/CODD-NEWDom/cmake-build-release-ilyin/misp5 /home/fabio/CODD-NEWDom/data/misp/p_hat300-1.clq 64
+TOP=300
+B&B searching...
+dual@root:300
+B&B Nodes          Dual	 Primal	 Gap(%)
+----------------------------------------------
+update in RO 4.000000
+
+CHECKER is 1 SUM:4
+TIME:19.000000
+P TIGHTEN: 0.020000 <P:4.000000, D:300.000000, INC:(36)[0 0 0 0 1 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 1 ]> 4.000000 4.000000 + 0.000000 #1461
+update in RO 5.000000
+
+CHECKER is 1 SUM:5
+TIME:20.000000
+P TIGHTEN: 0.021000 <P:5.000000, D:300.000000, INC:(70)[0 0 0 0 0 1 1 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 1 ]> 5.000000 5.000000 + 0.000000 #3631
+update in RO 6.000000
+
+CHECKER is 1 SUM:6
+TIME:22.000000
+P TIGHTEN: 0.023000 <P:6.000000, D:300.000000, INC:(139)[0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 1 0 1 ]> 6.000000 6.000000 + 0.000000 #7865
+update in RO 7.000000
+
+CHECKER is 1 SUM:7
+TIME:24.000000
+P TIGHTEN: 0.025000 <P:7.000000, D:300.000000, INC:(226)[0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 ]> 7.000000 7.000000 + 0.000000 #10457
+update in RO 8.000000
+
+CHECKER is 1 SUM:8
+TIME:46.000000
+P TIGHTEN: 0.047000 <P:8.000000, D:32.000000, INC:(300)[0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 ]> 8.000000 8.000000 + 0.000000 #10995
+Done(64):8.0000000000000000	 #nodes:1157/1172	 P/D:0/0	 Time:0.0460000000000000/0.3460000000000000s	 LIM?:0	 Seen:0
+	Command being timed: "/usr/bin/timeout 915 /home/fabio/CODD-NEWDom/cmake-build-release-ilyin/misp5 /home/fabio/CODD-NEWDom/data/misp/p_hat300-1.clq 64"
+	User time (seconds): 0.34
+	System time (seconds): 0.01
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.35
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 47616
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 11643
+	Voluntary context switches: 3
+	Involuntary context switches: 3
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 0
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+

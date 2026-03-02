@@ -178,7 +178,7 @@ public:
         // Always >= 1 because d_new contains 0 (invariant preserved by intersection)
         i32 const sm_new = (~d_new).smallest();
 
-        return State(m_new, d_new, k_new, e_new, sm_new);
+        return State(m_new, d_new, k_new, min<i32>(s1.e,s2.e), min<i32>(s1.sm,s2.sm));
     }
 
     GFL_HOST_DEVICE static

@@ -159,8 +159,11 @@ public:
         {
             expData.swapParentsAndChildren();
             expandParents(model,expData,primal);
+            childrenInfo.print();
             filterRepresentedChildren<Model,Node>(expData);
+            childrenInfo.print();
             sortChildrenByG<Model,Node>(expData);
+            childrenInfo.print();
             exact = exact and (childrenInfo.size() <= width_);
             childrenInfo.resizeTo(min<i64>(width_, childrenInfo.size()));
             calcOutLabels<Model,Node>(model, children, childrenInfo, primal, dual, DDRestricted);

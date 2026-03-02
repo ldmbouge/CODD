@@ -1,0 +1,35 @@
+COMMAND: /usr/bin/time -v /usr/bin/timeout 915 /home/fabio/CODD-NEWDom/cmake-build-release-ilyin/knapsack2 /home/fabio/CODD-NEWDom/data/knapsack/f8_l-d_kp_23_10000.txt 256
+CAPA:10000
+B&B searching...
+dual@root:10000
+B&B Nodes          Dual	 Primal	 Gap(%)
+----------------------------------------------
+update in RO 9767.000000
+CHECKER:9767.000000 RC:232
+TIME:8.000000
+P TIGHTEN: 0.009000 <P:9767.000000, D:10000.000000, INC:(23)[1 1 0 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 ]> 9767.000000 9767.000000 + 0.000000 #3989
+Done(256):9767.0000000000000000	 #nodes:496/496	 P/D:0/37	 Time:0.0080000000000000/0.0380000000000000s	 LIM?:0	 Seen:0
+	Command being timed: "/usr/bin/timeout 915 /home/fabio/CODD-NEWDom/cmake-build-release-ilyin/knapsack2 /home/fabio/CODD-NEWDom/data/knapsack/f8_l-d_kp_23_10000.txt 256"
+	User time (seconds): 0.03
+	System time (seconds): 0.00
+	Percent of CPU this job got: 97%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.04
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 12288
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 2580
+	Voluntary context switches: 3
+	Involuntary context switches: 5
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 0
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+

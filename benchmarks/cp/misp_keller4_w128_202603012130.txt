@@ -1,0 +1,57 @@
+COMMAND: /usr/bin/time -v /usr/bin/timeout 915 /home/fabio/CODD-NEWDom/cmake-build-release-ilyin/misp5 /home/fabio/CODD-NEWDom/data/misp/keller4.clq 128
+TOP=171
+B&B searching...
+dual@root:171
+B&B Nodes          Dual	 Primal	 Gap(%)
+----------------------------------------------
+update in RO 7.000000
+
+CHECKER is 1 SUM:7
+TIME:21.000000
+P TIGHTEN: 0.022000 <P:7.000000, D:171.000000, INC:(59)[0 0 1 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 1 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 1 ]> 7.000000 7.000000 + 0.000000 #5840
+update in RO 8.000000
+
+CHECKER is 1 SUM:8
+TIME:22.000000
+P TIGHTEN: 0.023000 <P:8.000000, D:171.000000, INC:(76)[0 1 0 0 0 0 0 0 0 0 0 0 0 0 1 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 1 0 1 ]> 8.000000 8.000000 + 0.000000 #8047
+update in RO 9.000000
+
+CHECKER is 1 SUM:9
+TIME:23.000000
+P TIGHTEN: 0.024000 <P:9.000000, D:171.000000, INC:(88)[1 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 1 0 0 0 0 0 0 1 ]> 9.000000 9.000000 + 0.000000 #9536
+update in RO 10.000000
+
+CHECKER is 1 SUM:10
+TIME:25.000000
+P TIGHTEN: 0.025000 <P:10.000000, D:171.000000, INC:(108)[0 0 0 0 1 0 1 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 1 ]> 10.000000 10.000000 + 0.000000 #12082
+update in RO 11.000000
+
+CHECKER is 1 SUM:11
+TIME:25.000000
+P TIGHTEN: 0.025000 <P:11.000000, D:171.000000, INC:(112)[0 0 0 0 1 0 1 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 1 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 1 ]> 11.000000 11.000000 + 0.000000 #12423
+B&B(13694)	 14.000000	 11.000000	 27.2727%	 time:5.0010s
+Done(128):11.0000000000000000	 #nodes:60322/60322	 P/D:0/0	 Time:0.0250000000000000/9.3040000000000003s	 LIM?:0	 Seen:0
+	Command being timed: "/usr/bin/timeout 915 /home/fabio/CODD-NEWDom/cmake-build-release-ilyin/misp5 /home/fabio/CODD-NEWDom/data/misp/keller4.clq 128"
+	User time (seconds): 9.27
+	System time (seconds): 0.03
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:09.31
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 81408
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 0
+	Minor (reclaiming a frame) page faults: 20265
+	Voluntary context switches: 3
+	Involuntary context switches: 42
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 8
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0
+
