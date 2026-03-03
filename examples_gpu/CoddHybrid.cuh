@@ -55,7 +55,7 @@ int runHybrid(int argc, char* argv[])
     ArenaAllocator resEngAlloc(engMemSize, heapReserve(engMemSize));
     ArenaAllocator resBuffAlloc(cli.memSize(), heapReserve(cli.memSize()));
     ResEngCpu * const resEng = new (resEngAlloc) ResEngCpu();
-    i32 const cpuWidth = 2 ; //cli.width();
+    i32 const cpuWidth = 128 ; //cli.width();
     resEng->initRestrictedExpansion(cpuWidth, BranchFactor, resBuffAlloc);
     printf("Restricted Working memory: ");
     printMemSize(resBuffAlloc.usedSize());
@@ -110,8 +110,7 @@ int runHybrid(int argc, char* argv[])
                       auto [resBestTarget, _] = resEng->getTargets();
                       if (resBestTarget.has_value())
                       {
-                          std::abort();
-                          //printf("[DBG] RES exact value: %.3f\n", resBestTarget.value().g());
+                          printf("[DBG] RES exact value: %.3f\n", resBestTarget.value().g());
                           bnb.primal(resBestTarget.value());
                       }
                       if (resEng->exact)
@@ -164,7 +163,7 @@ int runHybrid(int argc, char* argv[])
             //printf("[DBG] Offloading %ld nodes with f %.2f (Remaining %ld)\n", parentsBuffer.size(), parentsBuffer.back().f(), queue.size());
 
             f64 const fDepth = scast<f32>(parentsBuffer.front().depth()) / scast<f32>(Depth) ; //1.5;//isValid<Model>(bnb.primal()) ? 1.5 : 3.0;
-            f64 const lambda = 1.0; //bnb.havvvvvvvvvvvvvvvvvvvvvsPrimal() ? 1.5 : 15.0;//1.0 + 2 * (1.0 - fDepth); //bnb.hasPrimal() ? 1.5 : 5.0;
+            f64 const lambda = 1.0 + fDepth; //bnb.hasPrimal() ? 1.5 : 5.0;
 
 
             //printf("Going on GPU with %d nodes\n", parentsBuffer.size());
@@ -188,13 +187,13 @@ int runHybrid(int argc, char* argv[])
             if (relBestExactTarget.has_value())
             {
                 Node const & bestExt = relBestExactTarget.value();
-                //printf("[DBG] REL exact value: %.3f\n", bestExt.g());
+                printf("[DBG] REL exact value: %.3f\n", bestExt.g());
                 bnb.primal(bestExt);
             }
             if (relBestTarget.has_value())
             {
                 Node const & bestOverall = relBestTarget.value();
-                //printf("[DBG] REL best value: %.3f (Exact %d)\n", bestOverall.g(), not bestOverall.approximated());; // G is correct!
+                printf("[DBG] REL best value: %.3f (Exact %d)\n", bestOverall.g(), not bestOverall.approximated());; // G is correct!
                 if (isBetter<Model>(bestOverall.g(), bnb.primal()))
                 {
                     if (bestOverall.approximated())

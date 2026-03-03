@@ -22,10 +22,10 @@ public:
     class State
     {
         MarksSet m;   // set of mark positions placed so far
-        MarksSet d;   // set of distances already used (always contains 0)
-        gfl::i32 k;   // number of marks placed (= layer in the DD)
+        MarksSet d;   // set of distances already used
+        gfl::i32 k;   // number of marks placed
         gfl::i32 e;   // position of the last (rightmost) mark
-        gfl::i32 sm;  // smallest distance NOT yet used (always >= 1)
+        gfl::i32 sm;  // smallest distance NOT yet used
 
     public:
         GFL_HOST_DEVICE
@@ -61,8 +61,8 @@ public:
         void print() const
         {
             printf("K %d | E %d | SM %d | ", k, e, sm);
-           // printf("M "); m.print();
-           // printf(" | D "); d.print(); printf("\n");
+            printf("M "); m.printAsInts();
+            printf(" | D "); d.printAsInts(); printf("\n");
         }
 
         friend std::ostream & operator<<(std::ostream & os, State const & s)
@@ -77,13 +77,13 @@ public:
 
     State initial() const noexcept
     {
-        return State(MarksSet(),MarksSet(),0,0,0);
+        return State(MarksSet(),MarksSet(),0,0,1);
     }
 
     GFL_HOST_DEVICE
     bool isTarget(State const & s) const noexcept
     {
-        return s.k == n-1;
+        return s.k == n;
     }
 
     GFL_HOST_DEVICE
@@ -99,7 +99,7 @@ public:
             else
                 ub = min<i32>(ub, pBound-1) - OPT[n-s.k];
             i32 lb = max<i32>(s.e + s.sm,ceil<i32>(s.k*(s.k-1),2));
-            lb = max<i32>(lb ,(s.k < n-1) ? OPT[s.k+1] : OPT[s.k]+1);
+            lb = max<i32>(lb ,(s.k < n - 1) ? OPT[s.k+1] : OPT[s.k]+1);
             MarksSet vr;
             for(i32 label = lb;label <= ub;label++)
             {
@@ -114,7 +114,7 @@ public:
         }
         else
         {
-            return OutLabels(0);
+            return MarksSet(0);
         }
     }
 
@@ -122,6 +122,7 @@ public:
     gfl::optional<State> stf(State const & s, int l) const noexcept
     {
         using namespace gfl;
+
         MarksSet d_new = (l - s.m) | s.d;
         i32 smallest_dist = s.sm;
         while (d_new.contains(smallest_dist)) smallest_dist += 1;
@@ -147,7 +148,6 @@ public:
             s1.k,
             min<i32>(s1.e,s2.e),
             min<i32>(s1.sm,s2.sm));
-
     }
 
     constexpr static bool has_heur = false;

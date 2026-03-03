@@ -31,6 +31,7 @@ gfl::f64 worst() noexcept
     return -best<Model>();
 }
 
+
 template<typename Model>
 GFL_HOST_DEVICE constexpr
 bool isBetter(gfl::f64 const a, gfl::f64 const b) noexcept
@@ -49,6 +50,13 @@ bool isBetterEq(gfl::f64 const a, gfl::f64 const b) noexcept
         return a >= b;
     else
         return a <= b;
+}
+
+template<typename Model>
+GFL_HOST_DEVICE constexpr
+bool isBest(gfl::f64 const a) noexcept
+{
+    return isBetterEq<Model>(a, best<Model>());
 }
 
 template<typename Model>
@@ -105,7 +113,7 @@ GFL_HOST_DEVICE constexpr
 gfl::f64 boostScore(gfl::f64 const score, gfl::f64 const lambda)
 {
     if constexpr (Model::is_maximization)
-        return score * lambda;   // lambda > 1 makes it larger = better
+        return score / lambda;
     else
-        return score / lambda;   // lambda > 1 makes it smaller = better
+        return score * lambda;
 }

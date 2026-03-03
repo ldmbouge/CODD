@@ -158,34 +158,34 @@ public:
         int i = 0;
         while (not childrenInfo.empty() and not expData.bestTargetNode.has_value())
         {
-            printf("Iteration %d\n", i++); fflush(stdout);
+            //printf("Iteration %d\n", i++); fflush(stdout);
             expData.swapParentsAndChildren();
-            for (auto const & i : childrenInfo) {children[i.idx].print(); printf("\n");}
-            printf("\n"); fflush(stdout);
+            //for (auto const & i : childrenInfo) {children[i.idx].print(); printf("\n");}
+            //printf("\n"); fflush(stdout);
             expandParents(model,expData,primal);
-            for (auto const & i : childrenInfo) {children[i.idx].print(); printf("\n");}
-            printf("\n"); fflush(stdout);
+            //for (auto const & i : childrenInfo) {children[i.idx].print(); printf("\n");}
+            //printf("\n"); fflush(stdout);
             filterRepresentedChildren<Model,Node>(expData);
-            for (auto const & i : childrenInfo) {children[i.idx].print(); printf("\n");}
-            printf("\n"); fflush(stdout);
+            //for (auto const & i : childrenInfo) {children[i.idx].print(); printf("\n");}
+            //printf("\n"); fflush(stdout);
             sortChildrenByG<Model,Node>(expData);
-            for (auto const & i : childrenInfo) {children[i.idx].print(); printf("\n");}
-            printf("\n"); fflush(stdout);
+            //for (auto const & i : childrenInfo) {children[i.idx].print(); printf("\n");}
+            //printf("\n"); fflush(stdout);
             exact = exact and (childrenInfo.size() <= width_);
             childrenInfo.resizeTo(min<i64>(width_, childrenInfo.size()));
-            for (auto const & i : childrenInfo) {children[i.idx].print(); printf("\n");}
-            printf("\n"); fflush(stdout);
+            //for (auto const & i : childrenInfo) {children[i.idx].print(); printf("\n");}
+            //printf("\n"); fflush(stdout);
             calcOutLabels<Model,Node>(model, children, childrenInfo, primal, dual, DDRestricted);
-            for (auto const & i : childrenInfo) {children[i.idx].print(); printf("\n");}
-            printf("\n"); fflush(stdout);
+            //for (auto const & i : childrenInfo) {children[i.idx].print(); printf("\n");}
+            //printf("\n"); fflush(stdout);
             checkForTarget(model, bestTrgt, children, childrenInfo);
-            for (auto const & i : childrenInfo) {children[i.idx].print(); printf("\n");}
-            printf("\n"); fflush(stdout);
+            //for (auto const & i : childrenInfo) {children[i.idx].print(); printf("\n");}
+            //printf("\n"); fflush(stdout);
         }
-        printf("---\n"); fflush(stdout);
-        for (auto const & i : childrenInfo) {children[i.idx].print(); printf("\n");}
-        printf("\n"); fflush(stdout);
-        printf("---\n"); fflush(stdout);
+         // printf("---\n"); fflush(stdout);
+         // for (auto const & i : childrenInfo) {children[i.idx].print(); printf("\n");}
+         // printf("\n"); fflush(stdout);
+         // printf("---\n"); fflush(stdout);
 
         // while (not childrenInfo.empty() and not expData.bestTargetNode.has_value())
         // {

@@ -63,7 +63,7 @@ public:
     void dual(gfl::f64 const dual) noexcept
     {
         //printf("[DBG] BNB Dual: %.2f vs IN Dual: %.2f\n", dual_, dual);
-        if (dual != worst<Model>() and isWorse<Model>(dual, dual_))
+        if (not hasDual() or isWorse<Model>(dual, dual_))
         {
          //   printf("BNB Dual: %.2f vs IN Dual: %.2f\n", dual_, dual);
          //   printf("%.2f > %.2f ? %d\n", dual , dual_, dual > dual_);
@@ -81,7 +81,7 @@ public:
 
     bool solved() const noexcept
     {
-        return hasGap() and isBetterEq<Model>(dual_,primal_);
+        return hasGap() and isWorse<Model>(dual_,primal_);
     }
 
     void printSolution() const noexcept { return solution_.printSolution(); }

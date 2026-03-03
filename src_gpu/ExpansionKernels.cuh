@@ -95,7 +95,7 @@ void expandParentsKernel(
                         f64 const h = model->h(cState.value(), BBCtx);
                         cH = better<Model>(cH, h);
                     }
-                    if (isBetterEq<Model>(cG + cH, primal))
+                    if (isBetter<Model>(cG + cH, primal))
                     {
                         i64 const offset = pIdx * branchFactor + (label - minl);
                         children[offset] = Node(cState.value(), cG, cH, label, pNode);
@@ -699,8 +699,9 @@ void setHKernel(
     {
 
         Node & node = cutset->at(i);
-        f64 const h = f - node.g();
-        node.h(better<Model>(h, node.h()));
+        f64 h = f - node.g();
+        h = isBest<Model>(node.h())? h : better<Model>(h, node.h());
+        node.h(h);
     }
 }
 

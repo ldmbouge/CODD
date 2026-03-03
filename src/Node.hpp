@@ -49,7 +49,7 @@ public:
         f64 h = best<Model>();
         if constexpr (Model::has_heur) h = model->h(state, DDInit);
         Node * const n = new Node(state, 0, h);
-        n->outLabels_= model->lgf(state, best<Model>(), worst<Model>(), DDExact);
+        n->outLabels_= model->lgf(state, worst<Model>(), best<Model>(), DDExact);
         return n;
     }
 
