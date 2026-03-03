@@ -81,7 +81,7 @@ public:
 
     bool solved() const noexcept
     {
-        return hasGap() and isWorse<Model>(dual_,primal_);
+        return hasGap() and isBetterEq<Model>(primal_,dual_);
     }
 
     void printSolution() const noexcept { return solution_.printSolution(); }

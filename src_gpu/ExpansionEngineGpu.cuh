@@ -152,6 +152,7 @@ public:
         resizeToKernel<<<1,1>>>(&tmpInfo,childrenInfo.sizePtr());
         CHECK_LAST_CUDA_ERROR();
         setScoreAsGKernel<Model><<<gridSize,blockSize>>>(&children, &childrenInfo, lambda);
+        //setScoreAsFKernel<Model><<<gridSize,blockSize>>>(&children, &childrenInfo, lambda);
         CHECK_LAST_CUDA_ERROR();
 
         sortKernel<NodeInfo::ScoreDecomposer><<<1,1>>>(&childrenInfo,&tmpInfo,&cubAuxMem);

@@ -93,7 +93,7 @@ void expandParentsKernel(
                     if constexpr (Model::has_heur)
                     {
                         f64 const h = model->h(cState.value(), BBCtx);
-                        cH = better<Model>(cH, h);
+                        cH = worse<Model>(cH, h);
                     }
                     if (isBetter<Model>(cG + cH, primal))
                     {
@@ -103,7 +103,7 @@ void expandParentsKernel(
                     }
                     else
                     {
-                        printf("%.2f beat by primal %.2f\n",cG + cH, primal);
+                        //printf("%.2f beat by primal %.2f\n",cG + cH, primal);
                     }
 
                 }
@@ -377,29 +377,13 @@ void setScoreAsGKernel(
                                 : boostScore<Model>(info.score, lambda);
     }
 }
-template<typename Model, typename Node>
-GFL_GLOBAL
-void setGScoreKernel(
-    gfl::ArrayView<Node> const * const nodes,
-    gfl::ArrayView<NodeInfo> const * const nodesInfo)
-{
-    using namespace gfl;
-
-    assert(nodes->size() >= nodesInfo->size());
-    auto [begin,end] = calcSlice<i64>(blockIdx.x, gridDim.x, nodesInfo->size());
-    for (i64 i = begin + threadIdx.x; i < end; i += blockDim.x)
-    {
-        NodeInfo & info = nodesInfo->at(i);
-        Node const & node = nodes->at(info.idx);
-        info.score = score<Model>(node.g());
-    }
-}
 
 template<typename Model, typename Node>
 GFL_GLOBAL
-void setScoreFKernel(
+void setScoreAsFKernel(
     gfl::ArrayView<Node> const * const nodes,
-    gfl::ArrayView<NodeInfo> const * const nodesInfo)
+    gfl::ArrayView<NodeInfo> const * const nodesInfo,
+    gfl::f64 const lambda)
 {
     using namespace gfl;
 
@@ -410,6 +394,9 @@ void setScoreFKernel(
         NodeInfo & info = nodesInfo->at(i);
         Node const & node = nodes->at(info.idx);
         info.score = score<Model>(node.f());
+        info.score =
+            node.approximated() ? info.score
+                                : boostScore<Model>(info.score, lambda);
     }
 }
 
@@ -608,6 +595,7 @@ void reduceByInfoKernel(
             mergeNodeWith<Model>(fNode_r, iNode);
         }
         NodeInfo const & rInfo = inInfo->at(begin);
+        assert(fNode_r.f() <= 106);
         children->at(rInfo.idx) = fNode_r;
         outInfo->at(blockIdx.x) = rInfo;
     }
@@ -632,6 +620,7 @@ void reduceByInfoSeqKernel(
             NodeInfo const & iInfo = inInfo->at(i);
             Node const & iNode = children->at(iInfo.idx);
             mergeNodeWith<Model>(fNode_r, iNode);
+            assert(fNode_r.f() <= 106);
         }
     }
 }
@@ -699,9 +688,8 @@ void setHKernel(
     {
 
         Node & node = cutset->at(i);
-        f64 h = f - node.g();
-        h = isBest<Model>(node.h())? h : better<Model>(h, node.h());
-        node.h(h);
+        f64 const h = f - node.g();
+        node.h(worse<Model>(h, node.h()));
     }
 }
 
