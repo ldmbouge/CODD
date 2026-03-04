@@ -56,7 +56,7 @@ int runHybrid(int argc, char* argv[])
     ArenaAllocator resEngAlloc(engMemSize, heapReserve(engMemSize));
     ArenaAllocator resBuffAlloc(cli.memSize(), heapReserve(cli.memSize()));
     ResEngCpu * const resEng = new (resEngAlloc) ResEngCpu();
-    i32 const cpuWidth = 128 ; //cli.width();
+    i32 const cpuWidth = 16 ; //cli.width();
     resEng->initRestrictedExpansion(cpuWidth, BranchFactor, resBuffAlloc);
     printf("Restricted Working memory: ");
     printMemSize(resBuffAlloc.usedSize());
@@ -88,7 +88,7 @@ int runHybrid(int argc, char* argv[])
     i32 prundedByDual = 0;
     i32 prundedByRes = 0;
 
-    while (not queue.empty() and stats.elapsed<sec>() <= cli.timeout() )//and not bnb.solved())
+    while (not queue.empty() and stats.elapsed<sec>() <= cli.timeout() and not bnb.solved())
     {
         parentsBuffer.clear();
         prundedByDual = 0;
@@ -96,14 +96,12 @@ int runHybrid(int argc, char* argv[])
 
         while (not queue.empty() and parentsBuffer.size() < adjToPop)
         {
-            {
                 Node const * node = queue.peekBest();
-                // if (isBetterEq<Model>(node->f(), bnb.primal()) or not bnb.hasPrimal())
+                if (isBetterEq<Model>(node->f(), bnb.primal()) or not bnb.hasPrimal())
                 {
 
                     //Restricted
-                    //bool restricted = true;
-                    bool constexpr restricted = false;
+                    bool constexpr restricted = true;
                     if (restricted)
                     {
                         testBuffer.clear();
@@ -120,6 +118,7 @@ int runHybrid(int argc, char* argv[])
                         }
                         if (resEng->exact)
                         {
+                            //printf("[DBG] RES exact!");
                             queue.pullBest();
                             prundedByRes += 1;
                             log.progress();
@@ -128,9 +127,10 @@ int runHybrid(int argc, char* argv[])
                     }
 
                     if (parentsBuffer.empty() or
-                       (parentsBuffer.size() < adjToPop and
-                           parentsBuffer.back().depth() == node->depth())                           // parentsBuffer.back().f() == node->f()
-                       )
+                       (parentsBuffer.size() < adjToPop
+                           and parentsBuffer.back().depth() == node->depth()
+                           and parentsBuffer.back().f() == node->f()
+                       ))
                     {
                         node = queue.pullBest();
                         parentsBuffer.push_back(*node);
@@ -140,29 +140,30 @@ int runHybrid(int argc, char* argv[])
                         break;
                     }
                 }
-                // else
-                // {
-                //     prundedByDual += 1;
-                //     queue.pullBest();
-                //     log.progress();
-                // }
-            }
+                else
+                {
+                    prundedByDual += 1;
+                    queue.pullBest();
+                    log.progress();
+                }
+
             log.progress();
         }
 
-        // printf("[DBG] Pulled %d nodes form the queue with value at depth (D = %d RS = %d)\n",
-        //         (int) parentsBuffer.size(),
-        //         parentsBuffer.front().depth(),
-        //        prundedByDual,
-        //        prundedByRes
-        //        );
+        printf("[DBG] Offloading %d nodes at DPT = %d (D = %d RS = %d)\n",
+                (int) parentsBuffer.size(),
+                parentsBuffer.front().f(),
+                parentsBuffer.front().depth(),
+               prundedByDual,
+               prundedByRes
+               );
 
         if (not parentsBuffer.empty())
         {
 
             fflush(stdout);
 
-            //bnb.dual(parentsBuffer.front().f());
+            bnb.dual(parentsBuffer.front().f());
 
             //printf("[DBG] Offloading %ld nodes with f %.2f (Remaining %ld)\n", parentsBuffer.size(), parentsBuffer.back().f(), queue.size());
 

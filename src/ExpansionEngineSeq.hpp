@@ -155,7 +155,7 @@ public:
         resetInfoIdx(childrenInfo);
 
         exact = true;
-        int i = 0;
+        //int i = 0;
         while (not childrenInfo.empty() and not expData.bestTargetNode.has_value())
         {
             //printf("Iteration %d\n", i++); fflush(stdout);

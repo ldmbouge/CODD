@@ -381,7 +381,7 @@ void setScoreAsGKernel(
         info.score = score<Model>(node.g());
         info.score =
             node.approximated() ? info.score
-                                : boostScore<Model>(info.score, lambda * scast<f64>(i) / scast<f64>(nodesInfo->size()));
+                                : boostScore<Model>(info.score, lambda);
     }
 }
 
