@@ -20,11 +20,11 @@ int runHybrid(int argc, char* argv[])
     CliManager cli("CODD", "A C++ solver for DIDP models.");
     cli.parse(argc, argv);
 
-    if (cli.width()  < BranchFactor)
-    {
-        printf("WARNING: Width too small, increased to %d\n.", BranchFactor);
-        cli.width(BranchFactor);
-    }
+    // if (cli.width()  < BranchFactor)
+    // {
+    //     printf("WARNING: Width too small, increased to %d\n.", BranchFactor);
+    //     cli.width(BranchFactor);
+    // }
 
 
     std::cout << "Instance: " << cli.instance() << std::endl;
@@ -42,7 +42,7 @@ int runHybrid(int argc, char* argv[])
     model->init(cli.instance(), modelAlloc);
 
     // Expansion engines
-    constexpr i32 engMemSize = 32; // Small, it MUST be on managed memory
+    constexpr i32 engMemSize = 2048; // Small, it MUST be on managed memory
     assert(engMemSize > sizeof(RelEngGpu));
     ArenaAllocator relEngAlloc(engMemSize, cudaReserveManaged(engMemSize));
     ArenaAllocator relBuffAlloc(cli.memSize(), cudaReserveDevice(cli.memSize()));
@@ -56,7 +56,7 @@ int runHybrid(int argc, char* argv[])
     ArenaAllocator resEngAlloc(engMemSize, heapReserve(engMemSize));
     ArenaAllocator resBuffAlloc(cli.memSize(), heapReserve(cli.memSize()));
     ResEngCpu * const resEng = new (resEngAlloc) ResEngCpu();
-    i32 const cpuWidth = 1024 ; //cli.width();
+    i32 const cpuWidth = 128 ; //cli.width();
     resEng->initRestrictedExpansion(cpuWidth, BranchFactor, resBuffAlloc);
     printf("Restricted Working memory: ");
     printMemSize(resBuffAlloc.usedSize());
@@ -88,7 +88,7 @@ int runHybrid(int argc, char* argv[])
     i32 prundedByDual = 0;
     i32 prundedByRes = 0;
 
-    while (not queue.empty() and stats.elapsed<sec>() <= cli.timeout() and not bnb.solved())
+    while (not queue.empty() and stats.elapsed<sec>() <= cli.timeout() )//and not bnb.solved())
     {
         parentsBuffer.clear();
         prundedByDual = 0;
@@ -98,34 +98,38 @@ int runHybrid(int argc, char* argv[])
         {
             {
                 Node const * node = queue.peekBest();
-                if (isBetterEq<Model>(node->f(), bnb.primal()) or not bnb.hasPrimal())
+                // if (isBetterEq<Model>(node->f(), bnb.primal()) or not bnb.hasPrimal())
                 {
 
                     //Restricted
-                       testBuffer.clear();
-                       testBuffer.push_back(*node);
-                       {
-                           //TIMED_SCOPE_N("ResDD");
-                           resEng->expandRestricted(model, testBuffer, bnb.primal(), bnb.dual());
-                       }
-                       auto [resBestTarget, _] = resEng->getTargets();
-                       if (resBestTarget.has_value())
-                       {
-                           //printf("[DBG] RES exact value: %.3f\n", resBestTarget.value().g());
-                           bnb.primal(resBestTarget.value());
-                       }
-                       if (resEng->exact)
-                       {
-                           queue.pullBest();
-                           prundedByRes += 1;
-                           log.progress();
-                           continue;
-                       }
+                    //bool restricted = true;
+                    bool constexpr restricted = false;
+                    if (restricted)
+                    {
+                        testBuffer.clear();
+                        testBuffer.push_back(*node);
+                        {
+                            //TIMED_SCOPE_N("ResDD");
+                            resEng->expandRestricted(model, testBuffer, bnb.primal(), bnb.dual());
+                        }
+                        auto [resBestTarget, _] = resEng->getTargets();
+                        if (resBestTarget.has_value())
+                        {
+                            //printf("[DBG] RES exact value: %.3f\n", resBestTarget.value().g());
+                            bnb.primal(resBestTarget.value());
+                        }
+                        if (resEng->exact)
+                        {
+                            queue.pullBest();
+                            prundedByRes += 1;
+                            log.progress();
+                            continue;
+                        }
+                    }
 
                     if (parentsBuffer.empty() or
                        (parentsBuffer.size() < adjToPop and
-                           parentsBuffer.back().depth() == node->depth()) and
-                           parentsBuffer.back().f() == node->f()
+                           parentsBuffer.back().depth() == node->depth())                           // parentsBuffer.back().f() == node->f()
                        )
                     {
                         node = queue.pullBest();
@@ -136,29 +140,29 @@ int runHybrid(int argc, char* argv[])
                         break;
                     }
                 }
-                else
-                {
-                    prundedByDual += 1;
-                    queue.pullBest();
-                    log.progress();
-                }
+                // else
+                // {
+                //     prundedByDual += 1;
+                //     queue.pullBest();
+                //     log.progress();
+                // }
             }
             log.progress();
         }
 
-        printf("[DBG] Pulled %d nodes form the queue with value %.3f (D = %d RS = %d)\n",
-                (int) parentsBuffer.size(),
-                parentsBuffer.front().f(),
-               prundedByDual,
-               prundedByRes
-               );
+        // printf("[DBG] Pulled %d nodes form the queue with value at depth (D = %d RS = %d)\n",
+        //         (int) parentsBuffer.size(),
+        //         parentsBuffer.front().depth(),
+        //        prundedByDual,
+        //        prundedByRes
+        //        );
 
         if (not parentsBuffer.empty())
         {
 
             fflush(stdout);
 
-            bnb.dual(parentsBuffer.front().f());
+            //bnb.dual(parentsBuffer.front().f());
 
             //printf("[DBG] Offloading %ld nodes with f %.2f (Remaining %ld)\n", parentsBuffer.size(), parentsBuffer.back().f(), queue.size());
 
@@ -176,7 +180,7 @@ int runHybrid(int argc, char* argv[])
             if (parentsBuffer.size() * 1.1 >= relEng->cutData.nodes()->size() and
                 parentsBuffer.size() * 0.9 <= relEng->cutData.nodes()->size())
             {
-                adjToPop = ceil<i32>(adjToPop,2);
+                adjToPop = ceil<i32>(adjToPop,10);
             }
             else
             {

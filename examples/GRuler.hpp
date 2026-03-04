@@ -77,7 +77,7 @@ public:
 
     State initial() const noexcept
     {
-        return State(MarksSet(),MarksSet(),0,0,1);
+        return State(MarksSet(0),MarksSet(),1,0,1);
     }
 
     GFL_HOST_DEVICE
@@ -91,31 +91,24 @@ public:
     {
         using namespace gfl;
 
-        if (s.k != 0)
-        {
-            i32 ub = L+1;
-            if (s.k < n/2)
-                ub = min<i32>(ub, pBound)/2 - OPT[(n/2)-s.k];
-            else
-                ub = min<i32>(ub, pBound-1) - OPT[n-s.k];
-            i32 lb = max<i32>(s.e + s.sm,ceil<i32>(s.k*(s.k-1),2));
-            lb = max<i32>(lb ,(s.k < n - 1) ? OPT[s.k+1] : OPT[s.k]+1);
-            MarksSet vr;
-            for(i32 label = lb;label <= ub;label++)
-            {
-                MarksSet leg(s.d);
-                bool legal = (leg.interWith(label - s.m).empty());
-                if (legal)
-                {
-                    vr.insert(label);
-                }
-            }
-            return vr;
-        }
+        i32 ub = L+1;
+        if (s.k < n/2)
+            ub = min<i32>(ub, pBound)/2 - OPT[(n/2)-s.k];
         else
+            ub = min<i32>(ub, pBound-1) - OPT[n-s.k];
+        i32 lb = max<i32>(s.e + s.sm,ceil<i32>(s.k*(s.k-1),2));
+        lb = max<i32>(lb ,(s.k < n - 1) ? OPT[s.k+1] : OPT[s.k]+1);
+        MarksSet vr;
+        for(i32 label = lb;label <= ub;label++)
         {
-            return MarksSet(0);
+            MarksSet leg(s.d);
+            bool legal = (leg.interWith(label - s.m).empty());
+            if (legal)
+            {
+                vr.insert(label);
+            }
         }
+        return vr;
     }
 
     GFL_HOST_DEVICE

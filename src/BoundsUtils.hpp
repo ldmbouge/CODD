@@ -85,6 +85,13 @@ bool isWorseEq(gfl::f64 const a, gfl::f64 const b) noexcept
 
 template<typename Model>
 GFL_HOST_DEVICE constexpr
+bool isWorst(gfl::f64 const a) noexcept
+{
+    return isWorseEq<Model>(a, worst<Model>());
+}
+
+template<typename Model>
+GFL_HOST_DEVICE constexpr
 gfl::f64 better(gfl::f64 const a, gfl::f64 const b) noexcept
 {
     return isBetter<Model>(a, b) ? a : b;

@@ -50,11 +50,17 @@ void swapParentsAndChildrenKernel(ExpansionData<Node> * const expData)
 
 template<typename T>
 GFL_GLOBAL
-void setValueKernel( T * const t, T const v) { *t = v; }
+void setValueKernel( T * const t, T const v)
+{
+    *t = v;
+}
 
 template<typename T>
 GFL_GLOBAL
-void copyValueKernel( T * const t, T const * const v) { *t = *v; }
+void copyValueKernel( T * const t, T const * const v)
+{
+    *t = *v;
+}
 
 template<typename Model, typename Node>
 GFL_GLOBAL
@@ -336,11 +342,12 @@ void copyBestTargetsKernel(
         Node const & node = targets->at(info.idx);
 
         // Best overall (any node)
+        f64 const g = node.g();
         if (not bestTarget->has_value() or
-            isBetter<Model>(node.g(), bestTarget->value().g()))
+             isBetter<Model>(g, bestTarget->value().g()))
         {
             *bestTarget = node;
-            //printf("[DBG] Best found with value %.2f\n", node.f());
+            //printf("[DBG] Best found with value %.2f\n", node.g());
         }
 
         // Best exact (non-approximated)
@@ -374,7 +381,7 @@ void setScoreAsGKernel(
         info.score = score<Model>(node.g());
         info.score =
             node.approximated() ? info.score
-                                : boostScore<Model>(info.score, lambda);
+                                : boostScore<Model>(info.score, lambda * scast<f64>(i) / scast<f64>(nodesInfo->size()));
     }
 }
 
@@ -555,31 +562,32 @@ void mergeNodeWith(Node & main, Node const & toMerge)
 template<typename Model, typename Node>
 GFL_GLOBAL
 void reduceByInfoKernel(
-    gfl::ArrayView<Node> * const children,
+    gfl::ArrayView<Node> * const nodes,
     gfl::ArrayView<NodeInfo> const * const inInfo,
     gfl::ArrayView<NodeInfo> * const outInfo,
     gfl::i64 const * const count)
 {
     using namespace gfl;
 
+    i32 constexpr reductionFactor = 32 * 32; // Each thread merges 32 elements
     assert(blockDim.x == 32);
-    assert(gridDim.x * 1024 >= *count);
+    assert(gridDim.x * reductionFactor >= *count);
 
     __shared__ Node tmpNodes[32];
 
-    i32 const begin = blockIdx.x * 1024;
-    i32 const end = min<i32>(begin + blockDim.x, *count);
+    i32 const begin = blockIdx.x * reductionFactor;
+    i32 const end = min<i32>(begin + reductionFactor, *count);
     i32 const nodesOfBlock = end - begin;
     i32 const tIdx = threadIdx.x;
     if (tIdx < nodesOfBlock)
     {
         NodeInfo const & fInfo = inInfo->at(begin + threadIdx.x);
-        Node & fNode_r = children->at(fInfo.idx);
+        Node fNode_r = nodes->at(fInfo.idx);
         fNode_r.approximated(true);
         for (i64 i = begin + threadIdx.x + blockDim.x; i < end; i += blockDim.x)
         {
             NodeInfo const & iInfo = inInfo->at(i);
-            Node const & iNode = children->at(iInfo.idx);
+            Node const & iNode = nodes->at(iInfo.idx);
             mergeNodeWith<Model>(fNode_r, iNode);
         }
         tmpNodes[threadIdx.x] = fNode_r;
@@ -588,16 +596,18 @@ void reduceByInfoKernel(
 
     if (threadIdx.x == 0 and nodesOfBlock > 0)
     {
-        Node & fNode_r = tmpNodes[0];
-        for (i64 i = 1; i < nodesOfBlock; ++i)
+
+        Node fNode_r = tmpNodes[0];
+        for (i64 i = 1; i < min<i64>(nodesOfBlock,32); ++i)
         {
-            Node const & iNode = tmpNodes[i];
+            Node const iNode = tmpNodes[i];
+            //printf("Reading node with %.2f at slot %d\n", iNode.g(),i);
             mergeNodeWith<Model>(fNode_r, iNode);
         }
         NodeInfo const & rInfo = inInfo->at(begin);
-        assert(fNode_r.f() <= 106);
-        children->at(rInfo.idx) = fNode_r;
+        nodes->at(rInfo.idx) = fNode_r;
         outInfo->at(blockIdx.x) = rInfo;
+        //printf("Writing node with %.2f at slot %d (idx %ld)\n", fNode_r.g(), blockIdx.x, rInfo.idx);
     }
 }
 
@@ -620,8 +630,8 @@ void reduceByInfoSeqKernel(
             NodeInfo const & iInfo = inInfo->at(i);
             Node const & iNode = children->at(iInfo.idx);
             mergeNodeWith<Model>(fNode_r, iNode);
-            assert(fNode_r.f() <= 106);
         }
+        assert(fNode_r.f() <= 106);
     }
 }
 
@@ -673,23 +683,24 @@ void setHKernel(
 {
     using namespace gfl;
 
-    assert(bestTarget->has_value());
-
     __shared__ f64 f;
 
-    if (threadIdx.x == 0)
+    if (bestTarget->has_value())
     {
-        f = bestTarget->value().g();
-    }
-    __syncthreads();
+        if (threadIdx.x == 0)
+        {
+            f = bestTarget->value().g();
+        }
+        __syncthreads();
 
-    auto [begin,end] = calcSlice<i64>(blockIdx.x, gridDim.x, cutset->size());
-    for (i64 i = begin + threadIdx.x; i < end; i += blockDim.x)
-    {
+        auto [begin,end] = calcSlice<i64>(blockIdx.x, gridDim.x, cutset->size());
+        for (i64 i = begin + threadIdx.x; i < end; i += blockDim.x)
+        {
 
-        Node & node = cutset->at(i);
-        f64 const h = f - node.g();
-        node.h(worse<Model>(h, node.h()));
+            Node & node = cutset->at(i);
+            f64 const h = f - node.g();
+            node.h(worse<Model>(h, node.h()));
+        }
     }
 }
 
@@ -744,6 +755,29 @@ void printKernel(gfl::i64 const i, gfl::ArrayView<T> const * array)
     printf("STEP %d\n",i);
     for (auto const & a : *array) {a.print(); printf("\n");}
 }
+
+template<typename T>
+GFL_GLOBAL
+void checkKernel(gfl::i64 const i,
+    gfl::ArrayView<NodeInfo> const * nodesInfo,
+    gfl::ArrayView<T> const * nodes)
+{
+    assert(gridDim.x == 1);
+    assert(blockDim.x == 1);
+
+    using namespace gfl;
+
+    bool found = nodesInfo->empty();
+    for (auto const & info : *nodesInfo)
+    {
+        auto const & n = nodes->at(info.idx);
+        if (i) printf("Node %.2f = %.2f + %.2f\n", n.f(), n.g(), n.h());
+        if (n.g() <= 106) found = true;
+    }
+    printf("---\n");
+    assert(found or i);
+}
+
 
 template<typename Node>
 GFL_GLOBAL

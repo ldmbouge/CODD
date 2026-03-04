@@ -230,39 +230,44 @@ public:
         // Compute suffix = childrenInfo[width_-1 .. end]
         initSuffix<<<1,1>>>(width_, &childrenInfo, &childrenInfoSuffix);
         CHECK_LAST_CUDA_ERROR();
+
         copyValueKernel<<<1,1>>>(&nNodes, childrenInfoSuffix.sizePtr());
         CHECK_LAST_CUDA_ERROR();
+
         // Resize tmpInfo to max possible pass1 output count
         resizeToKernel<<<1,1>>>(&tmpInfo, nBlocks1);
         CHECK_LAST_CUDA_ERROR();
 
-        //printKernel<<<1,1>>>(1,&childrenInfoSuffix, &children);
         // pass1: childrenInfoSuffix → tmpInfo, one result per block
-        reduceByInfoKernel<Model,Node><<<nBlocks1, blockSize>>>(&children, &childrenInfoSuffix, &tmpInfo, &nNodes);
+        reduceByInfoKernel<Model,Node><<<nBlocks1, blockSize>>>(
+            &children,&childrenInfoSuffix, &tmpInfo, &nNodes);
         CHECK_LAST_CUDA_ERROR();
+
+
         // Compute actual number of nodes produced by pass1
         ceilKernel<<<1,1>>>(&nNodes, reductionFactor);
         CHECK_LAST_CUDA_ERROR();
 
-        //printKernel<<<1,1>>>(2,&childrenInfoSuffix, &children);
-        // pass2: tmpInfo → childrenInfoSuffix, one result per block
-        reduceByInfoKernel<Model,Node><<<nBlocks2, blockSize>>>(&children, &tmpInfo, &childrenInfoSuffix, &nNodes);
+        // Resize tmpInfo to max possible pass1 output count
+        resizeToKernel<<<1,1>>>(&tmpInfo, &nNodes);
         CHECK_LAST_CUDA_ERROR();
+
+        // pass2: tmpInfo → childrenInfoSuffix, one result per block
+        reduceByInfoKernel<Model,Node><<<nBlocks2, blockSize>>>(
+            &children, &tmpInfo, &childrenInfoSuffix, &nNodes);
+        CHECK_LAST_CUDA_ERROR();
+
         // Compute actual number of nodes produced by pass2
         ceilKernel<<<1,1>>>(&nNodes, reductionFactor);
         CHECK_LAST_CUDA_ERROR();
 
-        //printKernel<<<1,1>>>(3,&childrenInfoSuffix, &children);
         // pass3: sequential final reduction, result at children[childrenInfoSuffix[0].idx]
         reduceByInfoSeqKernel<Model,Node><<<1,1>>>(&children, &childrenInfoSuffix, &nNodes);
         CHECK_LAST_CUDA_ERROR();
 
-        //printKernel<<<1,1>>>(4,&childrenInfoSuffix, &children);
         // Shrink childrenInfo to width_ — merged node already sits at correct idx
         shrinkToKernel<<<1,1>>>(&childrenInfo, width_);
         CHECK_LAST_CUDA_ERROR();
-
-        //printKernel<<<1,1>>>(5,&childrenInfoSuffix, &children);
     }
 
     void calcOutLabels(
@@ -400,6 +405,7 @@ public:
             // printf("nChildren %llu\n", childrenInfo.size());
             // fflush(stdout);
         }
+
         // printf("---\n", childrenInfo.size());
         // fflush(stdout);
         copyBestTargetsKernel<Model,Node><<<1,1>>>(&bestTrgt,&bestExactTrgt,&children, &childrenInfo);

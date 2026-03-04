@@ -37,7 +37,7 @@ protected:
 
 
     Pool memPool_;
-    Heap<Node const *,decltype(betterF)> heap_;
+    Heap<Node const *,decltype(deepestG)> heap_;
     gfl::i64 pulled_;
     gfl::i64 pushed_;
 
@@ -45,7 +45,7 @@ public:
 
     Queue() noexcept:
         memPool_(DefaultSegmentSize),
-        heap_(&memPool_, InitialQueueSize, betterF),
+        heap_(&memPool_, InitialQueueSize, deepestG),
         pulled_(0),
         pushed_(0)
     {}
