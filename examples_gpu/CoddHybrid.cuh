@@ -137,10 +137,10 @@ int runHybrid(int argc, char* argv[])
                 break;
         }
 
-        printf("[DBG] Offloading %d nodes with f = %.2f\n",
-               (int) parentsBuffer.size(),
-               parentsBuffer.front().f());
-        fflush(stdout);
+        // printf("[DBG] Offloading %d nodes with f = %.2f\n",
+        //        (int) parentsBuffer.size(),
+        //        parentsBuffer.front().f());
+        // fflush(stdout);
 
         if (not parentsBuffer.empty())
         {
