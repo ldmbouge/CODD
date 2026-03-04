@@ -3,6 +3,7 @@
 #include <GFL.hpp>
 
 #include "CliManager.hpp"
+#include "BlockingQueue.cuh"
 #include "QueueGpu.cuh"
 #include "BnBManager.hpp"
 #include "LogManager.hpp"
@@ -53,14 +54,17 @@ int runHybrid(int argc, char* argv[])
     printf("\n");
 
     assert(engMemSize > sizeof(ResEngCpu));
-    ArenaAllocator resEngAlloc(engMemSize, heapReserve(engMemSize));
-    ArenaAllocator resBuffAlloc(cli.memSize(), heapReserve(cli.memSize()));
-    ResEngCpu * const resEng = new (resEngAlloc) ResEngCpu();
-    i32 const cpuWidth = 16 ; //cli.width();
-    resEng->initRestrictedExpansion(cpuWidth, BranchFactor, resBuffAlloc);
-    printf("Restricted Working memory: ");
-    printMemSize(resBuffAlloc.usedSize());
-    printf("\n");
+    // Restricted engines - one per validator thread
+    constexpr i32 nValidators = 16;
+    i32 const cpuWidth = 4096 ; //cli.width();
+    std::array<ResEngCpu*, nValidators> resEngs;
+    for (i32 i = 0; i < nValidators; ++i)
+    {
+        ArenaAllocator resEngAlloc(engMemSize, heapReserve(engMemSize));
+        ArenaAllocator resBuffAlloc(cli.memSize(), heapReserve(cli.memSize()));
+        resEngs[i] = new (resEngAlloc) ResEngCpu();
+        resEngs[i]->initRestrictedExpansion(cpuWidth, BranchFactor, resBuffAlloc);
+    }
 
     // Bounds and solutions manager
     BnBManager<Model,Node> bnb;
@@ -69,100 +73,77 @@ int runHybrid(int argc, char* argv[])
     StatsManager stats(cli.timeout());
 
     // Layers
-    QueueGpu<Model,Node> queue;
-    queue.push(Node::makeRoot(model));
+    std::atomic<i32> inFlight{0};
+    std::mutex              sharedMutex;
+    std::condition_variable sharedCv;
+
+    BlockingQueue<Queue<Model,Node>,    Model> readyQueue(inFlight, sharedMutex, sharedCv);
+    BlockingQueue<QueueGpu<Model,Node>, Model> stashQueue(inFlight, sharedMutex, sharedCv);
+    readyQueue.push(Node::makeRoot(model));
 
     // Log manager
-    LogManager<Model,Node> log(bnb,queue,stats);
+    LogManager<Model,Node,decltype(readyQueue)> log(bnb,readyQueue,stats);
+
+    // ── Validator threads ────────────────────────────────────────────
+
+    auto validatorFn = [&](ResEngCpu * resEng)
+    {
+        std::vector<Node> localBuffer;
+        while (auto node = stashQueue.pop())   // blocking
+        {
+            localBuffer.clear();
+            localBuffer.push_back(**node);
+            resEng->expandRestricted(model, localBuffer, bnb.primal(), bnb.dual());
+            auto [best, _] = resEng->getTargets();
+            if (best) bnb.primal(best.value());
+            if (not resEng->exact)
+                readyQueue.pushNoCount(*node);      // moving between queues, no inFlight change
+            else
+                stashQueue.done();
+        }
+    };
+    std::array<std::thread, nValidators> validators;
+    for (i32 i = 0; i < nValidators; ++i)
+        validators[i] = std::thread(validatorFn, resEngs[i]);
+
 
     std::vector<Node> parentsBuffer;
     parentsBuffer.reserve(cli.pop());
 
-    std::vector<Node> testBuffer;
-
     // BnB search
     log.header();
     stats.start();
+
     i32 adjToPop = cli.pop();
-
-    i32 prundedByDual = 0;
-    i32 prundedByRes = 0;
-
-    while (not queue.empty() and stats.elapsed<sec>() <= cli.timeout() and not bnb.solved())
+    while (
+        stats.elapsed<sec>() <= cli.timeout()
+        and not bnb.solved()
+        )
     {
+        // Collect batch from readyQueue
         parentsBuffer.clear();
-        prundedByDual = 0;
-        prundedByRes = 0;
-
-        while (not queue.empty() and parentsBuffer.size() < adjToPop)
+        auto first = readyQueue.popOrDone(); // returns nullopt if empty AND inFlight==0
+        if (not first) break;
+        if (first)
+            parentsBuffer.push_back(**first);
+        else
+            break;
+        while (parentsBuffer.size() < adjToPop)
         {
-                Node const * node = queue.peekBest();
-                if (isBetterEq<Model>(node->f(), bnb.primal()) or not bnb.hasPrimal())
-                {
-
-                    //Restricted
-                    bool constexpr restricted = true;
-                    if (restricted)
-                    {
-                        testBuffer.clear();
-                        testBuffer.push_back(*node);
-                        {
-                            //TIMED_SCOPE_N("ResDD");
-                            resEng->expandRestricted(model, testBuffer, bnb.primal(), bnb.dual());
-                        }
-                        auto [resBestTarget, _] = resEng->getTargets();
-                        if (resBestTarget.has_value())
-                        {
-                            //printf("[DBG] RES exact value: %.3f\n", resBestTarget.value().g());
-                            bnb.primal(resBestTarget.value());
-                        }
-                        if (resEng->exact)
-                        {
-                            //printf("[DBG] RES exact!");
-                            queue.pullBest();
-                            prundedByRes += 1;
-                            log.progress();
-                            continue;
-                        }
-                    }
-
-                    if (parentsBuffer.empty() or
-                       (parentsBuffer.size() < adjToPop
-                           and parentsBuffer.back().depth() == node->depth()
-                           and parentsBuffer.back().f() == node->f()
-                       ))
-                    {
-                        node = queue.pullBest();
-                        parentsBuffer.push_back(*node);
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-                else
-                {
-                    prundedByDual += 1;
-                    queue.pullBest();
-                    log.progress();
-                }
-
-            log.progress();
+            auto node = readyQueue.popIf(parentsBuffer.back().f(), parentsBuffer.back().depth());  // blocks until non-empty, checks f()
+            if (node)
+                parentsBuffer.push_back(**node);
+            else
+                break;
         }
 
-        printf("[DBG] Offloading %d nodes at DPT = %d (D = %d RS = %d)\n",
-                (int) parentsBuffer.size(),
-                parentsBuffer.front().f(),
-                parentsBuffer.front().depth(),
-               prundedByDual,
-               prundedByRes
-               );
+        printf("[DBG] Offloading %d nodes with f = %.2f\n",
+               (int) parentsBuffer.size(),
+               parentsBuffer.front().f());
+        fflush(stdout);
 
         if (not parentsBuffer.empty())
         {
-
-            fflush(stdout);
-
             bnb.dual(parentsBuffer.front().f());
 
             //printf("[DBG] Offloading %ld nodes with f %.2f (Remaining %ld)\n", parentsBuffer.size(), parentsBuffer.back().f(), queue.size());
@@ -204,7 +185,7 @@ int runHybrid(int argc, char* argv[])
                     if (bestOverall.approximated())
                     {
                         auto const & cutset = relEng->cutData.nodes();
-                        queue.pushFromGpu(cutset, bnb.primal());
+                        stashQueue.pushFromGpu(cutset, bnb.primal());
                     }
                 }
             }
@@ -215,6 +196,11 @@ int runHybrid(int argc, char* argv[])
             log.progress();
         }
     }
+
+    stashQueue.stop();
+    for (auto & t : validators) t.join();
+    readyQueue.stop();
+
     stats.end();
     log.summary();
     //Timer::summary();

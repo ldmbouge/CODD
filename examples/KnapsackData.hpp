@@ -31,7 +31,7 @@ public:
             file >> profits[i];
             file >> weights[i];
         }
-        auto const toKey = [](i32 const & p, i32 const & w) { return scast<f32>(p) / scast<f32>(w);};
+        auto const toKey = [](i32 const & p, i32 const & w) { return -scast<f32>(p) / scast<f32>(w);};
         sortByKeyFn(toKey, profits, weights);
     }
 };

@@ -128,6 +128,23 @@ public:
         return State(s1.n,max<i32>(s1.c,s2.c));
     }
 
-    constexpr static bool has_heur = false;
+    constexpr static bool has_heur = true;
+    GFL_HOST_DEVICE
+    gfl::f64 h(State const & s, HContext hCtx) const noexcept
+    {
+        using namespace gfl;
+        double nn = 0;
+        int    rc = s.c;
+        for(auto i=s.n; i < Items;i++)
+            if (weights[i] <= rc) {
+                rc -= weights[i];
+                nn += profits[i];
+            } else {
+                nn += (rc / weights[i]) * profits[i];
+                break;
+            }
+        return nn;
+    }
+
     constexpr static bool has_dom = false;
 };

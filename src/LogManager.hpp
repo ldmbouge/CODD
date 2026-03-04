@@ -2,14 +2,15 @@
 
 #include <fmt/core.h>
 
+#include "BlockingQueue.cuh"
 #include "BnBManager.hpp"
 #include "StatsManager.hpp"
 
-template<typename Model, typename Node>
+template<typename Model, typename Node, typename Q>
 class LogManager
 {
     using BnBManager = BnBManager<Model, Node>;
-    using Queue = Queue<Model, Node>;
+    using Queue = Q;
 
     static constexpr gfl::i32 wTime     = 10;
     static constexpr gfl::i32 wPrimal   = 10;
