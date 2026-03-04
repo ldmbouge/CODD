@@ -631,7 +631,6 @@ void reduceByInfoSeqKernel(
             Node const & iNode = children->at(iInfo.idx);
             mergeNodeWith<Model>(fNode_r, iNode);
         }
-        assert(fNode_r.f() <= 106);
     }
 }
 

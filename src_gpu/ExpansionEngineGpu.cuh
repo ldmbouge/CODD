@@ -208,6 +208,7 @@ public:
         CHECK_LAST_CUDA_ERROR();
         copyByCutsetMarkKernel<<<gridSize,blockSize>>>(&cutset, &parents, &parentsInfo); // ← mark() called device-side
         CHECK_LAST_CUDA_ERROR();
+
     }
 
     void mergeChildren()

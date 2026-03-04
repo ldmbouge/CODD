@@ -4,9 +4,9 @@
 
 int main(int argc,char* argv[])
 {
-    constexpr int BranchFactor = 2010;
-    constexpr int Items = 2010;
-    constexpr int Depth = 2010;
+    constexpr int BranchFactor = 2;
+    constexpr int Items = 5010;
+    constexpr int Depth = 5010;
 
     using Model = Knapsack<BranchFactor,Items>;
     using Node = SNode<Model::State,Model::OutLabels,Depth>;

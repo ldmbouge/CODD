@@ -43,7 +43,7 @@ int runHybrid(int argc, char* argv[])
     model->init(cli.instance(), modelAlloc);
 
     // Expansion engines
-    constexpr i32 engMemSize = 2048; // Small, it MUST be on managed memory
+    constexpr i32 engMemSize = 4096; // Small, it MUST be on managed memory
     assert(engMemSize > sizeof(RelEngGpu));
     ArenaAllocator relEngAlloc(engMemSize, cudaReserveManaged(engMemSize));
     ArenaAllocator relBuffAlloc(cli.memSize(), cudaReserveDevice(cli.memSize()));
