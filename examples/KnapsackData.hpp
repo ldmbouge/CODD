@@ -24,8 +24,8 @@ public:
 
         file >> items;
         file >> capacity;
-        weights = ArrayView<i32>(items, alloc);
         profits = ArrayView<i32>(items, alloc);
+        weights = ArrayView<i32>(items, alloc);
         for (i32 i = 0; i < items; ++i)
         {
             file >> profits[i];

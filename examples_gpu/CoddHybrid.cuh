@@ -153,6 +153,8 @@ int runHybrid(int argc, char* argv[])
                 parentsBuffer.size() * 0.9 <= relEng->cutData.nodes()->size())
             {
                 adjToPop = ceil<i32>(adjToPop,10);
+                printf("Loop detected, reducing pop size to %d\n", adjToPop);
+                fflush(stdout);
             }
             else
             {
