@@ -39,12 +39,22 @@ public:
         return true;
     }
 
-    void pushFromGpu(auto const * cutsetGpu, gfl::f64 const primal) {
+    template<typename Node>
+    void push(std::vector<gfl::ArrayView<Node>> const & cutsetFragments, gfl::f64 const f, gfl::f64 const primal) {
+
         {
             std::unique_lock lock(mutex_);
             if (stopped_) return;
             gfl::i64 const before = queue_.size();
-            queue_.pushFromGpu(cutsetGpu, primal);
+            for (auto const & fragment : cutsetFragments)
+            {
+                for (auto & node : fragment)
+                {
+                    gfl::f64 const h = f - node.g();
+                    node.h(worse<Model>(h, node.h()));
+                    queue_.push(&node, primal);
+                }
+            }
             gfl::i64 const added = queue_.size() - before;
             inFlight_ += added;
         }

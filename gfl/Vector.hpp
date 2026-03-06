@@ -13,10 +13,10 @@ namespace gfl
         using VectorView<T>::data_;
         using VectorView<T>::capacity_;
 
-        static constexpr i64 MaxBytes    = 8ll * 1024ll * 1024ll * 1024ll; // 8GB
+        static constexpr i64 MaxBytes    = 64ll * 1024ll * 1024ll * 1024ll; // 64GB
         static constexpr i64 MaxElements = MaxBytes / scast<i64>(sizeof(T));
         static constexpr i64 GrowthFactor  = 4;
-        static constexpr i64 DefaultSize = 1024;
+        static constexpr i64 DefaultSize = 4096;
 
         void reserve(i64 const capacity) noexcept
         {

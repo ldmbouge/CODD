@@ -8,6 +8,8 @@ class CutsetData
     gfl::VectorView<Node> nodes_;
     gfl::i64 markOffset_ = 0;  // offset into nodes_ where last segment starts
     gfl::i64 markSize_   = 0;  // size of last segment
+    std::vector<gfl::ArrayView<Node>> fragments_;
+    Pool memPool;
 
     /*
      * CUTSET SIZE BOUNDS FOR LIMITED-WIDTH TREES
@@ -80,13 +82,13 @@ public:
     void init(gfl::i32 const width, gfl::i32 const branchFactor, gfl::i32 const depth, gfl::ArenaAllocator & alloc) noexcept
     {
         using namespace gfl;
-        nodes_ = VectorView<Node>(width * depth, alloc);
+        nodes_ = VectorView<Node>(width * 16, alloc);
     }
 
-    GFL_HOST_DEVICE
     void clear() noexcept
     {
         nodes_.clear();
+        fragments_.clear();
         markOffset_ = 0;
         markSize_   = 0;
     }
@@ -106,7 +108,24 @@ public:
 
     GFL_HOST_DEVICE
     gfl::VectorView<Node> const * nodes() const noexcept { return &nodes_; }
+     std::vector<gfl::ArrayView<Node>>  const & fragments() const noexcept { return fragments_; }
 
     GFL_HOST_DEVICE
     gfl::ArrayView<Node> const * nodesPtr() const noexcept { return &nodes_; }
+
+
+    void saveFragmentFromGpu()
+    {
+        Node * const fragment = new (&memPool) Node[nodes_.size()];
+        CHECK_CUDA_ERROR(cudaMemcpy(
+            fragment,
+            nodes_.data(),
+            nodes_.dataMemSize(),
+            cudaMemcpyDeviceToHost));
+        fragments_.push_back(gfl::ArrayView<Node>(nodes_.size(), fragment));
+        nodes_.clear();
+        markOffset_ = 0;
+        markSize_   = 0;
+    }
+
 };

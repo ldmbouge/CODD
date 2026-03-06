@@ -366,6 +366,7 @@ public:
     void expandRelaxed(
         Model const * model,
         std::vector<Node> const & parents,
+        Pool & nodesPoll,
         gfl::f64 const primal,
         gfl::f64 const dual,
         gfl::f64 const lambda)
@@ -403,15 +404,27 @@ public:
             checkForTargetKernel<<<1,1>>>(model, &expData.bestTargetNode, &children, &childrenInfo);
             CHECK_LAST_CUDA_ERROR();
             CHECK_CUDA_ERROR(cudaDeviceSynchronize());
+            if (cutData.nodes()->size() + width_ > cutData.nodes()->capacity())
+            {
+                //printf("[DBG] Flushing GPU cutset buffer of size %lld\n", cutData.nodes()->size());
+                cutData.saveFragmentFromGpu();
+            }
+
             // printf("nChildren %llu\n", childrenInfo.size());
             // fflush(stdout);
         }
 
-        // printf("---\n", childrenInfo.size());
-        // fflush(stdout);
         copyBestTargetsKernel<Model,Node><<<1,1>>>(&bestTrgt,&bestExactTrgt,&children, &childrenInfo);
         CHECK_LAST_CUDA_ERROR();
-        finalizeCutset(model, primal, dual);
+
+        if (not cutData.nodes()->empty())
+        {
+            //printf("[DBG] Flushing GPU cutset buffer of size %lld\n", cutData.nodes()->size());
+            cutData.saveFragmentFromGpu();
+        }
+        // printf("---\n", childrenInfo.size());
+        // fflush(stdout);
+        // finalizeCutset(model, primal, dual);
         CHECK_CUDA_ERROR(cudaDeviceSynchronize());
     }
 };

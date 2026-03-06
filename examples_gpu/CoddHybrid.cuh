@@ -100,6 +100,7 @@ int runHybrid(int argc, char* argv[])
 
     std::vector<Node> parentsBuffer;
     parentsBuffer.reserve(cli.pop());
+    Pool nodesPoll;
 
     // BnB search
     log.header();
@@ -145,7 +146,7 @@ int runHybrid(int argc, char* argv[])
             //printf("Going on GPU with %d nodes\n", parentsBuffer.size());
             {
                 //TIMED_SCOPE_N("RelDD");
-                relEng->expandRelaxed(model, parentsBuffer, bnb.primal(), bnb.dual(), cli.lambda());
+                relEng->expandRelaxed(model, parentsBuffer, nodesPoll, bnb.primal(), bnb.dual(), cli.lambda());
             }
 
             // Avoid loops
@@ -176,8 +177,8 @@ int runHybrid(int argc, char* argv[])
                 {
                     if (bestOverall.approximated())
                     {
-                        auto const & cutset = relEng->cutData.nodes();
-                        stashQueue.pushFromGpu(cutset, bnb.primal());
+
+                        stashQueue.push(relEng->cutData.fragments(), bestOverall.g(),  bnb.primal());
                     }
                 }
             }
