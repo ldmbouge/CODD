@@ -18,13 +18,15 @@ class alignas(gfl::DefaultAlign) Node
     gfl::u8 ancestorInCutset_;
     gfl::i16 depth_;
 
-    protected:
-    GFL_HOST_DEVICE
-    Node(Node const &) noexcept = default;
-
 public:
     GFL_HOST_DEVICE
     Node() noexcept {}
+
+    GFL_HOST_DEVICE
+    Node(Node const &) noexcept = default;
+
+    GFL_HOST_DEVICE
+    Node& operator=(Node const&) noexcept = default;
 
     GFL_HOST_DEVICE
     Node(State const & s,
@@ -128,6 +130,8 @@ class LNode : public Node<State, OutLabels>
     {}
 
 public:
+    using BaseNode = Node<State, OutLabels>;
+
     GFL_HOST_DEVICE
     LNode() noexcept {}
 
@@ -170,6 +174,8 @@ class SNode : public Node<State, OutLabels>
     }
 
 public:
+    using BaseNode = Node<State, OutLabels>;
+
     SNode() noexcept {}
 
     GFL_HOST_DEVICE
@@ -203,7 +209,7 @@ public:
     void printSolution() const noexcept
     {
         using namespace gfl;
-       chooses_.printAs01( this->depth());
+       chooses_.printAsInts( this->depth());
     }
 };
 

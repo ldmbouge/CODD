@@ -569,6 +569,55 @@ void reduceByInfoKernel(
 {
     using namespace gfl;
 
+    i32 constexpr reductionFactor = 32 * 32;
+    assert(blockDim.x == 32);
+    assert(gridDim.x * reductionFactor >= *count);
+
+    __shared__ i32 tmpIdx[32];   // 128 bytes only
+
+    i32 const begin = blockIdx.x * reductionFactor;
+    i32 const end = min<i32>(begin + reductionFactor, *count);
+    i32 const nodesOfBlock = end - begin;
+    i32 const tIdx = threadIdx.x;
+
+    if (tIdx < nodesOfBlock)
+    {
+        NodeInfo const & fInfo = inInfo->at(begin + tIdx);
+        Node & fNode_r = nodes->at(fInfo.idx);      // ← reference to global memory
+        fNode_r.approximated(true);
+        for (i64 i = begin + tIdx + blockDim.x; i < end; i += blockDim.x)
+        {
+            NodeInfo const & iInfo = inInfo->at(i);
+            Node const & iNode = nodes->at(iInfo.idx);
+            mergeNodeWith<Model>(fNode_r, iNode);   // ← writes directly to global
+        }
+        tmpIdx[tIdx] = fInfo.idx;                   // ← share only the index
+    }
+    __syncwarp();
+
+    if (threadIdx.x == 0 and nodesOfBlock > 0)
+    {
+        Node & fNode_r = nodes->at(tmpIdx[0]);      // ← reference to global memory
+        for (i64 i = 1; i < min<i64>(nodesOfBlock, 32); ++i)
+        {
+            Node const & iNode = nodes->at(tmpIdx[i]);
+            mergeNodeWith<Model>(fNode_r, iNode);
+        }
+        NodeInfo const & rInfo = inInfo->at(begin);
+        outInfo->at(blockIdx.x) = rInfo;
+    }
+}
+
+template<typename Model, typename Node>
+GFL_GLOBAL
+void reduceByInfoKernelOld(
+    gfl::ArrayView<Node> * const nodes,
+    gfl::ArrayView<NodeInfo> const * const inInfo,
+    gfl::ArrayView<NodeInfo> * const outInfo,
+    gfl::i64 const * const count)
+{
+    using namespace gfl;
+
     i32 constexpr reductionFactor = 32 * 32; // Each thread merges 32 elements
     assert(blockDim.x == 32);
     assert(gridDim.x * reductionFactor >= *count);

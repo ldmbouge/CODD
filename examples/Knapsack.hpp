@@ -19,7 +19,7 @@ class Knapsack : public KnapsackData
 public:
 
     constexpr static bool is_maximization = true;
-    using OutLabels = gfl::BitSet<gfl::BitSet<>::num_words(Items)>;
+    using OutLabels = gfl::BitSet<gfl::BitSet<>::num_words(BranchFactor)>;
 
     class State
     {
@@ -135,7 +135,8 @@ public:
         using namespace gfl;
         double nn = 0;
         int    rc = s.c;
-        for(auto i=s.n; i < Items;i++)
+        for(auto i= s.n; i < items; ++i)
+        {
             if (weights[i] <= rc) {
                 rc -= weights[i];
                 nn += profits[i];
@@ -143,6 +144,7 @@ public:
                 nn += (rc / weights[i]) * profits[i];
                 break;
             }
+        }
         return nn;
     }
 

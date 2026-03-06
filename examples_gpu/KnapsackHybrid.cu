@@ -5,8 +5,8 @@
 int main(int argc,char* argv[])
 {
     constexpr int BranchFactor = 2;
-    constexpr int Items = 5010;
-    constexpr int Depth = 5010;
+    constexpr int Items = 10000;
+    constexpr int Depth = 10000;
 
     using Model = Knapsack<BranchFactor,Items>;
     using Node = SNode<Model::State,Model::OutLabels,Depth>;

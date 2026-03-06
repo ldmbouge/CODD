@@ -20,51 +20,44 @@ int runHybrid(int argc, char* argv[])
 
     CliManager cli("CODD", "A C++ solver for DIDP models.");
     cli.parse(argc, argv);
-
-    // if (cli.width()  < BranchFactor)
-    // {
-    //     printf("WARNING: Width too small, increased to %d\n.", BranchFactor);
-    //     cli.width(BranchFactor);
-    // }
-
-
     std::cout << "Instance: " << cli.instance() << std::endl;
-    std::cout << "Width: " << cli.width() << std::endl;
-    std::cout << "Lambda: " << cli.lambda() << std::endl;
     std::cout << "Engine: GPU (Relaxed) + CPU (Restricted)"  << std::endl;
-
-
+    std::cout << "Relaxed Width: " << cli.gpuWidth() << std::endl;
+    std::cout << "Relaxed Buffer: " << cli.pop() << std::endl;
+    std::cout << "Restricted Width: " << cli.cpuWidth() << std::endl;
+    std::cout << "Validators: " << cli.validators() << std::endl;
+    std::cout << "Lambda: " << cli.lambda() << std::endl;
 
     // Model (+ Instance) creation
-    constexpr i32 modelMemSize = 256 * 1024; // Small, it MUST fit in shared memory
+    constexpr i32 modelMemSize = 512 * 1024 * 1024;
     assert(modelMemSize > sizeof(Model)); // At least, instance data not included
     ArenaAllocator modelAlloc(modelMemSize, cudaReserveManaged(modelMemSize));
     Model * const model = new (modelAlloc) Model();
     model->init(cli.instance(), modelAlloc);
 
     // Expansion engines
-    constexpr i32 engMemSize = 4096; // Small, it MUST be on managed memory
-    assert(engMemSize > sizeof(RelEngGpu));
+    i32 engMemSize = sizeof(RelEngGpu);
     ArenaAllocator relEngAlloc(engMemSize, cudaReserveManaged(engMemSize));
     ArenaAllocator relBuffAlloc(cli.memSize(), cudaReserveDevice(cli.memSize()));
     RelEngGpu * const relEng = new (relEngAlloc) RelEngGpu();
-    relEng->initRelaxedExpansion(cli.width(), BranchFactor, Depth, relBuffAlloc);
+    relEng->initRelaxedExpansion(cli.gpuWidth(), BranchFactor, Depth, relBuffAlloc);
     printf("Relaxed working memory: ");
     printMemSize(relBuffAlloc.usedSize());
     printf("\n");
 
-    assert(engMemSize > sizeof(ResEngCpu));
     // Restricted engines - one per validator thread
-    constexpr i32 nValidators = 16;
-    i32 const cpuWidth = 4096 ; //cli.width();
-    std::array<ResEngCpu*, nValidators> resEngs;
-    for (i32 i = 0; i < nValidators; ++i)
+    engMemSize = sizeof(ResEngCpu) + DefaultAlign;
+    std::vector<ResEngCpu*> resEngs;
+    ArenaAllocator resEngAlloc(engMemSize * cli.validators(), heapReserve(engMemSize * cli.validators()));
+    ArenaAllocator resBuffAlloc(cli.memSize(), heapReserve(cli.memSize()));
+    for (i32 i = 0; i < cli.validators(); ++i)
     {
-        ArenaAllocator resEngAlloc(engMemSize, heapReserve(engMemSize));
-        ArenaAllocator resBuffAlloc(cli.memSize(), heapReserve(cli.memSize()));
-        resEngs[i] = new (resEngAlloc) ResEngCpu();
-        resEngs[i]->initRestrictedExpansion(cpuWidth, BranchFactor, resBuffAlloc);
+        resEngs.push_back(new (resEngAlloc) ResEngCpu());
+        resEngs[i]->initRestrictedExpansion(cli.cpuWidth(), BranchFactor, resBuffAlloc);
     }
+    printf("Restricted working memory: ");
+    printMemSize(resBuffAlloc.usedSize());
+    printf("\n");
 
     // Bounds and solutions manager
     BnBManager<Model,Node> bnb;
@@ -72,18 +65,17 @@ int runHybrid(int argc, char* argv[])
     // Search statistics
     StatsManager stats(cli.timeout());
 
-    // Layers
+    // Queues
     std::atomic<i32> inFlight{0};
     std::mutex              sharedMutex;
     std::condition_variable sharedCv;
-
     BlockingQueue<Queue<Model,Node>,    Model> readyQueue(inFlight, sharedMutex, sharedCv);
     BlockingQueue<QueueGpu<Model,Node>, Model> stashQueue(inFlight, sharedMutex, sharedCv);
     readyQueue.push(Node::makeRoot(model));
 
     // Log manager
-    LogManager<Model,Node,decltype(readyQueue)> log(bnb,readyQueue,stats);
-
+    //LogManager<Model,Node,decltype(readyQueue)> log(bnb,stashQueue,stats);
+    LogManager<Model, Node, decltype(readyQueue), decltype(stashQueue)> log(bnb, readyQueue, stashQueue, stats);
     // ── Validator threads ────────────────────────────────────────────
 
     auto validatorFn = [&](ResEngCpu * resEng)
@@ -102,10 +94,9 @@ int runHybrid(int argc, char* argv[])
                 stashQueue.done();
         }
     };
-    std::array<std::thread, nValidators> validators;
-    for (i32 i = 0; i < nValidators; ++i)
-        validators[i] = std::thread(validatorFn, resEngs[i]);
-
+    std::vector<std::thread> validators;
+    for (i32 i = 0; i < cli.validators(); ++i)
+        validators.push_back(std::thread(validatorFn, resEngs[i]));
 
     std::vector<Node> parentsBuffer;
     parentsBuffer.reserve(cli.pop());
@@ -113,7 +104,6 @@ int runHybrid(int argc, char* argv[])
     // BnB search
     log.header();
     stats.start();
-
     i32 adjToPop = cli.pop();
     while (
         stats.elapsed<sec>() <= cli.timeout()
@@ -121,7 +111,7 @@ int runHybrid(int argc, char* argv[])
         )
     {
         // Collect batch from readyQueue
-        parentsBuffer.clear();
+        parentsBuffer.clear(); 
         auto first = readyQueue.popOrDone(); // returns nullopt if empty AND inFlight==0
         if (not first) break;
         if (first)

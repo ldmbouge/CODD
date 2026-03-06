@@ -11,20 +11,24 @@
 class CliManager
 {
 
-    int width_{0};
+    int gpuWidth_{0};
     int timeout_{std::numeric_limits<int>::max()};
-    int toPop_{1};
+    int toPop_{100};
     double lambda_ {1.0};
     long long int memSize_{0};
     std::string instance_{};
+    int validators_{1};
+    int cpuWidth_{0};
     cxxopts::Options options_;
 
 public:
     CliManager(std::string const& programName, std::string const& description);
     void parse(int argc, char* argv[]);
 
-    int width() const { return width_; }
-    void width(int const width) { width_ = width; }
+    int gpuWidth() const { return gpuWidth_; }
+    int cpuWidth() const { return cpuWidth_; }
+    int validators() const { return validators_; }
+
     int timeout() const { return timeout_; }
     int pop() const { return toPop_; }
     double lambda() const { return lambda_; }
@@ -40,7 +44,9 @@ CliManager::CliManager(std::string const& programName, std::string const& descri
       options_(programName, description)
 {
     options_.add_options("Available")
-        ("w,width", "DD width", cxxopts::value(width_))
+        ("g,gpu-width", "DD relaxed width (GPU)", cxxopts::value(gpuWidth_))
+        ("c,cpu-width", "DD restricted width (CPU)", cxxopts::value(cpuWidth_))
+        ("v,validators", "Number of restricted DD (CPU)", cxxopts::value(validators_))
         ("h,help", "Show this help message and exit")
         ("m,memory", "Working memory in GB", cxxopts::value(memSize_))
         ("p,pop", "Max nodes to pop in parallel ", cxxopts::value(toPop_))
@@ -97,9 +103,19 @@ void CliManager::validate()
         }
     }
 
-    if (width_ <= 0)
+    if (gpuWidth_ <= 0)
     {
-        std::cerr << "Error: Width must be greater than 0" << std::endl;
+        std::cerr << "Error: GPU Width must be greater than 0" << std::endl;
+        hasError = true;
+    }
+    if (cpuWidth_ <= 0)
+    {
+        std::cerr << "Error: CPU Width must be greater than 0" << std::endl;
+        hasError = true;
+    }
+    if (validators_ <= 0)
+    {
+        std::cerr << "Error: Validators must be more than 0" << std::endl;
         hasError = true;
     }
     if (toPop_ <= 0)
@@ -107,7 +123,6 @@ void CliManager::validate()
         std::cerr << "Error: Pop must be greater than 0" << std::endl;
         hasError = true;
     }
-
     if (timeout_ <= 0)
     {
         std::cerr << "Error: Timeout must be greater than 0" << std::endl;
