@@ -24,7 +24,7 @@ public:
             queue_.push(node);
             inFlight_++;
         }
-        cv_.notify_one();
+        cv_.notify_all();
         return true;
     }
 
@@ -35,28 +35,37 @@ public:
             queue_.push(node, primal);
             inFlight_++;
         }
-        cv_.notify_one();
+        cv_.notify_all();
         return true;
+    }
+
+    void drainInto(BlockingQueue & other) {
+        {
+            std::unique_lock lock(mutex_);
+            while (not queue_.empty()) {
+                other.queue_.push(queue_.pullBest());
+            }
+        } // lock released here
+        cv_.notify_all(); // then notify
     }
 
     template<typename Node>
     void push(std::vector<gfl::ArrayView<Node>> const & cutsetFragments, gfl::f64 const f, gfl::f64 const primal) {
+        // Pre-process nodes BEFORE acquiring the lock
+        for (auto const & fragment : cutsetFragments)
+            for (auto & node : fragment)
+                node.h(worse<Model>(f - node.g(), node.h()));
 
+        // Lock only for the actual queue insertion
         {
             std::unique_lock lock(mutex_);
             if (stopped_) return;
-            gfl::i64 const before = queue_.size();
-            for (auto const & fragment : cutsetFragments)
-            {
-                for (auto & node : fragment)
-                {
-                    gfl::f64 const h = f - node.g();
-                    node.h(worse<Model>(h, node.h()));
+            for (auto const & fragment : cutsetFragments) {
+                for (auto & node : fragment) {
                     queue_.push(&node, primal);
+                    inFlight_++;
                 }
             }
-            gfl::i64 const added = queue_.size() - before;
-            inFlight_ += added;
         }
         cv_.notify_all();
     }
@@ -68,6 +77,35 @@ public:
         cv_.wait(lock, [&] { return !queue_.empty() || stopped_; });
         if (queue_.empty()) return std::optional<ReturnType>{std::nullopt};
         return std::optional<ReturnType>{queue_.pullBest()};
+    }
+
+    // Blocking pull of up to n nodes - waits for at least one, then greedily takes more
+    template<typename N>
+    auto pullUpTo(gfl::i32 const n, std::vector<N> & bufferIn) {
+        std::unique_lock lock(mutex_);
+        // Block until at least one node is available or stopped
+        cv_.wait(lock, [&] { return !queue_.empty() || stopped_; });
+        if (queue_.empty()) return false;
+
+        while (bufferIn.size() < static_cast<size_t>(n) && !queue_.empty()) {
+            bufferIn.push_back(queue_.pullBest());
+        }
+        return true;
+    }
+
+
+    // Push a batch without incrementing inFlight (nodes already counted)
+    template<typename N>
+    bool pushBatchNoCount(std::vector<N> const & batch) {
+        {
+            std::unique_lock lock(mutex_);
+            if (stopped_) return false;
+            for (auto const & node : batch) {
+                queue_.push(node);
+            }
+        }
+        cv_.notify_all();
+        return true;
     }
 
     void done() {
@@ -95,7 +133,7 @@ public:
             if (stopped_) return false;
             queue_.push(node);
         }
-        cv_.notify_one();
+        cv_.notify_all();
         return true;
     }
 

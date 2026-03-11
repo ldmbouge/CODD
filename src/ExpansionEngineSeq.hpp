@@ -156,7 +156,9 @@ public:
 
         exact = true;
         //int i = 0;
-        while (not childrenInfo.empty() and not expData.bestTargetNode.has_value())
+        while (not childrenInfo.empty()
+            and not expData.bestTargetNode.has_value()
+            and isBetter<Model>(children[childrenInfo[0].idx].g(), primal))
         {
             //printf("Iteration %d\n", i++); fflush(stdout);
             expData.swapParentsAndChildren();

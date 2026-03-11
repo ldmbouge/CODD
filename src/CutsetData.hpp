@@ -9,6 +9,8 @@ class CutsetData
     gfl::i64 markOffset_ = 0;  // offset into nodes_ where last segment starts
     gfl::i64 markSize_   = 0;  // size of last segment
     std::vector<gfl::ArrayView<Node>> fragments_;
+    bool toSave_;
+    bool saved_;
     Pool memPool;
 
     /*
@@ -82,13 +84,15 @@ public:
     void init(gfl::i32 const width, gfl::i32 const branchFactor, gfl::i32 const depth, gfl::ArenaAllocator & alloc) noexcept
     {
         using namespace gfl;
-        nodes_ = VectorView<Node>(width * 16, alloc);
+        nodes_ = VectorView<Node>(width * 4, alloc);
     }
 
     void clear() noexcept
     {
         nodes_.clear();
         fragments_.clear();
+        toSave_ = false;
+        saved_ = false;
         markOffset_ = 0;
         markSize_   = 0;
     }
@@ -108,11 +112,22 @@ public:
 
     GFL_HOST_DEVICE
     gfl::VectorView<Node> const * nodes() const noexcept { return &nodes_; }
-     std::vector<gfl::ArrayView<Node>>  const & fragments() const noexcept { return fragments_; }
+    std::vector<gfl::ArrayView<Node>>  const & fragments() const noexcept { return fragments_; }
 
     GFL_HOST_DEVICE
     gfl::ArrayView<Node> const * nodesPtr() const noexcept { return &nodes_; }
 
+    GFL_HOST_DEVICE
+    bool saved() const noexcept { return saved_; }
+
+    GFL_HOST_DEVICE
+    void saved(bool value) noexcept { saved_ = value; }
+
+    GFL_HOST_DEVICE
+    bool toSave() const noexcept { return toSave_; }
+
+    GFL_HOST_DEVICE
+    void toSave(bool value) noexcept { toSave_ = value; }
 
     void saveFragmentFromGpu()
     {

@@ -123,7 +123,7 @@ public:
         using namespace gfl;
         f32 n = 0.0;
         f32 mean = 0.0;
-        gfl::sim_combine(mean,n,s1.sel.iou(s2.sel));
+        //gfl::simCombine(mean,n,s1.sel.iou(s2.sel));
         return mean;
     };
 

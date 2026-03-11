@@ -279,6 +279,39 @@ void copyByInfoIdxKernel(
         info.idx = i;
     }
 }
+
+template<typename Node>
+GFL_GLOBAL
+void saveByCutsetMarkKernel(
+    CutsetData<Node> * const cutset,
+    gfl::ArrayView<Node> const * const parents,
+    gfl::ArrayView<NodeInfo> const * const parentsInfo)
+{
+    using namespace gfl;
+
+    ArrayView<Node> mark = cutset->mark();
+
+
+
+    if (not cutset->saved() and cutset->toSave())
+    {
+        assert(parentsInfo->size() <= mark.size());
+
+        if(blockIdx.x == 0  and threadIdx.x == 0)
+        {
+            cutset->saved(true);
+        }
+
+        auto [begin,end] = calcSlice<i64>(blockIdx.x, gridDim.x, parentsInfo->size());
+        for (i64 i = begin + threadIdx.x; i < end; i += blockDim.x)
+        {
+            NodeInfo & info = parentsInfo->at(i);
+            Node & sNode    = parents->at(info.idx);
+            Node & dNode    = mark.at(i);
+            dNode  = sNode;
+        }
+    }
+}
 template<typename Node>
 GFL_GLOBAL
 void copyByCutsetMarkKernel(
@@ -526,6 +559,21 @@ GFL_GLOBAL
 void markAndResizeByKernel( CutsetData<Node> * const cutset, gfl::i64 const * const count)
 {
     cutset->markAndResizeBy(*count);
+}
+
+template<typename Node>
+GFL_GLOBAL
+void markAndResizeByKernel(
+    CutsetData<Node> * const cutset,
+    gfl::i64 const width,
+    gfl::ArrayView<NodeInfo> const * const parentsInfo,
+    gfl::ArrayView<NodeInfo> const * const childrenInfo)
+{
+    if (childrenInfo->size() > width and not cutset->saved())
+    {
+        cutset->toSave(true);
+        cutset->markAndResizeBy(parentsInfo->size());
+    }
 }
 
 template<typename Node>

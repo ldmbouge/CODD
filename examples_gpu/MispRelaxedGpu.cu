@@ -5,8 +5,8 @@
 int main(int argc,char* argv[])
 {
     constexpr int BranchFactor = 2;
-    constexpr int Items = 200;
-    constexpr int Depth = 200;
+    constexpr int Items = 1501;
+    constexpr int Depth = 1501;
 
     using Model = Misp<BranchFactor,Items>;
     using Node = Node<Model::State,Model::OutLabels,Depth>;

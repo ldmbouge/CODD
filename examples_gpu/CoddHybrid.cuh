@@ -70,8 +70,9 @@ int runHybrid(int argc, char* argv[])
     std::mutex              sharedMutex;
     std::condition_variable sharedCv;
     BlockingQueue<Queue<Model,Node>,    Model> readyQueue(inFlight, sharedMutex, sharedCv);
-    BlockingQueue<QueueGpu<Model,Node>, Model> stashQueue(inFlight, sharedMutex, sharedCv);
+    BlockingQueue<Queue<Model,Node>, Model> stashQueue(inFlight, sharedMutex, sharedCv);
     readyQueue.push(Node::makeRoot(model));
+    bnb.onPrimal([&]{readyQueue.drainInto(stashQueue);});
 
     // Log manager
     //LogManager<Model,Node,decltype(readyQueue)> log(bnb,stashQueue,stats);
@@ -80,20 +81,69 @@ int runHybrid(int argc, char* argv[])
 
     auto validatorFn = [&](ResEngCpu * resEng)
     {
-        std::vector<Node> localBuffer;
-        while (auto node = stashQueue.pop())   // blocking
+        constexpr i32 nodesToPull = 10;
+        constexpr i32 nodesToPush = 1;
+        using NodePtr = decltype(stashQueue.pop())::value_type;
+        std::vector<NodePtr> bufferIn;
+        std::vector<NodePtr> bufferOut;
+        bufferIn.reserve(nodesToPull);
+        bufferOut.reserve(nodesToPull);
+
+        while (true)
         {
-            localBuffer.clear();
-            localBuffer.push_back(**node);
-            resEng->expandRestricted(model, localBuffer, bnb.primal(), bnb.dual());
-            auto [best, _] = resEng->getTargets();
-            if (best) bnb.primal(best.value());
-            if (not resEng->exact)
-                readyQueue.pushNoCount(*node);      // moving between queues, no inFlight change
-            else
-                stashQueue.done();
+            bufferIn.clear();
+            bufferOut.clear();
+
+            if (not stashQueue.pullUpTo(nodesToPull, bufferIn)) break;
+
+            for (auto & node : bufferIn)
+            {
+                std::vector<Node> localNodes;
+                localNodes.push_back(*node);
+
+                resEng->expandRestricted(model, localNodes, bnb.primal(), bnb.dual());
+                auto [best, _] = resEng->getTargets();
+                if (best) bnb.primal(best.value());
+
+                if (not resEng->exact)
+                {
+                    bufferOut.push_back(node);
+                    //printf("Validating node with f %.2f (VALIDATED)\n", localNodes.back().f());
+                }
+                else
+                {
+                    stashQueue.done();
+                    //printf("Validating node with f %.2f (DISCARDED)\n", localNodes.back().f());
+                }
+
+                if (bufferOut.size() >= nodesToPush)
+                {
+                    readyQueue.pushBatchNoCount(bufferOut);
+                    bufferOut.clear();
+                }
+            }
+
+            readyQueue.pushBatchNoCount(bufferOut);
+            bufferOut.clear();
         }
     };
+
+    // auto validatorFn = [&](ResEngCpu * resEng)
+    // {
+    //     std::vector<Node> localBuffer;
+    //     while (auto node = stashQueue.pop())   // blocking
+    //     {
+    //         localBuffer.clear();
+    //         localBuffer.push_back(**node);
+    //         resEng->expandRestricted(model, localBuffer, bnb.primal(), bnb.dual());
+    //         auto [best, _] = resEng->getTargets();
+    //         if (best) bnb.primal(best.value());
+    //         if (not resEng->exact)
+    //             readyQueue.pushNoCount(*node);      // moving between queues, no inFlight change
+    //         else
+    //             stashQueue.done();
+    //     }
+    // };
     std::vector<std::thread> validators;
     for (i32 i = 0; i < cli.validators(); ++i)
         validators.push_back(std::thread(validatorFn, resEngs[i]));
@@ -101,6 +151,16 @@ int runHybrid(int argc, char* argv[])
     std::vector<Node> parentsBuffer;
     parentsBuffer.reserve(cli.pop());
     Pool nodesPoll;
+
+    std::atomic<bool> searchDone{false};
+    std::thread logThread([&]()
+    {
+        while (not searchDone.load())
+        {
+            log.progress();
+            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        }
+    });
 
     // BnB search
     log.header();
@@ -172,7 +232,7 @@ int runHybrid(int argc, char* argv[])
             if (relBestTarget.has_value())
             {
                 Node const & bestOverall = relBestTarget.value();
-                //printf("[DBG] REL best value: %.3f (Exact %d)\n", bestOverall.g(), not bestOverall.approximated());; // G is correct!
+               // printf("[DBG] REL best value: %.3f (Exact %d)\n", bestOverall.g(), not bestOverall.approximated());; // G is correct!
                 if (isBetter<Model>(bestOverall.g(), bnb.primal()))
                 {
                     if (bestOverall.approximated())
@@ -186,9 +246,11 @@ int runHybrid(int argc, char* argv[])
             {
                 //printf("[DBG] REL no node survived \n");
             }
-            log.progress();
-        }
+        };
     }
+
+    searchDone.store(true);
+    logThread.join();
 
     stashQueue.stop();
     for (auto & t : validators) t.join();

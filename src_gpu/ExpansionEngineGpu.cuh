@@ -22,8 +22,10 @@ public:
     using ExpEng::nFlagged;
     using ExpEng::nNodes;
     using ExpEng::width_;
+    using ExpEng::width_;
     using ExpEng::branchFactor_;
 
+    bool toSave;
     gfl::ArrayView<gfl::u8> cubAuxMem;
 
     static
@@ -163,6 +165,31 @@ public:
         CHECK_LAST_CUDA_ERROR();
         swapKernel<<<1,1>>>(&tmpNodes, &children);
         CHECK_LAST_CUDA_ERROR();
+    }
+
+
+    void saveCutsetLEL()
+    {
+        using namespace gfl;
+        auto const & parents = expData.parents;
+        auto & parentsInfo = expData.parentInfo;
+        auto & children = expData.children;
+        auto & childrenInfo = expData.childrenInfo;
+        auto & tmpNodes = expData.tmpNodes;
+        auto & tmpInfo = expData.tmpInfo;
+        auto & cutset = cutData;
+        constexpr u8 ToNotSave = 1;
+        constexpr u8 ToSave = 0;
+
+        i32 const maxChildren = width_ * branchFactor_;
+        i32 const blockSize = 256;
+        i32 const gridSize = ceil<i32>(maxChildren, blockSize);
+
+        markAndResizeByKernel<<<1,1>>>(&cutset, width_, &parentsInfo, &childrenInfo);       // ← updates markOffset_/markSize_
+        CHECK_LAST_CUDA_ERROR();
+        saveByCutsetMarkKernel<<<gridSize,blockSize>>>(&cutset, &parents, &parentsInfo); // ← mark() called device-side
+        CHECK_LAST_CUDA_ERROR();
+
     }
 
     void saveCutset()
@@ -380,6 +407,7 @@ public:
 
         expData.clear();
         cutData.clear();
+        toSave = false;
 
         expData.children.pushBackGpuAsync(parents.data(), parents.size());
         CHECK_LAST_CUDA_ERROR();
@@ -398,6 +426,7 @@ public:
             filterRepresentedChildren();
             sortChildrenByG(lambda);
             saveCutset();
+            //saveCutsetLEL();
             mergeChildren();
             calcOutLabelsKernel<<<gridSize, blockSize>>>(model, &children, &childrenInfo, primal, dual, DDRelaxed);
             CHECK_LAST_CUDA_ERROR();
