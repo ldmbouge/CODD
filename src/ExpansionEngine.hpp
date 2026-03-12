@@ -26,6 +26,7 @@ public:
     gfl::i32 depth_;
     gfl::i64 nNodes;
     bool exact;
+    bool completed;
 
 public:
 

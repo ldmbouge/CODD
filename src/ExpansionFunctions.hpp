@@ -73,7 +73,7 @@ void expandParents(
                     if constexpr (Model::has_heur)
                     {
                         f64 const h = model->h(cState.value(), BBCtx);
-                        cH = better<Model>(cH,h);
+                        cH = worse<Model>(cH,h);
                     }
                     // Conditions to keep the child
                     if (isBetterEq<Model>(cG + cH, primal))
@@ -468,7 +468,8 @@ template<typename Model, typename Node>
 void mergeChildren(
     gfl::i64 const width,
     ExpansionData<Node> * const expData,
-    CutsetData<Node> * const cutData)
+    CutsetData<Node> * const cutData,
+    bool saveCut = true)
 {
     using namespace gfl;
 
@@ -511,8 +512,11 @@ void mergeChildren(
     )
 
     // Save cutset
-    updateAncestorFlag(children,childrenInfo,parentInfo);
-    saveCutset<Model>(parents, parentInfo, cutData);
+    if (saveCut)
+    {
+        updateAncestorFlag(children,childrenInfo,parentInfo);
+        saveCutset<Model>(parents, parentInfo, cutData);
+    }
 
     assert(infoConsistent(children, childrenInfo));
 }

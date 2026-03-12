@@ -115,6 +115,7 @@ class ExpansionEngineSeq : public ExpansionEngine<Model,Node>
 public:
     using ExpansionEngine<Model,Node>::cutData;
     using ExpEng::exact;
+    using ExpEng::completed;
 
     void fullyExpandRelaxed(
             Model const * model,
@@ -155,10 +156,10 @@ public:
         resetInfoIdx(childrenInfo);
 
         exact = true;
+        completed = true;
         //int i = 0;
         while (not childrenInfo.empty()
-            and not expData.bestTargetNode.has_value()
-            and isBetter<Model>(children[childrenInfo[0].idx].g(), primal))
+            and not expData.bestTargetNode.has_value())
         {
             //printf("Iteration %d\n", i++); fflush(stdout);
             expData.swapParentsAndChildren();
@@ -183,6 +184,12 @@ public:
             checkForTarget(model, bestTrgt, children, childrenInfo);
             //for (auto const & i : childrenInfo) {children[i.idx].print(); printf("\n");}
             //printf("\n"); fflush(stdout);
+
+            if (isWorse<Model>(children[childrenInfo[0].idx].g(), primal))
+            {
+                completed = false;
+                break;
+            }
         }
          // printf("---\n"); fflush(stdout);
          // for (auto const & i : childrenInfo) {children[i.idx].print(); printf("\n");}

@@ -71,7 +71,7 @@ int runHybrid(int argc, char* argv[])
     std::condition_variable sharedCv;
     BlockingQueue<Queue<Model,Node>,    Model> readyQueue(inFlight, sharedMutex, sharedCv);
     BlockingQueue<Queue<Model,Node>, Model> stashQueue(inFlight, sharedMutex, sharedCv);
-    readyQueue.push(Node::makeRoot(model));
+    stashQueue.push(Node::makeRoot(model));
     bnb.onPrimal([&]{readyQueue.drainInto(stashQueue);});
 
     // Log manager
@@ -81,8 +81,8 @@ int runHybrid(int argc, char* argv[])
 
     auto validatorFn = [&](ResEngCpu * resEng)
     {
-        constexpr i32 nodesToPull = 10;
-        constexpr i32 nodesToPush = 1;
+        constexpr i32 nodesToPull = 100;
+        constexpr i32 nodesToPush = 10;
         using NodePtr = decltype(stashQueue.pop())::value_type;
         std::vector<NodePtr> bufferIn;
         std::vector<NodePtr> bufferOut;
@@ -105,15 +105,14 @@ int runHybrid(int argc, char* argv[])
                 auto [best, _] = resEng->getTargets();
                 if (best) bnb.primal(best.value());
 
-                if (not resEng->exact)
+                if (resEng->exact and resEng->completed)
                 {
-                    bufferOut.push_back(node);
-                    //printf("Validating node with f %.2f (VALIDATED)\n", localNodes.back().f());
+                    stashQueue.done();
+
                 }
                 else
                 {
-                    stashQueue.done();
-                    //printf("Validating node with f %.2f (DISCARDED)\n", localNodes.back().f());
+                    bufferOut.push_back(node);
                 }
 
                 if (bufferOut.size() >= nodesToPush)
@@ -202,8 +201,18 @@ int runHybrid(int argc, char* argv[])
             // f64 const fDepth = scast<f32>(parentsBuffer.front().depth()) / scast<f32>(Depth) ; //1.5;//isValid<Model>(bnb.primal()) ? 1.5 : 3.0;
             // f64 const lambda = 1.0 + 2 * fDepth; //bnb.hasPrimal() ? 1.5 : 5.0;
 
+            i32 const oldWidth = relEng->width_;
+            relEng->width_ = min<i32>(15000, oldWidth);
+            relEng->expandRelaxed(model, parentsBuffer, nodesPoll, bnb.primal(), bnb.dual(), cli.lambda(), false);
+            relEng->width_ = oldWidth;
+            auto [nRelBestTarget, nRelBestExactTarget] = relEng->getTargets();
+            if (not nRelBestTarget.has_value())
+            {
+                printf("[DBG] Narrow relaxed is disconnected! Pruning %d nodes!\n", parentsBuffer.size());
+                continue;
+            }
 
-            //printf("Going on GPU with %d nodes\n", parentsBuffer.size());
+            //printf("Going on GPU with %d nodes\n", parentsBuffer.size());w
             {
                 //TIMED_SCOPE_N("RelDD");
                 relEng->expandRelaxed(model, parentsBuffer, nodesPoll, bnb.primal(), bnb.dual(), cli.lambda());
@@ -226,7 +235,7 @@ int runHybrid(int argc, char* argv[])
             if (relBestExactTarget.has_value())
             {
                 Node const & bestExt = relBestExactTarget.value();
-                //printf("[DBG] REL exact value: %.3f\n", bestExt.g());
+                printf("[DBG] REL exact value: %.3f\n", bestExt.g());
                 bnb.primal(bestExt);
             }
             if (relBestTarget.has_value())
@@ -246,7 +255,7 @@ int runHybrid(int argc, char* argv[])
             {
                 //printf("[DBG] REL no node survived \n");
             }
-        };
+        }
     }
 
     searchDone.store(true);

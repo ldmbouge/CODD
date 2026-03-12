@@ -51,24 +51,21 @@ public:
 
     template<typename Node>
     void push(std::vector<gfl::ArrayView<Node>> const & cutsetFragments, gfl::f64 const f, gfl::f64 const primal) {
-        // Pre-process nodes BEFORE acquiring the lock
-        for (auto const & fragment : cutsetFragments)
-            for (auto & node : fragment)
-                node.h(worse<Model>(f - node.g(), node.h()));
-
-        // Lock only for the actual queue insertion
+        using namespace gfl;
         {
             std::unique_lock lock(mutex_);
             if (stopped_) return;
-            for (auto const & fragment : cutsetFragments) {
-                for (auto & node : fragment) {
-                    queue_.push(&node, primal);
-                    inFlight_++;
-                }
+            for (auto const & fragment : cutsetFragments)
+            {
+                i64 const oldSize = queue_.size();
+                queue_.pushBatch(fragment, f, primal);
+                inFlight_ += (queue_.size() - oldSize);
             }
         }
         cv_.notify_all();
     }
+
+
 
     // Blocking pop - waits until something is available or stopped
     auto pop() {

@@ -84,21 +84,16 @@ public:
     GFL_HOST_DEVICE
     OutLabels lgf(State const & s, double pBound, double dBound, DDContext ddCtx) const noexcept
     {
-        return OutLabels(0,1);
+        return OutLabels(0,s.sel.contains(s.n));
     }
 
     GFL_HOST_DEVICE
     gfl::optional<State> stf(State const & s, int l) const noexcept
     {
-        if (s.n == nodes)
-           return gfl::nullopt;
-        else {
-            if (l == 1 and not s.sel.contains(s.n))  return gfl::nullopt;
-            ItemSet out = s.sel;
-            out.remove(s.n);
-            if (l)  out.diffWith(adj[s.n]);
-            return State(out, s.n + 1); // build state accordingly
-        }
+        ItemSet out = s.sel;
+        out.remove(s.n);
+        if (l)  out.diffWith(adj[s.n]);
+        return State(out, s.n + 1); // build state accordingly
     }
 
     GFL_HOST_DEVICE
@@ -115,16 +110,20 @@ public:
         assert(s1.n == s2.n);
         return State(s1.sel | s2.sel,s1.n);
     }
-    // State similarity function
+
+    constexpr static bool has_rank = true;
+    // State ranking  function
     GFL_HOST_DEVICE
     static
-    gfl::f32 ssf(State const & s1, State const & s2) noexcept
+    gfl::f32 srf(State const & s) noexcept
     {
         using namespace gfl;
-        f32 n = 0.0;
-        f32 mean = 0.0;
-        //gfl::simCombine(mean,n,s1.sel.iou(s2.sel));
-        return mean;
+        f32 score = scast<f32>(s.sel.capacity()) - scast<f32>(s.sel.size());
+        score /= scast<f32>(s.sel.capacity());
+        //score += 1.0f;
+        //score *= 10.0;
+        //score +=  scast<f32>(s.sel.smallest()) / scast<f32>(s.sel.capacity());
+        return score;
     };
 
     constexpr static bool has_heur = true;

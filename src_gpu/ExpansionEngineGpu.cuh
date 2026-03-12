@@ -192,7 +192,7 @@ public:
 
     }
 
-    void saveCutset()
+    void saveCutset(bool saveLayer = false)
     {
         using namespace gfl;
         auto const & parents = expData.parents;
@@ -213,7 +213,7 @@ public:
         CHECK_LAST_CUDA_ERROR();
         setFlagKernel<<<gridSize,blockSize>>>(ToNotSave, &parentsInfo);
         CHECK_LAST_CUDA_ERROR();
-        flagToSaveKernel<<<gridSize,blockSize>>>(ToSave, &parentsInfo, width_, &children, &childrenInfo);
+        flagToSaveKernel<<<gridSize,blockSize>>>(ToSave, saveLayer, &parents, &parentsInfo, width_, &children, &childrenInfo);
         CHECK_LAST_CUDA_ERROR();
         updateAncInCutKernel<<<gridSize,blockSize>>>(ToSave, &parentsInfo, &children, &childrenInfo);
         CHECK_LAST_CUDA_ERROR();
@@ -396,7 +396,8 @@ public:
         Pool & nodesPoll,
         gfl::f64 const primal,
         gfl::f64 const dual,
-        gfl::f64 const lambda)
+        gfl::f64 const lambda,
+        bool saveCut = true)
     {
 
         using namespace gfl;
@@ -407,8 +408,6 @@ public:
 
         expData.clear();
         cutData.clear();
-        toSave = false;
-
         expData.children.pushBackGpuAsync(parents.data(), parents.size());
         CHECK_LAST_CUDA_ERROR();
         resizeToKernel<<<1,1>>>(&expData.childrenInfo, parents.size());
@@ -419,13 +418,19 @@ public:
         CHECK_LAST_CUDA_ERROR();
         CHECK_CUDA_ERROR(cudaDeviceSynchronize());
 
+        i32 const initialDepth = parents.data()->depth();
+        i32 const relativeDepth = 2;//initialDepth;
+        i32 currentDepth = initialDepth;
         while (not childrenInfo.empty() and not expData.bestTargetNode.has_value())
         {
             expData.swapParentsAndChildren();
             expandParents(model, primal);
             filterRepresentedChildren();
             sortChildrenByG(lambda);
-            saveCutset();
+            if (saveCut)
+            {
+                saveCutset();
+            }
             //saveCutsetLEL();
             mergeChildren();
             calcOutLabelsKernel<<<gridSize, blockSize>>>(model, &children, &childrenInfo, primal, dual, DDRelaxed);
@@ -435,7 +440,7 @@ public:
             CHECK_CUDA_ERROR(cudaDeviceSynchronize());
             if (cutData.nodes()->size() + width_ > cutData.nodes()->capacity())
             {
-                //printf("[DBG] Flushing GPU cutset buffer of size %lld\n", cutData.nodes()->size());
+                printf("[DBG] Flushing GPU cutset buffer of size %lld\n", cutData.nodes()->size());
                 cutData.saveFragmentFromGpu();
             }
 
@@ -448,7 +453,7 @@ public:
 
         if (not cutData.nodes()->empty())
         {
-            //printf("[DBG] Flushing GPU cutset buffer of size %lld\n", cutData.nodes()->size());
+            printf("[DBG] Flushing GPU cutset buffer of size %lld\n", cutData.nodes()->size());
             cutData.saveFragmentFromGpu();
         }
         // printf("---\n", childrenInfo.size());

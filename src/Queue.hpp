@@ -23,7 +23,8 @@ protected:
         i32 const & d2 = n2->depth();
         return isBetter<Model>(f1,f2) or
                (f1 == f2 and d1 > d2) or
-               (f1 == f2 and d1 == d2 and isBetter<Model>(g1,g2));
+               (f1 == f2 and d1 == d2 and isBetter<Model>(g1,g2)); // or
+               //(f1 == f2 and d1 == d2 and Model::srf(n1->state()) < Model::srf(n2->state()));
     };
 
     static constexpr auto deepestG = [](Node const * const n1, Node const * const n2) noexcept {
@@ -69,6 +70,22 @@ public:
             heap_.insertHeap(node);
             pushed_++;
         }
+    }
+
+    void pushBatch(gfl::ArrayView<Node> const & nodes, gfl::f64 const f, gfl::f64 const primal) noexcept
+    {
+        using namespace gfl;
+        for (auto & node : nodes)
+        {
+            node.h(worse<Model>(f - node.g(), node.h()));
+            if (isBetterEq<Model>(node.f(),primal))
+            {
+                //printf("[DBG] Pushing node with f %.2f\n",node->f());
+                heap_.insert(&node);
+                pushed_++;
+            }
+        }
+        heap_.buildHeap();
     }
 
     void push(gfl::ArrayView<Node> const & nodes,  gfl::f64 const primal) noexcept
