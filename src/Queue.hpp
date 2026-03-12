@@ -80,7 +80,6 @@ public:
             node.h(worse<Model>(f - node.g(), node.h()));
             if (isBetterEq<Model>(node.f(),primal))
             {
-                //printf("[DBG] Pushing node with f %.2f\n",node->f());
                 heap_.insert(&node);
                 pushed_++;
             }
@@ -129,13 +128,9 @@ public:
     Node const * pullBest() noexcept
     {
         using namespace gfl;
-
         assert(not empty());
-
         Node const * const bestNode = heap_.extractMax();
         pulled_++;
-
-        //printf("[DBG] Pulled node with %.2f at level %d\n", bestNode->f(), bestNode->depth());
         return bestNode;
     }
 

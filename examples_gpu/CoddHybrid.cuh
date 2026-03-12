@@ -15,8 +15,8 @@ template<typename Model, typename Node, int BranchFactor, int Depth>
 int runHybrid(int argc, char* argv[])
 {
     using namespace gfl;
-    using RelEngGpu = ExpansionEngineGpu<Model,Node>;
-    using ResEngCpu = ExpansionEngineSeq<Model,Node>;
+    using EngGpu = ExpansionEngineGpu<Model,Node>;
+    using EngCpu = ExpansionEngineSeq<Model,Node>;
 
     CliManager cli("CODD", "A C++ solver for DIDP models.");
     cli.parse(argc, argv);
@@ -36,27 +36,35 @@ int runHybrid(int argc, char* argv[])
     model->init(cli.instance(), modelAlloc);
 
     // Expansion engines
-    i32 engMemSize = sizeof(RelEngGpu);
-    ArenaAllocator relEngAlloc(engMemSize, cudaReserveManaged(engMemSize));
-    ArenaAllocator relBuffAlloc(cli.memSize(), cudaReserveDevice(cli.memSize()));
-    RelEngGpu * const relEng = new (relEngAlloc) RelEngGpu();
-    relEng->initRelaxedExpansion(cli.gpuWidth(), BranchFactor, Depth, relBuffAlloc);
-    printf("Relaxed working memory: ");
-    printMemSize(relBuffAlloc.usedSize());
+    i32 engMemSize = sizeof(EngGpu) + DefaultAlign;
+    ArenaAllocator engGpuAlloc(engMemSize * 2, cudaReserveManaged(engMemSize * 2));
+    ArenaAllocator buffGpuAlloc(cli.memSize(), cudaReserveDevice(cli.memSize()));
+    EngGpu * const resEngGpu = new (engGpuAlloc) EngGpu();
+    resEngGpu->initRestrictedExpansion(cli.gpuWidth(), BranchFactor, buffGpuAlloc);
+    buffGpuAlloc.clear();
+    EngGpu * const relEngGpu = new (engGpuAlloc) EngGpu();
+    relEngGpu->initRelaxedExpansion(cli.gpuWidth(), BranchFactor, Depth, buffGpuAlloc);
+    printf("GPU Relaxed/Restricted working memory: ");
+    printMemSize(buffGpuAlloc.usedSize());
     printf("\n");
 
-    // Restricted engines - one per validator thread
-    engMemSize = sizeof(ResEngCpu) + DefaultAlign;
-    std::vector<ResEngCpu*> resEngs;
-    ArenaAllocator resEngAlloc(engMemSize * cli.validators(), heapReserve(engMemSize * cli.validators()));
-    ArenaAllocator resBuffAlloc(cli.memSize(), heapReserve(cli.memSize()));
+    // Relaxed + Restricted engines - per validator thread
+    engMemSize = sizeof(EngCpu) + DefaultAlign;
+    std::vector<EngCpu*> resEngsCpu;
+    std::vector<EngCpu*> relEngsCpu;
+    ArenaAllocator engCpuAlloc(engMemSize * 2  * cli.validators() , heapReserve(engMemSize * 2 * cli.validators()));
+    ArenaAllocator buffCpuAlloc(cli.memSize(), heapReserve(cli.memSize()));
+    std::vector<f64> inFlightBestF;
     for (i32 i = 0; i < cli.validators(); ++i)
     {
-        resEngs.push_back(new (resEngAlloc) ResEngCpu());
-        resEngs[i]->initRestrictedExpansion(cli.cpuWidth(), BranchFactor, resBuffAlloc);
+        resEngsCpu.push_back(new (engCpuAlloc) EngCpu());
+        relEngsCpu.push_back(new (engCpuAlloc) EngCpu());
+        inFlightBestF.push_back(best<Model>());
+        resEngsCpu[i]->initRestrictedExpansion(cli.cpuWidth(), BranchFactor, buffCpuAlloc);
+        relEngsCpu[i]->initRelaxedExpansion(32, BranchFactor, Depth, buffCpuAlloc);
     }
-    printf("Restricted working memory: ");
-    printMemSize(resBuffAlloc.usedSize());
+    printf("CPU Relaxed + Restricted working memory: ");
+    printMemSize(buffCpuAlloc.usedSize());
     printf("\n");
 
     // Bounds and solutions manager
@@ -66,26 +74,23 @@ int runHybrid(int argc, char* argv[])
     StatsManager stats(cli.timeout());
 
     // Queues
-    std::atomic<i32> inFlight{0};
-    std::mutex              sharedMutex;
-    std::condition_variable sharedCv;
-    BlockingQueue<Queue<Model,Node>,    Model> readyQueue(inFlight, sharedMutex, sharedCv);
-    BlockingQueue<Queue<Model,Node>, Model> stashQueue(inFlight, sharedMutex, sharedCv);
-    stashQueue.push(Node::makeRoot(model));
-    bnb.onPrimal([&]{readyQueue.drainInto(stashQueue);});
+    std::mutex              queueMutex;
+    std::condition_variable queueCV;
+    std::atomic<i32> inFlight = 0;
+    BlockingQueue<Queue<Model,Node>, Model> readyQueue(queueMutex, queueCV, inFlight);
+    BlockingQueue<Queue<Model,Node>, Model> pendingQueue(queueMutex, queueCV, inFlight);
+    bnb.onPrimal([&]{readyQueue.drainInto(pendingQueue);});
+
 
     // Log manager
-    //LogManager<Model,Node,decltype(readyQueue)> log(bnb,stashQueue,stats);
-    LogManager<Model, Node, decltype(readyQueue), decltype(stashQueue)> log(bnb, readyQueue, stashQueue, stats);
+    LogManager<Model, Node, decltype(readyQueue), decltype(pendingQueue)> log(bnb, readyQueue, pendingQueue, stats);
     // ── Validator threads ────────────────────────────────────────────
 
-    auto validatorFn = [&](ResEngCpu * resEng)
+    auto validatorFn = [&](f64 & bestF, EngCpu * relEngCpu, EngCpu * resEngCpu)
     {
-        constexpr i32 nodesToPull = 100;
-        constexpr i32 nodesToPush = 10;
-        using NodePtr = decltype(stashQueue.pop())::value_type;
-        std::vector<NodePtr> bufferIn;
-        std::vector<NodePtr> bufferOut;
+        constexpr i32 nodesToPull = 25;
+        std::vector<Node const *> bufferIn;
+        std::vector<Node const *> bufferOut;
         bufferIn.reserve(nodesToPull);
         bufferOut.reserve(nodesToPull);
 
@@ -94,62 +99,63 @@ int runHybrid(int argc, char* argv[])
             bufferIn.clear();
             bufferOut.clear();
 
-            if (not stashQueue.pullUpTo(nodesToPull, bufferIn)) break;
-
+            if (not pendingQueue.pullUpTo(nodesToPull, bufferIn, bestF)) break;
             for (auto & node : bufferIn)
             {
-                std::vector<Node> localNodes;
-                localNodes.push_back(*node);
+                std::vector<Node> nodes;
+                nodes.push_back(*node);
 
-                resEng->expandRestricted(model, localNodes, bnb.primal(), bnb.dual());
-                auto [best, _] = resEng->getTargets();
-                if (best) bnb.primal(best.value());
+                // Pruning by not connection to the sink
+                relEngCpu->expandRelaxed(model, nodes, bnb.primal(), bnb.dual(), 1.0, false);
+                auto [relBestTarget, relBestExactTarget] = relEngCpu->getTargets();
+                if (not relBestTarget.has_value()) { continue; }
 
-                if (resEng->exact and resEng->completed)
+                // Pruning by exactness or primal
+                resEngCpu->expandRestricted(model, nodes, bnb.primal(), bnb.dual());
+                auto [resBestTarget, _] = resEngCpu->getTargets();
+                if (resBestTarget.has_value())
                 {
-                    stashQueue.done();
-
+                    assert(not resBestTarget.value().approximated());
+                    bnb.primal(resBestTarget.value());
                 }
-                else
+                if (not resEngCpu->exact or not resEngCpu->completed)
                 {
                     bufferOut.push_back(node);
                 }
-
-                if (bufferOut.size() >= nodesToPush)
-                {
-                    readyQueue.pushBatchNoCount(bufferOut);
-                    bufferOut.clear();
-                }
             }
-
-            readyQueue.pushBatchNoCount(bufferOut);
-            bufferOut.clear();
+            readyQueue.push(bufferOut, bestF);   // inFlight += pushed
+            pendingQueue.done(bufferIn.size());
         }
     };
-
-    // auto validatorFn = [&](ResEngCpu * resEng)
-    // {
-    //     std::vector<Node> localBuffer;
-    //     while (auto node = stashQueue.pop())   // blocking
-    //     {
-    //         localBuffer.clear();
-    //         localBuffer.push_back(**node);
-    //         resEng->expandRestricted(model, localBuffer, bnb.primal(), bnb.dual());
-    //         auto [best, _] = resEng->getTargets();
-    //         if (best) bnb.primal(best.value());
-    //         if (not resEng->exact)
-    //             readyQueue.pushNoCount(*node);      // moving between queues, no inFlight change
-    //         else
-    //             stashQueue.done();
-    //     }
-    // };
-    std::vector<std::thread> validators;
-    for (i32 i = 0; i < cli.validators(); ++i)
-        validators.push_back(std::thread(validatorFn, resEngs[i]));
 
     std::vector<Node> parentsBuffer;
     parentsBuffer.reserve(cli.pop());
     Pool nodesPoll;
+    Node const * root = Node::makeRoot(model);
+
+    //Initial big restricted for primal
+    parentsBuffer.push_back(*root);
+    resEngGpu->expandRestricted(model, parentsBuffer, bnb.primal(), bnb.dual());
+    auto [resBestTarget, resBestExactTarget] = resEngGpu->getTargets();
+    if (resBestTarget.has_value())
+    {
+        assert(not resBestTarget.value().approximated());
+        bnb.primal(resBestTarget.value());
+    }
+    parentsBuffer.clear();
+    pendingQueue.push(root);
+
+
+    std::vector<std::thread> validators;
+    for (i32 i = 0; i < cli.validators(); ++i)
+    {
+        validators.push_back(std::thread(
+            validatorFn,
+            std::ref(inFlightBestF[i]),
+            relEngsCpu[i],
+            resEngsCpu[i])
+        );
+    }
 
     std::atomic<bool> searchDone{false};
     std::thread logThread([&]()
@@ -161,81 +167,48 @@ int runHybrid(int argc, char* argv[])
         }
     });
 
+    auto const getDual = [&]
+    {
+        std::unique_lock lock(queueMutex);
+        f64 dual = worst<Model>();
+        if (not readyQueue.emptyUnlocked())   dual = better<Model>(dual, readyQueue.peekBestUnlocked()->f());
+        if (not pendingQueue.emptyUnlocked()) dual = better<Model>(dual, pendingQueue.peekBestUnlocked()->f());
+        for (auto const & f : inFlightBestF)
+            dual = better<Model>(dual, f);
+        return dual;
+    };
+
     // BnB search
     log.header();
     stats.start();
-    i32 adjToPop = cli.pop();
-    while (
-        stats.elapsed<sec>() <= cli.timeout()
-        and not bnb.solved()
-        )
+    i32 pullGpu = cli.pop();
+    while (stats.elapsed<sec>() <= cli.timeout() and not bnb.solved())
     {
         // Collect batch from readyQueue
-        parentsBuffer.clear(); 
-        auto first = readyQueue.popOrDone(); // returns nullopt if empty AND inFlight==0
-        if (not first) break;
-        if (first)
-            parentsBuffer.push_back(**first);
-        else
-            break;
-        while (parentsBuffer.size() < adjToPop)
-        {
-            auto node = readyQueue.popIf(parentsBuffer.back().f(), parentsBuffer.back().depth());  // blocks until non-empty, checks f()
-            if (node)
-                parentsBuffer.push_back(**node);
-            else
-                break;
-        }
-
-        // printf("[DBG] Offloading %d nodes with f = %.2f\n",
-        //        (int) parentsBuffer.size(),
-        //        parentsBuffer.front().f());
-        // fflush(stdout);
-
+        parentsBuffer.clear();
+        if (not readyQueue.pullUpTo(pullGpu, parentsBuffer)) break;
         if (not parentsBuffer.empty())
         {
-            bnb.dual(parentsBuffer.front().f());
-
             //printf("[DBG] Offloading %ld nodes with f %.2f (Remaining %ld)\n", parentsBuffer.size(), parentsBuffer.back().f(), queue.size());
-
-            // f64 const fDepth = scast<f32>(parentsBuffer.front().depth()) / scast<f32>(Depth) ; //1.5;//isValid<Model>(bnb.primal()) ? 1.5 : 3.0;
-            // f64 const lambda = 1.0 + 2 * fDepth; //bnb.hasPrimal() ? 1.5 : 5.0;
-
-            i32 const oldWidth = relEng->width_;
-            relEng->width_ = min<i32>(15000, oldWidth);
-            relEng->expandRelaxed(model, parentsBuffer, nodesPoll, bnb.primal(), bnb.dual(), cli.lambda(), false);
-            relEng->width_ = oldWidth;
-            auto [nRelBestTarget, nRelBestExactTarget] = relEng->getTargets();
-            if (not nRelBestTarget.has_value())
-            {
-                printf("[DBG] Narrow relaxed is disconnected! Pruning %d nodes!\n", parentsBuffer.size());
-                continue;
-            }
-
-            //printf("Going on GPU with %d nodes\n", parentsBuffer.size());w
-            {
-                //TIMED_SCOPE_N("RelDD");
-                relEng->expandRelaxed(model, parentsBuffer, nodesPoll, bnb.primal(), bnb.dual(), cli.lambda());
-            }
-
+            relEngGpu->expandRelaxed(model, parentsBuffer, bnb.primal(), bnb.dual(), cli.lambda());
             // Avoid loops
-            if (parentsBuffer.size() * 1.1 >= relEng->cutData.nodes()->size() and
-                parentsBuffer.size() * 0.9 <= relEng->cutData.nodes()->size())
+            if (parentsBuffer.size() * 1.1 >= relEngGpu->cutData.nodes()->size() and
+                parentsBuffer.size() * 0.9 <= relEngGpu->cutData.nodes()->size())
             {
-                adjToPop = ceil<i32>(adjToPop,10);
-                printf("Loop detected, reducing pop size to %d\n", adjToPop);
+                pullGpu = ceil<i32>(pullGpu,10);
+                printf("[INFO] Loop detected, reducing pull size to %d\n", pullGpu);
                 fflush(stdout);
             }
             else
             {
-                adjToPop = cli.pop();
+                pullGpu = cli.pop();
             }
 
-            auto [relBestTarget, relBestExactTarget] = relEng->getTargets();
+            auto [relBestTarget, relBestExactTarget] = relEngGpu->getTargets();
             if (relBestExactTarget.has_value())
             {
                 Node const & bestExt = relBestExactTarget.value();
-                printf("[DBG] REL exact value: %.3f\n", bestExt.g());
+                //printf("[DBG] REL exact value: %.3f\n", bestExt.g());
                 bnb.primal(bestExt);
             }
             if (relBestTarget.has_value())
@@ -246,22 +219,19 @@ int runHybrid(int argc, char* argv[])
                 {
                     if (bestOverall.approximated())
                     {
-
-                        stashQueue.push(relEng->cutData.fragments(), bestOverall.g(),  bnb.primal());
+                        pendingQueue.push(relEngGpu->cutData.fragments(), bestOverall.g(),  bnb.primal());
                     }
                 }
             }
-            else
-            {
-                //printf("[DBG] REL no node survived \n");
-            }
+            readyQueue.done(parentsBuffer.size());
         }
+        bnb.dual(getDual());
     }
 
     searchDone.store(true);
     logThread.join();
 
-    stashQueue.stop();
+    pendingQueue.stop();
     for (auto & t : validators) t.join();
     readyQueue.stop();
 

@@ -273,7 +273,7 @@ void copyByInfoIdxKernel(
     for (i64 i = begin + threadIdx.x; i < end; i += blockDim.x)
     {
         NodeInfo & info = nodesInfo->at(i);
-        Node & sNode = src->at(info.idx);
+        Node const & sNode = src->at(info.idx);
         Node & dNode = dst->at(i);
         dNode = sNode;
         info.idx = i;
@@ -466,11 +466,9 @@ void setApproximatedFlagKernel(
 template<typename Node>
 GFL_GLOBAL
 void flagToSaveKernel(
-    gfl::i64 const flag,
-    bool saveLayer,
-    gfl::ArrayView<Node> const * const parents,
-    gfl::ArrayView<NodeInfo> const * const parentsInfo,
     gfl::i64 const width,
+    gfl::i64 const flag,
+    gfl::ArrayView<NodeInfo> const * const parentsInfo,
     gfl::ArrayView<Node> const * const children,
     gfl::ArrayView<NodeInfo> const * const childrenInfo
 )
@@ -479,34 +477,17 @@ void flagToSaveKernel(
 
     assert(children->size() >= childrenInfo->size());
 
-    if (not saveLayer)
+    // Merge a prefix down to one, so that the total number of nodes is width
+    i64 const prefixSize = childrenInfo->size() - (width - 1);
+    auto [begin,end] = calcSlice<i64>(blockIdx.x, gridDim.x, prefixSize);
+    for (i64 i = begin + threadIdx.x; i < end; i += blockDim.x)
     {
-        // Merge a prefix down to one, so that the total number of nodes is width
-        i64 const prefixSize = childrenInfo->size() - (width - 1);
-        auto [begin,end] = calcSlice<i64>(blockIdx.x, gridDim.x, prefixSize);
-        for (i64 i = begin + threadIdx.x; i < end; i += blockDim.x)
+        i64 const j = (width - 1) + i;
+        NodeInfo const & info = childrenInfo->at(j);
+        Node const & node = children->at(info.idx);
+        if (not node.ancestorInCutset() and node.depth() > 1)
         {
-            i64 const j = (width - 1) + i;
-            NodeInfo const & info = childrenInfo->at(j);
-            Node const & node = children->at(info.idx);
-            if (not node.ancestorInCutset() and node.depth() > 1)
-            {
-                parentsInfo->at(info.pIdx).flag = flag;
-            }
-        }
-    }
-    else
-    {
-
-        auto [begin,end] = calcSlice<i64>(blockIdx.x, gridDim.x, parentsInfo->size());
-        for (i64 i = begin + threadIdx.x; i < end; i += blockDim.x)
-        {
-            NodeInfo const & info = parentsInfo->at(i);
-            Node const & node = parents->at(info.idx);
-            if (not node.ancestorInCutset())
-            {
-                parentsInfo->at(info.pIdx).flag = flag;
-            }
+            parentsInfo->at(info.pIdx).flag = flag;
         }
     }
 }

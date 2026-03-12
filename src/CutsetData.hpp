@@ -129,6 +129,16 @@ public:
     GFL_HOST_DEVICE
     void toSave(bool value) noexcept { toSave_ = value; }
 
+    void saveFragment()
+    {
+        Node * const fragment = new (&memPool) Node[nodes_.size()];
+        memcpy(fragment,nodes_.data(),nodes_.dataMemSize());
+        fragments_.push_back(gfl::ArrayView<Node>(nodes_.size(), fragment));
+        nodes_.clear();
+        markOffset_ = 0;
+        markSize_   = 0;
+    }
+
     void saveFragmentFromGpu()
     {
         Node * const fragment = new (&memPool) Node[nodes_.size()];

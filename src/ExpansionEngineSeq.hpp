@@ -16,132 +16,18 @@ class ExpansionEngineSeq : public ExpansionEngine<Model,Node>
     using ExpEng::expData;
     using ExpEng::width_;
 
-    void expandLayerRelaxed(Model const * const model, gfl::f64 const pBound, gfl::f64 const dBound)
-    {
-        expandParents(model, &expData, pBound);
-
-
-
-       //std::cout << "RAW MEAT:" << expData->children << "\n";
-
-       // std::cout << "----------------------------------------------------------------------" << "\n";
-       // {
-       //    int i=0;
-       //    for(const auto& c : expData->children) {
-       //       std::cout << "KID[" << i<< "]= ";
-       //       Node::print(c); std::cout << "\n";
-       //       i++;
-       //    }
-       // }
-       // std::cout << "----------------------------------------------------------------------" << "\n";
-        // printf("BEFORE FLT:\n");
-        // for(auto const & c : expData.children) {Node::print(c);printf("\n");}
-        // printf("\n");
-
-       filterChildren<Model,Node>(&expData);
-        // printf("BEFORE MRG:\n");
-        // for(auto const & c : expData.children) {Node::print(c);printf("\n");}
-        // printf("\n");
-       if (expData.children.size() > width_)
-          {
-             mergeChildren<Model,Node>(width_,&expData,&cutData);
-          }
-       // if  (expData->children[0].depth() >= 41) {
-       //    std::cout << "We are deep! " << "\n";
-       //    {
-       //       int i=0;
-       //       for(const auto& c : expData->children) {
-       //          std::cout << "KID[" << i<< "]= ";
-       //          Node::print(c); std::cout << "\n";
-       //          i++;
-       //       }
-       //    }
-       // }
-       calcOutLabels<Model,Node>(model,&expData.children,pBound,dBound,DDRelaxed);
-        // printf("AFTER MRG:\n");
-        // for(auto const & c : expData.children) {Node::print(c);printf("\n");}
-        // printf("\n");
-    }
-
-    void expandLayerRestricted(Model const * const model, gfl::f64 const pBound, gfl::f64 const dBound)
-    {
-        // printf("BEFORE EXP (PARENTS):\n");
-        // for(auto const & c : expData.parents) {Node::print(c);printf("\n");}
-        // printf("\n");
-        //std::cout << "PARENTS ARE:" << expData->parents << "\n";
-        expandParents(model, &expData, pBound);
-        //std::cout << "RAW MEAT:" << expData->children << "\n";
-
-        // std::cout << "----------------------------------------------------------------------" << "\n";
-        // {
-        //    int i=0;
-        //    for(const auto& c : expData->children) {
-        //       std::cout << "KID[" << i<< "]= ";
-        //       Node::print(c); std::cout << "\n";
-        //       i++;
-        //    }
-        // }
-        // std::cout << "----------------------------------------------------------------------" << "\n";
-        // printf("BEFORE FLT:\n");
-        // for(auto const & c : expData.children) {Node::print(c);printf("\n");}
-        // printf("\n");
-
-        filterChildren<Model,Node>(&expData);
-        // printf("BEFORE MRG:\n");
-        // for(auto const & c : expData.children) {Node::print(c);printf("\n");}
-        // printf("\n");
-        if (expData.children.size() > width_)
-        {
-            mergeChildren<Model,Node>(width_,&expData,&cutData);
-        }
-        // if  (expData->children[0].depth() >= 41) {
-        //    std::cout << "We are deep! " << "\n";
-        //    {
-        //       int i=0;
-        //       for(const auto& c : expData->children) {
-        //          std::cout << "KID[" << i<< "]= ";
-        //          Node::print(c); std::cout << "\n";
-        //          i++;
-        //       }
-        //    }
-        // }
-        calcOutLabels<Model,Node>(model,&expData.children,pBound,dBound,DDRelaxed);
-        // printf("AFTER MRG:\n");
-        // for(auto const & c : expData.children) {Node::print(c);printf("\n");}
-        // printf("\n");
-    }
-
-
 public:
     using ExpansionEngine<Model,Node>::cutData;
     using ExpEng::exact;
     using ExpEng::completed;
 
-    void fullyExpandRelaxed(
+    void expandRelaxed(
             Model const * model,
-            std::vector<Node> const & nodes,
+            std::vector<Node> const & parents,
             gfl::f64 const primal,
-            gfl::f64 const dual)
-    {
-        using namespace gfl;
-        expData.clear();
-        cutData.clear();
-        expData.parents.pushBack(nodes);
-        expandLayerRelaxed(model, primal, dual);
-        while (not expData.children.empty() and not expData.children.front().isTarget(model))
-        {
-            expData.swapParentsAndChildren();
-            expandLayerRelaxed(model, primal, dual);
-        }
-        onlyBestTargets(model,&expData);
-        finializeCutset<Model,Node>(model,&expData,&cutData,primal,dual,DDRelaxed);
-    }
-
-    void expandRestricted(
-       Model const * model,
-       std::vector<Node> const & parents,
-       gfl::f64 const primal,
-       gfl::f64 const dual)
+            gfl::f64 const dual,
+            gfl::f64 const lambda,
+            bool saveCut = true)
     {
         using namespace gfl;
         auto & children = expData.children;
@@ -156,10 +42,74 @@ public:
         resetInfoIdx(childrenInfo);
 
         exact = true;
-        completed = true;
-        //int i = 0;
         while (not childrenInfo.empty()
-            and not expData.bestTargetNode.has_value())
+               and not expData.bestTargetNode.has_value())
+        {
+            //printf("Iteration %d\n", i++); fflush(stdout);
+            expData.swapParentsAndChildren();
+            //for (auto const & i : childrenInfo) {children[i.idx].print(); printf("\n");}
+            //printf("\n"); fflush(stdout);
+            expandParents(model,expData,primal);
+            //for (auto const & i : childrenInfo) {children[i.idx].print(); printf("\n");}
+            //printf("\n"); fflush(stdout);
+            filterRepresentedChildren<Model,Node>(expData);
+            //for (auto const & i : childrenInfo) {children[i.idx].print(); printf("\n");}
+            //printf("\n"); fflush(stdout);
+            sortChildrenByG<Model,Node>(expData, lambda);
+            //for (auto const & i : childrenInfo) {children[i.idx].print(); printf("\n");}
+            //printf("\n"); fflush(stdout);
+            exact = exact and (childrenInfo.size() <= width_);
+            if (expData.childrenInfo.size() > width_)
+            {
+                if (saveCut)
+                {
+                    saveCutset(width_,expData,cutData);
+                }
+                mergeChildren<Model,Node>(width_,expData);
+                childrenInfo.resizeTo(min<i64>(width_, childrenInfo.size()));
+            }
+            //for (auto const & i : childrenInfo) {children[i.idx].print(); printf("\n");}
+            //printf("\n"); fflush(stdout);
+            calcOutLabels<Model,Node>(model, children, childrenInfo, primal, dual, DDRestricted);
+            //for (auto const & i : childrenInfo) {children[i.idx].print(); printf("\n");}
+            //printf("\n"); fflush(stdout);
+            checkForTarget(model, expData);
+            //for (auto const & i : childrenInfo) {children[i.idx].print(); printf("\n");}
+            //printf("\n"); fflush(stdout);
+            if (cutData.nodes()->size() + width_ > cutData.nodes()->capacity())
+            {
+                //printf("[DBG] Flushing GPU cutset buffer of size %lld\n", cutData.nodes()->size());
+                cutData.saveFragment();
+            }
+        }
+        copyBestTargets<Model>(expData);
+        if (not cutData.nodes()->empty())
+        {
+            //printf("[DBG] Flushing GPU cutset buffer of size %lld\n", cutData.nodes()->size());
+            cutData.saveFragment();
+        }
+    }
+
+    void expandRestricted(
+       Model const * model,
+       std::vector<Node> const & parents,
+       gfl::f64 const primal,
+       gfl::f64 const dual)
+    {
+        using namespace gfl;
+        auto & children = expData.children;
+        auto & childrenInfo = expData.childrenInfo;
+        auto & bestTrgt = expData.bestTargetNode;
+
+        expData.clear();
+
+        expData.children.pushBack(parents);
+        childrenInfo.resizeTo(parents.size());
+        resetInfoIdx(childrenInfo);
+
+        exact = true;
+        while (not childrenInfo.empty()
+               and not expData.bestTargetNode.has_value())
         {
             //printf("Iteration %d\n", i++); fflush(stdout);
             expData.swapParentsAndChildren();
@@ -181,34 +131,14 @@ public:
             calcOutLabels<Model,Node>(model, children, childrenInfo, primal, dual, DDRestricted);
             //for (auto const & i : childrenInfo) {children[i.idx].print(); printf("\n");}
             //printf("\n"); fflush(stdout);
-            checkForTarget(model, bestTrgt, children, childrenInfo);
+            checkForTarget(model,expData);
             //for (auto const & i : childrenInfo) {children[i.idx].print(); printf("\n");}
             //printf("\n"); fflush(stdout);
-
-            if (isWorse<Model>(children[childrenInfo[0].idx].g(), primal))
+            if (not childrenInfo.empty() and isWorse<Model>(children[childrenInfo[0].idx].g(), primal))
             {
                 completed = false;
                 break;
             }
         }
-         // printf("---\n"); fflush(stdout);
-         // for (auto const & i : childrenInfo) {children[i.idx].print(); printf("\n");}
-         // printf("\n"); fflush(stdout);
-         // printf("---\n"); fflush(stdout);
-
-        // while (not childrenInfo.empty() and not expData.bestTargetNode.has_value())
-        // {
-        //     expData.swapParentsAndChildren();
-        //     expandParents(model,expData,primal);
-        //     filterRepresentedChildren<Model,Node>(expData);
-        //     //sortChildrenByG<Model,Node>(expData);
-        //     sortChildrenByF<Model,Node>(expData);
-        //     exact = exact and (childrenInfo.size() <= width_);
-        //     childrenInfo.resizeTo(min<i64>(width_, childrenInfo.size()));
-        //     calcOutLabels<Model,Node>(model, children, childrenInfo, primal, dual, DDRestricted);
-        //     checkForTarget(model, bestTrgt, children, childrenInfo);
-        //     printf("RS: %llu (&d)\n", childrenInfo.size());
-        // }
-        // printf("===");
     }
 };

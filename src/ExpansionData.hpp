@@ -83,11 +83,6 @@ struct ExpansionData
         tmpInfo.clear();
     }
 
-    void addToParents(Node const & node) noexcept
-    {
-        parents.pushBack(node);
-    }
-
     GFL_HOST_DEVICE
     void swapParentsAndChildren()
     {
@@ -99,16 +94,6 @@ struct ExpansionData
         childrenInfo.clear();
         tmpNodes.clear();
         tmpInfo.clear();
-    }
-
-    bool hasTarget() const noexcept
-    {
-        return children.size() == 1;
-    }
-
-    Node const & getTarget() const noexcept
-    {
-        return children.front();
     }
 
     static

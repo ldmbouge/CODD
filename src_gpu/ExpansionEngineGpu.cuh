@@ -22,7 +22,6 @@ public:
     using ExpEng::nFlagged;
     using ExpEng::nNodes;
     using ExpEng::width_;
-    using ExpEng::width_;
     using ExpEng::branchFactor_;
 
     bool toSave;
@@ -213,7 +212,7 @@ public:
         CHECK_LAST_CUDA_ERROR();
         setFlagKernel<<<gridSize,blockSize>>>(ToNotSave, &parentsInfo);
         CHECK_LAST_CUDA_ERROR();
-        flagToSaveKernel<<<gridSize,blockSize>>>(ToSave, saveLayer, &parents, &parentsInfo, width_, &children, &childrenInfo);
+        flagToSaveKernel<<<gridSize,blockSize>>>(width_,ToSave, &parentsInfo, &children, &childrenInfo);
         CHECK_LAST_CUDA_ERROR();
         updateAncInCutKernel<<<gridSize,blockSize>>>(ToSave, &parentsInfo, &children, &childrenInfo);
         CHECK_LAST_CUDA_ERROR();
@@ -236,6 +235,17 @@ public:
         copyByCutsetMarkKernel<<<gridSize,blockSize>>>(&cutset, &parents, &parentsInfo); // ← mark() called device-side
         CHECK_LAST_CUDA_ERROR();
 
+    }
+
+    void trimChildren()
+    {
+        using namespace gfl;
+
+        auto & childrenInfo       = expData.childrenInfo;
+
+        // Shrink childrenInfo to width_ — merged node already sits at correct idx
+        shrinkToKernel<<<1,1>>>(&childrenInfo, width_);
+        CHECK_LAST_CUDA_ERROR();
     }
 
     void mergeChildren()
@@ -390,14 +400,24 @@ public:
         initCubAuxMem(maxNodes,alloc);
     }
 
-    void expandRelaxed(
+    void initRestrictedExpansion(
+     gfl::i32 const width,
+     gfl::i32 const branchFactor,
+     gfl::ArenaAllocator & alloc)
+    {
+        using namespace gfl;
+
+        ExpEng::initRestrictedExpansion(width, branchFactor, alloc);
+        i32 const maxNodes = width_ * branchFactor_;
+        initCubAuxMem(maxNodes,alloc);
+    }
+
+    void expandRestricted(
         Model const * model,
         std::vector<Node> const & parents,
-        Pool & nodesPoll,
         gfl::f64 const primal,
-        gfl::f64 const dual,
-        gfl::f64 const lambda,
-        bool saveCut = true)
+        gfl::f64 const dual
+        )
     {
 
         using namespace gfl;
@@ -418,20 +438,64 @@ public:
         CHECK_LAST_CUDA_ERROR();
         CHECK_CUDA_ERROR(cudaDeviceSynchronize());
 
-        i32 const initialDepth = parents.data()->depth();
-        i32 const relativeDepth = 2;//initialDepth;
-        i32 currentDepth = initialDepth;
+        // i32 const initialDepth = parents.data()->depth();
+        // i32 const relativeDepth = 2;//initialDepth;
+        // i32 currentDepth = initialDepth;
+        while (not childrenInfo.empty() and not expData.bestTargetNode.has_value())
+        {
+            expData.swapParentsAndChildren();
+            expandParents(model, primal);
+            filterRepresentedChildren();
+            sortChildrenByG();
+            trimChildren();
+            calcOutLabelsKernel<<<gridSize, blockSize>>>(model, &children, &childrenInfo, primal, dual, DDRelaxed);
+            CHECK_LAST_CUDA_ERROR();
+            checkForTargetKernel<<<1,1>>>(model, &expData.bestTargetNode, &children, &childrenInfo);
+            CHECK_LAST_CUDA_ERROR();
+            CHECK_CUDA_ERROR(cudaDeviceSynchronize());
+        }
+        copyBestTargetsKernel<Model,Node><<<1,1>>>(&bestTrgt,&bestExactTrgt,&children, &childrenInfo);
+        CHECK_LAST_CUDA_ERROR();
+        CHECK_CUDA_ERROR(cudaDeviceSynchronize());
+    }
+
+    void expandRelaxed(
+        Model const * model,
+        std::vector<Node> const & parents,
+        gfl::f64 const primal,
+        gfl::f64 const dual,
+        gfl::f64 const lambda
+        )
+    {
+
+        using namespace gfl;
+        auto & children = expData.children;
+        auto & childrenInfo = expData.childrenInfo;
+        auto & bestTrgt = expData.bestTargetNode;
+        auto & bestExactTrgt = expData.bestExactTargetNode;
+
+        expData.clear();
+        cutData.clear();
+        expData.children.pushBackGpuAsync(parents.data(), parents.size());
+        CHECK_LAST_CUDA_ERROR();
+        resizeToKernel<<<1,1>>>(&expData.childrenInfo, parents.size());
+        CHECK_LAST_CUDA_ERROR();
+        i32 const blockSize = 256;
+        i32 const gridSize = ceil<i32>(width_ * branchFactor_, blockSize);
+        resetInfoIdxKernel<<<gridSize, blockSize>>>(&expData.childrenInfo);
+        CHECK_LAST_CUDA_ERROR();
+        CHECK_CUDA_ERROR(cudaDeviceSynchronize());
+
+        // i32 const initialDepth = parents.data()->depth();
+        // i32 const relativeDepth = 2;//initialDepth;
+        // i32 currentDepth = initialDepth;
         while (not childrenInfo.empty() and not expData.bestTargetNode.has_value())
         {
             expData.swapParentsAndChildren();
             expandParents(model, primal);
             filterRepresentedChildren();
             sortChildrenByG(lambda);
-            if (saveCut)
-            {
-                saveCutset();
-            }
-            //saveCutsetLEL();
+            saveCutset();
             mergeChildren();
             calcOutLabelsKernel<<<gridSize, blockSize>>>(model, &children, &childrenInfo, primal, dual, DDRelaxed);
             CHECK_LAST_CUDA_ERROR();
@@ -440,7 +504,7 @@ public:
             CHECK_CUDA_ERROR(cudaDeviceSynchronize());
             if (cutData.nodes()->size() + width_ > cutData.nodes()->capacity())
             {
-                printf("[DBG] Flushing GPU cutset buffer of size %lld\n", cutData.nodes()->size());
+                //printf("[DBG] Flushing GPU cutset buffer of size %lld\n", cutData.nodes()->size());
                 cutData.saveFragmentFromGpu();
             }
 
@@ -453,7 +517,7 @@ public:
 
         if (not cutData.nodes()->empty())
         {
-            printf("[DBG] Flushing GPU cutset buffer of size %lld\n", cutData.nodes()->size());
+            //printf("[DBG] Flushing GPU cutset buffer of size %lld\n", cutData.nodes()->size());
             cutData.saveFragmentFromGpu();
         }
         // printf("---\n", childrenInfo.size());

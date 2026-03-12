@@ -204,14 +204,13 @@ void flagRepresented(
 }
 
 inline
-gfl::i32 countFlagged(
+gfl::i64  countFlagged(
     gfl::i64 const flag,
-
     gfl::ArrayView<NodeInfo> const & nodesInfo)
 {
     using namespace gfl;
 
-    i32 count = 0;
+    i64 count = 0;
     for (i32 i = 0; i < nodesInfo.size(); ++i)
     {
         NodeInfo const & info = nodesInfo[i];
@@ -221,34 +220,22 @@ gfl::i32 countFlagged(
 }
 
 template<typename Node>
-void copyByInfo(gfl::ArrayView<Node> const & dst, gfl::ArrayView<Node> const & src, gfl::ArrayView<NodeInfo> const & nodesInfo)
+void copyByInfoIdx(gfl::ArrayView<Node> const & dst, gfl::ArrayView<Node> const & src, gfl::ArrayView<NodeInfo> const & nodesInfo)
 {
     using namespace gfl;
 
-    assert(src.size() >= nodesInfo.size());
-    assert(dst.size() == nodesInfo.size());
+    assert(nodesInfo.size() <= src.size());
+    assert(nodesInfo.size() <= dst.size());
+
     for (i32 i = 0; i < nodesInfo.size(); ++i)
     {
         NodeInfo & info = nodesInfo[i];
-        Node & sNode = src[info.idx];
+        Node const & sNode = src[info.idx];
         Node & dNode = dst[i];
         dNode = sNode;
         info.idx = i;
     }
 }
-
-template<typename T>
-void copy(gfl::ArrayView<T> & dst, gfl::ArrayView<T> const & src)
-{
-    using namespace gfl;
-
-    assert(src.size() <= dst.size());
-    for (i32 i = 0; i < src.size(); i += 1)
-    {
-        dst[i] = src[i];
-    }
-}
-
 
 template<typename Model, typename Node>
 void filterRepresentedChildren(ExpansionData<Node> & expData)
@@ -274,28 +261,8 @@ void filterRepresentedChildren(ExpansionData<Node> & expData)
 }
 
 template<typename Model, typename Node>
-void sortChildrenByF(ExpansionData<Node> & expData)
-{
-    using namespace gfl;
-
-    using namespace gfl;
-    auto & children = expData.children;
-    auto & childrenInfo = expData.childrenInfo;
-
-    assert(childrenInfo.size() == children.size());
-
-    for (i32 i = 0; i < childrenInfo.size(); i += 1)
-    {
-        NodeInfo & info = childrenInfo[i];
-        Node const & node = children[info.idx];
-        info.score = score<Model>(node.f());
-    }
-    sort(childrenInfo, NodeInfo::cmpByScore);
-}
-
-
-template<typename Model, typename Node>
-void sortChildrenByG(ExpansionData<Node> & expData)
+void sortChildrenByG(ExpansionData<Node> & expData,
+    gfl::i32 const lambda = 1.0)
 {
     using namespace gfl;
 
@@ -310,146 +277,81 @@ void sortChildrenByG(ExpansionData<Node> & expData)
         NodeInfo & info = childrenInfo[i];
         Node const & node = children[info.idx];
         info.score = score<Model>(node.g());
+        info.score =
+         node.approximated() ? info.score
+                             : boostScore<Model>(info.score, lambda);
     }
     sort(childrenInfo, NodeInfo::cmpByScore);
 }
 
-template<typename Model, typename Node>
-void setRevScoreF(gfl::ArrayView<Node> const & nodes, gfl::ArrayView<NodeInfo> const & nodesInfo)
-{
-    using namespace gfl;
-
-    assert(nodes.size() >= nodesInfo.size());
-    for (i32 i = 0; i < nodesInfo.size(); i += 1)
-    {
-        NodeInfo & info = nodesInfo[i];
-        Node const & node = nodes[info.idx];
-        info.score = -score<Model>(node.f());
-    }
-}
-
-template<typename Model, typename Node>
-void mergeChildrenInplace(gfl::ArrayView<Node> & children)
-{
-    using namespace gfl;
-
-    Node & mNode = children[0];
-    mNode.approximated(true);
-    for (i32 nIdx = 1; nIdx < children.size(); nIdx += 1)
-    {
-        Node const & tNode = children[nIdx];
-        mNode.state(Model::smf(mNode.state(), tNode.state()));
-        mNode.g(better<Model>(mNode.g(), tNode.g()));
-        mNode.h(looser<Model>(mNode.h(), tNode.h()));
-    }
-}
-
 template<typename Node>
-void flagParentsToSave(gfl::i32 const width, gfl::ArrayView<Node> & children, gfl::ArrayView<NodeInfo> const & childrenInfo, gfl::ArrayView<NodeInfo> & parentInfo)
+void flagToSave(
+    gfl::i64 const width,
+    gfl::i64 const flag,
+    gfl::ArrayView<NodeInfo> const & parentsInfo,
+    gfl::ArrayView<Node> const & children,
+    gfl::ArrayView<NodeInfo> const & childrenInfo
+    )
 {
     using namespace gfl;
 
-    assert(children.size() == childrenInfo.size());
+    assert(children.size() >= childrenInfo.size());
 
     for (i32 i = width - 1; i < children.size(); ++i)
     {
         NodeInfo const & info = childrenInfo[i];
-        assert(info.idx == i);
         Node const & node = children[info.idx];
         if (not node.ancestorInCutset())
         {
-            parentInfo[info.pIdx].flag = 1;
+            parentsInfo[info.pIdx].flag = flag;
         }
     }
 }
 
 template< typename Node>
-void updateAncestorFlag(gfl::ArrayView<Node> & children, gfl::ArrayView<NodeInfo> const & childrenInfo, gfl::ArrayView<NodeInfo> & parentInfo)
+void updateAncInCut(
+    gfl::i64 const flag,
+    gfl::ArrayView<NodeInfo> const & parentInfo,
+    gfl::ArrayView<Node> const & children,
+    gfl::ArrayView<NodeInfo> const & childrenInfo)
 {
-    assert(children.size() == childrenInfo.size());
-    for (auto i = 0; i < children.size(); i += 1)
+    assert(children.size() >= childrenInfo.size());
+
+    for (auto i = 0; i < childrenInfo.size(); i += 1)
     {
-        auto const & info = childrenInfo[i];
-        assert(info.idx == i);
-        auto & node = children[info.idx];
-        if (parentInfo[info.pIdx].flag == 1)
+        NodeInfo const & info = childrenInfo[i];
+        Node & node = children[info.idx];
+        if (parentInfo[info.pIdx].flag == flag)
         {
             node.ancestorInCutset(true);
         }
     }
 }
 
-template<typename Model, typename Node>
-void saveCutset(ExpansionData<Node> & expData)
+template<typename Node>
+void saveCutset(
+    gfl::i64 const width,
+    ExpansionData<Node> & expData,
+    CutsetData<Node> & cutData)
 {
-    // using namespace gfl;
-    // auto const & parents = expData.parents;
-    // auto & parentsInfo = expData.parentInfo;
-    // auto & children = expData.children;
-    // auto & childrenInfo = expData.childrenInfo;
-    // auto & tmpNodes = expData.tmpNodes;
-    // auto & tmpInfo = expData.tmpInfo;
-    // auto & cutset = cutData;
-    // constexpr u8 ToNotSave = 1;
-    // constexpr u8 ToSave = 0;
-    //
-    // i32 const maxChildren = width_ * branchFactor_;
-    // i32 const blockSize = 256;
-    // i32 const gridSize = ceil<i32>(maxChildren, blockSize);
-    //
-    // resetInfoIdxKernel<<<gridSize,blockSize>>>(&parentsInfo);
-    // CHECK_LAST_CUDA_ERROR();
-    // setFlagKernel<<<gridSize,blockSize>>>(ToNotSave, &parentsInfo);
-    // CHECK_LAST_CUDA_ERROR();
-    // flagToSaveKernel<<<gridSize,blockSize>>>(ToSave, &parentsInfo, width_, &children, &childrenInfo);
-    // CHECK_LAST_CUDA_ERROR();
-    // updateAncInCutKernel<<<gridSize,blockSize>>>(ToSave, &parentsInfo, &children, &childrenInfo);
-    // CHECK_LAST_CUDA_ERROR();
-    // resizeToKernel<<<1,1>>>(&tmpInfo, parentsInfo.sizePtr());
-    // CHECK_LAST_CUDA_ERROR();
-    // sortKernel<NodeInfo::FlagDecomposer><<<1,1>>>(&parentsInfo, &tmpInfo, &cubAuxMem);
-    // CHECK_LAST_CUDA_ERROR();
-    // swapKernel<<<1,1>>>(&tmpInfo, &parentsInfo);
-    // CHECK_LAST_CUDA_ERROR();
-    // setValueKernel<<<1,1>>>(&nFlagged, scast<i64>(0));
-    // CHECK_LAST_CUDA_ERROR();
-    // countFlaggedKernel<<<gridSize,blockSize>>>(ToSave, &nFlagged, &parentsInfo);
-    // CHECK_LAST_CUDA_ERROR();
-    // resizeToKernel<<<1,1>>>(&parentsInfo, &nFlagged);
-    // CHECK_LAST_CUDA_ERROR();
-    // resizeToKernel<<<1,1>>>(&tmpInfo, &nFlagged);
-    // CHECK_LAST_CUDA_ERROR();
-    // markAndResizeByKernel<<<1,1>>>(&cutset, &nFlagged);
-    // CHECK_LAST_CUDA_ERROR();
-    // copyByInfoIdxKernel<<<gridSize,blockSize>>>(cutset.mark(), &parents, &parentsInfo);
-    // CHECK_LAST_CUDA_ERROR();
-    //
-    //
-    //
-    //
-    // using namespace gfl;
-    //
-    // sort(parentInfo, NodeInfo::cmpByFlag);
-    // i32 nParentsToCopy = 0;
-    // countFlagged(1, &nParentsToCopy, parentInfo);
-    //
-    // if (nParentsToCopy > 0)
-    // {
-    //     ArrayView<NodeInfo> parentsToCopyInfo = parentInfo.slice(-nParentsToCopy);
-    //     setRevScoreF<Model,Node>(parents, parentsToCopyInfo);
-    //     sort(parentsToCopyInfo, NodeInfo::cmpByScore);
-    //     cutData->markAndResizeBy(nParentsToCopy);
-    //     ArrayView<Node> const * segment = cutData->mark();
-    //     copyByInfo(*segment, parents, parentsToCopyInfo);
-    //
-    //     printf("CUTSET:\n");
-    //     for(auto const & c : *segment) {Node::print(c);printf("\n");}
-    //     printf("\n");
-    // }
-    //
-    // DEBUG_CUT (
-    //
-    // )
+    using namespace gfl;
+    auto const & parents = expData.parents;
+    auto & parentsInfo = expData.parentInfo;
+    auto & children = expData.children;
+    auto & childrenInfo = expData.childrenInfo;
+    auto & cutset = cutData;
+    constexpr u8 ToNotSave = 1;
+    constexpr u8 ToSave = 0;
+
+    resetInfoIdx(parentsInfo);
+    setFlag(ToNotSave, parentsInfo);
+    flagToSave(width, ToSave, parentsInfo, children, childrenInfo);
+    updateAncInCut(ToSave, parentsInfo, children, childrenInfo);
+    sort(parentsInfo, NodeInfo::cmpByFlag);
+    i64 nFlagged = countFlagged(ToSave, parentsInfo);
+    parentsInfo.resizeTo(nFlagged);
+    cutset.markAndResizeBy(nFlagged);
+    copyByInfoIdx(cutset.mark(), parents, parentsInfo);
 }
 
 inline
@@ -467,58 +369,28 @@ void initInfoIdx(gfl::ArrayView<NodeInfo> const & nodesInfo)
 template<typename Model, typename Node>
 void mergeChildren(
     gfl::i64 const width,
-    ExpansionData<Node> * const expData,
-    CutsetData<Node> * const cutData,
-    bool saveCut = true)
+    ExpansionData<Node> const & expData)
 {
     using namespace gfl;
 
-    auto const & parents = expData->parents;
-    auto & children = expData->children;
-    auto & tmpChildren = expData->tmpNodes;
-    auto & childrenInfo = expData->childrenInfo;
-    auto & parentInfo = expData->parentInfo;
-
-    assert(width < children.size());
-
-    assert(infoConsistent(children, childrenInfo));
-
-    tmpChildren.resizeTo(children.size());
-    setScoreG<Model>(children, childrenInfo);
-    sort(childrenInfo, NodeInfo::cmpByScore);
-    copyByInfo(tmpChildren,children, childrenInfo);
-    VectorView<Node>::swap(tmpChildren, children);
-
-
-
-    // Flag the parents of the nodes that will be merged
-    parentInfo.resizeTo(parents.size());
-    initInfoIdx(parentInfo);
-    setFlag(0,parentInfo);
-    flagParentsToSave(width, children, childrenInfo, parentInfo);
+    auto & children = expData.children;
+    auto & childrenInfo = expData.childrenInfo;
 
     // Merge the last children - (width - 1) nodes
     i32 const prefixSize = width - 1;
-    auto suffix = children.slice(prefixSize, children.size());
-    mergeChildrenInplace<Model>(suffix);
-    children.resizeTo(width);
-    childrenInfo.resizeTo(width);
+    ArrayView<NodeInfo> const suffixInfo = childrenInfo.slice(prefixSize, childrenInfo.size());
 
-
-    DEBUG_MRG(
-        printf("AFTER MRG:\n");
-        for(auto const & c : expData->children) {Node::print(c);printf("\n");}
-        printf("\n");
-    )
-
-    // Save cutset
-    if (saveCut)
+    NodeInfo const & rInfo = suffixInfo[0];
+    Node & rNode = children[rInfo.idx];
+    rNode.approximated(true);
+    for (i32 i = 1; i < suffixInfo.size(); i += 1)
     {
-        updateAncestorFlag(children,childrenInfo,parentInfo);
-        saveCutset<Model>(parents, parentInfo, cutData);
+        NodeInfo const & info = suffixInfo[i];
+        Node const & node = children[info.idx];
+        rNode.state(Model::smf(rNode.state(), node.state()));
+        rNode.g(better<Model>(rNode.g(), node.g()));
+        rNode.h(worse<Model>(rNode.h(), node.h()));
     }
-
-    assert(infoConsistent(children, childrenInfo));
 }
 
 template<typename Model, typename Node>
@@ -540,84 +412,61 @@ void calcOutLabels(
     }
 }
 
-
-
-
 template<typename Model, typename Node>
-void onlyBestTargets(Model const * const model, ExpansionData<Node> * const expData)
+void copyBestTargets(ExpansionData<Node> & expData)
 {
     using namespace gfl;
 
-    auto & targets = expData->children;
-    auto & targetsInfo = expData->childrenInfo;
+    auto & targets = expData.children;
+    auto & targetsInfo = expData.childrenInfo;
+    optional<Node> & bestTarget = expData.bestTargetNode;
+    optional<Node> & bestExactTarget = expData.bestExactTargetNode;
 
-    if (not targets.empty())
+    bestTarget.reset();
+
+    for (i64 i = 0; i < targetsInfo.size(); ++i)
     {
-        assert(targets.front().isTarget(model)); // All of them should be targets
-        setScoreG<Model>(targets, targetsInfo);
-        sort(targetsInfo, NodeInfo::cmpByScore);
-        NodeInfo const & bestInfo = targetsInfo[0];
-        expData->bestTargetNode = targets[bestInfo.idx];
-        for (i32 i = 0; i < targets.size(); ++i)
+        NodeInfo const & info = targetsInfo[i];
+        Node const & node = targets[info.idx];
+
+        // Best overall (any node)
+        f64 const g = node.g();
+        if (not bestTarget.has_value() or
+             isBetter<Model>(g, bestTarget.value().g()))
         {
-            NodeInfo const & bestExactInfo = targetsInfo[i];
-            Node const & node = targets[bestExactInfo.idx];
-            if (not node.approximated())
+            bestTarget = node;
+            //printf("[DBG] Best found with value %.2f\n", node.g());
+        }
+
+        // Best exact (non-approximated)
+        if (not node.approximated())
+        {
+            if (not bestExactTarget.has_value() or
+                isBetter<Model>(node.g(), bestExactTarget.value().g()))
             {
-                expData->bestExactTargetNode = node;
-                break;
+                //printf("[DBG] Exact found with value %.2f\n", node.f());
+                bestExactTarget = node;
             }
         }
     }
 }
 
-
-template<typename Model, typename Node>
-void setH(gfl::ArrayView<Node> const & nodes, gfl::f64 const f)
-{
-    using namespace gfl;
-
-    for (i64 i = 0; i < nodes.size(); i += 1)
-    {
-        Node & node = nodes[i];
-        f64 const h = f - node.g();
-        node.h(tighter<Model>(node.h(), h));
-    }
-}
-
-template<typename Model, typename Node>
-void finializeCutset(
-    Model const * const model,
-    ExpansionData<Node> * const expData,
-    CutsetData<Node> * const cutData,
-    gfl::f64 pBound,
-    gfl::f64 dBound,
-    DDContext const ddCtx)
-{
-    using namespace gfl;
-
-    if (expData->hasTarget())
-    {
-        calcOutLabels(model, cutData->nodes(), pBound, dBound, ddCtx);
-        f64 const f = expData->getTarget().g();
-        setH<Model,Node>(*cutData->nodes(), f);
-    }
-
-}
-
 template<typename Model, typename Node>
 void checkForTarget(
     Model const * const model,
-    gfl::optional<Node> & target,
-    gfl::ArrayView<Node> const & nodes,
-    gfl::ArrayView<NodeInfo> const & nodesInfo)
+    ExpansionData<Node> & expData
+    )
 {
     using namespace gfl;
 
-    if (not nodesInfo.empty())
+    auto & targets = expData.children;
+    auto & targetsInfo = expData.childrenInfo;
+    optional<Node> & bestTarget = expData.bestTargetNode;
+
+    if (not targets.empty())
     {
-        NodeInfo const & info = nodesInfo[0];
-        Node const & node = nodes[info.idx];
-        if (node.isTarget(model)) target = node;
+        NodeInfo const & info = targetsInfo[0];
+        Node const & node = targets[info.idx];
+        if (node.isTarget(model)) bestTarget = node;
     }
 }
