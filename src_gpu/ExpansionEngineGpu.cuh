@@ -22,6 +22,7 @@ public:
     using ExpEng::nFlagged;
     using ExpEng::nNodes;
     using ExpEng::width_;
+    using ExpEng::exact;
     using ExpEng::branchFactor_;
 
     bool toSave;

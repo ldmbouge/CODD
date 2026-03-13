@@ -32,11 +32,9 @@ public:
         return true;
     }
 
-    // ── Validator pull: up to n nodes, tracks bestF for dual bound ────
-    // Caller must decrement inFlight by bufferIn.size() when done with the batch
-    // (whether nodes are forwarded to another queue or pruned).
+    // ── Validator pull: up to n nodes, filters against primal ────────
     template <typename N>
-    bool pullUpTo(gfl::i32 const n, std::vector<N>& bufferIn, gfl::f64& bestF)
+    bool pullUpTo(gfl::i32 const n, std::vector<N>& bufferIn, gfl::f64& bestF, gfl::f64 const primal)
     {
         std::unique_lock lock(mutex_);
         cv_.wait(lock, [&] {
@@ -48,8 +46,45 @@ public:
         while (bufferIn.size() < static_cast<size_t>(n) && !queue_.empty())
         {
             auto node = queue_.pullBest();
-            bestF     = better<Model>(bestF, node->f());
+            if (not isBetter<Model>(node->f(), primal))
+            {
+                --inFlight_;   // pruned here, caller won't see it
+                continue;
+            }
+            bestF = better<Model>(bestF, node->f());
             bufferIn.push_back(node);
+        }
+        return true;
+    }
+
+    // ── GPU pull: up to n nodes, same f/depth, filters against primal ─
+    template <typename N>
+    bool pullUpTo(gfl::i32 const n, std::vector<N>& bufferIn, gfl::f64 const primal)
+    {
+        using namespace gfl;
+        std::unique_lock lock(mutex_);
+        cv_.wait(lock, [&] {
+            return !queue_.empty() || stopped_ || inFlight_.load() == 0;
+        });
+        if (queue_.empty() || stopped_) return false;
+
+        // Drain any stale nodes at the front before starting the batch
+        while (!queue_.empty() && not isBetter<Model>(queue_.peekBest()->f(), primal))
+        {
+            queue_.pullBest();
+            --inFlight_;
+        }
+        if (queue_.empty()) return false;
+
+        bufferIn.push_back(*queue_.pullBest());
+        f64 const fValue = bufferIn.back().f();
+        i32 const depth  = bufferIn.back().depth();
+
+        while (bufferIn.size() < static_cast<size_t>(n) && !queue_.empty() &&
+               queue_.peekBest()->f()     == fValue &&
+               queue_.peekBest()->depth() == depth)
+        {
+            bufferIn.push_back(*queue_.pullBest());
         }
         return true;
     }
@@ -65,35 +100,9 @@ public:
             for (auto const& node : batch)
                 queue_.push(node);
             inFlight_ += static_cast<gfl::i32>(batch.size());
-            bestF = best<Model>();
+            bestF = worst<Model>();
         }
         cv_.notify_all();
-        return true;
-    }
-
-    // ── GPU pull: up to n nodes sharing the same f and depth ─────────
-    // Same-f/depth batching keeps GPU warps uniform.
-    // Caller must decrement inFlight by bufferIn.size() when done.
-    template <typename N>
-    bool pullUpTo(gfl::i32 const n, std::vector<N>& bufferIn)
-    {
-        using namespace gfl;
-        std::unique_lock lock(mutex_);
-        cv_.wait(lock, [&] {
-            return !queue_.empty() || stopped_ || inFlight_.load() == 0;
-        });
-        if (queue_.empty() || stopped_) return false;
-
-        bufferIn.push_back(*queue_.pullBest());
-        f64 const fValue = bufferIn.back().f();
-        i32 const depth  = bufferIn.back().depth();
-
-        while (bufferIn.size() < static_cast<size_t>(n) && !queue_.empty() &&
-               queue_.peekBest()->f()     == fValue &&
-               queue_.peekBest()->depth() == depth)
-        {
-            bufferIn.push_back(*queue_.pullBest());
-        }
         return true;
     }
 
