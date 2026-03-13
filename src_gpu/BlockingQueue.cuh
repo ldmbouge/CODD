@@ -137,6 +137,16 @@ public:
         return queue_.peekBest();
     }
 
+    auto peekBestBlocking(std::atomic<gfl::i32> & inFlight)
+    {
+        std::unique_lock lock(mutex_);
+        cv_.wait(lock, [&] {
+            return !queue_.empty() || stopped_ || inFlight.load() == 0;
+        });
+        if (queue_.empty() || stopped_) return decltype(queue_.peekBest()){nullptr};
+        return queue_.peekBest();
+    }
+
     bool empty() const
     {
         std::unique_lock lock(mutex_);

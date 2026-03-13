@@ -4,7 +4,8 @@
 
 int main(int argc,char* argv[])
 {
-    constexpr int BranchFactor = 256;
+    // Based on 16
+    constexpr int BranchFactor = 180;
     constexpr int Items = 256;
     constexpr int Depth = 16;
 

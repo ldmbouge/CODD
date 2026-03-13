@@ -132,19 +132,7 @@ int runHybrid(int argc, char* argv[])
     parentsBuffer.reserve(cli.pop());
     Pool nodesPoll;
     Node const * root = Node::makeRoot(model);
-
-    //Initial big restricted for primal
-    parentsBuffer.push_back(*root);
-    resEngGpu->expandRestricted(model, parentsBuffer, bnb.primal(), bnb.dual());
-    auto [resBestTarget, resBestExactTarget] = resEngGpu->getTargets();
-    if (resBestTarget.has_value())
-    {
-        assert(not resBestTarget.value().approximated());
-        bnb.primal(resBestTarget.value());
-    }
-    parentsBuffer.clear();
     pendingQueue.push(root);
-
 
     std::vector<std::thread> validators;
     for (i32 i = 0; i < cli.validators(); ++i)
@@ -184,6 +172,19 @@ int runHybrid(int argc, char* argv[])
     i32 pullGpu = cli.pop();
     while (stats.elapsed<sec>() <= cli.timeout() and not bnb.solved())
     {
+        if (not bnb.hasPrimal())
+        {
+            parentsBuffer.push_back(*readyQueue.peekBestBlocking(inFlight));
+            resEngGpu->expandRestricted(model, parentsBuffer, bnb.primal(), bnb.dual());
+            auto [resBestTarget, resBestExactTarget] = resEngGpu->getTargets();
+            if (resBestTarget.has_value())
+            {
+                assert(not resBestTarget.value().approximated());
+                bnb.primal(resBestTarget.value());
+            }
+            parentsBuffer.clear();
+        }
+
         // Collect batch from readyQueue
         parentsBuffer.clear();
         if (not readyQueue.pullUpTo(pullGpu, parentsBuffer)) break;
@@ -202,6 +203,18 @@ int runHybrid(int argc, char* argv[])
             else
             {
                 pullGpu = cli.pop();
+            }
+            // Adj pull
+            if (pendingQueue.empty())
+            {
+                i32 const maxPull = cli.pop() * 16;
+                pullGpu = max<i32>(pullGpu * 2, maxPull);
+                if (pullGpu != maxPull) printf("[INFO] Stagnation detected, increasing pull size to %d\n", pullGpu);
+                fflush(stdout);
+            }
+            else
+            {
+                pullGpu = max<i32>( cli.pop(), pullGpu / 2);
             }
 
             auto [relBestTarget, relBestExactTarget] = relEngGpu->getTargets();

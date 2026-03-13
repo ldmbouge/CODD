@@ -21,10 +21,9 @@ protected:
         f64 const g2 =  n2->g();
         i32 const & d1 = n1->depth();
         i32 const & d2 = n2->depth();
-        return isBetter<Model>(f1,f2) or
-               (f1 == f2 and d1 > d2) or
-               (f1 == f2 and d1 == d2 and isBetter<Model>(g1,g2)); // or
-               //(f1 == f2 and d1 == d2 and Model::srf(n1->state()) < Model::srf(n2->state()));
+        return
+        isBetter<Model>(f1,f2) or (f1 == f2 and d1 > d2) or (f1 == f2 and d1 == d2 and isBetter<Model>(g1,g2)); // f,d,g
+        //isBetter<Model>(f1,f2) or (f1 == f2 and isBetter<Model>(g1,g2)) or (f1 == f2 and g1 == g2 and d1> d2); // f,g,d
     };
 
     static constexpr auto deepestG = [](Node const * const n1, Node const * const n2) noexcept {

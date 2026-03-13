@@ -17,7 +17,7 @@ class GRuler : public GRulerData
 
 public:
     constexpr static bool is_maximization = false;
-    using OutLabels = gfl::BitSet<gfl::BitSet<>::num_words(BranchFactor)>;
+    using OutLabels = gfl::BitSet<gfl::BitSet<>::num_words(Items)>;
 
     class State
     {

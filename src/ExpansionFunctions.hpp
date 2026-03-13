@@ -79,9 +79,9 @@ void expandParents(
                     if (isBetterEq<Model>(cG + cH, primal))
                     {
                         // Node
-                        i32 const iIdx = childrenInfo.resizeBy(1);
+                        i32 const cInfoIdx = childrenInfo.resizeBy(1);
                         i32 const cIdx = children.resizeBy(1);
-                        childrenInfo[iIdx] = NodeInfo(cIdx, pIdx);
+                        childrenInfo[cInfoIdx] = NodeInfo(cIdx, pIdx);
                         children[cIdx] = Node(cState.value(), cG, cH, label, pNode);
                     }
                 }
@@ -262,7 +262,7 @@ void filterRepresentedChildren(ExpansionData<Node> & expData)
 
 template<typename Model, typename Node>
 void sortChildrenByG(ExpansionData<Node> & expData,
-    gfl::i32 const lambda = 1.0)
+    gfl::f32 const lambda = 1.0)
 {
     using namespace gfl;
 
@@ -297,7 +297,7 @@ void flagToSave(
 
     assert(children.size() >= childrenInfo.size());
 
-    for (i32 i = width - 1; i < children.size(); ++i)
+    for (i32 i = width - 1; i < childrenInfo.size(); ++i)
     {
         NodeInfo const & info = childrenInfo[i];
         Node const & node = children[info.idx];
