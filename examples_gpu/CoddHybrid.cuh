@@ -118,7 +118,7 @@ int runHybrid(int argc, char* argv[])
                     assert(not resBestTarget.value().approximated());
                     bnb.primal(resBestTarget.value());
                 }
-                if (not resEngCpu->exact or not resEngCpu->completed)
+                if (not resEngCpu->exact)
                 {
                     bufferOut.push_back(node);
                 }

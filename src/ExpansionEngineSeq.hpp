@@ -19,7 +19,6 @@ class ExpansionEngineSeq : public ExpansionEngine<Model,Node>
 public:
     using ExpansionEngine<Model,Node>::cutData;
     using ExpEng::exact;
-    using ExpEng::completed;
 
     void expandRelaxed(
             Model const * model,
@@ -134,9 +133,11 @@ public:
             checkForTarget(model,expData);
             //for (auto const & i : childrenInfo) {children[i.idx].print(); printf("\n");}
             //printf("\n"); fflush(stdout);
-            if (not childrenInfo.empty() and isWorse<Model>(children[childrenInfo[0].idx].g(), primal))
+            if (
+                not exact
+                and expData.bestTargetNode.has_value()
+                and isWorse<Model>( expData.bestTargetNode.value().f(), primal))
             {
-                completed = false;
                 break;
             }
         }
