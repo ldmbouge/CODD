@@ -53,7 +53,7 @@ int runHybrid(int argc, char* argv[])
     std::vector<EngCpu*> resEngsCpu;
     std::vector<EngCpu*> relEngsCpu;
     ArenaAllocator engCpuAlloc(engMemSize * 2  * cli.validators() , heapReserve(engMemSize * 2 * cli.validators()));
-    ArenaAllocator buffCpuAlloc(cli.memSize(), heapReserve(cli.memSize()));
+    ArenaAllocator buffCpuAlloc(cli.memSize() * 3, heapReserve(cli.memSize() * 3));
     std::vector<f64> inFlightBestF;
     for (i32 i = 0; i < cli.validators(); ++i)
     {
@@ -61,7 +61,7 @@ int runHybrid(int argc, char* argv[])
         relEngsCpu.push_back(new (engCpuAlloc) EngCpu());
         inFlightBestF.push_back(best<Model>());
         resEngsCpu[i]->initRestrictedExpansion(cli.cpuWidth(), BranchFactor, buffCpuAlloc);
-        relEngsCpu[i]->initRelaxedExpansion(32, BranchFactor, Depth, buffCpuAlloc);
+        relEngsCpu[i]->initRelaxedExpansion(2, BranchFactor, Depth, buffCpuAlloc);
     }
     printf("CPU Relaxed + Restricted working memory: ");
     printMemSize(buffCpuAlloc.usedSize());
@@ -132,7 +132,7 @@ int runHybrid(int argc, char* argv[])
     parentsBuffer.reserve(cli.pop());
     Pool nodesPoll;
     Node const * root = Node::makeRoot(model);
-    pendingQueue.push(root);
+    readyQueue.push(root);
 
     std::vector<std::thread> validators;
     for (i32 i = 0; i < cli.validators(); ++i)

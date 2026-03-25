@@ -146,6 +146,31 @@ namespace gfl
         friend BitSet operator-(i32 const l, BitSet const & s) noexcept { return BitSet(l, s);}
 
         GFL_HOST_DEVICE
+        friend bool operator<=(BitSet const& a, BitSet const& b) noexcept
+        {
+            unsigned short nw = 0;
+            for (auto i = 0; i < NumWords; i++)
+                nw += (a.words_[i] & b.words_[i]) == a.words_[i];
+            return nw == NumWords;
+        }
+
+        template <typename Pred>
+        GFL_HOST_DEVICE friend
+        BitSet filter(BitSet const & set, Pred const p) {
+            BitSet out;
+            auto [minVal,maxVal,_] = set.summary();
+            for (i32 v = minVal; v <= maxVal; ++v)
+            {
+                if (set.contains(v))
+                {
+                    if (p(v))
+                        out.insert(v);
+                }
+            }
+            return out;
+        }
+
+        GFL_HOST_DEVICE
         void printAsInts(i32 const end = WordBitSize * NumWords) const noexcept;
 
         GFL_HOST_DEVICE
@@ -166,6 +191,112 @@ namespace gfl
             u64 seed = 0;
             for (auto i = 0;i < NumWords; i++) hashCombine(seed, words_[i]);
             return seed;
+        }
+
+        template <typename Term>
+        GFL_HOST_DEVICE friend
+        tuple<i32,i32> argmin(BitSet const & set, Term const & t)
+        {
+            i32 min = numeric_limits<i32>::max();
+            int elt;
+            auto [minVal,maxVal,_] = set.summary();
+            for (i32 v = minVal; v <= maxVal; ++v)
+            {
+                if (set.contains(v))
+                {
+                    auto const tv = t(v);
+                    min = (min < tv) ? min : tv;
+                    elt = (min < tv) ? elt : v;
+                }
+            }
+            return {elt, min};
+        }
+
+        template <typename Filter, typename Term>
+        GFL_HOST_DEVICE friend
+        i32 min(BitSet const & set, Filter const & f, Term const & t)
+        {
+            i32 ttl = numeric_limits<i32>::max();
+            auto [minVal,maxVal,_] = set.summary();
+            for (i32 v = minVal; v <= maxVal; ++v)
+            {
+                if (set.contains(v))
+                {
+                    if (f(v))
+                    {
+                        auto const tv = t(v);
+                        ttl = (ttl  < tv) ? ttl : tv;
+                    }
+                }
+            }
+            return ttl;
+        }
+
+        template <typename Term>
+        GFL_HOST_DEVICE friend
+        i32 min(BitSet const & set, Term const & t)
+        {
+            i32 ttl = numeric_limits<i32>::max();
+            auto [minVal,maxVal,_] = set.summary();
+            for (i32 v = minVal; v <= maxVal; ++v)
+            {
+                if (set.contains(v))
+                {
+                    auto const tv = t(v);
+                    ttl = (ttl  < tv) ? ttl : tv;
+                }
+            }
+            return ttl;
+        }
+
+        template <typename Term>
+        GFL_HOST_DEVICE friend
+        i32 max(BitSet const & set, Term const & t)
+        {
+            i32 ttl = numeric_limits<i32>::min();
+            auto [minVal,maxVal,_] = set.summary();
+            for (i32 v = minVal; v <= maxVal; ++v)
+            {
+                if (set.contains(v))
+                {
+                    auto const tv = t(v);
+                    ttl = (ttl > tv) ? ttl : tv;
+                }
+            }
+            return ttl;
+        }
+
+        template <typename Filter>
+        GFL_HOST_DEVICE friend
+        i32 count(BitSet const & set, Filter const & f) {
+            i32 count = 0;
+            auto [minVal,maxVal,_] = set.summary();
+            for (i32 v = minVal; v <= maxVal; ++v)
+            {
+                if (set.contains(v))
+                {
+                    if (f(v))
+                    {
+                        count++;
+                    }
+                }
+            }
+            return count;
+        }
+
+        template <typename Pred>
+        GFL_HOST_DEVICE friend
+        bool any(BitSet const & set, Pred const p)
+        {
+            auto [minVal,maxVal,_] = set.summary();
+            for (i32 v = minVal; v <= maxVal; ++v)
+            {
+                if (set.contains(v))
+                {
+                    if (p(v)) return true;
+                }
+            }
+            return false;
         }
     };
 
@@ -435,8 +566,8 @@ namespace gfl
             i32 const sWord = words_[wIdx] != 0 ? wBegin + lsb(words_[wIdx]) : numeric_limits<i32>::max();
             i32 const lWord = words_[wIdx] != 0 ? wBegin + msb(words_[wIdx]) : numeric_limits<i32>::min();
             i32 const cWord = words_[wIdx] != 0 ? popcount(words_[wIdx]) : 0;
-            smallest = min<int>(smallest, sWord);
-            largest = max<int>(largest, lWord);
+            smallest = gfl::min<i32>(smallest, sWord);
+            largest = gfl::max<i32>(largest, lWord);
             count += cWord;
         }
         return {smallest,largest,count};

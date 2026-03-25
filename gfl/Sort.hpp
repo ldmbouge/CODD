@@ -9,7 +9,11 @@
 // ─────────────────────────────────────────────
 template <typename... Containers>
 void swapAll(int i, int j, Containers&... arrays) {
-    (std::swap(arrays[i], arrays[j]), ...);
+    ([&]{
+        auto tmp  = arrays[i];
+        arrays[i] = arrays[j];
+        arrays[j] = tmp;
+    }(), ...);
 }
 
 template <typename KeyContainer, typename... Containers>
