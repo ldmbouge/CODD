@@ -11,9 +11,8 @@ protected:
   ExpansionData<Node> _data;
 
 public:
-  Node const * getBestTargetNode() const noexcept {
-    Node const * const node = _data.bestTargetNode.has_value() ? &_data.bestTargetNode.value() : nullptr;
-    return node;
+  gfl::optional<Node> const & getBestTargetNode() const noexcept {
+    return _data.bestTargetNode;
   }
   gfl::i32 getBranchingFactor() const noexcept { return _data.branchingFactor; }
   gfl::ArrayView<Node> const & getExpansion() const noexcept { return _data.children; }

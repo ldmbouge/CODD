@@ -26,7 +26,7 @@ int runCaddsSeq(gfl::Ptr<Model> model, CliManager const & cli) {
 
   // Expansion engine
   PoolAllocator<Heap> engAlloc;
-  Engine * const eng = new (engAlloc) Engine();
+  auto * const eng = new (engAlloc) Engine();
   ArenaAllocator buffAlloc(Heap::reserve(cli.memSize()), cli.memSize());
 
   // Queue
@@ -53,13 +53,13 @@ int runCaddsSeq(gfl::Ptr<Model> model, CliManager const & cli) {
       ArrayView<Node> const batch = queue.pullUpTo(lIdx, min<i32>(toPull,maxBatchSize));
       toPull -= batch.size() == maxBatchSize ? maxBatchSize : toPull;
       buffAlloc.clear();
-      eng->allocData(batch.size(), branchingFactor, buffAlloc);
+      eng->allocData(buffAlloc, batch.size(), branchingFactor);
       eng->expand(model, batch, sols.solutionCost());
       auto const expansion = eng->getExpansion();
       if (not expansion.empty()) {
-        Node const * const bestTargetNode = eng->getBestTargetNode();
-        if (bestTargetNode) {
-          sols.solution(*bestTargetNode);
+        auto const & bestTargetNode = eng->getBestTargetNode();
+        if (bestTargetNode.has_value()) {
+          sols.solution(bestTargetNode.value());
         } else {
           queue.push(lIdx + 1, eng->getBranchingFactor(), expansion);
         }

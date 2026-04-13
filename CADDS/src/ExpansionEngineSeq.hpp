@@ -7,10 +7,10 @@
 #include "ExpansionFunctionsSeq.hpp"
 
 template<typename Model, typename Node>
-class ExpansionEngineSeq :  public ExpansionEngine<Node> {
+class ExpansionEngineSeq : public ExpansionEngine<Node> {
   using ExpansionEngine<Node>::_data;
 public:
-  void allocData(gfl::i32 const nodes, gfl::i32 const maxBranchFactor, gfl::ArenaAllocator & alloc) {
+  void allocData(gfl::ArenaAllocator & alloc, gfl::i32 const nodes, gfl::i32 const maxBranchFactor) {
     using namespace gfl;
     i32 const nParents = nodes;
     i32 const nChildren = nParents * maxBranchFactor;

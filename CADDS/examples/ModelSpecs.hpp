@@ -42,7 +42,7 @@ concept HasMerge = (M::has_merge == false) or
 template<typename M, typename S>
 concept HasHeur = (M::has_heur == false) or
                   requires(M const & m, S const & s, HContext c) {
-  { m.h(s, c) } -> std::same_as<double>;
+  { m.h(s, c) } -> std::same_as<gfl::f64>;
 };
 
 template<typename M, typename S>

@@ -1,121 +1,141 @@
 # CODD
-CODD is a C++/CUDA solver for combinatorial optimization problems
-represented as state-based models.  It implements *Complete Anytime
-Decision Diagram Search (CADDS)* with *GPU acceleration*, achieving
-speedups up to two orders of magnitude over sequential methods.
 
+CODD is a C++/CUDA solver for combinatorial optimization problems represented as state-based models. It implements **Complete Anytime Decision Diagram Search (CADDS)** with optional GPU acceleration, achieving speedups of up to two orders of magnitude over sequential methods.
 
-## Quickinfo
-**Model** The user needs to specify just four components:
+## Overview
 
-- *State:* the information characterizing the problem.
-- *Labeling function:* returns the possible decisions from a given state.
-- *Transition function:* returns the successor state resulting from a decision.
-- *Cost function:* returns the cost of a decision.
+CODD requires the user to specify four core components:
 
-Two optional components can be included to accelerate the solving:
+| Component | Description |
+|-----------|-------------|
+| **State** | The information characterizing the problem |
+| **Labeling function** | Returns the possible decisions from a given state |
+| **Transition function** | Returns the successor state resulting from a decision |
+| **Cost function** | Returns the cost of a decision |
 
-- *Dominance rule:* a condition to discard a state dominated by another.
-- *Heuristic function:* returns an approximate cost of a state.
+Two optional components can further accelerate solving:
 
-**CADDS** It views the search space as a Multi-valued Decision 
-Diagram (MDD) and incrementally explores it to collect solutions 
-until optimality is proven.
+| Component | Description |
+|-----------|-------------|
+| **Dominance rule** | A condition to discard a state dominated by another |
+| **Heuristic function** | Returns an approximate cost-to-go from a state |
 
-**GPU acceleration** It leverages the layered structure of MDDs. Given a set of
-states from the same layer, the GPU parallelizes both the successor generation
-and the filtering of duplicate, dominated, and suboptimal states.
+**CADDS** views the search space as a Multi-valued Decision Diagram (MDD) and incrementally explores it, collecting improving solutions until optimality is proven.
 
-## Structure
+**GPU acceleration** exploits the layered structure of MDDs: given a set of states from the same layer, the GPU parallelizes both successor generation and the filtering of duplicate, dominated, and suboptimal states.
+
+## Repository Structure
 
 ```
-├── gfl/            # GPU-Friendly Library: types, bitset, allocators, views, ...
-├── src/            # Solver core: expansion engines, nodes, queue, solution tracking, ...
 ├── examples/       # Entry points: one file per problem/backend combination
-└── data/           # Benchmark instances: AFG, Dumas, Solnon, Solomon, ...
+├── gfl/            # GPU-Friendly Library: types, bitsets, allocators, views, ...
+└── src/            # Solver core: expansion engines, nodes, queue, ...
 ```
 
 ## Requirements
 
-- CMake >= 3.28
-- CUDA Toolkit >= 12.5
-- GCC >= 13.2
+| Tool | Minimum Version | Tested Version |
+|------|----------------|----------------|
+| CMake | 3.28 | 3.28, 4.3      |
+| CUDA Toolkit | 12.5 | 12.5, 13.2     |
+| GCC | 13.3 | 13.3, 15.2     |
+> Tested on Ubuntu 24.04 LTS and Arch Linux.
 
-## Build 
+## Build
 
-*On a machine equipped with NVIDIA hardware and the CUDA toolkit 
-(tested on 12.5 and 12.9) 
+### GPU build
 
-```
-mkdir build
+Requires an NVIDIA GPU and a compatible CUDA Toolkit installation.
+
+```bash
+mkdir build 
 cd build
-cmake .. -DENABLE_GPU=ON -DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc 
-make
-```
-Please do adapt the paths for _your_ local installation of CUDA.
-
-To compile the sequential *CPU only* version, do
-
-```
-mkdir build
-cd build
-cmake .. -DENABLE_GPU=OFF 
+cmake .. -DENABLE_GPU=ON -DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc
 make
 ```
 
-By default, `cmake` will compile in *Release*. You can be explicit by
-using (for instance):
+> Adapt the path to `nvcc` to match your local CUDA installation.
 
-```
-mkdir build
+### CPU-only build
+
+```bash
+mkdir build 
 cd build
-cmake .. -DENABLE_GPU=OFF  -DCMAKE_BUILD_TYPE=Release
+cmake ..
 make
 ```
 
-The same observation holds for the GPU.
+### Build type
+
+CMake defaults to `Release`. To set it explicitly:
+
+```bash
+cmake .. -DCMAKE_BUILD_TYPE=Debug
+```
+
+> Valid options are `Release`, `RelWithDebInfo`, and `Debug`.
 
 ## Run
 
-The top-level `data` folder has a `data/tsptwAsInt` that scales all 
-distances to be integral values rather than floating points.
+The `data/tsptwAsInt` folder contains TSPTW instances with distances scaled to integer values.
 
-To run the *GPU* version, do
+### GPU
 
 ```
 ./TsptwCaddsGpu -m 8 -i ../../data/tsptwAsInt/SolnonFeasible/n31g60b40.001.txt
 Search: CADD
 Engine: GPU
-Instance: ../../data/tsptw/Solnon25_feasible/n31g60b40.001.txt
+Instance: ../../data/tsptwAsInt/SolnonFeasible/n31g60b40.001.txt
 Fragment: Auto
 Memory: 8 GB
 Timeout: None
 ---
 Time [s]         Primal       Expanded          Queue        Nodes/s
-    5.00              -       12919280        1466281        2583553
-   10.00              -       30761085        4445764        3567975
-   11.49         607.00       37828021        4445764        4738322
-   12.37         603.00       42192609        3358122        4974031
-   13.48         602.00       47787834        2286592        5035407
-   19.00         602.00       73660689          87411        4686440
+    2.64         607.00       37828021        4445764       14315694
+    2.73         603.00       42192609        3358122       51863444
+    2.83         602.00       47787834        2286592       53299754
 ---
 Status           = Completed
 Extracted        = 80948258
 Queue            = 0
-Search Time      = 20.60
-Solution Time    = 13.48
+Search Time      = 3.64
+Solution Time    = 2.83
 Solution Cost    = 602.00
-Solution         = 17,25,23,27,7,28,6,24,19,22,4,13,14,20,16,11,10,9,2,18,8,12,3,21,15,5,1,26,30,29,0
+Solution         = 17,25,23,27,7,28,6,24,19,22,4,13,14,20,16,11,10,9...
 ```
 
-The *CPU* executable has a different name.
+### CPU
 
-| Flag              | Description                          |
-|-------------------|--------------------------------------|
-| `-i, --instance`  | Path to the instance file (required) |
-| `-m, --memory`    | Working memory in GB (required)      |
-| `-f, --fragment`  | Maximum states per expansion step    |        |
-| `-t, --timeout`   | Timeout in seconds                   |
+```
+./TsptwCaddsSeq -m 8 -i ../../data/tsptwAsInt/SolnonFeasible/n31g60b40.001.txt
+Search: CADD
+Engine: Sequential
+Instance: ../../data/tsptwAsInt/SolnonFeasible/n31g60b40.001.txt
+Fragment: Auto
+Memory: 8 GB
+Timeout: None
+---
+Time [s]         Primal       Expanded          Queue        Nodes/s
+   10.00              -        6597341         340238         801761
+   15.00              -        8797631         516626         440012
+   20.00              -       11131852         863761         466797
+   ...
+   67.90         611.00       42298169        7506426         370579
+   73.01         611.00       50852076        3379949        1675323
+   74.72         606.00       53463209        3379949        1521605
+   ...
+   88.27         602.00       71499839         863761        1276913
+   94.01         602.00       78540049         340238        1225870
+   99.01         602.00       83671218              0        1026132
+---
+Status           = Completed
+Extracted        = 87101286
+Queue            = 0
+Search Time      = 101.47
+Solution Time    = 88.27
+Solution Cost    = 602.00
+Solution         = 17,25,23,27,7,28,6,24,19,22,4,13,14,20,16,11,10,9,...
+```
 
 ## Citation
 

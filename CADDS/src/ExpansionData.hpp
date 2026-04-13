@@ -5,7 +5,6 @@
 
 template <typename Node>
 struct ExpansionData {
-
   gfl::i32 branchingFactor;
   gfl::optional<Node> bestTargetNode;
   gfl::VectorView<Node> parents;

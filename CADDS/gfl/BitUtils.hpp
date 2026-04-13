@@ -214,7 +214,7 @@ T prefixMaskInclusive(i32 const bitIdx) noexcept {
   static_assert(std::is_integral_v<T>);
   static_assert(std::is_unsigned_v<T>);
 
-  u32 constexpr bitSize = numeric_limits<T>::digits;
+  i32 constexpr bitSize = numeric_limits<T>::digits;
   assert(bitIdx < bitSize);
   T constexpr fullMask = numeric_limits<T>::max();
   T constexpr emptyMask = scast<T>(0);

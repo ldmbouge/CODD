@@ -46,13 +46,13 @@ namespace gfl {
 template<gfl::MemoryBackend B>
 void * operator new(std::size_t const size, gfl::PoolAllocator<B> & alloc) {
   using namespace gfl;
-  return alloc.template allocate<u8>(scast<i64>(size));
+  return alloc.template allocate<u8>(scast<i64>(size), DefaultAlign);
 }
 
 template<gfl::MemoryBackend B>
 void * operator new[](std::size_t const size, gfl::PoolAllocator<B> & alloc) {
   using namespace gfl;
-  return alloc.template allocate<u8>(scast<i64>(size));
+  return alloc.template allocate<u8>(scast<i64>(size), DefaultAlign);
 }
 
 template<gfl::MemoryBackend B>

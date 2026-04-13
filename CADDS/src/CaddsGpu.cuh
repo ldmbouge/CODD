@@ -54,9 +54,9 @@ int runCaddsGpu(gfl::Ptr<Model> model, CliManager const & cli) {
       eng->expand(model, batch, branchingFactor, sols.solutionCost());
       auto const expansion = eng->getExpansion();
       if (not expansion.empty()) {
-        Node const * const bestTargetNode = eng->getBestTargetNode();
-        if (bestTargetNode) {
-          sols.solution(*bestTargetNode);
+        auto const & bestTargetNode = eng->getBestTargetNode();
+        if (bestTargetNode.has_value()) {
+            sols.solution(bestTargetNode.value());
         } else {
           queue.pushFromGpu(lIdx + 1, eng->getBranchingFactor(), expansion);
         }
