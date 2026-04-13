@@ -1,17 +1,18 @@
 
 # Table of Contents
 
-1.  [CODD](#org2153b40)
-    1.  [Dependencies](#orgfd8c3a3)
-    2.  [C++ Standard](#orgc3f268f)
-    3.  [Build system](#orgfca022f)
-    4.  [Examples](#orgfa2ca46)
-    5.  [Unit test](#org8ec9b5d)
-    6.  [Library](#org14e7933)
-    7.  [Brief documentation](#orgf214349)
+1.  [CODD](#orgbd4f5ee)
+    1.  [Dependencies](#orgaf222c7)
+    2.  [C++ Standard](#org5e9af54)
+    3.  [Build system](#org7afab77)
+    4.  [Examples](#orgc166674)
+    5.  [Unit test](#org6400d0b)
+    6.  [Library](#orgd98cdcf)
+    7.  [Brief documentation](#org708560c)
+2.  [CADDS](#org3b1c2bb)
 
 
-<a id="org2153b40"></a>
+<a id="orgbd4f5ee"></a>
 
 # CODD
 
@@ -24,7 +25,7 @@ It has:
 -   restricted construction is truly bounded now (not truncation based).
 
 
-<a id="orgfd8c3a3"></a>
+<a id="orgaf222c7"></a>
 
 ## Dependencies
 
@@ -34,7 +35,7 @@ in `/tmp` and then macOS `open` command is used (via `fork/execlp`)  to open the
 PDF. The same functionality needs to be added on Linux (different API to pop up a viewer).
 
 
-<a id="orgc3f268f"></a>
+<a id="org5e9af54"></a>
 
 ## C++ Standard
 
@@ -44,7 +45,7 @@ I use the mainline clang coming with Xcode.
 The implementation uses templates and concepts to factor the code.
 
 
-<a id="orgfca022f"></a>
+<a id="org7afab77"></a>
 
 ## Build system
 
@@ -61,7 +62,7 @@ the variable `CMAKE_BUILD_TYPE` from `Debug` to `Release` as shown below:
     cmake .. -DCMAKE_BUILD_TYPE=Release
 
 
-<a id="orgfa2ca46"></a>
+<a id="orgc166674"></a>
 
 ## Examples
 
@@ -109,23 +110,42 @@ from the `build` folder to run on the br17 instance with a width of 32. The outp
 Every 5 seconds, the branch and bound reports the number of nodes, current node value, incumbent value, duality gap and the time since the start. The last line (with the `Done`) says that the optimal was 39, that it took 13912 nodes to close the optimality proof, that no nodes where discarded because of a dominance and that the optimum was found after 3.063s and the proof took 31.995s (if there was a limit, it was <span class="underline">not</span> reached). 
 
 
-<a id="org8ec9b5d"></a>
+<a id="org6400d0b"></a>
 
 ## Unit test
 
 In the `test` folder
 
 
-<a id="org14e7933"></a>
+<a id="orgd98cdcf"></a>
 
 ## Library
 
 All of it in the `src` folder
 
 
-<a id="orgf214349"></a>
+<a id="org708560c"></a>
 
 ## Brief documentation
 
 A [small site](./doc/CODD.html) with some documentation in HTML is available too.
+
+
+<a id="org3b1c2bb"></a>
+
+# CADDS
+
+The CADDS system (loosely based on CODD) exist in a sub-folder `CADDS`
+Restrictions imposed by NVIDIA forced to change the modeling layer to use
+methods on a model object rather than closures. The methods can still use
+first-order functions and locally defined lambda (so that they end-up
+being compiled on the `DEVICE` and not just the host.
+
+Files carry the extension `.cuh` for CUDA.
+
+CADDS itself (the generic library) can be found in `CADDS/src` while the
+TSPTW benchmark lives in `CADDS/examples`.
+
+Please consult `CADDS/README.md` on the details for compilation and
+execution. 
 

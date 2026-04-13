@@ -137,3 +137,18 @@ You need
 g++-13 -std=c++20 -fmodules-ts -xc++-system-header iostream
 #+end_src
 Haven't found a way to automate in cmake yet. Though there should be
+
+* CADDS
+The CADDS system (loosely based on CODD) exist in a sub-folder ~CADDS~
+Restrictions imposed by NVIDIA forced to change the modeling layer to use
+methods on a model object rather than closures. The methods can still use
+first-order functions and locally defined lambda (so that they end-up
+being compiled on the ~DEVICE~ and not just the host.
+
+Files carry the extension ~.cuh~ for CUDA.
+
+CADDS itself (the generic library) can be found in ~CADDS/src~ while the
+TSPTW benchmark lives in ~CADDS/examples~.
+
+Please consult ~CADDS/README.md~ on the details for compilation and
+execution. 

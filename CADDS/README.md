@@ -1,6 +1,8 @@
 # CODD
-CODD is a C++/CUDA solver for combinatorial optimization problems represented as state-based models.
-It implements *Complete Anytime Decision Diagram Search (CADDS)* with *GPU acceleration*, achieving speedups up to two orders of magnitude over sequential methods.
+CODD is a C++/CUDA solver for combinatorial optimization problems
+represented as state-based models.  It implements *Complete Anytime
+Decision Diagram Search (CADDS)* with *GPU acceleration*, achieving
+speedups up to two orders of magnitude over sequential methods.
 
 
 ## Quickinfo
@@ -16,8 +18,9 @@ Two optional components can be included to accelerate the solving:
 - *Dominance rule:* a condition to discard a state dominated by another.
 - *Heuristic function:* returns an approximate cost of a state.
 
-**CADDS** It views the search space as a Multi-valued Decision Diagram (MDD) and
-incrementally explores it to collect solutions until optimality is proven.
+**CADDS** It views the search space as a Multi-valued Decision 
+Diagram (MDD) and incrementally explores it to collect solutions 
+until optimality is proven.
 
 **GPU acceleration** It leverages the layered structure of MDDs. Given a set of
 states from the same layer, the GPU parallelizes both the successor generation
@@ -38,7 +41,10 @@ and the filtering of duplicate, dominated, and suboptimal states.
 - CUDA Toolkit >= 12.5
 - GCC >= 13.2
 
-## Build
+## Build 
+
+*On a machine equipped with NVIDIA hardware and the CUDA toolkit 
+(tested on 12.5 and 12.9) 
 
 ```
 mkdir build
@@ -46,11 +52,38 @@ cd build
 cmake .. -DENABLE_GPU=ON -DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc 
 make
 ```
+Please do adapt the paths for _your_ local installation of CUDA.
+
+To compile the sequential *CPU only* version, do
+
+```
+mkdir build
+cd build
+cmake .. -DENABLE_GPU=OFF 
+make
+```
+
+By default, `cmake` will compile in *Release*. You can be explicit by
+using (for instance):
+
+```
+mkdir build
+cd build
+cmake .. -DENABLE_GPU=OFF  -DCMAKE_BUILD_TYPE=Release
+make
+```
+
+The same observation holds for the GPU.
 
 ## Run
 
+The top-level `data` folder has a `data/tsptwAsInt` that scales all 
+distances to be integral values rather than floating points.
+
+To run the *GPU* version, do
+
 ```
-./TsptwCaddsGpu -m 8 -i ../data/tsptw/SolnonFeasible/n31g60b40.001.txt
+./TsptwCaddsGpu -m 8 -i ../data/tsptwAsInt/SolnonFeasible/n31g60b40.001.txt
 Search: CADD
 Engine: GPU
 Instance: ../data/tsptw/Solnon25_feasible/n31g60b40.001.txt
@@ -74,6 +107,8 @@ Solution Time    = 13.48
 Solution Cost    = 602.00
 Solution         = 17,25,23,27,7,28,6,24,19,22,4,13,14,20,16,11,10,9,2,18,8,12,3,21,15,5,1,26,30,29,0
 ```
+
+The *CPU* executable has a different name.
 
 | Flag              | Description                          |
 |-------------------|--------------------------------------|
