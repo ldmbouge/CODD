@@ -83,10 +83,10 @@ distances to be integral values rather than floating points.
 To run the *GPU* version, do
 
 ```
-./TsptwCaddsGpu -m 8 -i ../data/tsptwAsInt/SolnonFeasible/n31g60b40.001.txt
+./TsptwCaddsGpu -m 8 -i ../../data/tsptwAsInt/SolnonFeasible/n31g60b40.001.txt
 Search: CADD
 Engine: GPU
-Instance: ../data/tsptw/Solnon25_feasible/n31g60b40.001.txt
+Instance: ../../data/tsptw/Solnon25_feasible/n31g60b40.001.txt
 Fragment: Auto
 Memory: 8 GB
 Timeout: None
