@@ -106,7 +106,7 @@ void BAndB::search(Bounds& bnds)
       // cout << "CURDUAL:" << curDual << "\t PRIMAL:" << bnds.getPrimal()
       //      << " isBetter:" << relaxed->isBetter(curDual,bnds.getPrimal()) << "\n";
       if (!relaxed->isBetter(curDual,bnds.getPrimal())) {
-         _theDD->releaseNode(bbn.node);
+         //_theDD->releaseNode(bbn.node);
          bbPool->release(bbn.node);
          continue;
       }
@@ -195,7 +195,7 @@ void BAndB::search(Bounds& bnds)
          }
       } //else 
       //std::cout << "DB:F " <<  "Primal:" << bnds.getPrimal() << " Dual:" << relaxed->currentOpt()  << "\n";      
-      _theDD->releaseNode(bbn.node);
+      //_theDD->releaseNode(bbn.node);
       bbPool->release(bbn.node);
    }
    cout << setprecision(ss);

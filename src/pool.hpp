@@ -20,10 +20,14 @@ public:
       else {
          ANode::Ptr nd = _free.top();
          _free.pop();
+         //std::cout << "*** LPool::claimNode("<< nd.get() << ")\n" << std::flush;      
          return nd;
       }
    }
-   void release(ANode::Ptr n) { _free.push(n);}
+   void release(ANode::Ptr n) {
+      //std::cout << "+++ LPool::release(" << n.get() << ")\n"; 
+      _free.push(n);
+   }
 };
 
 #endif

@@ -909,7 +909,7 @@ GNSet setFrom(const std::ranges::iota_view<T,B>& from) {
 
 
 template <class T> class FArray {
-   T*            _tab;
+   T            *_tab;
    std::size_t    _mx;
 public:
    typedef T ValType;
@@ -929,12 +929,20 @@ public:
       for(auto i=0u;i < _mx;i++)
          _tab[i] = t._tab[i];
    }
-   FArray(FArray&& t) : _tab(t._tab),_mx(t._mx) {
-      t._tab = nullptr;
+   FArray(FArray &&t) : _tab(t._tab), _mx(t._mx) {
+     t._tab = nullptr;
+     t._mx  = 0;
    }
-   ~FArray() { if (_tab) delete[] _tab;}
+   ~FArray() {
+     if (_tab)
+       delete[] _tab;
+     _tab = nullptr;
+     //_mx = 0;
+     //std::cout << "FArray::~FArray("<< this << ")\n"; 
+   }
    FArray& operator=(const FArray& t) {
-      if (_mx != t._mx) {
+     if (_mx != t._mx) {
+         assert(_tab != t._tab);
          delete []_tab;
          _mx = t._mx;
          _tab = new T[_mx];
@@ -944,10 +952,12 @@ public:
       return *this;
    }
    FArray& operator=(FArray&& a) {
+      assert(_tab != a._tab);
       if (_tab) delete[] _tab;
       _mx = a._mx;
       _tab = a._tab;
       a._tab = nullptr;
+      a._mx  = 0;
       return *this;
    }
    std::size_t size() const noexcept { return _mx;}

@@ -358,11 +358,11 @@ class DDNodeAllocator :public AbstractNodeAllocator {
 public:
    DDNodeAllocator(LPool::Ptr pool) : AbstractNodeAllocator(pool),_nmap(pool->get(),200000) {}
    ~DDNodeAllocator() {}
-   ANode::Ptr cloneNode(ANode::Ptr src) override {      
-      auto sp = static_cast<const Node<ST>*>(src.get());
-      Node<ST>* nn = new (_base->get()) Node<ST>(_base->get(),_base->grabId(),*sp);
-      return nn;
-      /*
+   ANode::Ptr cloneNode(ANode::Ptr src) override {
+     auto sp = static_cast<const Node<ST>*>(src.get());
+     /*
+     Node<ST>* nn = new (_base->get()) Node<ST>(_base->get(),_base->grabId(),*sp); return nn;
+     */      
       //temporarily out. Something not correct here. [ldm]
       Node<ST>* at = nullptr;
       auto inMap = _nmap.getLoc(sp->get(),at);
@@ -381,11 +381,12 @@ public:
       } else {
          //std::cout << "Already added node to B&B...." << "\n";         
          return nullptr;
-         }
-      */
+      }
    }
    void release(ANode::Ptr src) override {
-      //_base->release(src);
+      //auto sp = static_cast<const Node<ST> *>(src.get());
+      //std::cout << "About to release:" << sp << std::endl;
+      _base->release(src);
    }
 };
 
@@ -627,6 +628,7 @@ public:
    unsigned getLastId() const noexcept { return _ndId;}
    void reset() {
       _ndId = 0;
+      //std::cout << "DD:reset " << _nmap.size() << "\n";
       _nmap.doOnAll([](Node<ST>* np) {
          np->~Node<ST>();
       });

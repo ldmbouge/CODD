@@ -267,7 +267,7 @@ int main(int argc,char* argv[])
                 decltype(smf),
                 decltype(eqs)
                 >::makeDD(init,target,lgf,stf,scf,smf,eqs,labels),w);
-   engine.setTimeLimit([](double elapsed) { return elapsed >= 300000;});
+   engine.setTimeLimit([](double elapsed) { return elapsed >= 600000;});
    engine.search(bnds);
    return 0;
 }
